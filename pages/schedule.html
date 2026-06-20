@@ -1,7 +1,3 @@
-The extra shift or weird spacing is happening because the layout tags in your code don't match the wrapper structure of your `clients.html` file.
-
-In your `clients.html` layout, the primary structural grid is inside an outer wrapper section (usually `<div class="dashboard-content">` or similar) that controls padding natively, while elements like `.page-title` and `.page-sub` have global margin sets inside your `../css/style.css` stylesheet. Because this file had conflicting utility styles, clicking on elements or resizing the browser caused double margins to stack.
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
