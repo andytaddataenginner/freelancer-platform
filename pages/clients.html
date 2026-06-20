@@ -19,13 +19,14 @@
       --sans: 'Outfit', system-ui, sans-serif;
       --serif: 'Playfair Display', serif;
       --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --paper3: rgba(13,35,83,0.1);
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
-    /* ── LAYOUT ── */
+    /* ── LAYOUT ENGINE (MATCHES TIME LOGS) ── */
     .layout { display: flex; min-height: 100vh; }
 
-    /* ── SIDEBAR ── */
+    /* ── SIDEBAR ENGINE ── */
     .sidebar {
       width: 220px; background: var(--navy); position: fixed;
       top: 0; left: 0; height: 100vh; display: flex;
@@ -61,7 +62,7 @@
     .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
     .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
-    /* ── MOBILE NAV ── */
+    /* ── MOBILE NAVBAR INTERFACES ── */
     .mobile-header {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
       background: var(--navy); padding: 0.8rem 1rem;
@@ -82,7 +83,7 @@
     .sidebar-overlay.open { display: block; }
     .sidebar.mobile-open { transform: translateX(0) !important; }
 
-    /* ── MAIN ── */
+    /* ── MAIN CONTENT SYSTEM ── */
     .main { margin-left: 220px; flex: 1; }
 
     .topbar {
@@ -94,44 +95,55 @@
 
     .content { padding: 1.5rem; }
 
-    /* ── CARDS ── */
+    /* ── CARDS & UTILITIES ── */
     .card {
-      background: white; border-radius: var(--radius);
+      background: white; border-radius: var(--radius); padding: 1.2rem;
       box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
       margin-bottom: 1.2rem;
     }
-    .card-header {
-      padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
-    }
-    .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
-
-    /* ── TABLE ── */
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 700px; }
-    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; white-space: nowrap; }
-    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--bg); }
-
+    
     /* ── BADGES ── */
     .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
     .badge-green { background: var(--green-bg); color: var(--green); }
     .badge-amber { background: var(--amber-bg); color: var(--amber); }
     .badge-blue  { background: #dbeafe; color: #1e40af; }
+    .badge-gray  { background: var(--gray-bg); color: var(--gray); }
 
     /* ── BUTTONS ── */
-    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-family: var(--sans); font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .btn-primary { background: var(--navy); color: white; padding: 0.65rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .btn-primary:hover { background: var(--accent); }
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
     .btn-green  { background: var(--green-bg); color: var(--green); }
     .btn-green:hover { background: var(--green); color: white; }
     .btn-red    { background: var(--red-bg); color: var(--red); }
     .btn-red:hover { background: var(--red); color: white; }
     .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
     .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
-    .btn-navy   { background: var(--navy); color: white; }
-    .btn-navy:hover { background: var(--accent); }
 
-    /* ── RESPONSIVE ── */
+    /* ── MODALS ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); animation: modalIn 0.25s ease; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
+    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
+    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: var(--red-bg); color: var(--red); }
+    
+    .modal-form { display: flex; flex-direction: column; gap: 0.9rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink2); }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 9px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.88rem; color: var(--navy); width: 100%;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); background: white; }
+    .form-status { font-size: 0.8rem; margin-top: 0.4rem; font-weight: 500; }
+    .form-status.success { color: var(--green); }
+    .form-status.error   { color: var(--red); }
+
+    /* ── RESPONSIVE OVERRIDES ── */
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 240px; }
       .main { margin-left: 0; padding-top: 56px; }
@@ -143,7 +155,6 @@
 </head>
 <body>
 
-<!-- Mobile header -->
 <div class="mobile-header" id="mobile-header">
   <div class="mobile-logo">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -154,7 +165,6 @@
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div class="layout">
-  <!-- Sidebar Engine -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -175,49 +185,33 @@
     </div>
   </aside>
 
-  <!-- Main Platform Container Area -->
   <div class="main">
     <div class="topbar">
       <h2>Clients</h2>
-      <p>Manage your client accounts, rate configurations, and assignments.</p>
+      <p>Manage clients, billing rates, and payment status.</p>
     </div>
 
     <div class="content">
-      <!-- Your Dynamic Client Content/Tables Go inside here -->
-      <div class="card">
-        <div class="card-header">
-          <h3>All Active Clients</h3>
-        </div>
-        <div class="table-wrap">
-          <!-- Formatted table layout matches time logs style sheets exactly -->
-          <table>
-            <thead>
-              <tr>
-                <th>Client Name</th>
-                <th>Company</th>
-                <th>Rate Setup</th>
-                <th>Rate Value</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Keep your existing JavaScript engine rendering rows smoothly here -->
-            </tbody>
-          </table>
-        </div>
+      <div style="margin-bottom:1.5rem">
+        <button class="btn-primary" onclick="document.getElementById('modal-add').classList.add('open')">+ Add New Client</button>
       </div>
 
+      <div id="clients-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem">
+        <p style="color:var(--ink3)">Loading…</p>
+      </div>
     </div>
   </div>
 </div>
 
-<script>
-// Keep all your current script logic below here intact.
-// Make sure to add the standard sidebar helper hook:
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('mobile-open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
-}
-</script>
-</body>
-</html>
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Client</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-add').classList.remove('open')">✕</button>
+    </div>
+    <form class="modal-form" onsubmit="addClient(event)">
+      <div class="form-group"><label>Full name</label><input type="text" name="name" required/></div>
+      <div class="form-group"><label>Email address</label><input type="email" name="email" required/></div>
+      <div class="form-group"><label>Company (optional)</label><input type="text" name="company"/></div>
+      <div class="form-group"><label>Temporary password</label><input type="text" name="password" required placeholder="Client uses this to log in"/></div>
+      <div style="border-top:1px solid var(--paper
