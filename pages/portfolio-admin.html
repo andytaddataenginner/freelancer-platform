@@ -101,7 +101,10 @@
       .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
       .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
       .main { margin-left: 0; padding-top: 52px; }
-      .topbar { top: 52px; }
+      
+      /* FIX: Changed topbar sticky behavior to unpinned static layouts on small device targets */
+      .topbar { position: static !important; padding: 1.2rem 1rem 0.8rem !important; }
+      
       .content { padding: 1rem; }
       #portfolio-grid { grid-template-columns: 1fr !important; }
     }
