@@ -3,58 +3,73 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Schedule — YourName</title>
+  <title>Schedule — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
     /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
+    :root {
+      --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --green: #166534; --green-bg: #dcfce7;
+      --amber: #92400e; --amber-bg: #fef3c7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --gray: #4b5563; --gray-bg: #f3f4f6;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --paper3: rgba(13,35,83,0.1);
+    }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
     /* ── FLEX LAYOUT STABILITY ── */
-    .dashboard { display: flex; min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; }
 
     /* ── FIXED DESKTOP SIDEBAR ── */
     .sidebar {
-      width: 240px !important; 
-      background: #0d2353 !important; 
+      width: 220px !important; 
+      background: var(--navy) !important; 
       position: fixed !important;
       top: 0 !important; left: 0 !important; height: 100vh !important; 
       display: flex !important; flex-direction: column !important; 
-      z-index: 150 !important;
+      z-index: 50 !important;
       transform: translateX(0);
-      transition: transform 0.3s ease-in-out !important;
+      transition: transform 0.3s ease !important;
     }
     .sidebar-brand {
-      padding: 1.2rem 1.5rem !important;
+      padding: 1.1rem 1.2rem !important;
       border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      display: flex !important; align-items: center !important; gap: 0.6rem !important;
       flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
     }
     .sidebar-nav { 
       flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
-      display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
+      display: flex !important; flex-direction: column !important; width: 100% !important;
     }
     .sidebar-nav a {
       display: flex !important; align-items: center !important; gap: 0.7rem !important;
-      padding: 0.8rem 1.5rem !important; font-size: 0.88rem !important; font-weight: 500 !important;
-      color: rgba(255,255,255,0.65) !important; text-decoration: none !important;
-      transition: all 0.2s; border-right: 4px solid transparent !important;
+      padding: 0.7rem 1.2rem !important; font-size: 0.85rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.55) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 3px solid transparent !important;
       width: 100% !important; box-sizing: border-box !important;
       justify-content: flex-start !important;
     }
     .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
-    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: #f5c842 !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: var(--gold2) !important; }
 
     .sidebar-user { 
-      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
+      padding: 1rem 1.2rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
       font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
     }
 
     /* ── MOBILE HEADER BAR ── */
     .mobile-header {
-      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: #0d2353; padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
       box-shadow: 0 2px 12px rgba(13,35,83,0.2);
     }
     .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
@@ -66,25 +81,76 @@
       cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     
-    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
+    .sidebar-overlay.visible { display: block !important; }
+    .sidebar.is-open { transform: translateX(0) !important; }
 
     /* ── RESPONSIVE MAIN CONTAINER FROM MAIN STYLESHEET FRAMEWORK ── */
-    .main-content { margin-left: 240px; flex: 1; position: relative; }
+    .main { margin-left: 220px; flex: 1; position: relative; }
 
+    .topbar {
+      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
+      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
+    }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+
+    .content { padding: 1.5rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: white; border-radius: var(--radius); padding: 1.2rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.2rem;
+    }
+
+    /* ── STATS CARDS ── */
+    .stat-card {
+      background: white; border-radius: var(--radius); padding: 1.2rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      display: flex; flex-direction: column; gap: 0.2rem;
+    }
+    .stat-num { font-size: 1.8rem; font-weight: 600; color: var(--navy); line-height: 1.2; }
+    .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-blue  { background: #dbeafe; color: #1e40af; }
+    .badge-gray  { background: var(--gray-bg); color: var(--gray); }
+
+    /* ── BUTTONS ── */
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
+    .btn-green  { background: var(--green-bg); color: var(--green); }
+    .btn-green:hover { background: var(--green); color: white; }
+    .btn-red    { background: var(--red-bg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
+    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+    
     /* ── ACTIVE FILTER STYLING ── */
     .btn-filter-toggle.active {
-      background: var(--ink, #0d2353) !important;
+      background: var(--navy) !important;
       color: white !important;
-      border-color: var(--ink, #0d2353) !important;
+      border-color: var(--navy) !important;
     }
+
+    /* ── TABLES ── */
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    th { padding: 0.8rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); border-bottom: 1px solid var(--bg2); }
+    td { padding: 0.9rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
 
     /* ── MOBILE MEDIA QUERIES ── */
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
+      .sidebar { transform: translateX(-100%); width: 240px; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding-top: 76px !important; }
+      .main { margin-left: 0 !important; padding-top: 56px !important; }
       .mobile-header { display: flex !important; }
+      .topbar { top: 56px; }
+      .content { padding: 1rem; }
       .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; display: grid !important; }
     }
     @media (max-width: 480px) {
@@ -107,15 +173,15 @@
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-<div class="dashboard">
+<div class="layout">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+      <div style="width:36px;height:36px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
         <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
       </div>
       <div style="line-height:1.2">
-        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
-        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+        <div style="color:white;font-size:0.78rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:#f5c842;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -127,60 +193,64 @@
       <a href="../index.html" target="_blank">🌐 Public Site</a>
     </nav>
     <div class="sidebar-user">
-      <strong id="user-name" style="color:white; display:block;">Loading…</strong>
-      <span style="color:rgba(255,255,255,0.5); font-size:0.75rem;">Freelancer</span>
-      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+      <strong id="user-name" style="color:white; display:block; margin-bottom:0.1rem;">Loading…</strong>
+      <span style="color:rgba(255,255,255,0.4); font-size:0.72rem;">Freelancer</span>
+      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.75rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
     </div>
   </aside>
 
-  <main class="main-content">
-    <h2 class="page-title">Schedule</h2>
-    <p class="page-sub">View and manage client booking requests.</p>
-
-    <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
-      <div class="stat-card">
-        <span class="stat-num" id="s-pending">—</span>
-        <span class="stat-label">Pending requests</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-num" id="s-confirmed">—</span>
-        <span class="stat-label">Confirmed</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-num" id="s-upcoming">—</span>
-        <span class="stat-label">Upcoming (7 days)</span>
-      </div>
+  <div class="main">
+    <div class="topbar">
+      <h2>Schedule</h2>
+      <p>View and manage client booking requests.</p>
     </div>
 
-    <div class="card">
-      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-        <h3>All Bookings</h3>
-        <div style="display:flex;gap:0.5rem">
-          <button class="btn-sm btn-outline btn-filter-toggle active" id="filter-all" onclick="filterBookings('all')">All</button>
-          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-pending" onclick="filterBookings('pending')">Pending</button>
-          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-confirmed" onclick="filterBookings('confirmed')">Confirmed</button>
+    <div class="content">
+      <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
+        <div class="stat-card">
+          <span class="stat-num" id="s-pending">—</span>
+          <span class="stat-label">Pending requests</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="s-confirmed">—</span>
+          <span class="stat-label">Confirmed</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="s-upcoming">—</span>
+          <span class="stat-label">Upcoming (7 days)</span>
         </div>
       </div>
-      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-        <table>
-          <thead>
-            <tr>
-              <th>Client</th>
-              <th>Date & Time</th>
-              <th>Type</th>
-              <th>Duration</th>
-              <th>Message</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="bookings-table">
-            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
-          </tbody>
-        </table>
+
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.2rem;">
+          <h3 style="font-family: var(--serif); font-size: 1.1rem; font-weight: 700;">All Bookings</h3>
+          <div style="display:flex;gap:0.4rem">
+            <button class="btn-sm btn-outline btn-filter-toggle active" id="filter-all" onclick="filterBookings('all')">All</button>
+            <button class="btn-sm btn-outline btn-filter-toggle" id="filter-pending" onclick="filterBookings('pending')">Pending</button>
+            <button class="btn-sm btn-outline btn-filter-toggle" id="filter-confirmed" onclick="filterBookings('confirmed')">Confirmed</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Duration</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-table">
+              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </main>
+  </div>
 </div>
 
 <script>
