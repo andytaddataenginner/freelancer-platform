@@ -2,7 +2,7 @@ const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// Public stats (for homepage)
+// Public stats
 router.get('/public', async (req, res, next) => {
   try {
     const [clients, projects] = await Promise.all([
@@ -13,9 +13,10 @@ router.get('/public', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// Freelancer dashboard stats
+// Freelancer dashboard stats — filtered by THIS freelancer only
 router.get('/freelancer', requireFreelancer, async (req, res, next) => {
   try {
+    const freelancerId = req.user.id;
     const monthParam = req.query.month;
     let firstOfMonth, lastOfMonth;
 
@@ -31,76 +32,54 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       lastOfMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
     }
 
-    // ── Hourly stats from time_logs ───────────────────────────
+    // Hourly stats from time_logs — filtered by this freelancer
     const [hours, tasks, hourlyEarned, hourlyUnpaid, monthClients, bookings] = await Promise.all([
-
-      // Total hours logged this month (hourly clients only)
       pool.query(`
-        SELECT COALESCE(SUM(hours),0)::float AS h
-        FROM time_logs
+        SELECT COALESCE(SUM(hours),0)::float AS h FROM time_logs
         WHERE freelancer_id=$1 AND date >= $2::date AND date <= $3::date
-      `, [req.user.id, firstOfMonth, lastOfMonth]),
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
 
-      // Total task entries this month
       pool.query(`
-        SELECT COUNT(*)::int AS cnt
-        FROM time_logs
+        SELECT COUNT(*)::int AS cnt FROM time_logs
         WHERE freelancer_id=$1 AND date >= $2::date AND date <= $3::date
-      `, [req.user.id, firstOfMonth, lastOfMonth]),
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
 
-      // Hourly paid this month
       pool.query(`
-        SELECT COALESCE(SUM(amount),0)::float AS total
-        FROM time_logs
-        WHERE freelancer_id=$1
-          AND date >= $2::date AND date <= $3::date
-          AND payment_status = 'paid'
-      `, [req.user.id, firstOfMonth, lastOfMonth]),
-
-      // Hourly unpaid this month
-      pool.query(`
-        SELECT COALESCE(SUM(amount),0)::float AS total
-        FROM time_logs
-        WHERE freelancer_id=$1
-          AND date >= $2::date AND date <= $3::date
-          AND (payment_status = 'unpaid' OR payment_status IS NULL)
-      `, [req.user.id, firstOfMonth, lastOfMonth]),
-
-      // Unique clients who had hourly logs this month
-      pool.query(`
-        SELECT COUNT(DISTINCT client_id)::int AS cnt
-        FROM time_logs
+        SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs
         WHERE freelancer_id=$1 AND date >= $2::date AND date <= $3::date
-      `, [req.user.id, firstOfMonth, lastOfMonth]),
+          AND payment_status='paid'
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
 
-      // Upcoming bookings
+      pool.query(`
+        SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs
+        WHERE freelancer_id=$1 AND date >= $2::date AND date <= $3::date
+          AND (payment_status='unpaid' OR payment_status IS NULL)
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
+
+      pool.query(`
+        SELECT COUNT(DISTINCT client_id)::int AS cnt FROM time_logs
+        WHERE freelancer_id=$1 AND date >= $2::date AND date <= $3::date
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
+
       pool.query(`
         SELECT COUNT(*)::int AS cnt FROM bookings
         WHERE freelancer_id=$1 AND date >= NOW()::date AND status != 'cancelled'
-      `, [req.user.id]),
+      `, [freelancerId]),
     ]);
 
-    // ── Fixed rate clients ────────────────────────────────────
-    // Fixed clients are always counted for the month since they pay a flat fee
-    // We track their payment_status separately in a fixed_payments table concept
-    // For now: fixed clients with no explicit paid record = unpaid
+    // Fixed rate clients — only THIS freelancer's fixed clients
     const fixedClients = await pool.query(`
-      SELECT
-        u.id,
-        u.name AS client_name,
-        u.company,
-        c.fixed_price,
-        c.fixed_payment_status
+      SELECT u.id, u.name AS client_name, u.company,
+             c.fixed_price, c.fixed_payment_status
       FROM clients c
       JOIN users u ON u.id = c.user_id
       WHERE c.rate_type = 'fixed'
         AND c.fixed_price IS NOT NULL
         AND c.fixed_price > 0
-    `);
+        AND c.freelancer_id = $1
+    `, [freelancerId]);
 
-    // Sum fixed paid and unpaid
-    let fixedPaid   = 0;
-    let fixedUnpaid = 0;
+    let fixedPaid = 0, fixedUnpaid = 0;
     fixedClients.rows.forEach(fc => {
       if (fc.fixed_payment_status === 'paid') {
         fixedPaid += parseFloat(fc.fixed_price);
@@ -109,38 +88,35 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       }
     });
 
-    // ── Totals ────────────────────────────────────────────────
     const totalEarned   = parseFloat(hourlyEarned.rows[0].total) + fixedPaid;
     const totalUnpaid   = parseFloat(hourlyUnpaid.rows[0].total) + fixedUnpaid;
     const totalExpected = (totalEarned + totalUnpaid).toFixed(2);
 
-    // Total clients this month = hourly active + all fixed clients
+    // Total clients for THIS freelancer only
+    const allClients = await pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM clients WHERE freelancer_id=$1`,
+      [freelancerId]
+    );
+
     const clientsThisMonth = monthClients.rows[0].cnt + fixedClients.rows.length;
 
-    // All active clients count
-    const allClients = await pool.query(`SELECT COUNT(*)::int AS cnt FROM users WHERE role='client'`);
-
-    // ── Per-client breakdown ───────────────────────────────────
-    // Hourly clients breakdown
+    // Per-client breakdown — hourly
     const hourlyBreakdown = await pool.query(`
-      SELECT
-        u.name  AS client_name,
-        u.company,
-        'hourly' AS rate_type,
-        COALESCE(SUM(t.hours),0)::float AS hours,
-        COALESCE(SUM(CASE WHEN t.payment_status='paid' THEN t.amount ELSE 0 END),0)::float AS paid,
-        COALESCE(SUM(CASE WHEN t.payment_status='unpaid' OR t.payment_status IS NULL THEN t.amount ELSE 0 END),0)::float AS unpaid,
-        COALESCE(SUM(t.amount),0)::float AS total
+      SELECT u.name AS client_name, u.company, 'hourly' AS rate_type,
+             COALESCE(SUM(t.hours),0)::float AS hours,
+             COALESCE(SUM(CASE WHEN t.payment_status='paid' THEN t.amount ELSE 0 END),0)::float AS paid,
+             COALESCE(SUM(CASE WHEN t.payment_status='unpaid' OR t.payment_status IS NULL THEN t.amount ELSE 0 END),0)::float AS unpaid,
+             COALESCE(SUM(t.amount),0)::float AS total
       FROM time_logs t
       JOIN users u ON u.id = t.client_id
+      JOIN clients c ON c.user_id = t.client_id AND c.freelancer_id = $1
       WHERE t.freelancer_id=$1
-        AND t.date >= $2::date
-        AND t.date <= $3::date
+        AND t.date >= $2::date AND t.date <= $3::date
       GROUP BY u.name, u.company
       ORDER BY total DESC
-    `, [req.user.id, firstOfMonth, lastOfMonth]);
+    `, [freelancerId, firstOfMonth, lastOfMonth]);
 
-    // Fixed clients breakdown — always show them regardless of logs
+    // Fixed clients breakdown
     const fixedBreakdown = fixedClients.rows.map(fc => ({
       client_name: fc.client_name,
       company:     fc.company,
@@ -151,7 +127,6 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       total:       parseFloat(fc.fixed_price)
     }));
 
-    // Combine and sort by total
     const clientBreakdown = [...hourlyBreakdown.rows, ...fixedBreakdown]
       .sort((a, b) => b.total - a.total);
 
