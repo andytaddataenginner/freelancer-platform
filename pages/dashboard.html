@@ -55,7 +55,6 @@
     .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none}
 
     /* ── MAIN ── */
-    /* Prevent subpixel-rounding horizontal shifts from layout loops */
     .main{margin-left:240px;min-height:100vh;overflow-x:hidden;}
     .topbar{background:#fff;border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
     .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em}
@@ -326,7 +325,6 @@
 const API='https://freelancer-platform-9jut.onrender.com/api';
 const SH=8;
 
-/* UPDATED AUTH OBJECT: Keys matched directly to login.html properties */
 const auth={
   token:()=>localStorage.getItem('token'),
   user:()=>{try{return JSON.parse(localStorage.getItem('user'))}catch{return null}},
@@ -347,7 +345,6 @@ async function api(path,opts={}){
   return r.json();
 }
 
-// Protected execution wrap
 document.addEventListener('DOMContentLoaded', () => {
   if(!auth.ok()){go('login.html');return;}
   const u=auth.user();
@@ -358,6 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
   document.getElementById('ld').value=new Date().toISOString().slice(0,10);
   
+  // Sync state tracking from active timer references
+  syncTimerState();
   load();
 });
 
@@ -417,6 +416,14 @@ async function load(){
     document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
     document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
 
+    // Restore dropdown options safely before checking local timer storage fields
+    if(localStorage.getItem('t_client_id')) {
+      document.getElementById('tc').value = localStorage.getItem('t_client_id');
+    }
+    if(localStorage.getItem('t_task_desc')) {
+      document.getElementById('tt').value = localStorage.getItem('t_task_desc');
+    }
+
     const rt=document.getElementById('rtable');
     if(!lg.length){
       rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
@@ -465,24 +472,123 @@ async function saveEdit(){
   }catch(e){s.className='fs er';s.textContent=e.message;}
 }
 
+/* ── RECOVERABLE TIME ENGINE SYSTEM ── */
 let tiv=null,ts=0,tr=false;
-function tdsp(){const h=Math.floor(ts/3600).toString().padStart(2,'0'),m=Math.floor((ts%3600)/60).toString().padStart(2,'0'),s=(ts%60).toString().padStart(2,'0');document.getElementById('tdisp').textContent=`${h}:${m}:${s}`;}
-function startTimer(){if(tr)return;tr=true;tiv=setInterval(()=>{ts++;tdsp();},1000);document.getElementById('tstart').style.display='none';document.getElementById('tstop').style.display='inline-flex';}
+
+function tdsp(){
+  const h=Math.floor(ts/3600).toString().padStart(2,'0'),
+        m=Math.floor((ts%3600)/60).toString().padStart(2,'0'),
+        s=(ts%60).toString().padStart(2,'0');
+  document.getElementById('tdisp').textContent=`${h}:${m}:${s}`;
+}
+
+function syncTimerState() {
+  const runningSince = localStorage.getItem('t_start_time');
+  const accumulated = parseInt(localStorage.getItem('t_accumulated') || '0', 10);
+  
+  if (runningSince) {
+    const elapsedSeconds = Math.floor((Date.now() - parseInt(runningSince, 10)) / 1000);
+    ts = accumulated + elapsedSeconds;
+    tr = true;
+    tdsp();
+    tiv = setInterval(() => { ts++; tdsp(); }, 1000);
+    document.getElementById('tstart').style.display = 'none';
+    document.getElementById('tstop').style.display = 'inline-flex';
+  } else if (accumulated > 0) {
+    ts = accumulated;
+    tr = false;
+    tdsp();
+    document.getElementById('tstart').style.display = 'inline-flex';
+    document.getElementById('tstop').style.display = 'none';
+  }
+  
+  // Track field shifts dynamically
+  document.getElementById('tc').addEventListener('change', (e) => localStorage.setItem('t_client_id', e.target.value));
+  document.getElementById('tt').addEventListener('input', (e) => localStorage.setItem('t_task_desc', e.target.value));
+}
+
+function startTimer(){
+  if(tr)return;
+  tr=true;
+  localStorage.setItem('t_start_time', Date.now().toString());
+  localStorage.setItem('t_client_id', document.getElementById('tc').value);
+  localStorage.setItem('t_task_desc', document.getElementById('tt').value);
+  
+  tiv=setInterval(()=>{ts++;tdsp();},1000);
+  document.getElementById('tstart').style.display='none';
+  document.getElementById('tstop').style.display='inline-flex';
+}
+
 async function stopTimer(){
-  if(!tr)return;clearInterval(tiv);tr=false;
-  const hours=Math.round(ts/3600*100)/100;
+  if(!tr)return;
+  clearInterval(tiv);
+  tr=false;
+  
+  const startTime = parseInt(localStorage.getItem('t_start_time') || '0', 10);
+  const accumulated = parseInt(localStorage.getItem('t_accumulated') || '0', 10);
+  const totalSessionTime = accumulated + Math.floor((Date.now() - startTime) / 1000);
+  const hours=Math.round(totalSessionTime/3600*100)/100;
+  
   const cid=document.getElementById('tc').value;
   const task=document.getElementById('tt').value;
-  if(!cid){alert('Select a client first.');startTimer();return;}
-  if(hours<0.01){alert('Too short to log.');resetTimer();return;}
+  
+  if(!cid){
+    alert('Select a client first.');
+    // Cache total runtime progress locally before continuing session loop safely
+    localStorage.setItem('t_accumulated', totalSessionTime.toString());
+    localStorage.removeItem('t_start_time');
+    ts = totalSessionTime;
+    document.getElementById('tstart').style.display='inline-flex';
+    document.getElementById('tstop').style.display='none';
+    return;
+  }
+  if(hours<0.01){
+    alert('Too short to log.');
+    resetTimer();
+    return;
+  }
+  
   try{
     await api('/timelogs',{method:'POST',body:JSON.stringify({client_id:cid,hours,task_description:task||'Timed session',date:new Date().toISOString().slice(0,10),source:'timer'})});
-    alert('✓ Logged '+fmtH(hours));resetTimer();load();
-  }catch(e){alert('Failed: '+e.message);}
+    alert('✓ Logged '+fmtH(hours));
+    resetTimer();
+    load();
+  }catch(e){
+    alert('Failed: '+e.message);
+    localStorage.setItem('t_accumulated', totalSessionTime.toString());
+    localStorage.removeItem('t_start_time');
+    ts = totalSessionTime;
+    document.getElementById('tstart').style.display='inline-flex';
+    document.getElementById('tstop').style.display='none';
+  }
+}
+
+function resetTimer(){
+  clearInterval(tiv);
+  tr=false;
+  ts=0;
+  tdsp();
+  ['t_start_time', 't_accumulated', 't_client_id', 't_task_desc'].forEach(k => localStorage.removeItem(k));
+  document.getElementById('tt').value = '';
+  document.getElementById('tc').value = '';
   document.getElementById('tstart').style.display='inline-flex';
   document.getElementById('tstop').style.display='none';
 }
-function resetTimer(){clearInterval(tiv);tr=false;ts=0;tdsp();document.getElementById('tstart').style.display='inline-flex';document.getElementById('tstop').style.display='none';}
+
+/* Visibility API Sync handling across tab layers */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && tr) {
+    clearInterval(tiv);
+    const startTime = parseInt(localStorage.getItem('t_start_time') || '0', 10);
+    const accumulated = parseInt(localStorage.getItem('t_accumulated') || '0', 10);
+    if (startTime > 0) {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      ts = accumulated + elapsed;
+      tdsp();
+      tiv = setInterval(() => { ts++; tdsp(); }, 1000);
+    }
+  }
+});
 
 async function submitLog(e){
   e.preventDefault();
