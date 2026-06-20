@@ -235,6 +235,8 @@
           <div class="timer-disp" id="tdisp">00:00:00</div>
           <div class="timer-btns">
             <button class="btn btn-g" id="tstart" onclick="startTimer()">▶ Start</button>
+            <button class="btn btn-o" id="tpause" onclick="pauseTimer()" style="display:none">⏸ Pause</button>
+            <button class="btn btn-g" id="tresume" onclick="startTimer()" style="display:none">▶ Resume</button>
             <button class="btn btn-r" id="tstop" onclick="stopTimer()" style="display:none">■ Stop & Save</button>
             <button class="btn btn-o btn-sm" onclick="resetTimer()">↺ Reset</button>
           </div>
@@ -355,8 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
   document.getElementById('ld').value=new Date().toISOString().slice(0,10);
   
-  // Sync state tracking from active timer references
-  syncTimerState();
   load();
 });
 
@@ -416,14 +416,6 @@ async function load(){
     document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
     document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
 
-    // Restore dropdown options safely before checking local timer storage fields
-    if(localStorage.getItem('t_client_id')) {
-      document.getElementById('tc').value = localStorage.getItem('t_client_id');
-    }
-    if(localStorage.getItem('t_task_desc')) {
-      document.getElementById('tt').value = localStorage.getItem('t_task_desc');
-    }
-
     const rt=document.getElementById('rtable');
     if(!lg.length){
       rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
@@ -472,7 +464,7 @@ async function saveEdit(){
   }catch(e){s.className='fs er';s.textContent=e.message;}
 }
 
-/* ── RECOVERABLE TIME ENGINE SYSTEM ── */
+/* ── COMPLETE ACTIVE LIVE TRACKER FUNCTIONALITY ── */
 let tiv=null,ts=0,tr=false;
 
 function tdsp(){
@@ -482,69 +474,49 @@ function tdsp(){
   document.getElementById('tdisp').textContent=`${h}:${m}:${s}`;
 }
 
-function syncTimerState() {
-  const runningSince = localStorage.getItem('t_start_time');
-  const accumulated = parseInt(localStorage.getItem('t_accumulated') || '0', 10);
-  
-  if (runningSince) {
-    const elapsedSeconds = Math.floor((Date.now() - parseInt(runningSince, 10)) / 1000);
-    ts = accumulated + elapsedSeconds;
-    tr = true;
-    tdsp();
-    tiv = setInterval(() => { ts++; tdsp(); }, 1000);
-    document.getElementById('tstart').style.display = 'none';
-    document.getElementById('tstop').style.display = 'inline-flex';
-  } else if (accumulated > 0) {
-    ts = accumulated;
-    tr = false;
-    tdsp();
-    document.getElementById('tstart').style.display = 'inline-flex';
-    document.getElementById('tstop').style.display = 'none';
-  }
-  
-  // Track field shifts dynamically
-  document.getElementById('tc').addEventListener('change', (e) => localStorage.setItem('t_client_id', e.target.value));
-  document.getElementById('tt').addEventListener('input', (e) => localStorage.setItem('t_task_desc', e.target.value));
-}
-
 function startTimer(){
-  if(tr)return;
+  if(tr) return;
   tr=true;
-  localStorage.setItem('t_start_time', Date.now().toString());
-  localStorage.setItem('t_client_id', document.getElementById('tc').value);
-  localStorage.setItem('t_task_desc', document.getElementById('tt').value);
-  
   tiv=setInterval(()=>{ts++;tdsp();},1000);
+  
   document.getElementById('tstart').style.display='none';
+  document.getElementById('tresume').style.display='none';
+  document.getElementById('tpause').style.display='inline-flex';
   document.getElementById('tstop').style.display='inline-flex';
 }
 
-async function stopTimer(){
-  if(!tr)return;
+function pauseTimer(){
+  if(!tr) return;
   clearInterval(tiv);
   tr=false;
   
-  const startTime = parseInt(localStorage.getItem('t_start_time') || '0', 10);
-  const accumulated = parseInt(localStorage.getItem('t_accumulated') || '0', 10);
-  const totalSessionTime = accumulated + Math.floor((Date.now() - startTime) / 1000);
-  const hours=Math.round(totalSessionTime/3600*100)/100;
+  document.getElementById('tpause').style.display='none';
+  document.getElementById('tresume').style.display='inline-flex';
+}
+
+async function stopTimer(){
+  clearInterval(tiv);
+  const tempTr = tr; // Store running state
+  tr=false;
   
+  const hours=Math.round(ts/3600*100)/100;
   const cid=document.getElementById('tc').value;
   const task=document.getElementById('tt').value;
   
   if(!cid){
     alert('Select a client first.');
-    // Cache total runtime progress locally before continuing session loop safely
-    localStorage.setItem('t_accumulated', totalSessionTime.toString());
-    localStorage.removeItem('t_start_time');
-    ts = totalSessionTime;
-    document.getElementById('tstart').style.display='inline-flex';
-    document.getElementById('tstop').style.display='none';
+    // Resume previous UI state if validation fails
+    if(tempTr) { startTimer(); } else { pauseTimer(); }
     return;
   }
   if(hours<0.01){
     alert('Too short to log.');
     resetTimer();
+    return;
+  }
+  
+  if(!confirm(`Are you sure you want to stop and save this session?\nTotal recorded time: ${fmtH(hours)} (${hours} hrs).`)){
+    if(tempTr) { startTimer(); } else { pauseTimer(); }
     return;
   }
   
@@ -555,11 +527,7 @@ async function stopTimer(){
     load();
   }catch(e){
     alert('Failed: '+e.message);
-    localStorage.setItem('t_accumulated', totalSessionTime.toString());
-    localStorage.removeItem('t_start_time');
-    ts = totalSessionTime;
-    document.getElementById('tstart').style.display='inline-flex';
-    document.getElementById('tstop').style.display='none';
+    if(tempTr) { startTimer(); } else { pauseTimer(); }
   }
 }
 
@@ -568,27 +536,13 @@ function resetTimer(){
   tr=false;
   ts=0;
   tdsp();
-  ['t_start_time', 't_accumulated', 't_client_id', 't_task_desc'].forEach(k => localStorage.removeItem(k));
-  document.getElementById('tt').value = '';
-  document.getElementById('tc').value = '';
+  document.getElementById('tt').value='';
+  document.getElementById('tc').value='';
   document.getElementById('tstart').style.display='inline-flex';
+  document.getElementById('tpause').style.display='none';
+  document.getElementById('tresume').style.display='none';
   document.getElementById('tstop').style.display='none';
 }
-
-/* Visibility API Sync handling across tab layers */
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && tr) {
-    clearInterval(tiv);
-    const startTime = parseInt(localStorage.getItem('t_start_time') || '0', 10);
-    const accumulated = parseInt(localStorage.getItem('t_accumulated') || '0', 10);
-    if (startTime > 0) {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      ts = accumulated + elapsed;
-      tdsp();
-      tiv = setInterval(() => { ts++; tdsp(); }, 1000);
-    }
-  }
-});
 
 async function submitLog(e){
   e.preventDefault();
