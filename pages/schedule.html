@@ -26,7 +26,7 @@
     }
     body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
-    /* ── MOBILE TOP BAR (Aligned with clients.html framework) ── */
+    /* ── MOBILE TOP BAR ── */
     .mob-bar {
       display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px;
       background: var(--navy); z-index: 200;
@@ -118,7 +118,10 @@
       .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
       .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
       .main { margin-left: 0; padding-top: 52px; }
-      .topbar { top: 52px; }
+      
+      /* FIX: Changes sticky position to static on mobile so it cleanly scrolls out of view */
+      .topbar { position: static !important; padding: 1.2rem 1rem 0.8rem !important; } 
+      
       .content { padding: 1rem; }
       .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; display: grid !important; }
     }
@@ -238,7 +241,7 @@ async function apiFetch(path, options = {}) {
 })();
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
-// Mobile Navigation Control Rules (Synced directly with clients.html engine)
+// Mobile Control Actions
 function sbOpen(){
   document.getElementById('sidebar').classList.add('open');
   document.getElementById('overlay').classList.add('on');
