@@ -68,8 +68,14 @@
     
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    /* ── RESPONSIVE MAIN CONTAINER WITH STANDARDIZED LEFT MARGIN ── */
-    .main-content { margin-left: 240px; flex: 1; padding: 1.5rem; position: relative; }
+    /* ── RESPONSIVE MAIN CONTAINER WITH STANDARDIZED SPACING ── */
+    .main-content { margin-left: 240px; flex: 1; padding: 1.5rem !important; position: relative; }
+    
+    /* Explicit Typography & Card Layout Spacing overrides */
+    .page-title { font-size: 1.4rem !important; margin-bottom: 0.1rem !important; }
+    .page-sub { font-size: 0.8rem !important; margin-bottom: 1.2rem !important; display: block; }
+    .card { padding: 1.2rem !important; margin-bottom: 1.2rem !important; background: white; border-radius: 12px; }
+    .card-header { margin-bottom: 1rem !important; }
 
     /* ── ACTIVE FILTER STYLING ── */
     .btn-filter-toggle.active {
@@ -85,12 +91,12 @@
       .sidebar-overlay.visible { display: block !important; }
       .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 76px !important; }
       .mobile-header { display: flex !important; }
-      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; display: grid !important; }
+      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; display: grid !important; margin-bottom: 1.2rem !important; }
     }
     @media (max-width: 480px) {
       .stats-row { grid-template-columns: 1fr !important; }
       .card-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.8rem !important; }
-      .card-header div { width: 100%; }
+      .card-header div { width: 100%; display: flex; gap: 0.4rem; }
       .card-header button { flex: 1; text-align: center; }
     }
   </style>
@@ -135,7 +141,7 @@
 
   <main class="main-content">
     <h2 class="page-title">Schedule</h2>
-    <p class="page-sub" style="margin-bottom: 1.2rem;">View and manage client booking requests.</p>
+    <p class="page-sub">View and manage client booking requests.</p>
 
     <div class="stats-row" style="margin-bottom:1.2rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
       <div class="stat-card">
@@ -153,7 +159,7 @@
     </div>
 
     <div class="card">
-      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom: 1rem;">
+      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
         <h3>All Bookings</h3>
         <div style="display:flex;gap:0.5rem">
           <button class="btn-sm btn-outline btn-filter-toggle active" id="filter-all" onclick="filterBookings('all')">All</button>
