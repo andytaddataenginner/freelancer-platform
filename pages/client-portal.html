@@ -86,6 +86,7 @@
 </head>
 <body>
 
+<!-- Mobile Navbar Header -->
 <div class="mobile-header" id="mobile-header">
   <div class="mobile-logo">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -94,9 +95,11 @@
   <button class="hamburger-btn" onclick="openSidebar()">☰</button>
 </div>
 
+<!-- Drawer Overlay backdrop -->
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <div class="dashboard">
+  <!-- Interactive Sidebar Navigation -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
@@ -121,9 +124,22 @@
   </aside>
 
   <main class="main-content">
-    <h2 class="page-title">My Project Portal</h2>
-    <p class="page-sub">Track your project, payment status, and book sessions.</p>
+    
+    <!-- Fancy Premium Client Logs Style Hero Header Banner -->
+    <div style="background: linear-gradient(135deg, #0d2353, #1e3c72); border-radius: 16px; padding: 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(13,35,83,0.15); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: #f5c842; font-weight: 700; display: block; margin-bottom: 0.4rem;">Client Management Workspace</span>
+        <h2 style="margin:0; font-family:'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; line-height: 1.2;">My Project Portal</h2>
+        <p style="margin: 0.4rem 0 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem;">Track real-time deliverables, active balance updates, and book direct working sessions.</p>
+      </div>
+      <div id="engagement-badge-container">
+        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Active Engagement
+        </span>
+      </div>
+    </div>
 
+    <!-- Fixed price information block -->
     <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
       <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
         <div>
@@ -135,25 +151,27 @@
       </div>
     </div>
 
+    <!-- Responsive metrics row layout -->
     <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
       <div class="stat-card" style="border-left:4px solid #22c55e">
-        <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$—</span>
+        <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
         <span class="stat-label">Total paid</span>
       </div>
       <div class="stat-card" style="border-left:4px solid #f59e0b">
-        <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$—</span>
+        <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
         <span class="stat-label">Outstanding balance</span>
       </div>
       <div class="stat-card" style="border-left:4px solid transparent">
-        <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">—</span>
+        <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">0.0h</span>
         <span class="stat-label">Total hours logged</span>
       </div>
       <div class="stat-card" style="border-left:4px solid transparent">
-        <span class="stat-num" id="s-bookings" style="display:block; font-size:1.5rem; font-weight:700;">—</span>
+        <span class="stat-num" id="s-bookings" style="display:block; font-size:1.5rem; font-weight:700;">0</span>
         <span class="stat-label">Upcoming sessions</span>
       </div>
     </div>
 
+    <!-- Hourly Log Interface -->
     <div id="hourly-section">
       <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
         <button id="tab-all"    onclick="switchTab('all')"    style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
@@ -177,6 +195,7 @@
       </div>
     </div>
 
+    <!-- Fixed engagement section information alternative -->
     <div id="fixed-section" style="display:none">
       <div class="card">
         <div class="card-header"><h3>📋 Project Details</h3></div>
@@ -188,6 +207,7 @@
       </div>
     </div>
 
+    <!-- Session Booking module wrapper -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>📅 Book a Session</h3></div>
       <div style="padding:1.5rem">
@@ -241,6 +261,7 @@
       </div>
     </div>
 
+    <!-- Active bookings feed container -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>Upcoming Sessions</h3></div>
       <div id="upcoming-sessions" style="padding:1rem"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
@@ -280,6 +301,7 @@ function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 let allLogs = [];
 let currentTab = 'all';
+let currentHourlyRate = 0; 
 
 async function loadPortal() {
   try {
@@ -289,17 +311,22 @@ async function loadPortal() {
       apiFetch('/client/bookings')
     ]);
     const isFixed = stats.rateType === 'fixed';
+    currentHourlyRate = parseFloat(stats.hourlyRate || 0);
 
-    document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
-    document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
-    document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
-    
+    // Update fancy header type badge display context dynamically
+    const badgeContainer = document.getElementById('engagement-badge-container');
+    if (isFixed) {
+      badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
+    } else {
+      badgeContainer.innerHTML = `<span style="background:rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #4ade80; display: inline-flex; align-items: center; gap: 0.5rem;"><span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate}/hr)</span>`;
+    }
+
+    // Process future system events metrics counters
     const todayStr = new Date().toISOString().slice(0,10);
     const futureBookings = bookings.filter(b => {
       const bDate = b.date ? b.date.slice(0,10) : '';
       return bDate >= todayStr && b.status !== 'cancelled';
     });
-    
     document.getElementById('s-bookings').textContent = futureBookings.length;
 
     if (isFixed) {
@@ -308,32 +335,62 @@ async function loadPortal() {
       document.getElementById('hourly-section').style.display = 'none';
       document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
 
+      // Simple structural fallback for KPIs under fixed configurations
+      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
+      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
+      document.getElementById('s-hours').textContent  = '—';
+
       const isPaid = stats.fixedStatus === 'paid';
       document.getElementById('fixed-status-display').innerHTML = isPaid
         ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div></div>`
-        : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div><div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-top:0.3rem">Please complete your payment</div></div>`;
+        : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div></div>`;
     } else {
       document.getElementById('fixed-notice').style.display = 'none';
       document.getElementById('fixed-section').style.display = 'none';
       document.getElementById('hourly-section').style.display = 'block';
+      
+      // Save global records array reference context
       allLogs = logs;
+      
+      // Calculate dynamic accurate KPI adjustments based on log level item evaluations
+      let totalPaidAdjusted = 0;
+      let totalUnpaidAdjusted = 0;
+      let totalHoursAdjusted = 0;
+
+      allLogs.forEach(l => {
+        const h = parseFloat(l.hours || 0);
+        let amt = parseFloat(l.amount || 0);
+        if (!amt && h && currentHourlyRate) {
+          amt = h * currentHourlyRate;
+        }
+        totalHoursAdjusted += h;
+        if (l.payment_status === 'paid') {
+          totalPaidAdjusted += amt;
+        } else {
+          totalUnpaidAdjusted += amt;
+        }
+      });
+
+      // Update KPIs metrics visually with calculated values
+      document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
+      document.getElementById('s-unpaid').textContent = '$' + totalUnpaidAdjusted.toFixed(2);
+      document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
+
       renderLogs(allLogs);
     }
 
+    // Build incoming reservation arrays outputs
     const upcoming = document.getElementById('upcoming-sessions');
     if (!futureBookings.length) {
       upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions.</p>';
     } else {
       upcoming.innerHTML = futureBookings.map(b => {
         let formattedDate = b.date;
-        try {
-          formattedDate = new Date(b.date).toLocaleDateString();
-        } catch(e){}
-        
+        try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
         return `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--paper2)">
           <div>
-            <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type_label || b.type}</div>
+            <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
             <div style="color:var(--ink2);font-size:0.82rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
             ${b.message?`<div style="color:var(--ink3);font-size:0.8rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
           </div>
@@ -352,10 +409,8 @@ function switchTab(tab) {
     btn.style.color      = t===tab ? 'white'      : 'var(--ink2)';
     btn.style.border     = t===tab ? 'none'        : '1.5px solid var(--paper3)';
   });
-  const titles = { all:'All Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' };
-  document.getElementById('logs-title').textContent = titles[tab];
-  const filtered = tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab);
-  renderLogs(filtered);
+  document.getElementById('logs-title').textContent = { all:'All Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' }[tab];
+  renderLogs(tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab));
 }
 
 function renderLogs(logs) {
@@ -371,17 +426,24 @@ function renderLogs(logs) {
   let sumHours=0, sumAmount=0;
   tbody.innerHTML = logs.map(l => {
     const isPaid  = l.payment_status === 'paid';
-    const amount  = parseFloat(l.amount||0);
-    sumHours  += parseFloat(l.hours||0);
+    const hours = parseFloat(l.hours || 0);
+    
+    // Explicit dynamic amount fallback integration logic matching client_logs layout
+    let amount = parseFloat(l.amount || 0);
+    if (!amount && hours && currentHourlyRate) {
+      amount = hours * currentHourlyRate;
+    }
+
+    sumHours  += hours;
     sumAmount += amount;
     const badge = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">⚠ Unpaid</span>';
     return `
       <tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
         <td>${new Date(l.date).toLocaleDateString()}</td>
-        <td><strong>${l.hours}h</strong></td>
+        <td><strong>${hours}h</strong></td>
         <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
         <td>${badge}</td>
-        <td>${l.task_description}</td>
+        <td>${l.task_description || ''}</td>
       </tr>`;
   }).join('');
   footer.innerHTML = `<strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong>`;
