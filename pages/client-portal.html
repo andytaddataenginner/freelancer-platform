@@ -62,7 +62,7 @@
       width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-     
+      
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
     /* ── RESPONSIVE MAIN CONTAINER ── */
@@ -71,7 +71,7 @@
 
     /* ── MOBILE MEDIA QUERIES ── */
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
+      .sidebar { transform: translateX(-100%) !important; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
       .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 76px !important; }
@@ -86,7 +86,6 @@
 </head>
 <body>
 
-<!-- Mobile Navbar Header -->
 <div class="mobile-header" id="mobile-header">
   <div class="mobile-logo">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -95,11 +94,9 @@
   <button class="hamburger-btn" onclick="openSidebar()">☰</button>
 </div>
 
-<!-- Drawer Overlay backdrop -->
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <div class="dashboard">
-  <!-- Interactive Sidebar Navigation -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
@@ -127,7 +124,6 @@
     <h2 class="page-title">My Project Portal</h2>
     <p class="page-sub">Track your project, payment status, and book sessions.</p>
 
-    <!-- Fixed price information block -->
     <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
       <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
         <div>
@@ -139,7 +135,6 @@
       </div>
     </div>
 
-    <!-- Responsive metrics row layout -->
     <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
       <div class="stat-card" style="border-left:4px solid #22c55e">
         <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$—</span>
@@ -159,7 +154,6 @@
       </div>
     </div>
 
-    <!-- Hourly Log Interface -->
     <div id="hourly-section">
       <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
         <button id="tab-all"    onclick="switchTab('all')"    style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
@@ -183,7 +177,6 @@
       </div>
     </div>
 
-    <!-- Fixed engagement section information alternative -->
     <div id="fixed-section" style="display:none">
       <div class="card">
         <div class="card-header"><h3>📋 Project Details</h3></div>
@@ -195,7 +188,6 @@
       </div>
     </div>
 
-    <!-- Session Booking module wrapper -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>📅 Book a Session</h3></div>
       <div style="padding:1.5rem">
@@ -249,7 +241,6 @@
       </div>
     </div>
 
-    <!-- Active bookings feed container -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>Upcoming Sessions</h3></div>
       <div id="upcoming-sessions" style="padding:1rem"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
@@ -303,7 +294,6 @@ async function loadPortal() {
     document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
     document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
     
-    // Normalized comparison using string-based slicing (YYYY-MM-DD) so items later today don't vanish
     const todayStr = new Date().toISOString().slice(0,10);
     const futureBookings = bookings.filter(b => {
       const bDate = b.date ? b.date.slice(0,10) : '';
@@ -417,20 +407,19 @@ async function bookSession(e) {
   }
 }
 
-loadPortal();
-</script>
-
-<script>
+// Side-drawer responsiveness operations logic
 function openSidebar() {
   document.getElementById('sidebar').classList.add('is-open');
   document.getElementById('sidebar-overlay').classList.add('visible');
   document.body.style.overflow = 'hidden';
 }
+
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('is-open');
   document.getElementById('sidebar-overlay').classList.remove('visible');
   document.body.style.overflow = '';
 }
+
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
     a.addEventListener('click', function() {
@@ -438,6 +427,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+
+loadPortal();
 </script>
 </body>
 </html>
