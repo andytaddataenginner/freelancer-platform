@@ -86,7 +86,6 @@
 </head>
 <body>
 
-<!-- Mobile Navbar Header -->
 <div class="mobile-header" id="mobile-header">
   <div class="mobile-logo">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -95,11 +94,9 @@
   <button class="hamburger-btn" onclick="openSidebar()">☰</button>
 </div>
 
-<!-- Drawer Overlay backdrop -->
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <div class="dashboard">
-  <!-- Interactive Sidebar Navigation -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
@@ -125,7 +122,6 @@
 
   <main class="main-content">
     
-    <!-- Fancy Premium Client Logs Style Hero Header Banner -->
     <div style="background: linear-gradient(135deg, #0d2353, #1e3c72); border-radius: 16px; padding: 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(13,35,83,0.15); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
       <div>
         <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: #f5c842; font-weight: 700; display: block; margin-bottom: 0.4rem;">Client Management Workspace</span>
@@ -134,12 +130,11 @@
       </div>
       <div id="engagement-badge-container">
         <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
-          <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Active Engagement
+          <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Syncing Profile…
         </span>
       </div>
     </div>
 
-    <!-- Fixed price information block -->
     <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
       <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
         <div>
@@ -151,7 +146,6 @@
       </div>
     </div>
 
-    <!-- Responsive metrics row layout -->
     <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
       <div class="stat-card" style="border-left:4px solid #22c55e">
         <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
@@ -171,7 +165,6 @@
       </div>
     </div>
 
-    <!-- Hourly Log Interface -->
     <div id="hourly-section">
       <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
         <button id="tab-all"    onclick="switchTab('all')"    style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
@@ -193,9 +186,17 @@
         </div>
         <div id="logs-footer" style="padding:1rem;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--paper2)"></div>
       </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header" style="background: var(--paper2);">
+          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Year & Month Payment Breakdown</h3>
+        </div>
+        <div id="periodic-breakdown-container" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
+          <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting entry analysis...</p>
+        </div>
+      </div>
     </div>
 
-    <!-- Fixed engagement section information alternative -->
     <div id="fixed-section" style="display:none">
       <div class="card">
         <div class="card-header"><h3>📋 Project Details</h3></div>
@@ -207,7 +208,6 @@
       </div>
     </div>
 
-    <!-- Session Booking module wrapper -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>📅 Book a Session</h3></div>
       <div style="padding:1.5rem">
@@ -261,7 +261,6 @@
       </div>
     </div>
 
-    <!-- Active bookings feed container -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>Upcoming Sessions</h3></div>
       <div id="upcoming-sessions" style="padding:1rem"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
@@ -313,15 +312,14 @@ async function loadPortal() {
     const isFixed = stats.rateType === 'fixed';
     currentHourlyRate = parseFloat(stats.hourlyRate || 0);
 
-    // Update fancy header type badge display context dynamically
+    // Update fancy header type badge display context dynamically with active loaded rate
     const badgeContainer = document.getElementById('engagement-badge-container');
     if (isFixed) {
       badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
     } else {
-      badgeContainer.innerHTML = `<span style="background:rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #4ade80; display: inline-flex; align-items: center; gap: 0.5rem;"><span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate}/hr)</span>`;
+      badgeContainer.innerHTML = `<span style="background:rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #4ade80; display: inline-flex; align-items: center; gap: 0.5rem;"><span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate.toFixed(2)}/hr)</span>`;
     }
 
-    // Process future system events metrics counters
     const todayStr = new Date().toISOString().slice(0,10);
     const futureBookings = bookings.filter(b => {
       const bDate = b.date ? b.date.slice(0,10) : '';
@@ -335,7 +333,6 @@ async function loadPortal() {
       document.getElementById('hourly-section').style.display = 'none';
       document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
 
-      // Simple structural fallback for KPIs under fixed configurations
       document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
       document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
       document.getElementById('s-hours').textContent  = '—';
@@ -349,37 +346,12 @@ async function loadPortal() {
       document.getElementById('fixed-section').style.display = 'none';
       document.getElementById('hourly-section').style.display = 'block';
       
-      // Save global records array reference context
       allLogs = logs;
       
-      // Calculate dynamic accurate KPI adjustments based on log level item evaluations
-      let totalPaidAdjusted = 0;
-      let totalUnpaidAdjusted = 0;
-      let totalHoursAdjusted = 0;
-
-      allLogs.forEach(l => {
-        const h = parseFloat(l.hours || 0);
-        let amt = parseFloat(l.amount || 0);
-        if (!amt && h && currentHourlyRate) {
-          amt = h * currentHourlyRate;
-        }
-        totalHoursAdjusted += h;
-        if (l.payment_status === 'paid') {
-          totalPaidAdjusted += amt;
-        } else {
-          totalUnpaidAdjusted += amt;
-        }
-      });
-
-      // Update KPIs metrics visually with calculated values
-      document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
-      document.getElementById('s-unpaid').textContent = '$' + totalUnpaidAdjusted.toFixed(2);
-      document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
-
-      renderLogs(allLogs);
+      // Calculate dynamic accurate KPI adjustments based on active log evaluation structures
+      calculateAndRenderMetrics(allLogs);
     }
 
-    // Build incoming reservation arrays outputs
     const upcoming = document.getElementById('upcoming-sessions');
     if (!futureBookings.length) {
       upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions.</p>';
@@ -401,6 +373,93 @@ async function loadPortal() {
   } catch(e) { console.error(e); }
 }
 
+// Separate standalone calculation engine that updates metrics cards and periodic summaries
+function calculateAndRenderMetrics(filteredLogs) {
+  let totalPaidAdjusted = 0;
+  let totalUnpaidAdjusted = 0;
+  let totalHoursAdjusted = 0;
+  
+  const periodicData = {};
+
+  // Process global array to make sure metrics mirror actual breakdown elements correctly
+  filteredLogs.forEach(l => {
+    const h = parseFloat(l.hours || 0);
+    let amt = parseFloat(l.amount || 0);
+    if (!amt && h && currentHourlyRate) {
+      amt = h * currentHourlyRate;
+    }
+    
+    totalHoursAdjusted += h;
+    if (l.payment_status === 'paid') {
+      totalPaidAdjusted += amt;
+    } else {
+      totalUnpaidAdjusted += amt;
+    }
+
+    // Process structured date components for monthly subledger maps
+    try {
+      const dateObj = new Date(l.date);
+      if (!isNaN(dateObj.getTime())) {
+        const year = dateObj.getFullYear();
+        const monthLabel = dateObj.toLocaleString('default', { month: 'long' });
+        const periodKey = `${monthLabel} ${year}`;
+
+        if (!periodicData[periodKey]) {
+          periodicData[periodKey] = { hours: 0, amount: 0, paid: 0, unpaid: 0 };
+        }
+        periodicData[periodKey].hours += h;
+        periodicData[periodKey].amount += amt;
+        if (l.payment_status === 'paid') {
+          periodicData[periodKey].paid += amt;
+        } else {
+          periodicData[periodKey].unpaid += amt;
+        }
+      }
+    } catch(err) { console.error("Period breakdown parsing error", err); }
+  });
+
+  // Assign parameters to upper standard cards UI layout
+  document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
+  document.getElementById('s-unpaid').textContent = '$' + totalUnpaidAdjusted.toFixed(2);
+  document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
+
+  // Render the periodic subledger elements map dynamically
+  const breakdownContainer = document.getElementById('periodic-breakdown-container');
+  const periods = Object.keys(periodicData);
+  
+  if (!periods.length) {
+    breakdownContainer.innerHTML = `<p style="color: var(--ink3); font-size: 0.85rem; padding: 0.5rem;">No historical billing periods detected inside chosen filter.</p>`;
+  } else {
+    breakdownContainer.innerHTML = periods.map(period => {
+      const data = periodicData[period];
+      return `
+        <div style="background: var(--paper1); border: 1px solid var(--paper3); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--ink); border-bottom: 1px solid var(--paper2); padding-bottom: 0.4rem; margin-bottom: 0.6rem; display:flex; justify-content:space-between; align-items:center;">
+            <span>📅 ${period}</span>
+            <span style="font-size:0.8rem; background:rgba(13,35,83,0.06); padding:0.1rem 0.4rem; border-radius:4px; color:var(--ink2)">${data.hours.toFixed(1)}h</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--ink3)">Total Volume:</span>
+              <strong style="color: var(--ink)">$${data.amount.toFixed(2)}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #166534">Settled Paid:</span>
+              <span style="color: #166534; font-weight: 600;">$${data.paid.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #92400e">Outstanding:</span>
+              <span style="color: #92400e; font-weight: 600;">$${data.unpaid.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderLogs(filteredLogs);
+}
+
 function switchTab(tab) {
   currentTab = tab;
   ['all','unpaid','paid'].forEach(t => {
@@ -410,7 +469,9 @@ function switchTab(tab) {
     btn.style.border     = t===tab ? 'none'        : '1.5px solid var(--paper3)';
   });
   document.getElementById('logs-title').textContent = { all:'All Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' }[tab];
-  renderLogs(tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab));
+  
+  const filtered = tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab);
+  calculateAndRenderMetrics(filtered);
 }
 
 function renderLogs(logs) {
@@ -428,7 +489,6 @@ function renderLogs(logs) {
     const isPaid  = l.payment_status === 'paid';
     const hours = parseFloat(l.hours || 0);
     
-    // Explicit dynamic amount fallback integration logic matching client_logs layout
     let amount = parseFloat(l.amount || 0);
     if (!amount && hours && currentHourlyRate) {
       amount = hours * currentHourlyRate;
@@ -469,7 +529,6 @@ async function bookSession(e) {
   }
 }
 
-// Side-drawer responsiveness operations logic
 function openSidebar() {
   document.getElementById('sidebar').classList.add('is-open');
   document.getElementById('sidebar-overlay').classList.add('visible');
