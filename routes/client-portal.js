@@ -11,7 +11,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
     const now = new Date();
     const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
 
-    // Get client billing info + their freelancer
+    // 1. ✅ Select hourly_rate along with the other structural contract values
     const clientInfo = await pool.query(
       'SELECT rate_type, hourly_rate, fixed_price, fixed_payment_status FROM clients WHERE user_id=$1',
       [clientId]
@@ -46,7 +46,18 @@ router.get('/stats', requireClient, async (req, res, next) => {
       totalTasks=tasks.rows[0].cnt; totalPaid=paid.rows[0].total; totalUnpaid=unpaid.rows[0].total;
     }
 
-    res.json({ rateType:c.rate_type||'hourly', fixedPrice:c.fixed_price||0, fixedStatus:c.fixed_payment_status||'unpaid', totalHours, hoursThisMonth, totalTasks, totalPaid, totalUnpaid });
+    // 2. ✅ Pass hourlyRate into the json response body payload so the client portal frontend script reads it
+    res.json({ 
+      rateType: c.rate_type || 'hourly', 
+      hourlyRate: parseFloat(c.hourly_rate || 0), // Added this!
+      fixedPrice: c.fixed_price || 0, 
+      fixedStatus: c.fixed_payment_status || 'unpaid', 
+      totalHours, 
+      hoursThisMonth, 
+      totalTasks, 
+      totalPaid, 
+      totalUnpaid 
+    });
   } catch (e) { next(e); }
 });
 
@@ -82,7 +93,6 @@ router.post('/bookings', requireClient, async (req, res, next) => {
     const { date, time, duration, type, message } = req.body;
     if (!date || !time || !type) return res.status(400).json({ error: 'date, time, type required' });
 
-    // ✅ Find the freelancer who owns THIS client — not just any freelancer
     const clientRow = await pool.query(
       'SELECT freelancer_id FROM clients WHERE user_id=$1',
       [req.user.id]
