@@ -139,7 +139,7 @@
       <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
         <div>
           <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#f5c842;font-weight:700;margin-bottom:0.4rem">Fixed Price Project</div>
-          <div style="font-size:2rem;font-weight:700;font-family:'Playfair Display',serif" id="fixed-price-display">$20.00</div>
+          <div style="font-size:2rem;font-weight:700;font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
           <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:0.2rem">Total project fee</div>
         </div>
         <div id="fixed-status-display" style="text-align:right"></div>
@@ -300,7 +300,7 @@ function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 let allLogs = [];
 let currentTab = 'all';
-let currentHourlyRate = 0; 
+let currentHourlyRate = 20; 
 
 async function loadPortal() {
   try {
