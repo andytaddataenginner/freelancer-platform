@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Time Logs — YourName</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
     /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
     /* ── FLEX LAYOUT STABILITY ── */
-    .dashboard { display: flex; min-height: 100vh; }
+    .dashboard { display: flex; min-height: 100vh; background: #f8fafc; font-family: 'DM Sans', sans-serif; }
 
     /* ── FIXED DESKTOP SIDEBAR ── */
     .sidebar {
@@ -69,9 +69,48 @@
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
     /* ── RESPONSIVE MAIN CONTAINER ── */
-    .main-content { margin-left: 240px; flex: 1; padding: 2rem; position: relative; }
+    .main-content { margin-left: 240px; flex: 1; padding: 2.5rem 2rem; position: relative; }
 
-    /* ── UTILITY FILTER CONTROLS ── */
+    /* ── FANCY HEADER DESIGN ── */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .title-group h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem;
+      color: #0d2353;
+      font-weight: 400;
+      line-height: 1.1;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .title-group p {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-top: 0.4rem;
+    }
+    .period-badge {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #e0e7ff;
+      color: #4338ca;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 0.75rem;
+    }
+
+    /* ── UTILITY CONTROLS BAR ── */
     .controls-wrapper {
       display: flex;
       justify-content: space-between;
@@ -80,35 +119,44 @@
       margin-bottom: 1.5rem;
       flex-wrap: wrap;
     }
-    .month-filter-box {
+    .fancy-dropdown-box {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: #fff;
-      padding: 0.4rem 0.8rem;
-      border: 1.5px solid rgba(13, 35, 83, 0.1);
+      background: #ffffff;
+      padding: 0.5rem 1rem;
+      border: 1px solid #cbd5e1;
       border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .month-filter-box label {
-      font-size: 0.78rem;
+    .fancy-dropdown-box label {
+      font-size: 0.8rem;
       font-weight: 700;
-      color: #3a4a6a;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    .month-filter-box input {
-      padding: 0.2rem 0.4rem;
-      border: 1px solid rgba(13, 35, 83, 0.15);
-      border-radius: 4px;
-      font-size: 0.85rem;
+    .fancy-select {
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      padding: 0.4rem 2rem 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 500;
       color: #0d2353;
-    }
-    .clear-btn {
-      background: none;
-      border: none;
-      color: #1a5cff;
-      font-size: 0.78rem;
-      font-weight: 600;
       cursor: pointer;
-      text-decoration: underline;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d2353' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      background-size: 1em;
+      min-width: 180px;
+      transition: border-color 0.2s;
+    }
+    .fancy-select:focus {
+      border-color: #1a5cff;
+      background-color: #ffffff;
     }
 
     /* ── MOBILE MEDIA QUERIES ── */
@@ -116,10 +164,12 @@
       .sidebar { transform: translateX(-100%); }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 76px !important; }
+      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 86px !important; }
       .mobile-header { display: flex !important; }
       .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
       .controls-wrapper { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+      .header-container { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .period-badge { margin-left: 0; margin-top: 0.5rem; display: block; width: max-content; }
     }
     @media (max-width: 480px) {
       .stats-row { grid-template-columns: 1fr !important; }
@@ -162,247 +212,7 @@
   </aside>
 
   <main class="main-content">
-    <h2 class="page-title" id="main-title">My Time Logs</h2>
-    <p class="page-sub">All hours logged for your projects. See what's paid and what's outstanding.</p>
-
-    <div class="controls-wrapper">
-      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
-        <button class="btn-sm" id="tab-all"     onclick="switchTab('all')"     style="background:#0d2353;color:white;border:none;border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;">All</button>
-        <button class="btn-sm" id="tab-unpaid" onclick="switchTab('unpaid')" style="background:transparent;color:#3a4a6a;border:1.5px solid rgba(13,35,83,0.1);border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;">⚠ Unpaid</button>
-        <button class="btn-sm" id="tab-paid"   onclick="switchTab('paid')"   style="background:transparent;color:#3a4a6a;border:1.5px solid rgba(13,35,83,0.1);border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;">✓ Paid</button>
-      </div>
-
-      <div class="month-filter-box">
-        <label for="month-picker">Filter Month</label>
-        <input type="month" id="month-picker" onchange="applyFilters()"/>
-        <button class="clear-btn" id="clear-filter" onclick="clearMonthFilter()" style="display:none;">Clear</button>
-      </div>
-    </div>
-
-    <div class="stats-row" style="margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
-      <div class="stat-card" style="border-left:4px solid #1a6640">
-        <span class="stat-num" id="s-paid" style="color:#1a6640; display:block; font-size:1.5rem; font-weight:700;">$--</span>
-        <span class="stat-label" id="lbl-paid">Total paid</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #92400e">
-        <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$--</span>
-        <span class="stat-label" id="lbl-unpaid">Outstanding balance</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #1a5cff">
-        <span class="stat-num" id="s-hours" style="color:#1a5cff; display:block; font-size:1.5rem; font-weight:700;">—</span>
-        <span class="stat-label" id="lbl-hours">Total hours</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #7a8aaa">
-        <span class="stat-num" id="s-entries" style="color:#7a8aaa; display:block; font-size:1.5rem; font-weight:700;">—</span>
-        <span class="stat-label" id="lbl-entries">Log entries</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <h3 id="table-title">All Work Logs</h3>
-      </div>
-      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Hours</th>
-              <th>Amount</th>
-              <th>Payment Status</th>
-              <th>Task Description</th>
-            </tr>
-          </thead>
-          <tbody id="logs-table">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:#7a8aaa">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div id="table-footer" style="padding:1rem;font-size:0.85rem;color:#3a4a6a;border-top:1px solid rgba(13,35,83,0.08)"></div>
-    </div>
-  </main>
-</div>
-
-<script>
-const API = 'https://freelancer-platform-9jut.onrender.com/api';
-const auth = {
-  token: () => localStorage.getItem('token'),
-  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
-  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
-  isLoggedIn: () => !!localStorage.getItem('token'),
-  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
-};
-
-async function apiFetch(path, options = {}) {
-  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
-  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
-  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
-  return res.json();
-}
-
-(function() {
-  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
-  const u = auth.user();
-  if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
-  document.getElementById('user-name').textContent = u ? u.name : '';
-})();
-
-function logout() { auth.clear(); window.location.href = '../index.html'; }
-
-let allLogs = [];
-let currentTab = 'all';
-
-async function loadLogs() {
-  try {
-    // Fetch logs array safely up to limit configuration boundaries
-    const logs = await apiFetch('/client/timelogs?limit=500');
-    allLogs = logs;
-
-    // Set the default filter to current calendar month on first initialization setup
-    const currentMonthStr = new Date().toISOString().slice(0, 7);
-    document.getElementById('month-picker').value = currentMonthStr;
-
-    applyFilters();
-  } catch(e) { 
-    console.error(e);
-    document.getElementById('logs-table').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:#b91c1c">Failed to load system log items.</td></tr>`;
-  }
-}
-
-function applyFilters() {
-  const selectedMonth = document.getElementById('month-picker').value;
-  const clearBtn = document.getElementById('clear-filter');
-  
-  let targetLogs = allLogs;
-  
-  if (selectedMonth) {
-    clearBtn.style.display = 'inline-block';
-    const localizedMonth = new Date(selectedMonth + '-02').toLocaleString('default', { month: 'long', year: 'numeric' });
-    document.getElementById('main-title').textContent = 'My Time Logs — ' + localizedMonth;
     
-    // Filter array where date matches matching prefix syntax (YYYY-MM)
-    targetLogs = allLogs.filter(l => l.date && l.date.startsWith(selectedMonth));
-    
-    // Update card summary labels to visually represent current period context scoping
-    document.getElementById('lbl-paid').textContent = 'Paid (' + localizedMonth + ')';
-    document.getElementById('lbl-unpaid').textContent = 'Outstanding (' + localizedMonth + ')';
-    document.getElementById('lbl-hours').textContent = 'Hours (' + localizedMonth + ')';
-    document.getElementById('lbl-entries').textContent = 'Log Entries (' + localizedMonth + ')';
-  } else {
-    clearBtn.style.display = 'none';
-    document.getElementById('main-title').textContent = 'My Time Logs — All Time';
-    
-    document.getElementById('lbl-paid').textContent = 'Total paid (All Time)';
-    document.getElementById('lbl-unpaid').textContent = 'Outstanding balance';
-    document.getElementById('lbl-hours').textContent = 'Total hours';
-    document.getElementById('lbl-entries').textContent = 'Log entries';
-  }
-
-  // Calculate stats parameters on selected runtime configuration range parameters dynamically
-  let monthPaid = 0, monthUnpaid = 0, monthHours = 0;
-  targetLogs.forEach(l => {
-    const amt = parseFloat(l.amount || 0);
-    const hrs = parseFloat(l.hours || 0);
-    monthHours += hrs;
-    if (l.payment_status === 'paid') {
-      monthPaid += amt;
-    } else {
-      monthUnpaid += amt;
-    }
-  });
-
-  document.getElementById('s-paid').textContent = '$' + monthPaid.toFixed(2);
-  document.getElementById('s-unpaid').textContent = '$' + monthUnpaid.toFixed(2);
-  document.getElementById('s-hours').textContent = monthHours.toFixed(1) + 'h';
-  document.getElementById('s-entries').textContent = targetLogs.length;
-
-  // Delegate processing stream pipeline into active selected sub-tabs context layers
-  const filteredByTab = currentTab === 'all' ? targetLogs : targetLogs.filter(l => l.payment_status === currentTab);
-  renderLogs(filteredByTab);
-}
-
-function clearMonthFilter() {
-  document.getElementById('month-picker').value = '';
-  applyFilters();
-}
-
-function switchTab(tab) {
-  currentTab = tab;
-  ['all','unpaid','paid'].forEach(t => {
-    const btn = document.getElementById('tab-' + t);
-    btn.style.background = t === tab ? '#0d2353' : 'transparent';
-    btn.style.color      = t === tab ? 'white'       : '#3a4a6a';
-    btn.style.border     = t === tab ? 'none'        : '1.5px solid rgba(13,35,83,0.1)';
-  });
-  
-  const titles = { all: 'All Work Logs', unpaid: '⚠ Unpaid Logs', paid: '✓ Paid Logs' };
-  document.getElementById('table-title').textContent = titles[tab];
-  
-  applyFilters();
-}
-
-function renderLogs(logs) {
-  const tbody  = document.getElementById('logs-table');
-  const footer = document.getElementById('table-footer');
-  const isFiltered = !!document.getElementById('month-picker').value;
-
-  if (!logs.length) {
-    let msg = 'No records found matching criteria.';
-    if (currentTab === 'unpaid') msg = 'No unpaid logs — all settled! ✓';
-    else if (currentTab === 'paid') msg = 'No paid logs found.';
-    else if (isFiltered) msg = 'No log records entries for this selected calendar month period.';
-    
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:#7a8aaa">${msg}</td></tr>`;
-    footer.textContent = '';
-    return;
-  }
-
-  let sumHours = 0, sumAmount = 0;
-  tbody.innerHTML = logs.map(l => {
-    const isPaid  = l.payment_status === 'paid';
-    const amount  = parseFloat(l.amount || 0);
-    sumHours  += parseFloat(l.hours || 0);
-    sumAmount += amount;
-
-    const badge = isPaid
-      ? '<span class="badge badge-green" style="background:#dcfce7;color:#166534;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.75rem;font-weight:700;">✓ Paid</span>'
-      : '<span class="badge badge-amber" style="background:#fef3c7;color:#92400e;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.75rem;font-weight:700;">⚠ Unpaid</span>';
-
-    return `
-      <tr style="${!isPaid ? 'background:rgba(255,200,100,0.04)' : ''}">
-        <td>${new Date(l.date).toLocaleDateString()}</td>
-        <td><strong>${l.hours}h</strong></td>
-        <td>${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
-        <td>${badge}</td>
-        <td>${l.task_description}</td>
-      </tr>`;
-  }).join('');
-
-  footer.innerHTML = `Showing <strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> total &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong> total`;
-}
-
-// Fire data request layer instantiation
-loadLogs();
-</script>
-
-<script>
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('is-open');
-  document.getElementById('sidebar-overlay').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('is-open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-  document.body.style.overflow = '';
-}
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
-    a.addEventListener('click', function() {
-      if (window.innerWidth <= 768) closeSidebar();
-    });
-  });
-});
-</script>
-</body>
-</html>
+    <div class="header-container">
+      <div class="title-group">
+        <h2>⏱ My Time Logs <span class="period-badge" id="header-badge">Loading Month
