@@ -117,11 +117,11 @@
     .stat-num { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; display: block; }
     .stat-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); margin-top: 0.2rem; }
 
-    /* ── FILTERS ── */
-    .filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
+    /* ── FILTERS & ADMINISTRATIVE FORMS ── */
+    .filters, .payment-form-flex { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
     .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 130px; }
     .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); }
-    select, input[type=date] {
+    select, input[type=date], input[type=number] {
       padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1);
       border-radius: 8px; background: var(--bg); font-family: var(--sans);
       font-size: 0.85rem; color: var(--navy); width: 100%;
@@ -199,7 +199,7 @@
       .mobile-header { display: flex; }
       .topbar { top: 56px; }
       .stats-row { grid-template-columns: 1fr 1fr; }
-      .filters { gap: 0.6rem; }
+      .filters, .payment-form-flex { gap: 0.6rem; }
       .fg { min-width: 100px; }
       .content { padding: 1rem; }
     }
@@ -211,7 +211,6 @@
 </head>
 <body>
 
-<!-- Mobile header -->
 <div class="mobile-header" id="mobile-header">
   <div class="mobile-logo">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -250,11 +249,37 @@
 
     <div class="content">
 
-      <!-- Filters -->
+      <div class="card" style="border-left: 4px solid #10b981;">
+        <div class="card-header" style="padding-bottom: 0.2rem; border-bottom: none;">
+          <h3 style="color: #10b981;">💰 Record Client Payment Remittance</h3>
+        </div>
+        <form id="record-payment-form" onsubmit="handleRecordPayment(event)">
+          <div class="payment-form-flex">
+            <div class="fg" style="min-width: 200px;">
+              <label>Target Client</label>
+              <select id="payment-client" required>
+                <option value="">Select client...</option>
+              </select>
+            </div>
+            <div class="fg" style="min-width: 120px;">
+              <label>Amount Remitted ($)</label>
+              <input type="number" id="payment-amount" step="0.01" min="0.01" required placeholder="100.00"/>
+            </div>
+            <div class="fg" style="min-width: 130px;">
+              <label>Payment Date</label>
+              <input type="date" id="payment-date" required/>
+            </div>
+            <button type="submit" class="btn btn-navy" style="background: #10b981; padding: 0.65rem 1.2rem; font-size: 0.85rem; height: 38px;">
+              Apply Remittance
+            </button>
+          </div>
+        </form>
+      </div>
+
       <div class="card">
         <div class="filters">
           <div class="fg">
-            <label>Client</label>
+            <label>Client Filter</label>
             <select id="filter-client" onchange="loadLogs()">
               <option value="">All clients</option>
             </select>
@@ -279,7 +304,6 @@
         </div>
       </div>
 
-      <!-- Fixed client notice (shown when fixed client selected) -->
       <div class="fixed-notice" id="fixed-notice" style="display:none">
         <div>
           <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold2);font-weight:700;margin-bottom:0.3rem">Fixed Price Client</div>
@@ -293,7 +317,6 @@
         </div>
       </div>
 
-      <!-- Summary stats -->
       <div class="stats-row" id="stats-row">
         <div class="stat-card" style="border-left:4px solid #22c55e">
           <span class="stat-num" id="total-paid" style="color:var(--green)">$0</span>
@@ -313,7 +336,6 @@
         </div>
       </div>
 
-      <!-- Bulk bar -->
       <div class="bulk-bar" id="bulk-bar">
         <span id="bulk-count" style="font-size:0.88rem">0 selected</span>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
@@ -322,7 +344,6 @@
         </div>
       </div>
 
-      <!-- Logs table -->
       <div class="card" id="logs-card">
         <div class="card-header">
           <h3>All Time Logs</h3>
@@ -348,7 +369,6 @@
   </div>
 </div>
 
-<!-- Edit Log Modal -->
 <div class="modal-overlay" id="modal-edit">
   <div class="modal">
     <div class="modal-header">
@@ -411,14 +431,53 @@ let allClients  = [];
 
 // ── Init ─────────────────────────────────────────────────────
 async function init() {
+  // Default the payment form date field to today
+  document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+  
   try {
     allClients = await apiFetch('/clients');
     const opts = allClients.map(c =>
       `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-fixedstatus="${c.fixed_payment_status||'unpaid'}">${c.name}${c.company?' — '+c.company:''}</option>`
     ).join('');
+    
+    // Fill both the filter dropdown and the admin record payment dropdown
     document.getElementById('filter-client').innerHTML = '<option value="">All clients</option>' + opts;
+    document.getElementById('payment-client').innerHTML = '<option value="">Select client...</option>' + opts;
   } catch(e) {}
   loadLogs();
+}
+
+// ── Option B: Submit Payment Remittance ──────────────────────
+async function handleRecordPayment(event) {
+  event.preventDefault();
+  const clientId = document.getElementById('payment-client').value;
+  const amount = document.getElementById('payment-amount').value;
+  const date = document.getElementById('payment-date').value;
+
+  if (!clientId || !amount || !date) {
+    alert('Please fill out all fields.');
+    return;
+  }
+
+  try {
+    const result = await apiFetch('/payments/record-admin', {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: parseInt(clientId),
+        amount: parseFloat(amount),
+        date: date,
+        notes: `Manual balance posting via Freelancer Time Logs layout UI.`
+      })
+    });
+
+    alert(`Success! ${result.message}\nRecalculated surplus retainer balance of $${result.remainingCreditSurplus.toFixed(2)} credited forward.`);
+    
+    // Clear dynamic payment inputs and refresh UI lists
+    document.getElementById('payment-amount').value = '';
+    loadLogs();
+  } catch (err) {
+    alert('Payment Allocation Error: ' + err.message);
+  }
 }
 
 // ── Load logs ────────────────────────────────────────────────
@@ -430,7 +489,7 @@ async function loadLogs() {
 
   // Check if selected client is fixed rate
   const selectedOpt = document.getElementById('filter-client').selectedOptions[0];
-  const isFixed = selectedOpt && selectedOpt.dataset.rate === 'fixed';
+  const isFixed = selectedOpt && selectedOpt.value !== "" && selectedOpt.dataset.rate === 'fixed';
 
   const fixedNotice = document.getElementById('fixed-notice');
   const logsCard    = document.getElementById('logs-card');
