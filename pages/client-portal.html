@@ -68,6 +68,7 @@
     /* ── RESPONSIVE MAIN CONTAINER ── */
     .main-content { margin-left: 240px; flex: 1; padding: 2rem; position: relative; }
     .booking-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .ledger-management-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
 
     /* ── MOBILE MEDIA QUERIES ── */
     @media (max-width: 768px) {
@@ -78,6 +79,7 @@
       .mobile-header { display: flex !important; }
       .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
       .booking-form-grid { grid-template-columns: 1fr !important; }
+      .ledger-management-row { grid-template-columns: 1fr !important; }
     }
     @media (max-width: 480px) {
       .stats-row { grid-template-columns: 1fr !important; }
@@ -135,6 +137,15 @@
       </div>
     </div>
 
+    <div id="credit-alert-banner" style="display:none; background: linear-gradient(135deg, #15803d, #166534); border-radius: 16px; padding: 1.5rem; color: white; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(22,101,52,0.15); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #4ade80; font-weight: 700; margin-bottom: 0.2rem;">Prepaid Asset Capital Available</div>
+        <h3 style="margin:0; font-size: 1.8rem; font-weight: 700;" id="credit-banner-display">$0.00</h3>
+        <p style="margin: 0.2rem 0 0 0; color: rgba(255,255,255,0.8); font-size: 0.85rem;">This credit balance will automatically absorb and cover your upcoming logged work timeline entries.</p>
+      </div>
+      <div style="font-size: 2rem;">💰</div>
+    </div>
+
     <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
       <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
         <div>
@@ -149,11 +160,15 @@
     <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
       <div class="stat-card" style="border-left:4px solid #22c55e">
         <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
-        <span class="stat-label">Total paid</span>
+        <span class="stat-label">Total cash paid</span>
       </div>
       <div class="stat-card" style="border-left:4px solid #f59e0b">
         <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
         <span class="stat-label">Outstanding balance</span>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #10b981; background: rgba(16,185,129,0.02);">
+        <span class="stat-num" id="s-credit" style="color:#047857; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
+        <span class="stat-label">Available credit pool</span>
       </div>
       <div class="stat-card" style="border-left:4px solid transparent">
         <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">0.0h</span>
@@ -204,6 +219,37 @@
           <div style="font-size:3rem;margin-bottom:1rem">📦</div>
           <div style="font-weight:600;margin-bottom:0.5rem">Fixed Price Project</div>
           <div style="font-size:0.9rem;color:var(--ink3)">Your project is billed at a fixed rate.<br/>No hourly logs are tracked for this engagement.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ledger-management-row" id="ledger-management-row" style="margin-top: 1.5rem;">
+      <div class="card">
+        <div class="card-header"><h3>💳 Record Cash Remittance</h3></div>
+        <div style="padding:1.5rem">
+          <form onsubmit="recordPayment(event)" style="display:flex; flex-direction:column; gap:1rem">
+            <div class="form-group" style="display:flex; flex-direction:column; gap:0.4rem">
+              <label style="font-size:0.88rem; font-weight:500; color:var(--ink);">Payment Amount ($)</label>
+              <input type="number" step="0.01" min="1" placeholder="0.00" name="amount" id="p-amount" required style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid var(--paper3); font-family:inherit; font-size:0.9rem;"/>
+            </div>
+            <div class="form-group" style="display:flex; flex-direction:column; gap:0.4rem">
+              <label style="font-size:0.88rem; font-weight:500; color:var(--ink);">Remittance Processing Date</label>
+              <input type="date" name="date" id="p-date" required style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid var(--paper3); font-family:inherit; font-size:0.9rem;"/>
+            </div>
+            <div class="form-group" style="display:flex; flex-direction:column; gap:0.4rem">
+              <label style="font-size:0.88rem; font-weight:500; color:var(--ink);">Payment Notes / Statement Identifier Reference</label>
+              <textarea name="notes" rows="2" placeholder="e.g. ACH Bank Wire Transfer, Corporate Debit, Overpayment Reserve" style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid var(--paper3); font-family:inherit; font-size:0.9rem; resize:vertical;"></textarea>
+            </div>
+            <button type="submit" class="btn-primary" id="p-submit-btn" style="margin-top:0.4rem;">Post Remittance Record →</button>
+            <div id="payment-status-message" style="font-size:0.85rem; font-weight:500; margin-top:0.2rem"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>📜 Cash Receipts History Ledger</h3></div>
+        <div style="padding:1.5rem; max-height:335px; overflow-y:auto;" id="payment-receipts-ledger">
+          <p style="color:var(--ink3); font-size:0.85rem">Awaiting transaction records pipeline sync...</p>
         </div>
       </div>
     </div>
@@ -312,6 +358,24 @@ async function loadPortal() {
     const isFixed = stats.rateType === 'fixed';
     currentHourlyRate = parseFloat(stats.hourlyRate || 0);
 
+    // Initialize balance inputs tracking values inside DOM indicators
+    const creditVal = parseFloat(stats.creditBalance || 0);
+    document.getElementById('s-credit').textContent = '$' + creditVal.toFixed(2);
+
+    const creditBanner = document.getElementById('credit-alert-banner');
+    if (creditVal > 0) {
+      creditBanner.style.display = 'flex';
+      document.getElementById('credit-banner-display').textContent = '$' + creditVal.toFixed(2);
+    } else {
+      creditBanner.style.display = 'none';
+    }
+
+    // Default current calendar index element
+    document.getElementById('p-date').value = new Date().toISOString().slice(0,10);
+    
+    // Asynchronously update transaction tracking list
+    loadPaymentReceiptsLedger();
+
     // Update fancy header type badge display context dynamically with active loaded rate
     const badgeContainer = document.getElementById('engagement-badge-container');
     if (isFixed) {
@@ -349,7 +413,7 @@ async function loadPortal() {
       allLogs = logs;
       
       // Calculate dynamic accurate KPI adjustments based on active log evaluation structures
-      calculateAndRenderMetrics(allLogs);
+      calculateAndRenderMetrics(allLogs, stats.totalPaid, stats.totalUnpaid);
     }
 
     const upcoming = document.getElementById('upcoming-sessions');
@@ -373,8 +437,59 @@ async function loadPortal() {
   } catch(e) { console.error(e); }
 }
 
+// 🟢 NEW FUNCTION: SYNC REAL-TIME RECEIPT TRANSACTIONS LEDGER LIST
+async function loadPaymentReceiptsLedger() {
+  const container = document.getElementById('payment-receipts-ledger');
+  try {
+    const receipts = await apiFetch('/payments/history');
+    if (!receipts || !receipts.length) {
+      container.innerHTML = `<p style="color:var(--ink3); font-size:0.85rem; padding:0.5rem">No cash payment records tracked inside ledger architecture.</p>`;
+      return;
+    }
+    container.innerHTML = receipts.map(r => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 0.4rem; border-bottom:1px solid rgba(0,0,0,0.05); font-size:0.85rem;">
+        <div>
+          <strong style="color:#166534; font-size:0.9rem">+$${r.amount.toFixed(2)}</strong>
+          <span style="color:var(--ink3); font-size:0.78rem; margin-left:0.4rem">📅 ${new Date(r.date).toLocaleDateString()}</span>
+          ${r.notes ? `<div style="color:var(--ink2); font-size:0.78rem; margin-top:0.1rem; font-style:italic">💬 ${r.notes}</div>` : ''}
+        </div>
+        <span style="font-size:0.75rem; background:rgba(34,197,94,0.12); color:#15803d; padding:0.1rem 0.4rem; border-radius:4px; font-weight:600">Cleared</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    container.innerHTML = `<p style="color:red; font-size:0.82rem">Failed tracking structural receipts records history.</p>`;
+  }
+}
+
+// 🟢 NEW FUNCTION: RECORD CASH REMITTANCES TO LEDGER PIPELINE
+async function recordPayment(e) {
+  e.preventDefault();
+  const msg = document.getElementById('payment-status-message');
+  const btn = document.getElementById('p-submit-btn');
+  btn.disabled = true; btn.textContent = 'Posting Entry...';
+  
+  try {
+    await apiFetch('/payments/record', {
+      method: 'POST',
+      body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+    });
+    msg.style.color = 'green';
+    msg.textContent = '✓ Payment posted and balanced successfully!';
+    e.target.reset();
+    document.getElementById('p-date').value = new Date().toISOString().slice(0,10);
+    
+    // Refresh core architecture layout elements
+    await loadPortal();
+  } catch(err) {
+    msg.style.color = 'red';
+    msg.textContent = err.message || 'Transaction submission exception';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Post Remittance Record →';
+  }
+}
+
 // Separate standalone calculation engine that updates metrics cards and periodic summaries
-function calculateAndRenderMetrics(filteredLogs) {
+function calculateAndRenderMetrics(filteredLogs, serverPaidSum = null, serverUnpaidSum = null) {
   let totalPaidAdjusted = 0;
   let totalUnpaidAdjusted = 0;
   let totalHoursAdjusted = 0;
@@ -418,9 +533,14 @@ function calculateAndRenderMetrics(filteredLogs) {
     } catch(err) { console.error("Period breakdown parsing error", err); }
   });
 
-  // Assign parameters to upper standard cards UI layout
-  document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
-  document.getElementById('s-unpaid').textContent = '$' + totalUnpaidAdjusted.toFixed(2);
+  // Balanced against core endpoint ledger structures if pulling the full un-filtered pipeline
+  if (currentTab === 'all' && serverPaidSum !== null && serverUnpaidSum !== null) {
+    document.getElementById('s-paid').textContent   = '$' + parseFloat(serverPaidSum).toFixed(2);
+    document.getElementById('s-unpaid').textContent = '$' + parseFloat(serverUnpaidSum).toFixed(2);
+  } else {
+    document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
+    document.getElementById('s-unpaid').textContent = '$' + totalUnpaidAdjusted.toFixed(2);
+  }
   document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
 
   // Render the periodic subledger elements map dynamically
@@ -457,7 +577,7 @@ function calculateAndRenderMetrics(filteredLogs) {
     }).join('');
   }
 
-  renderLogs(filteredLogs);
+  renderLogs(logs);
 }
 
 function switchTab(tab) {
