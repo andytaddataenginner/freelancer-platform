@@ -3,144 +3,94 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Client Portal — QFA</title>
+  <title>My Portal — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
   <style>
-    /* ── PREMIUM VISUAL STYLING ── */
-    :root {
-      --bg-main: #f4f6fa;
-      --panel-bg: #ffffff;
-      --primary-dark: #0b192c;
-      --accent-gold: #f5c842;
-      --success-green: #10b981;
-      --warning-amber: #f59e0b;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --radius-lg: 16px;
-      --radius-md: 10px;
-      --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
-      --shadow-md: 0 10px 15px -3px rgba(15,23,42,0.08);
-    }
-
-    body {
-      font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      margin: 0; padding: 0;
-    }
-
+    /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     .dashboard { display: flex; min-height: 100vh; }
 
-    /* ── SIDEBAR ── */
+    /* ── FIXED DESKTOP SIDEBAR ── */
     .sidebar {
-      width: 260px; 
-      background: linear-gradient(180deg, #0b192c 0%, #08101c 100%); 
-      position: fixed; top: 0; left: 0; height: 100vh; 
-      display: flex; flex-direction: column; z-index: 150;
-      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
-      transition: transform 0.3s ease;
+      width: 240px !important; 
+      background: #0d2353 !important; 
+      position: fixed !important;
+      top: 0 !important; left: 0 !important; height: 100vh !important; 
+      display: flex !important; flex-direction: column !important; 
+      z-index: 150 !important;
+      transform: translateX(0);
+      transition: transform 0.3s ease-in-out !important;
     }
     .sidebar-brand {
-      padding: 2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);
-      display: flex; align-items: center; gap: 0.8rem;
+      padding: 1.2rem 1.5rem !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
     }
-    .sidebar-nav { flex: 1; padding: 1.5rem 0.8rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .sidebar-nav { 
+      flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
+      display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
+    }
     .sidebar-nav a {
-      display: flex; align-items: center; gap: 0.8rem; padding: 0.9rem 1.2rem; 
-      font-size: 0.92rem; font-weight: 500; color: rgba(255,255,255,0.65); 
-      text-decoration: none; border-radius: var(--radius-md); transition: all 0.2s;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      padding: 0.8rem 1.5rem !important; font-size: 0.88rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.65) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 4px solid transparent !important;
+      width: 100% !important; box-sizing: border-box !important;
+      justify-content: flex-start !important;
     }
-    .sidebar-nav a:hover, .sidebar-nav a.active { color: #ffffff; background: rgba(255,255,255,0.05); }
-    .sidebar-nav a.active { box-shadow: inset 3px 0 0 var(--accent-gold); }
-    .sidebar-user { padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15); }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: #f5c842 !important; }
+    .sidebar-user { 
+      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
+      font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
+    }
 
-    /* ── MOBILE HEADER ── */
+    /* ── MOBILE HEADER BAR ── */
     .mobile-header {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: var(--primary-dark); padding: 1rem 1.5rem; align-items: center; justify-content: space-between;
+      background: #0d2353; padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
     }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
     .hamburger-btn {
-      background: rgba(255,255,255,0.08); border: none; color: white;
-      width: 40px; height: 40px; border-radius: 10px; font-size: 1.2rem; cursor: pointer;
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,44,0.6); z-index: 120; backdrop-filter: blur(4px); }
+      
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    /* ── MAIN CONTENT ── */
-    .main-content { margin-left: 260px; flex: 1; padding: 3rem 2.5rem; max-width: 1300px; }
-    .page-header { margin-bottom: 2.5rem; }
-    .page-title { font-size: 2rem; font-weight: 700; color: var(--primary-dark); }
+    /* ── RESPONSIVE MAIN CONTAINER ── */
+    .main-content { margin-left: 240px; flex: 1; padding: 2rem; position: relative; }
+    .booking-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-    /* ── CARDS & METRICS ── */
-    .card {
-      background: var(--panel-bg); border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
-      margin-bottom: 2rem; overflow: hidden;
+    /* ── MOBILE MEDIA QUERIES ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%) !important; }
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
+      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 76px !important; }
+      .mobile-header { display: flex !important; }
+      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
+      .booking-form-grid { grid-template-columns: 1fr !important; }
     }
-    .card-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-    .card-header h3 { font-size: 1.15rem; font-weight: 600; color: var(--primary-dark); }
-
-    .stat-card {
-      background: var(--panel-bg); border-radius: var(--radius-lg); padding: 1.5rem;
-      box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
-      display: flex; flex-direction: column; gap: 0.5rem;
-    }
-    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); }
-    .stat-label { font-size: 0.88rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; }
-
-    /* ── TABLES & TABS ── */
-    .tab-btn {
-      padding: 0.6rem 1.4rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);
-      background: var(--panel-bg); cursor: pointer; font-family: inherit; font-size: 0.88rem; color: var(--text-muted);
-    }
-    .tab-btn.active { background: var(--primary-dark); color: white; border-color: var(--primary-dark); }
-
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
-    th { background: #f8fafc; padding: 1rem 2rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--border-color); }
-    td { padding: 1.2rem 2rem; border-bottom: 1px solid var(--border-color); }
-    tr:hover td { background-color: #f8fafc; }
-
-    /* ── BADGES ── */
-    .badge { display: inline-flex; padding: 0.35rem 0.8rem; font-size: 0.8rem; font-weight: 600; border-radius: 30px; }
-    .badge-green { background: rgba(16,185,129,0.12); color: #065f46; }
-    .badge-amber { background: rgba(245,158,11,0.12); color: #92400e; }
-
-    /* ── FORMS ── */
-    .booking-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-    .form-group label { font-size: 0.88rem; font-weight: 600; }
-    .form-group input, .form-group select, .form-group textarea {
-      padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);
-      font-family: inherit; font-size: 0.95rem; background: #f8fafc;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #0b192c 0%, #1e293b 100%); color: white;
-      padding: 0.85rem 1.8rem; border: none; border-radius: var(--radius-md); font-family: inherit;
-      font-weight: 600; cursor: pointer;
-    }
-
-    /* BREAKDOWN LIST STYLING */
-    .breakdown-item {
-      display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px dashed var(--border-color);
-    }
-    .breakdown-item:last-child { border-bottom: none; }
-
-    @media (max-width: 992px) {
-      .sidebar { transform: translateX(-100%); }
-      .sidebar.is-open { transform: translateX(0); }
-      .sidebar-overlay.visible { display: block; }
-      .main-content { margin-left: 0; padding-top: 90px; }
-      .mobile-header { display: flex; }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr !important; }
     }
   </style>
 </head>
 <body>
 
-<div class="mobile-header">
-  <div style="color:white; font-weight:700;">Client Portal</div>
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA Portal</span>
+  </div>
   <button class="hamburger-btn" onclick="openSidebar()">☰</button>
 </div>
 
@@ -149,120 +99,171 @@
 <div class="dashboard">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <img src="../QFA_Logo.png" style="height:40px; background:white; padding:2px; border-radius:6px;"/>
-      <span style="color:white; font-weight:700;">Client Portal</span>
+      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div style="line-height:1.2">
+        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+      </div>
     </div>
     <nav class="sidebar-nav">
-      <a href="client-portal.html" class="active">📊 Overview</a>
-      <a href="client-logs.html">⏱ Time Logs</a>
-      <a href="client-schedule.html">📅 Book Session</a>
+      <a href="client-portal.html" class="active">📊 My Overview</a>
+      <a href="client-logs.html">⏱ My Time Logs</a>
+      <a href="client-schedule.html">📅 Book a Session</a>
+      <a href="../index.html" target="_blank">🌐 Portfolio</a>
     </nav>
     <div class="sidebar-user">
       <strong id="user-name" style="color:white; display:block;">Loading…</strong>
-      <span id="user-company" style="display:block; font-size:0.8rem; color:rgba(255,255,255,0.5)"></span>
-      <a href="#" onclick="logout()" style="color:var(--accent-gold); font-size:0.85rem; margin-top:0.5rem; display:inline-block; text-decoration:none;">Logout</a>
+      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
+      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
     </div>
   </aside>
 
   <main class="main-content">
-    <div class="page-header">
-      <h2 class="page-title">Overview</h2>
-    </div>
-
-    <!-- MAIN METRIC OVERVIEW CARDS -->
-    <div class="stats-row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem; margin-bottom:2.5rem;">
-      <div class="stat-card" style="border-top:4px solid var(--success-green)">
-        <span class="stat-label">Total Paid</span>
-        <span class="stat-num" id="s-paid">$0.00</span>
+    
+    <div style="background: linear-gradient(135deg, #0d2353, #1e3c72); border-radius: 16px; padding: 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(13,35,83,0.15); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: #f5c842; font-weight: 700; display: block; margin-bottom: 0.4rem;">Client Management Workspace</span>
+        <h2 style="margin:0; font-family:'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; line-height: 1.2;">My Project Portal</h2>
+        <p style="margin: 0.4rem 0 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem;">Track real-time deliverables, active balance updates, and book direct working sessions.</p>
       </div>
-      <div class="stat-card" style="border-top:4px solid var(--warning-amber)">
-        <span class="stat-label">Total Unpaid</span>
-        <span class="stat-num" id="s-unpaid">$0.00</span>
-      </div>
-      <div class="stat-card" style="border-top:4px solid #3b82f6">
-        <span class="stat-label">Total Hours Logged</span>
-        <span class="stat-num" id="s-hours">0h</span>
+      <div id="engagement-badge-container">
+        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Syncing Profile…
+        </span>
       </div>
     </div>
 
-    <!-- MONTH / YEAR BREAKDOWN COMPONENT -->
-    <div class="card">
-      <div class="card-header"><h3>📅 Unpaid Amount Breakdown By Month/Year</h3></div>
-      <div style="padding: 1.5rem 2rem;" id="breakdown-container">
-        <p style="color: var(--text-muted);">Calculating monthly balances...</p>
+    <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
+      <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#f5c842;font-weight:700;margin-bottom:0.4rem">Fixed Price Project</div>
+          <div style="font-size:2rem;font-weight:700;font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:0.2rem">Total project fee</div>
+        </div>
+        <div id="fixed-status-display" style="text-align:right"></div>
       </div>
     </div>
 
-    <!-- LOGS TABLE CARD -->
-    <div class="card">
-      <div class="card-header">
-        <h3>Work Logs</h3>
-        <div style="display:flex; gap:0.5rem;">
-          <button id="tab-all" class="tab-btn active" onclick="switchTab('all')">All</button>
-          <button id="tab-unpaid" class="tab-btn" onclick="switchTab('unpaid')">Unpaid</button>
-          <button id="tab-paid" class="tab-btn" onclick="switchTab('paid')">Paid</button>
+    <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+      <div class="stat-card" style="border-left:4px solid #22c55e">
+        <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
+        <span class="stat-label">Total paid</span>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #f59e0b">
+        <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
+        <span class="stat-label">Outstanding balance</span>
+      </div>
+      <div class="stat-card" style="border-left:4px solid transparent">
+        <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">0.0h</span>
+        <span class="stat-label">Total hours logged</span>
+      </div>
+      <div class="stat-card" style="border-left:4px solid transparent">
+        <span class="stat-num" id="s-bookings" style="display:block; font-size:1.5rem; font-weight:700;">0</span>
+        <span class="stat-label">Upcoming sessions</span>
+      </div>
+    </div>
+
+    <div id="hourly-section">
+      <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
+        <button id="tab-all"    onclick="switchTab('all')"    style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
+        <button id="tab-unpaid" onclick="switchTab('unpaid')" style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">⚠ Unpaid</button>
+        <button id="tab-paid"   onclick="switchTab('paid')"   style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">✓ Paid</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 id="logs-title">All Work Logs</h3></div>
+        <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Hours</th><th>Amount</th><th>Status</th><th>Task</th></tr>
+            </thead>
+            <tbody id="logs-table">
+              <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="logs-footer" style="padding:1rem;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--paper2)"></div>
+      </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header" style="background: var(--paper2);">
+          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Year & Month Payment Breakdown</h3>
+        </div>
+        <div id="periodic-breakdown-container" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
+          <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting entry analysis...</p>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Hours</th><th>Amount</th><th>Status</th><th>Task Description</th></tr>
-          </thead>
-          <tbody id="logs-table">
-            <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">Loading work logs...</td></tr>
-          </tbody>
-        </table>
+    </div>
+
+    <div id="fixed-section" style="display:none">
+      <div class="card">
+        <div class="card-header"><h3>📋 Project Details</h3></div>
+        <div style="padding:2rem;text-align:center;color:var(--ink2)">
+          <div style="font-size:3rem;margin-bottom:1rem">📦</div>
+          <div style="font-weight:600;margin-bottom:0.5rem">Fixed Price Project</div>
+          <div style="font-size:0.9rem;color:var(--ink3)">Your project is billed at a fixed rate.<br/>No hourly logs are tracked for this engagement.</div>
+        </div>
       </div>
     </div>
 
-    <!-- BOOK REQUEST FORM CARD -->
-    <div class="card">
-      <div class="card-header"><h3>📅 Book Request</h3></div>
-      <div style="padding:2rem">
+    <div class="card" style="margin-top:1.5rem">
+      <div class="card-header"><h3>📅 Book a Session</h3></div>
+      <div style="padding:1.5rem">
+        <p style="color:var(--ink2);font-size:0.9rem;margin-bottom:1.4rem">Request a meeting or working session. I'll confirm within 24 hours.</p>
         <form onsubmit="bookSession(event)" class="booking-form-grid">
           <div class="form-group">
-            <label>Preferred Date</label>
+            <label>Preferred date</label>
             <input type="date" name="date" id="book-date" required/>
           </div>
           <div class="form-group">
-            <label>Preferred Time</label>
+            <label>Preferred time</label>
             <select name="time" required>
-              <option value="">Select Time Window...</option>
+              <option value="">Select time…</option>
               <option value="09:00">9:00 AM</option>
               <option value="10:00">10:00 AM</option>
               <option value="11:00">11:00 AM</option>
               <option value="13:00">1:00 PM</option>
               <option value="14:00">2:00 PM</option>
               <option value="15:00">3:00 PM</option>
+              <option value="16:00">4:00 PM</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Session Type</label>
+            <label>Session type</label>
             <select name="type" required>
-              <option value="">Select Type...</option>
-              <option value="call">Video Call</option>
-              <option value="review">Milestone Review</option>
-              <option value="workshop">Working Session</option>
+              <option value="">Select…</option>
+              <option value="call">Video call</option>
+              <option value="review">Project review</option>
+              <option value="workshop">Working session</option>
+              <option value="other">Other</option>
             </select>
           </div>
           <div class="form-group">
             <label>Duration</label>
             <select name="duration">
-              <option value="0.5">30 mins</option>
+              <option value="0.5">30 minutes</option>
               <option value="1" selected>1 hour</option>
+              <option value="1.5">1.5 hours</option>
               <option value="2">2 hours</option>
             </select>
           </div>
           <div class="form-group" style="grid-column:1/-1">
-            <label>Notes / Agenda</label>
-            <textarea name="message" rows="3" placeholder="Context for this meeting request..."></textarea>
+            <label>Message / agenda</label>
+            <textarea name="message" rows="2" placeholder="What would you like to discuss?"></textarea>
           </div>
-          <div style="grid-column:1/-1;">
-            <button type="submit" class="btn-primary" id="btn-submit-booking">Book Request</button>
-            <div id="book-status" style="margin-top: 1rem; display:none;"></div>
+          <div style="grid-column:1/-1">
+            <button type="submit" class="btn-primary">Request session →</button>
+            <div id="book-status" class="form-status" style="margin-top:0.5rem"></div>
           </div>
         </form>
       </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <div class="card-header"><h3>Upcoming Sessions</h3></div>
+      <div id="upcoming-sessions" style="padding:1rem"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
     </div>
   </main>
 </div>
@@ -277,131 +278,276 @@ const auth = {
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
 
-let allLogs = [];
-let currentTab = 'all';
+const TYPE_LABELS = { call: 'Video call', review: 'Project review', workshop: 'Working session', other: 'Other' };
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
   if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
   return res.json();
 }
 
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   const u = auth.user();
-  document.getElementById('user-name').textContent = u ? u.name : 'Client';
+  if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
+  document.getElementById('user-name').textContent = u ? u.name : '';
   if (u && u.company) document.getElementById('user-company').textContent = u.company;
   document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
 })();
 
-function logout() { auth.clear(); window.location.href = 'login.html'; }
+function logout() { auth.clear(); window.location.href = '../index.html'; }
+
+let allLogs = [];
+let currentTab = 'all';
+let currentHourlyRate = 20; 
 
 async function loadPortal() {
   try {
-    const [stats, logs] = await Promise.all([
+    const [stats, logs, bookings] = await Promise.all([
       apiFetch('/client/stats'),
-      apiFetch('/client/timelogs?limit=200')
+      apiFetch('/client/timelogs?limit=200'),
+      apiFetch('/client/bookings')
     ]);
+    const isFixed = stats.rateType === 'fixed';
+    currentHourlyRate = parseFloat(stats.hourlyRate || 0);
 
-    allLogs = logs || [];
+    // Update fancy header type badge display context dynamically with active loaded rate
+    const badgeContainer = document.getElementById('engagement-badge-container');
+    if (isFixed) {
+      badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
+    } else {
+      badgeContainer.innerHTML = `<span style="background:rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #4ade80; display: inline-flex; align-items: center; gap: 0.5rem;"><span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate.toFixed(2)}/hr)</span>`;
+    }
 
-    // Base Numbers
-    document.getElementById('s-paid').textContent = '$' + parseFloat(stats.totalPaid || 0).toFixed(2);
-    document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid || 0).toFixed(2);
-    document.getElementById('s-hours').textContent = parseFloat(stats.totalHours || 0).toFixed(1) + 'h';
+    const todayStr = new Date().toISOString().slice(0,10);
+    const futureBookings = bookings.filter(b => {
+      const bDate = b.date ? b.date.slice(0,10) : '';
+      return bDate >= todayStr && b.status !== 'cancelled';
+    });
+    document.getElementById('s-bookings').textContent = futureBookings.length;
 
-    // Calculate Month/Year breakdown for unpaid logs
-    calculateMonthlyBreakdown(allLogs);
-    
-    renderLogs(allLogs);
-  } catch (e) { console.error(e); }
+    if (isFixed) {
+      document.getElementById('fixed-notice').style.display = 'block';
+      document.getElementById('fixed-section').style.display = 'block';
+      document.getElementById('hourly-section').style.display = 'none';
+      document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
+
+      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
+      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
+      document.getElementById('s-hours').textContent  = '—';
+
+      const isPaid = stats.fixedStatus === 'paid';
+      document.getElementById('fixed-status-display').innerHTML = isPaid
+        ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div></div>`
+        : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div></div>`;
+    } else {
+      document.getElementById('fixed-notice').style.display = 'none';
+      document.getElementById('fixed-section').style.display = 'none';
+      document.getElementById('hourly-section').style.display = 'block';
+      
+      allLogs = logs;
+      
+      // Calculate dynamic accurate KPI adjustments based on active log evaluation structures
+      calculateAndRenderMetrics(allLogs);
+    }
+
+    const upcoming = document.getElementById('upcoming-sessions');
+    if (!futureBookings.length) {
+      upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions.</p>';
+    } else {
+      upcoming.innerHTML = futureBookings.map(b => {
+        let formattedDate = b.date;
+        try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
+        return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--paper2)">
+          <div>
+            <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
+            <div style="color:var(--ink2);font-size:0.82rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
+            ${b.message?`<div style="color:var(--ink3);font-size:0.8rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
+          </div>
+          <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='pending'?'badge-amber':'badge-gray'}">${b.status}</span>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) { console.error(e); }
 }
 
-function calculateMonthlyBreakdown(logs) {
-  const breakdownContainer = document.getElementById('breakdown-container');
-  const unpaidLogs = logs.filter(l => l.payment_status === 'unpaid');
+// Separate standalone calculation engine that updates metrics cards and periodic summaries
+function calculateAndRenderMetrics(filteredLogs) {
+  let totalPaidAdjusted = 0;
+  let totalUnpaidAdjusted = 0;
+  let totalHoursAdjusted = 0;
+  
+  const periodicData = {};
 
-  if (unpaidLogs.length === 0) {
-    breakdownContainer.innerHTML = '<p style="color: var(--success-green); font-weight:600;">No outstanding unpaid balances!</p>';
-    return;
-  }
-
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const monthlyMap = {};
-
-  unpaidLogs.forEach(log => {
-    const d = new Date(log.date);
-    if (!isNaN(d.getTime())) {
-      const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
-      monthlyMap[key] = (monthlyMap[key] || 0) + parseFloat(log.amount || 0);
+  // Process global array to make sure metrics mirror actual breakdown elements correctly
+  filteredLogs.forEach(l => {
+    const h = parseFloat(l.hours || 0);
+    let amt = parseFloat(l.amount || 0);
+    if (!amt && h && currentHourlyRate) {
+      amt = h * currentHourlyRate;
     }
+    
+    totalHoursAdjusted += h;
+    if (l.payment_status === 'paid') {
+      totalPaidAdjusted += amt;
+    } else {
+      totalUnpaidAdjusted += amt;
+    }
+
+    // Process structured date components for monthly subledger maps
+    try {
+      const dateObj = new Date(l.date);
+      if (!isNaN(dateObj.getTime())) {
+        const year = dateObj.getFullYear();
+        const monthLabel = dateObj.toLocaleString('default', { month: 'long' });
+        const periodKey = `${monthLabel} ${year}`;
+
+        if (!periodicData[periodKey]) {
+          periodicData[periodKey] = { hours: 0, amount: 0, paid: 0, unpaid: 0 };
+        }
+        periodicData[periodKey].hours += h;
+        periodicData[periodKey].amount += amt;
+        if (l.payment_status === 'paid') {
+          periodicData[periodKey].paid += amt;
+        } else {
+          periodicData[periodKey].unpaid += amt;
+        }
+      }
+    } catch(err) { console.error("Period breakdown parsing error", err); }
   });
 
-  let htmlStr = '';
-  for (const [monthYear, totalAmount] of Object.entries(monthlyMap)) {
-    htmlStr += `
-      <div class="breakdown-item">
-        <span style="font-weight: 500;">${monthYear}</span>
-        <strong style="color: var(--warning-amber);">$${totalAmount.toFixed(2)}</strong>
-      </div>`;
+  // Assign parameters to upper standard cards UI layout
+  document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
+  document.getElementById('s-unpaid').textContent = '$' + totalUnpaidAdjusted.toFixed(2);
+  document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
+
+  // Render the periodic subledger elements map dynamically
+  const breakdownContainer = document.getElementById('periodic-breakdown-container');
+  const periods = Object.keys(periodicData);
+  
+  if (!periods.length) {
+    breakdownContainer.innerHTML = `<p style="color: var(--ink3); font-size: 0.85rem; padding: 0.5rem;">No historical billing periods detected inside chosen filter.</p>`;
+  } else {
+    breakdownContainer.innerHTML = periods.map(period => {
+      const data = periodicData[period];
+      return `
+        <div style="background: var(--paper1); border: 1px solid var(--paper3); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--ink); border-bottom: 1px solid var(--paper2); padding-bottom: 0.4rem; margin-bottom: 0.6rem; display:flex; justify-content:space-between; align-items:center;">
+            <span>📅 ${period}</span>
+            <span style="font-size:0.8rem; background:rgba(13,35,83,0.06); padding:0.1rem 0.4rem; border-radius:4px; color:var(--ink2)">${data.hours.toFixed(1)}h</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--ink3)">Total Volume:</span>
+              <strong style="color: var(--ink)">$${data.amount.toFixed(2)}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #166534">Settled Paid:</span>
+              <span style="color: #166534; font-weight: 600;">$${data.paid.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #92400e">Outstanding:</span>
+              <span style="color: #92400e; font-weight: 600;">$${data.unpaid.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
-  breakdownContainer.innerHTML = htmlStr;
+
+  renderLogs(filteredLogs);
 }
 
 function switchTab(tab) {
   currentTab = tab;
   ['all','unpaid','paid'].forEach(t => {
-    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+    const btn = document.getElementById('tab-'+t);
+    btn.style.background = t===tab ? 'var(--ink)' : 'transparent';
+    btn.style.color      = t===tab ? 'white'      : 'var(--ink2)';
+    btn.style.border     = t===tab ? 'none'        : '1.5px solid var(--paper3)';
   });
+  document.getElementById('logs-title').textContent = { all:'All Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' }[tab];
+  
   const filtered = tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab);
-  renderLogs(filtered);
+  calculateAndRenderMetrics(filtered);
 }
 
 function renderLogs(logs) {
-  const tbody = document.getElementById('logs-table');
+  const tbody  = document.getElementById('logs-table');
+  const footer = document.getElementById('logs-footer');
   if (!logs.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted)">No matching logs found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">${
+      currentTab==='unpaid' ? 'No unpaid logs — all settled! ✓' : currentTab==='paid' ? 'No paid logs yet.' : 'No logs found.'
+    }</td></tr>`;
+    footer.textContent = '';
     return;
   }
+  let sumHours=0, sumAmount=0;
   tbody.innerHTML = logs.map(l => {
-    const isPaid = l.payment_status === 'paid';
+    const isPaid  = l.payment_status === 'paid';
+    const hours = parseFloat(l.hours || 0);
+    
+    let amount = parseFloat(l.amount || 0);
+    if (!amount && hours && currentHourlyRate) {
+      amount = hours * currentHourlyRate;
+    }
+
+    sumHours  += hours;
+    sumAmount += amount;
+    const badge = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">⚠ Unpaid</span>';
     return `
-      <tr>
+      <tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
         <td>${new Date(l.date).toLocaleDateString()}</td>
-        <td><strong>${l.hours}h</strong></td>
-        <td>$${parseFloat(l.amount||0).toFixed(2)}</td>
-        <td><span class="badge ${isPaid?'badge-green':'badge-amber'}">${l.payment_status}</span></td>
-        <td style="color:var(--text-muted);">${l.task_description || ''}</td>
+        <td><strong>${hours}h</strong></td>
+        <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+        <td>${badge}</td>
+        <td>${l.task_description || ''}</td>
       </tr>`;
   }).join('');
+  footer.innerHTML = `<strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong>`;
 }
 
 async function bookSession(e) {
   e.preventDefault();
   const status = document.getElementById('book-status');
-  const btn = document.getElementById('btn-submit-booking');
-  btn.disabled = true; btn.textContent = 'Booking...';
-  
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Sending…';
   try {
-    await apiFetch('/client/bookings', { 
-      method: 'POST', 
-      body: JSON.stringify(Object.fromEntries(new FormData(e.target))) 
-    });
-    status.style.display = 'block';
-    status.style.color = 'var(--success-green)';
-    status.textContent = 'Book Request submitted successfully.';
+    await apiFetch('/client/bookings', { method:'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+    status.className = 'form-status success';
+    status.textContent = '✓ Request sent! I\'ll confirm within 24 hours.';
     e.target.reset();
+    document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
+    loadPortal();
   } catch(err) {
-    status.style.display = 'block';
-    status.style.color = 'red';
-    status.textContent = 'Failed to submit request.';
+    status.className = 'form-status error';
+    status.textContent = err.message;
   } finally {
-    btn.disabled = false; btn.textContent = 'Book Request';
+    btn.disabled = false; btn.textContent = 'Request session →';
   }
 }
 
-function openSidebar() { document.getElementById('sidebar').classList.add('is-open'); document.getElementById('sidebar-overlay').classList.add('visible'); }
-function closeSidebar() { document.getElementById('sidebar').classList.remove('is-open'); document.getElementById('sidebar-overlay').classList.remove('visible'); }
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('is-open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('is-open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+});
 
 loadPortal();
 </script>
