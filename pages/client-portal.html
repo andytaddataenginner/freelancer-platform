@@ -121,15 +121,10 @@
   </aside>
 
   <main class="main-content">
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
-      <div>
-        <h2 class="page-title" style="display:inline-block; vertical-align:middle; margin-right:0.8rem;">My Project Portal</h2>
-        <span id="rate-tier-badge" class="badge" style="display:inline-block; vertical-align:middle; background:rgba(34,197,94,0.1); color:#22c55e; border:1px solid rgba(34,197,94,0.2); padding:0.35rem 0.75rem; font-size:0.8rem; border-radius:20px; font-weight:600;">Hourly Tier</span>
-      </div>
-    </div>
-    <p class="page-sub" style="margin-top:0.3rem;">Track your project, payment status, and book sessions.</p>
+    <h2 class="page-title">My Project Portal</h2>
+    <p class="page-sub">Track your project, payment status, and book sessions.</p>
 
-    <div id="fixed-notice" style="display:none;margin-bottom:1.5rem;margin-top:1rem;">
+    <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
       <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
         <div>
           <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#f5c842;font-weight:700;margin-bottom:0.4rem">Fixed Price Project</div>
@@ -140,7 +135,7 @@
       </div>
     </div>
 
-    <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem; margin-top:1rem;">
+    <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
       <div class="stat-card" style="border-left:4px solid #22c55e">
         <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$—</span>
         <span class="stat-label" id="lbl-paid">Total paid</span>
@@ -287,13 +282,6 @@ let allLogs = [];
 let currentTab = 'all';
 let currentRateType = 'hourly';
 
-function fmtH(h){
-  const hr=Math.floor(h),mn=Math.round((h-hr)*60);
-  if(hr===0) return mn+'min';
-  if(mn===0) return hr+'h';
-  return hr+'h '+mn+'min';
-}
-
 async function loadPortal() {
   try {
     const [stats, logs, bookings] = await Promise.all([
@@ -303,65 +291,51 @@ async function loadPortal() {
     ]);
     
     currentRateType = stats.rateType || stats.rate_type || 'hourly';
-    const badge = document.getElementById('rate-tier-badge');
 
-    // Dynamic Header Pill Display Handling
-    if (currentRateType === 'fixed') {
-      badge.textContent = `Fixed Tier`;
-      badge.style.color = '#1e40af';
-      badge.style.background = '#dbeafe';
-      badge.style.borderColor = '#bfdbfe';
-    } else if (currentRateType === 'credit') {
-      badge.textContent = `Prepaid Credit Bucket`;
-      badge.style.color = '#166534';
-      badge.style.background = '#dcfce7';
-      badge.style.borderColor = '#bbf7d0';
-    } else {
-      const rateVal = parseFloat(stats.hourlyRate || stats.hourly_rate || 0);
-      badge.textContent = `Hourly Tier ($${rateVal.toFixed(2)}/hr)`;
-      badge.style.color = '#22c55e';
-      badge.style.background = 'rgba(34, 197, 94, 0.1)';
-      badge.style.borderColor = 'rgba(34, 197, 94, 0.2)';
-    }
-
-    // Dynamic Metrics Processing based on Pricing Model Structures
+    // ── CREDIT MODEL INTERFACE CONFIGURATION ──
     if (currentRateType === 'credit') {
       document.getElementById('fixed-notice').style.display = 'none';
       document.getElementById('fixed-section').style.display = 'none';
       document.getElementById('hourly-section').style.display = 'block';
       
+      // Card 1: Total Purchased Credits
       document.getElementById('s-paid').textContent = (stats.total_credits || stats.totalCredits || 0) + 'h';
       document.getElementById('lbl-paid').textContent = 'Purchased Credits';
       
+      // Card 2: Remaining Available Balance 
       document.getElementById('s-unpaid').textContent = (stats.remaining_credits || stats.remainingCredits || 0).toFixed(1) + 'h';
       document.getElementById('lbl-unpaid').textContent = 'Available Balance';
-    } else if (currentRateType === 'fixed') {
+    } 
+    // ── FIXED CONTRACT MODEL ──
+    else if (currentRateType === 'fixed') {
       document.getElementById('fixed-notice').style.display = 'block';
       document.getElementById('fixed-section').style.display = 'block';
       document.getElementById('hourly-section').style.display = 'none';
-      document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice || stats.fixed_price || 0).toFixed(2);
+      document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
 
-      const isPaid = (stats.fixedStatus || stats.fixed_payment_status) === 'paid';
+      const isPaid = stats.fixedStatus === 'paid';
       document.getElementById('fixed-status-display').innerHTML = isPaid
         ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div></div>`
         : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div><div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-top:0.3rem">Please complete your payment</div></div>`;
       
-      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid || stats.total_paid || 0).toFixed(2);
-      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid || stats.total_unpaid || 0).toFixed(2);
+      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
+      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
       document.getElementById('lbl-paid').textContent = 'Total paid';
       document.getElementById('lbl-unpaid').textContent = 'Outstanding balance';
-    } else {
+    } 
+    // ── STANDARD HOURLY ENGAGEMENT ──
+    else {
       document.getElementById('fixed-notice').style.display = 'none';
       document.getElementById('fixed-section').style.display = 'none';
       document.getElementById('hourly-section').style.display = 'block';
       
-      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid || stats.total_paid || 0).toFixed(2);
-      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid || stats.total_unpaid || 0).toFixed(2);
+      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
+      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
       document.getElementById('lbl-paid').textContent = 'Total paid';
       document.getElementById('lbl-unpaid').textContent = 'Outstanding balance';
     }
 
-    document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours || stats.total_hours || 0).toFixed(1) + 'h';
+    document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
     
     const todayStr = new Date().toISOString().slice(0,10);
     const futureBookings = bookings.filter(b => {
@@ -395,10 +369,7 @@ async function loadPortal() {
         </div>`;
       }).join('');
     }
-  } catch(e) { 
-    console.error(e);
-    document.getElementById('logs-table').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:red">Failed to load data details: ${e.message}</td></tr>`;
-  }
+  } catch(e) { console.error(e); }
 }
 
 function switchTab(tab) {
@@ -435,9 +406,10 @@ function renderLogs(logs) {
     let badge = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">⚠ Unpaid</span>';
     let billingCost = amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—';
     
+    // Adjust badge layout cell if log row belongs to credit plan context
     if (currentRateType === 'credit' || l.rate_type === 'credit') {
       badge = '<span class="badge badge-green">Deducted</span>';
-      billingCost = '<small style="color:#166534; font-weight:600">Credit Box</small>';
+      billingCost = '<small style="color:#166534; font-weight:600">Credit Bucket</small>';
     }
 
     return `
@@ -472,7 +444,7 @@ async function bookSession(e) {
   } catch(err) {
     status.className = 'form-status error';
     status.textContent = err.message;
-  } declare {
+  } finally {
     btn.disabled = false; btn.textContent = 'Request session →';
   }
 }
