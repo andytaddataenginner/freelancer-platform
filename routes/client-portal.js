@@ -7,11 +7,11 @@ const TYPE_LABELS = { call:'Video call / meeting', review:'Project review', work
 // GET /api/client/stats
 router.get('/stats', requireClient, async (req, res, next) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.id; // This matches client_id in the time_logs table
     const now = new Date();
     const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
 
-    // 1. ✅ Select credit_balance along with structural contract parameters
+    // 1. Select credit_balance along with structural contract parameters
     const clientInfo = await pool.query(
       'SELECT rate_type, hourly_rate, fixed_price, fixed_payment_status, COALESCE(credit_balance, 0)::float AS credit_balance FROM clients WHERE user_id=$1',
       [clientId]
@@ -25,6 +25,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
       const price = parseFloat(c.fixed_price || 0);
       if (c.fixed_payment_status === 'paid') totalPaid = price;
       else totalUnpaid = price;
+      
       const hrs = await pool.query(
         'SELECT COALESCE(SUM(hours),0)::float AS h, COUNT(*)::int AS cnt FROM time_logs WHERE client_id=$1',
         [clientId]
@@ -46,13 +47,13 @@ router.get('/stats', requireClient, async (req, res, next) => {
       totalTasks=tasks.rows[0].cnt; totalPaid=paid.rows[0].total; totalUnpaid=unpaid.rows[0].total;
     }
 
-    // 2. ✅ Pass creditBalance to the response payload for frontend card and banner parsing
+    // 2. Pass data to payload response for frontend card parsing
     res.json({ 
       rateType: c.rate_type || 'hourly', 
       hourlyRate: parseFloat(c.hourly_rate || 0),
       fixedPrice: c.fixed_price || 0, 
       fixedStatus: c.fixed_payment_status || 'unpaid', 
-      creditBalance: c.credit_balance || 0, // Added for tracking overpayments/retainers
+      creditBalance: c.credit_balance || 0,
       totalHours, 
       hoursThisMonth, 
       totalTasks, 
@@ -65,10 +66,13 @@ router.get('/stats', requireClient, async (req, res, next) => {
 // GET /api/client/timelogs
 router.get('/timelogs', requireClient, async (req, res, next) => {
   try {
+    const clientId = req.user.id;
     const { limit=200, offset=0, from, to } = req.query;
-    let where=['client_id = $1'], params=[req.user.id], i=2;
+    
+    let where=['client_id = $1'], params=[clientId], i=2;
     if (from) { where.push(`date >= $${i++}`); params.push(from); }
     if (to)   { where.push(`date <= $${i++}`); params.push(to); }
+    
     const { rows } = await pool.query(
       `SELECT * FROM time_logs WHERE ${where.join(' AND ')} ORDER BY date DESC LIMIT $${i++} OFFSET $${i++}`,
       [...params, limit, offset]
@@ -77,7 +81,7 @@ router.get('/timelogs', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// GET /api/client/bookings — only THIS client's bookings
+// GET /api/client/bookings
 router.get('/bookings', requireClient, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
@@ -88,7 +92,7 @@ router.get('/bookings', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/client/bookings — book with the freelancer who OWNS this client
+// POST /api/client/bookings
 router.post('/bookings', requireClient, async (req, res, next) => {
   try {
     const { date, time, duration, type, message } = req.body;
@@ -114,7 +118,7 @@ router.post('/bookings', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// DELETE /api/client/bookings/:id — client cancels their own booking
+// DELETE /api/client/bookings/:id
 router.delete('/bookings/:id', requireClient, async (req, res, next) => {
   try {
     await pool.query(
@@ -125,8 +129,7 @@ router.delete('/bookings/:id', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// 🟢 NEW ENDPOINT: GET /api/payments/history
-// Fetches the historical cleared receipts to populate the subledger table view
+// GET /api/client/payments/history
 router.get('/payments/history', requireClient, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
@@ -137,8 +140,7 @@ router.get('/payments/history', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// 🟢 NEW ENDPOINT: POST /api/payments/record
-// Processes manual remittance inflows, increasing both cash paid and the credit balance asset account pool
+// POST /api/client/payments/record
 router.post('/payments/record', requireClient, async (req, res, next) => {
   try {
     const { amount, date, notes } = req.body;
@@ -151,13 +153,12 @@ router.post('/payments/record', requireClient, async (req, res, next) => {
       return res.status(400).json({ error: 'Processing timestamp date value is required.' });
     }
 
-    // Insert record entry item directly inside the historical ledger audit table
     await pool.query(
       'INSERT INTO payments (client_id, amount, date, notes) VALUES ($1, $2, $3, $4)',
       [req.user.id, parsedAmount, date, notes || null]
     );
 
-    // Increment both corporate total cash paid and the dynamic client available credit pool reserve counter account
+    // Updates corporate total cash and increases their available retainer credit pool counter
     await pool.query(
       'UPDATE clients SET total_paid = COALESCE(total_paid, 0) + $1, credit_balance = COALESCE(credit_balance, 0) + $1 WHERE user_id = $2',
       [parsedAmount, req.user.id]
