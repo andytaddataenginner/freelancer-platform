@@ -155,6 +155,10 @@
         <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
         <span class="stat-label">Outstanding balance</span>
       </div>
+      <div class="stat-card" style="border-left:4px solid #3b82f6">
+        <span class="stat-num" id="s-credit" style="color:#1d4ed8; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
+        <span class="stat-label">Available account credit</span>
+      </div>
       <div class="stat-card" style="border-left:4px solid transparent">
         <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">0.0h</span>
         <span class="stat-label">Total hours logged</span>
@@ -167,7 +171,7 @@
 
     <div id="hourly-section">
       <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
-        <button id="tab-all"    onclick="switchTab('all')"    style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
+        <button id="tab-all"    onclick="switchTab('all')"     style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
         <button id="tab-unpaid" onclick="switchTab('unpaid')" style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">⚠ Unpaid</button>
         <button id="tab-paid"   onclick="switchTab('paid')"   style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">✓ Paid</button>
       </div>
@@ -312,7 +316,6 @@ async function loadPortal() {
     const isFixed = stats.rateType === 'fixed';
     currentHourlyRate = parseFloat(stats.hourlyRate || 0);
 
-    // Update fancy header type badge display context dynamically with active loaded rate
     const badgeContainer = document.getElementById('engagement-badge-container');
     if (isFixed) {
       badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
@@ -333,8 +336,9 @@ async function loadPortal() {
       document.getElementById('hourly-section').style.display = 'none';
       document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
 
-      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
-      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
+      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid   ||0).toFixed(2);
+      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid ||0).toFixed(2);
+      document.getElementById('s-credit').textContent = '$' + parseFloat(stats.creditBalance || 0).toFixed(2);
       document.getElementById('s-hours').textContent  = '—';
 
       const isPaid = stats.fixedStatus === 'paid';
@@ -347,8 +351,6 @@ async function loadPortal() {
       document.getElementById('hourly-section').style.display = 'block';
       
       allLogs = logs;
-      
-      // Calculate dynamic accurate KPI adjustments based on active log evaluation structures
       calculateAndRenderMetrics(allLogs);
     }
 
@@ -373,15 +375,13 @@ async function loadPortal() {
   } catch(e) { console.error(e); }
 }
 
-// Separate standalone calculation engine that updates metrics cards and periodic summaries
 function calculateAndRenderMetrics(filteredLogs) {
   let totalPaidAdjusted = 0;
-  let totalUnpaidAdjusted = 0;
+  let totalBilledAdjusted = 0;
   let totalHoursAdjusted = 0;
   
   const periodicData = {};
 
-  // Process global array to make sure metrics mirror actual breakdown elements correctly
   filteredLogs.forEach(l => {
     const h = parseFloat(l.hours || 0);
     let amt = parseFloat(l.amount || 0);
@@ -390,13 +390,11 @@ function calculateAndRenderMetrics(filteredLogs) {
     }
     
     totalHoursAdjusted += h;
+    totalBilledAdjusted += amt;
     if (l.payment_status === 'paid') {
       totalPaidAdjusted += amt;
-    } else {
-      totalUnpaidAdjusted += amt;
     }
 
-    // Process structured date components for monthly subledger maps
     try {
       const dateObj = new Date(l.date);
       if (!isNaN(dateObj.getTime())) {
@@ -418,12 +416,24 @@ function calculateAndRenderMetrics(filteredLogs) {
     } catch(err) { console.error("Period breakdown parsing error", err); }
   });
 
-  // Assign parameters to upper standard cards UI layout
+  // Balanced Credit Logic: (Total Paid Cash Ledger - Total Billed Work Entries)
+  let balanceDiff = totalPaidAdjusted - totalBilledAdjusted;
+  let outstandingBalance = 0;
+  let creditBalance = 0;
+
+  if (balanceDiff >= 0) {
+    creditBalance = balanceDiff;
+    outstandingBalance = 0;
+  } else {
+    creditBalance = 0;
+    outstandingBalance = Math.abs(balanceDiff);
+  }
+
   document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
-  document.getElementById('s-unpaid').textContent = '$' + totalUnpaidAdjusted.toFixed(2);
+  document.getElementById('s-unpaid').textContent = '$' + outstandingBalance.toFixed(2);
+  document.getElementById('s-credit').textContent = '$' + creditBalance.toFixed(2);
   document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
 
-  // Render the periodic subledger elements map dynamically
   const breakdownContainer = document.getElementById('periodic-breakdown-container');
   const periods = Object.keys(periodicData);
   
