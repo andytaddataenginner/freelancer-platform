@@ -13,6 +13,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     if (from)           { where.push(`t.date >= $${i++}::date`);      params.push(from); }
     if (to)             { where.push(`t.date <= $${i++}::date`);      params.push(to); }
     if (payment_status) { where.push(`t.payment_status = $${i++}`);   params.push(payment_status); }
+    
     const { rows } = await pool.query(`
       SELECT t.*, u.name AS client_name, u.company AS client_company
       FROM time_logs t
@@ -50,6 +51,13 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, rate_type, amount, payment_status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'unpaid') RETURNING *
     `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2)]);
+
+    // Deduct log total amount directly from client credit balance retainer
+    await pool.query(
+      'UPDATE clients SET credit_balance = COALESCE(credit_balance, 0) - $1 WHERE user_id = $2',
+      [amount, client_id]
+    );
+
     res.status(201).json(rows[0]);
   } catch (e) { next(e); }
 });
@@ -82,25 +90,29 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/timelogs/:id — now also updates amount
+// PUT /api/timelogs/:id
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
 
-    let finalAmount = amount;
+    // Fetch original log state to balance out the changes to the credit account
+    const oldLog = await pool.query('SELECT client_id, amount FROM time_logs WHERE id=$1', [req.params.id]);
+    if (!oldLog.rows.length) return res.status(404).json({ error: 'Not found' });
+    
+    const client_id = oldLog.rows[0].client_id;
+    const oldAmount = parseFloat(oldLog.rows[0].amount || 0);
 
-    // If amount not provided, recalculate from client rate
+    let finalAmount = amount;
     if (finalAmount === undefined || finalAmount === null) {
-      const logRow = await pool.query('SELECT client_id FROM time_logs WHERE id=$1', [req.params.id]);
-      if (logRow.rows.length) {
-        const clientInfo = await pool.query(
-          'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id=$1',
-          [logRow.rows[0].client_id]
-        );
-        const c = clientInfo.rows[0] || {};
-        if (c.rate_type === 'hourly' && c.hourly_rate) {
-          finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
-        }
+      const clientInfo = await pool.query(
+        'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id=$1',
+        [client_id]
+      );
+      const c = clientInfo.rows[0] || {};
+      if (c.rate_type === 'hourly' && c.hourly_rate) {
+        finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
+      } else {
+        finalAmount = oldAmount;
       }
     }
 
@@ -108,9 +120,15 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
       UPDATE time_logs
       SET hours=$1, task_description=$2, date=$3, amount=COALESCE($4::numeric, amount)
       WHERE id=$5 AND freelancer_id=$6 RETURNING *
-    `, [hours, task_description, date, finalAmount || null, req.params.id, req.user.id]);
+    `, [hours, task_description, date, finalAmount, req.params.id, req.user.id]);
 
-    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    // Reverse the old logged cost and apply the updated transaction value to keep balances clean
+    const delta = parseFloat(finalAmount) - oldAmount;
+    await pool.query(
+      'UPDATE clients SET credit_balance = COALESCE(credit_balance, 0) - $1 WHERE user_id = $2',
+      [delta, client_id]
+    );
+
     res.json(rows[0]);
   } catch (e) { next(e); }
 });
@@ -118,6 +136,16 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
 // DELETE /api/timelogs/:id
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
+    const logRow = await pool.query('SELECT client_id, amount FROM time_logs WHERE id=$1', [req.params.id]);
+    if (logRow.rows.length) {
+      const { client_id, amount } = logRow.rows[0];
+      // Refund the deleted log's value back into the credit balance pool
+      await pool.query(
+        'UPDATE clients SET credit_balance = COALESCE(credit_balance, 0) + $1 WHERE user_id = $2',
+        [parseFloat(amount || 0), client_id]
+      );
+    }
+
     await pool.query('DELETE FROM time_logs WHERE id=$1 AND freelancer_id=$2', [req.params.id, req.user.id]);
     res.json({ message: 'Deleted' });
   } catch (e) { next(e); }
