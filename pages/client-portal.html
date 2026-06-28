@@ -138,11 +138,11 @@
     <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
       <div class="stat-card" style="border-left:4px solid #22c55e">
         <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$—</span>
-        <span class="stat-label" id="lbl-paid">Total paid</span>
+        <span class="stat-label">Total paid</span>
       </div>
       <div class="stat-card" style="border-left:4px solid #f59e0b">
         <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$—</span>
-        <span class="stat-label" id="lbl-unpaid">Outstanding balance</span>
+        <span class="stat-label">Outstanding balance</span>
       </div>
       <div class="stat-card" style="border-left:4px solid transparent">
         <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">—</span>
@@ -291,23 +291,23 @@ async function loadPortal() {
     ]);
     
     currentRateType = stats.rateType || stats.rate_type || 'hourly';
+    const isFixed = currentRateType === 'fixed';
+    const isCredit = currentRateType === 'credit';
 
-    // ── CREDIT MODEL INTERFACE CONFIGURATION ──
-    if (currentRateType === 'credit') {
+    // ── CREDIT MODEL ──
+    if (isCredit) {
       document.getElementById('fixed-notice').style.display = 'none';
       document.getElementById('fixed-section').style.display = 'none';
       document.getElementById('hourly-section').style.display = 'block';
       
-      // Card 1: Total Purchased Credits
-      document.getElementById('s-paid').textContent = (stats.total_credits || stats.totalCredits || 0) + 'h';
-      document.getElementById('lbl-paid').textContent = 'Purchased Credits';
+      document.getElementById('s-paid').textContent = (stats.totalCredits || stats.total_credits || 0) + 'h';
+      document.getElementById('s-unpaid').textContent = (stats.remainingCredits || stats.remaining_credits || 0).toFixed(1) + 'h';
       
-      // Card 2: Remaining Available Balance 
-      document.getElementById('s-unpaid').textContent = (stats.remaining_credits || stats.remainingCredits || 0).toFixed(1) + 'h';
-      document.getElementById('lbl-unpaid').textContent = 'Available Balance';
-    } 
+      document.getElementById('s-paid').nextElementSibling.textContent = 'Purchased Credits';
+      document.getElementById('s-unpaid').nextElementSibling.textContent = 'Available Balance';
+    }
     // ── FIXED CONTRACT MODEL ──
-    else if (currentRateType === 'fixed') {
+    else if (isFixed) {
       document.getElementById('fixed-notice').style.display = 'block';
       document.getElementById('fixed-section').style.display = 'block';
       document.getElementById('hourly-section').style.display = 'none';
@@ -320,10 +320,10 @@ async function loadPortal() {
       
       document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
       document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
-      document.getElementById('lbl-paid').textContent = 'Total paid';
-      document.getElementById('lbl-unpaid').textContent = 'Outstanding balance';
+      document.getElementById('s-paid').nextElementSibling.textContent = 'Total paid';
+      document.getElementById('s-unpaid').nextElementSibling.textContent = 'Outstanding balance';
     } 
-    // ── STANDARD HOURLY ENGAGEMENT ──
+    // ── HOURLY ENGAGEMENT ──
     else {
       document.getElementById('fixed-notice').style.display = 'none';
       document.getElementById('fixed-section').style.display = 'none';
@@ -331,8 +331,8 @@ async function loadPortal() {
       
       document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
       document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
-      document.getElementById('lbl-paid').textContent = 'Total paid';
-      document.getElementById('lbl-unpaid').textContent = 'Outstanding balance';
+      document.getElementById('s-paid').nextElementSibling.textContent = 'Total paid';
+      document.getElementById('s-unpaid').nextElementSibling.textContent = 'Outstanding balance';
     }
 
     document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
@@ -345,7 +345,7 @@ async function loadPortal() {
     
     document.getElementById('s-bookings').textContent = futureBookings.length;
 
-    if (currentRateType !== 'fixed') {
+    if (!isFixed) {
       allLogs = logs;
       renderLogs(allLogs);
     }
@@ -356,7 +356,9 @@ async function loadPortal() {
     } else {
       upcoming.innerHTML = futureBookings.map(b => {
         let formattedDate = b.date;
-        try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
+        try {
+          formattedDate = new Date(b.date).toLocaleDateString();
+        } catch(e){}
         
         return `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--paper2)">
@@ -404,19 +406,18 @@ function renderLogs(logs) {
     sumAmount += amount;
     
     let badge = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">⚠ Unpaid</span>';
-    let billingCost = amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—';
-    
-    // Adjust badge layout cell if log row belongs to credit plan context
+    let costDisplay = amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—';
+
     if (currentRateType === 'credit' || l.rate_type === 'credit') {
       badge = '<span class="badge badge-green">Deducted</span>';
-      billingCost = '<small style="color:#166534; font-weight:600">Credit Bucket</small>';
+      costDisplay = '<small style="color:#166534; font-weight:600">Credit Bucket</small>';
     }
 
     return `
-      <tr style="${(!isPaid && currentRateType !== 'credit') ? 'background:rgba(255,200,100,0.04)' : ''}">
+      <tr style="${(!isPaid && currentRateType !== 'credit')?'background:rgba(255,200,100,0.04)':''}">
         <td>${new Date(l.date).toLocaleDateString()}</td>
         <td><strong>${l.hours}h</strong></td>
-        <td>${billingCost}</td>
+        <td>${costDisplay}</td>
         <td>${badge}</td>
         <td>${l.task_description}</td>
       </tr>`;
