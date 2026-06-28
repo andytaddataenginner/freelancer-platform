@@ -279,7 +279,7 @@
       <div class="card">
         <div class="filters">
           <div class="fg">
-            <label>Client Filter</label>
+            <label>Client Filter <span id="client-credit-display" style="margin-left: 6px; color: #1a5cff; font-weight: 600; text-transform: none;"></span></label>
             <select id="filter-client" onchange="loadLogs()">
               <option value="">All clients</option>
             </select>
@@ -429,25 +429,46 @@ function toggleSidebar() {
 let selectedIds = new Set();
 let allClients  = [];
 
+// ── Fetch & Populate Client Dropdowns ────────────────────────
+async function fetchAndPopulateClients() {
+  try {
+    allClients = await apiFetch('/clients');
+    const opts = allClients.map(c =>
+      `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-fixedstatus="${c.fixed_payment_status||'unpaid'}" data-credit="${c.credit_balance||0}">${c.name}${c.company?' — '+c.company:''}</option>`
+    ).join('');
+    
+    const filterSelect = document.getElementById('filter-client');
+    const paymentSelect = document.getElementById('payment-client');
+    
+    const previousFilterVal = filterSelect.value;
+    const previousPaymentVal = paymentSelect.value;
+
+    filterSelect.innerHTML = '<option value="">All clients</option>' + opts;
+    paymentSelect.innerHTML = '<option value="">Select client...</option>' + opts;
+    
+    filterSelect.value = previousFilterVal;
+    paymentSelect.value = previousPaymentVal;
+  } catch(e) { console.error('Error fetching clients:', e); }
+}
+
 // ── Init ─────────────────────────────────────────────────────
 async function init() {
   // Default the payment form date field to today
   document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
   
-  try {
-    allClients = await apiFetch('/clients');
-    const opts = allClients.map(c =>
-      `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-fixedstatus="${c.fixed_payment_status||'unpaid'}">${c.name}${c.company?' — '+c.company:''}</option>`
-    ).join('');
-    
-    // Fill both the filter dropdown and the admin record payment dropdown
-    document.getElementById('filter-client').innerHTML = '<option value="">All clients</option>' + opts;
-    document.getElementById('payment-client').innerHTML = '<option value="">Select client...</option>' + opts;
-  } catch(e) {}
+  // Configure default date range to show ONLY the last 5 days initially
+  const today = new Date();
+  const fiveDaysAgo = new Date();
+  fiveDaysAgo.setDate(today.getDate() - 5);
+  
+  document.getElementById('filter-to').value = today.toISOString().split('T')[0];
+  document.getElementById('filter-from').value = fiveDaysAgo.toISOString().split('T')[0];
+  
+  await fetchAndPopulateClients();
   loadLogs();
 }
 
-// ── Option B: Submit Payment Remittance ──────────────────────
+// ── Submit Payment Remittance ──────────────────────
 async function handleRecordPayment(event) {
   event.preventDefault();
   const clientId = document.getElementById('payment-client').value;
@@ -472,8 +493,11 @@ async function handleRecordPayment(event) {
 
     alert(`Success! ${result.message}\nRecalculated surplus retainer balance of $${result.remainingCreditSurplus.toFixed(2)} credited forward.`);
     
-    // Clear dynamic payment inputs and refresh UI lists
+    // Clear dynamic payment inputs
     document.getElementById('payment-amount').value = '';
+    
+    // Re-fetch client values to instantly update data-credit metrics and reload
+    await fetchAndPopulateClients();
     loadLogs();
   } catch (err) {
     alert('Payment Allocation Error: ' + err.message);
@@ -490,6 +514,15 @@ async function loadLogs() {
   // Check if selected client is fixed rate
   const selectedOpt = document.getElementById('filter-client').selectedOptions[0];
   const isFixed = selectedOpt && selectedOpt.value !== "" && selectedOpt.dataset.rate === 'fixed';
+
+  // Live credit display setup
+  const creditDisplay = document.getElementById('client-credit-display');
+  if (selectedOpt && selectedOpt.value !== "") {
+    const balance = parseFloat(selectedOpt.dataset.credit || 0);
+    creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
+  } else {
+    creditDisplay.textContent = '';
+  }
 
   const fixedNotice = document.getElementById('fixed-notice');
   const logsCard    = document.getElementById('logs-card');
@@ -582,14 +615,7 @@ async function toggleFixedPayment(clientId, newStatus) {
       method: 'PATCH', body: JSON.stringify({ fixed_payment_status: newStatus })
     });
     // Refresh the dropdown data and reload
-    allClients = await apiFetch('/clients');
-    const opts = allClients.map(c =>
-      `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-fixedstatus="${c.fixed_payment_status||'unpaid'}">${c.name}${c.company?' — '+c.company:''}</option>`
-    ).join('');
-    const sel = document.getElementById('filter-client');
-    const prev = sel.value;
-    sel.innerHTML = '<option value="">All clients</option>' + opts;
-    sel.value = prev;
+    await fetchAndPopulateClients();
     loadLogs();
   } catch(e) { alert('Failed: ' + e.message); }
 }
