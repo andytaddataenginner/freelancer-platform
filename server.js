@@ -22,7 +22,7 @@ app.use('/api/portfolio', require('./routes/portfolio'));
 app.use('/api/stats',     require('./routes/stats'));
 app.use('/api/contact',   require('./routes/contact'));
 app.use('/api/client',    require('./routes/client-portal'));
-
+app.use('/api/payments',  require('./routes/payments')); // 👈 Added Payments Route
 // ── Health check ─────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
