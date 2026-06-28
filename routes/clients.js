@@ -10,6 +10,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       SELECT u.id, u.name, u.email, u.company,
              c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
              c.fixed_payment_status,
+             COALESCE(c.credit_balance, 0)::float AS credit_balance,
              COUNT(t.id)::int AS log_count,
              COALESCE(SUM(t.hours),0)::float AS total_hours
       FROM users u
@@ -19,7 +20,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
         AND c.freelancer_id = $1
       GROUP BY u.id, u.name, u.email, u.company,
                c.is_active, c.notes, c.rate_type, c.hourly_rate, 
-               c.fixed_price, c.fixed_payment_status
+               c.fixed_price, c.fixed_payment_status, c.credit_balance
       ORDER BY u.name
     `, [req.user.id]);
     res.json(rows);
@@ -42,8 +43,8 @@ router.post('/', requireFreelancer, async (req, res, next) => {
         [name, email.toLowerCase().trim(), hash, company || null]
       );
       await pool.query(
-        `INSERT INTO clients (user_id, freelancer_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status)
-         VALUES ($1,$2,$3,$4,$5,$6,'unpaid')`,
+        `INSERT INTO clients (user_id, freelancer_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance)
+         VALUES ($1,$2,$3,$4,$5,$6,'unpaid', 0)`,
         [userRow.rows[0].id, req.user.id, notes || null, 
          rate_type || 'hourly', hourly_rate || null, fixed_price || null]
       );
