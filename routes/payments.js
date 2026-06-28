@@ -1,67 +1,96 @@
-const router = require('express').Router();
-const pool   = require('../db/pool');
-const { requireFreelancer } = require('../middleware/auth');
+const express = require('express');
+const router = express.Router();
+const pool = require('../db'); // Your database connection configuration
+// Replace with your actual authentication middleware if named differently
+const { requireAdmin } = require('../middleware/auth'); 
 
-// POST /api/payments/record-admin
-// Freelancer records a client payment, auto-allocating it to wipe out outstanding debt first
-router.post('/record-admin', requireFreelancer, async (req, res, next) => {
+// POST /api/payments/remit - Process an admin client remittance payment
+router.post('/remit', requireAdmin, async (req, res, next) => {
+  const client = await pool.connect();
   try {
-    const { client_id, amount, date, notes } = req.body;
-    const parsedAmount = parseFloat(amount);
-
-    if (!client_id || !amount || isNaN(parsedAmount) || parsedAmount <= 0) {
-      return res.status(400).json({ error: 'A valid client and payment amount greater than zero are required.' });
+    const { client_id, amount_remitted, date, notes, log_ids } = req.body;
+    
+    const parsedAmount = parseFloat(amount_remitted);
+    if (!client_id || isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ error: 'Valid client_id and numeric payment amount are required.' });
     }
 
-    const processingDate = date || new Date().toISOString().split('T')[0];
+    // Start database transaction
+    await client.query('BEGIN');
 
-    // 1. Insert into historical log ledger
-    await pool.query(
-      'INSERT INTO payments (client_id, amount, date, notes) VALUES ($1, $2, $3, $4)',
-      [client_id, parsedAmount, processingDate, notes || `Freelancer manually recorded payment`]
+    // 1. Record the base payment tracking entry into the ledger
+    const paymentRes = await client.query(
+      `INSERT INTO payments (client_id, amount, date, notes) 
+       VALUES ($1, $2, $3, $4) RETURNING id`,
+      [client_id, parsedAmount, date || new Date().toISOString().slice(0,10), notes || null]
     );
-
-    // 2. Fetch all unpaid time logs for this specific client, sorted from OLDEST to NEWEST
-    const unpaidLogs = await pool.query(
-      "SELECT id, amount FROM time_logs WHERE client_id = $1 AND payment_status = 'unpaid' ORDER BY date ASC, id ASC",
-      [client_id]
-    );
+    const paymentId = paymentRes.rows[0].id;
 
     let remainingCash = parsedAmount;
-    const logsToMarkPaid = [];
 
-    // Loop through unpaid items and consume the cash pool
-    for (const log of unpaidLogs.rows) {
-      const logAmount = parseFloat(log.amount || 0);
-      if (remainingCash >= logAmount) {
-        remainingCash -= logAmount;
-        logsToMarkPaid.push(log.id);
-      } else {
-        // Not enough cash left to clear this entire log item fully, break loop
-        break;
+    // 2. Process hourly time log matchings if any were selected
+    if (log_ids && Array.isArray(log_ids) && log_ids.length > 0) {
+      // Fetch details of logs requested for checkout matching
+      const logsRes = await client.query(
+        `SELECT id, hours, amount, payment_status 
+         FROM timelogs 
+         WHERE id = ANY($1) AND client_id = $2 
+         ORDER BY date ASC, id ASC`,
+        [log_ids, client_id]
+      );
+
+      for (const log of logsRes.rows) {
+        if (log.payment_status === 'paid') continue;
+
+        // Fallback calculations if explicit total currency field is omitted
+        let logCost = parseFloat(log.amount);
+        if (!logCost && log.hours) {
+          // Fallback to a baseline variable or metadata rate if standard column is missing
+          const clientRateRes = await client.query('SELECT hourly_rate FROM clients WHERE user_id = $1', [client_id]);
+          const rate = parseFloat(clientRateRes.rows[0]?.hourly_rate || 20);
+          logCost = parseFloat(log.hours) * rate;
+        }
+
+        if (remainingCash >= logCost) {
+          // Deduct exact log value from payment pool
+          remainingCash -= logCost;
+
+          // Update log status to Paid
+          await client.query(
+            `UPDATE timelogs 
+             SET payment_status = 'paid', payment_id = $1 
+             WHERE id = $2`,
+            [paymentId, log.id]
+          );
+        } else {
+          // If cash runs out, don't mark as paid
+          break;
+        }
       }
     }
 
-    // 3. Batch update the fully covered logs to 'paid' status
-    if (logsToMarkPaid.length > 0) {
-      await pool.query(
-        "UPDATE time_logs SET payment_status = 'paid' WHERE id = ANY($1)",
-        [logsToMarkPaid]
-      );
-    }
-
-    // 4. Update the client profile: Add to total_paid, set the remaining surplus balance into credit_balance
-    await pool.query(
-      'UPDATE clients SET total_paid = COALESCE(total_paid, 0) + $1, credit_balance = COALESCE(credit_balance, 0) + $2 WHERE user_id = $3',
-      [parsedAmount, remainingCash, client_id]
+    // 3. ✅ FIXED: Add leftover cash balance strictly to credit_balance column
+    // Removed total_paid column reference completely to prevent schema crash errors
+    await client.query(
+      `UPDATE clients 
+       SET credit_balance = COALESCE(credit_balance, 0) + $1 
+       WHERE user_id = $2`,
+      [remainingCash, client_id]
     );
 
-    res.json({
-      success: true,
-      message: `Payment balanced successfully. Cleared ${logsToMarkPaid.length} log entries.`,
-      remainingCreditSurplus: remainingCash
+    await client.query('COMMIT');
+    res.status(200).json({ 
+      success: true, 
+      message: 'Remittance processed successfully.', 
+      applied_to_credit: remainingCash 
     });
-  } catch (e) { next(e); }
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    next(error);
+  } finally {
+    client.release();
+  }
 });
 
 module.exports = router;
