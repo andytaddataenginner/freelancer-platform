@@ -1,42 +1,66 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
-const { requireClient } = require('../middleware/auth');
+const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/payments/history - Get transaction logs for the logged-in client
-router.get('/history', requireClient, async (req, res, next) => {
+// POST /api/payments/record-admin
+// Freelancer records a client payment, auto-allocating it to wipe out outstanding debt first
+router.post('/record-admin', requireFreelancer, async (req, res, next) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT id, amount::float, date, notes, created_at FROM payments WHERE client_id = $1 ORDER BY date DESC, created_at DESC',
-      [req.user.id]
-    );
-    res.json(rows);
-  } catch (e) { next(e); }
-});
+    const { client_id, amount, date, notes } = req.body;
+    const parsedAmount = parseFloat(amount);
 
-// POST /api/payments/record - Simulate recording a cash payment transaction
-router.post('/record', requireClient, async (req, res, next) => {
-  try {
-    const { amount, notes, date } = req.body;
-    if (!amount || parseFloat(amount) <= 0) {
-      return res.status(400).json({ error: 'Valid payment amount is required' });
+    if (!client_id || !amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ error: 'A valid client and payment amount greater than zero are required.' });
     }
 
-    // Identify freelancer owner
-    const clientRow = await pool.query(
-      'SELECT freelancer_id FROM clients WHERE user_id = $1',
-      [req.user.id]
-    );
-    
-    const freelancerId = clientRow.rows.length ? clientRow.rows[0].freelancer_id : null;
-    const paymentDate = date || new Date().toISOString().slice(0, 10);
+    const processingDate = date || new Date().toISOString().split('T')[0];
 
-    const { rows } = await pool.query(
-      `INSERT INTO payments (client_id, freelancer_id, amount, date, notes) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [req.user.id, freelancerId, amount, paymentDate, notes || null]
+    // 1. Insert into historical log ledger
+    await pool.query(
+      'INSERT INTO payments (client_id, amount, date, notes) VALUES ($1, $2, $3, $4)',
+      [client_id, parsedAmount, processingDate, notes || `Freelancer manually recorded payment`]
     );
 
-    res.status(201).json(rows[0]);
+    // 2. Fetch all unpaid time logs for this specific client, sorted from OLDEST to NEWEST
+    const unpaidLogs = await pool.query(
+      "SELECT id, amount FROM time_logs WHERE client_id = $1 AND payment_status = 'unpaid' ORDER BY date ASC, id ASC",
+      [client_id]
+    );
+
+    let remainingCash = parsedAmount;
+    const logsToMarkPaid = [];
+
+    // Loop through unpaid items and consume the cash pool
+    for (const log of unpaidLogs.rows) {
+      const logAmount = parseFloat(log.amount || 0);
+      if (remainingCash >= logAmount) {
+        remainingCash -= logAmount;
+        logsToMarkPaid.push(log.id);
+      } else {
+        // Not enough cash left to clear this entire log item fully, break loop
+        break;
+      }
+    }
+
+    // 3. Batch update the fully covered logs to 'paid' status
+    if (logsToMarkPaid.length > 0) {
+      await pool.query(
+        "UPDATE time_logs SET payment_status = 'paid' WHERE id = ANY($1)",
+        [logsToMarkPaid]
+      );
+    }
+
+    // 4. Update the client profile: Add to total_paid, set the remaining surplus balance into credit_balance
+    await pool.query(
+      'UPDATE clients SET total_paid = COALESCE(total_paid, 0) + $1, credit_balance = COALESCE(credit_balance, 0) + $2 WHERE user_id = $3',
+      [parsedAmount, remainingCash, client_id]
+    );
+
+    res.json({
+      success: true,
+      message: `Payment balanced successfully. Cleared ${logsToMarkPaid.length} log entries.`,
+      remainingCreditSurplus: remainingCash
+    });
   } catch (e) { next(e); }
 });
 
