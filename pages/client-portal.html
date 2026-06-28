@@ -280,7 +280,6 @@ function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 let allLogs = [];
 let currentTab = 'all';
-let currentRateType = 'hourly';
 
 async function loadPortal() {
   try {
@@ -289,50 +288,36 @@ async function loadPortal() {
       apiFetch('/client/timelogs?limit=200'),
       apiFetch('/client/bookings')
     ]);
-    
-    // Read the type safely without breaking fallback assignments
-    currentRateType = stats.rateType || stats.rate_type || 'hourly';
-    const isFixed = currentRateType === 'fixed';
-    const isCredit = currentRateType === 'credit';
+    const isFixed = stats.rateType === 'fixed';
 
+    document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
     document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
     
-    // ── CREDIT MANAGEMENT ENGINE ──
-    if (isCredit) {
-      document.getElementById('fixed-notice').style.display = 'none';
-      document.getElementById('fixed-section').style.display = 'none';
-      document.getElementById('hourly-section').style.display = 'block';
-
-      // Capture either negative balance as overpayment credit, or dedicated backend credit fields
-      let purchased = stats.totalCredits || stats.total_credits || 0;
-      let remaining = stats.remainingCredits || stats.remaining_credits || 0;
-
-      // Safe overpayment fallback calculation if dedicated fields aren't populated
-      if (purchased === 0 && parseFloat(stats.totalUnpaid || 0) < 0) {
-        remaining = Math.abs(parseFloat(stats.totalUnpaid || 0));
-        purchased = parseFloat(stats.totalPaid || 0);
-      }
-
-      // Check if displaying hours bucket or money overpayment
-      if (stats.creditUnit === 'hours' || stats.credit_unit === 'hours') {
-        document.getElementById('s-paid').textContent = purchased + 'h';
-        document.getElementById('s-unpaid').textContent = remaining.toFixed(1) + 'h';
-        document.getElementById('s-paid').nextElementSibling.textContent = 'Purchased Credits';
-        document.getElementById('s-unpaid').nextElementSibling.textContent = 'Available Balance';
-      } else {
-        document.getElementById('s-paid').textContent = '$' + parseFloat(stats.totalPaid||0).toFixed(2);
-        document.getElementById('s-unpaid').textContent = '$' + remaining.toFixed(2);
-        document.getElementById('s-paid').nextElementSibling.textContent = 'Total Paid';
-        document.getElementById('s-unpaid').nextElementSibling.textContent = 'Credit / Overpayment';
-      }
-    }
-    // ── FIXED CONTRACT MODEL ──
-    else if (isFixed) {
-      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
-      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
-      document.getElementById('s-paid').nextElementSibling.textContent = 'Total paid';
+    // ── AUTOMATIC OVERPAYMENT / CREDIT TRACKING ──
+    const rawUnpaid = parseFloat(stats.totalUnpaid || 0);
+    if (rawUnpaid < 0) {
+      // If balance is negative, it's a positive overpayment credit balance
+      const creditBalance = Math.abs(rawUnpaid);
+      document.getElementById('s-unpaid').textContent = '$' + creditBalance.toFixed(2);
+      document.getElementById('s-unpaid').nextElementSibling.textContent = 'Credit Balance';
+      document.getElementById('s-unpaid').style.color = '#166534'; // safe matching text indicator
+    } else {
+      // Standard positive outstanding balance treatment
+      document.getElementById('s-unpaid').textContent = '$' + rawUnpaid.toFixed(2);
       document.getElementById('s-unpaid').nextElementSibling.textContent = 'Outstanding balance';
+      document.getElementById('s-unpaid').style.color = '#92400e';
+    }
 
+    // Normalized comparison using string-based slicing (YYYY-MM-DD) so items later today don't vanish
+    const todayStr = new Date().toISOString().slice(0,10);
+    const futureBookings = bookings.filter(b => {
+      const bDate = b.date ? b.date.slice(0,10) : '';
+      return bDate >= todayStr && b.status !== 'cancelled';
+    });
+    
+    document.getElementById('s-bookings').textContent = futureBookings.length;
+
+    if (isFixed) {
       document.getElementById('fixed-notice').style.display = 'block';
       document.getElementById('fixed-section').style.display = 'block';
       document.getElementById('hourly-section').style.display = 'none';
@@ -342,28 +327,10 @@ async function loadPortal() {
       document.getElementById('fixed-status-display').innerHTML = isPaid
         ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div></div>`
         : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div><div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-top:0.3rem">Please complete your payment</div></div>`;
-    } 
-    // ── STANDARD HOURLY ENGAGEMENT ──
-    else {
+    } else {
       document.getElementById('fixed-notice').style.display = 'none';
       document.getElementById('fixed-section').style.display = 'none';
       document.getElementById('hourly-section').style.display = 'block';
-      
-      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
-      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
-      document.getElementById('s-paid').nextElementSibling.textContent = 'Total paid';
-      document.getElementById('s-unpaid').nextElementSibling.textContent = 'Outstanding balance';
-    }
-    
-    const todayStr = new Date().toISOString().slice(0,10);
-    const futureBookings = bookings.filter(b => {
-      const bDate = b.date ? b.date.slice(0,10) : '';
-      return bDate >= todayStr && b.status !== 'cancelled';
-    });
-    
-    document.getElementById('s-bookings').textContent = futureBookings.length;
-
-    if (!isFixed) {
       allLogs = logs;
       renderLogs(allLogs);
     }
@@ -422,13 +389,7 @@ function renderLogs(logs) {
     const amount  = parseFloat(l.amount||0);
     sumHours  += parseFloat(l.hours||0);
     sumAmount += amount;
-    
-    let badge = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">⚠ Unpaid</span>';
-    
-    if (currentRateType === 'credit') {
-      badge = '<span class="badge badge-green">Deducted</span>';
-    }
-
+    const badge = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">⚠ Unpaid</span>';
     return `
       <tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
         <td>${new Date(l.date).toLocaleDateString()}</td>
