@@ -305,6 +305,7 @@ function logout() { auth.clear(); window.location.href = '../index.html'; }
 let allLogs = [];
 let currentTab = 'all';
 let currentHourlyRate = 20; 
+let currentCreditBalance = 0; // Global reference placeholder to stop tab-switch overrides
 
 async function loadPortal() {
   try {
@@ -315,6 +316,7 @@ async function loadPortal() {
     ]);
     const isFixed = stats.rateType === 'fixed';
     currentHourlyRate = parseFloat(stats.hourlyRate || 0);
+    currentCreditBalance = parseFloat(stats.creditBalance || 0); // ✅ Grab exact true database balance here
 
     const badgeContainer = document.getElementById('engagement-badge-container');
     if (isFixed) {
@@ -338,7 +340,7 @@ async function loadPortal() {
 
       document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid   ||0).toFixed(2);
       document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid ||0).toFixed(2);
-      document.getElementById('s-credit').textContent = '$' + parseFloat(stats.creditBalance || 0).toFixed(2);
+      document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
       document.getElementById('s-hours').textContent  = '—';
 
       const isPaid = stats.fixedStatus === 'paid';
@@ -416,23 +418,16 @@ function calculateAndRenderMetrics(filteredLogs) {
     } catch(err) { console.error("Period breakdown parsing error", err); }
   });
 
-  // Balanced Credit Logic: (Total Paid Cash Ledger - Total Billed Work Entries)
+  // Calculate outstanding balance logically using active context values
   let balanceDiff = totalPaidAdjusted - totalBilledAdjusted;
-  let outstandingBalance = 0;
-  let creditBalance = 0;
-
-  if (balanceDiff >= 0) {
-    creditBalance = balanceDiff;
-    outstandingBalance = 0;
-  } else {
-    creditBalance = 0;
-    outstandingBalance = Math.abs(balanceDiff);
-  }
+  let outstandingBalance = balanceDiff < 0 ? Math.abs(balanceDiff) : 0;
 
   document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
   document.getElementById('s-unpaid').textContent = '$' + outstandingBalance.toFixed(2);
-  document.getElementById('s-credit').textContent = '$' + creditBalance.toFixed(2);
   document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
+  
+  // ✅ FIXED: Read directly from the global verified database balance parameter instead of running local code math updates
+  document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
 
   const breakdownContainer = document.getElementById('periodic-breakdown-container');
   const periods = Object.keys(periodicData);
