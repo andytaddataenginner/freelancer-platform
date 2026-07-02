@@ -284,4 +284,176 @@ const auth = {
 };
 
 async function apiFetch(path, options = {}) {
-  const res = await fetch(API + path, {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+function toggleRateFields(prefix) {
+  const type = document.getElementById(prefix + '-rate-type').value;
+  document.getElementById(prefix + '-hourly-field').style.display = type === 'hourly' ? 'flex' : 'none';
+  document.getElementById(prefix + '-fixed-field').style.display  = type === 'fixed'  ? 'flex' : 'none';
+}
+
+// Helper to secure a local runtime current ISO month string format (YYYY-MM)
+function getCurrentYearMonthString() {
+  return new Date().toISOString().slice(0, 7);
+}
+
+// Holds tracked monthly dynamic button states across loads to prevent display pops
+let currentSelectedMonths = {};
+
+async function loadClients() {
+  try {
+    const clients = await apiFetch('/clients');
+    const grid = document.getElementById('clients-grid');
+    if (!clients.length) {
+      grid.innerHTML = '<p style="color:var(--ink3)">No clients yet. Add your first one!</p>';
+      return;
+    }
+    
+    // Fetch all active time logs to know exactly which months are already marked 'paid' via 'fixed_billing'
+    const activeTimeLogs = await apiFetch('/timelogs?limit=500').catch(() => []);
+
+    grid.innerHTML = clients.map(c => {
+      const isFixed = c.rate_type === 'fixed';
+      
+      const rateInfo = isFixed
+        ? `<span class="badge badge-blue">Fixed</span> <strong>$${parseFloat(c.fixed_price||0).toFixed(2)}</strong>`
+        : `<span class="badge badge-green">Hourly</span> <strong>$${parseFloat(c.hourly_rate||0).toFixed(2)}/hr</strong>`;
+
+      let fixedPayBtn = '';
+      if (isFixed) {
+        // Initialize or preserve selected month tracker state
+        if (!currentSelectedMonths[c.id]) {
+          currentSelectedMonths[c.id] = getCurrentYearMonthString();
+        }
+        const activeMonth = currentSelectedMonths[c.id];
+
+        // Check if a fixed log exists for this client and specific month marked as paid
+        const isCurrentMonthPaid = activeTimeLogs.some(log => 
+          log.client_id === c.id && 
+          log.source === 'fixed_billing' && 
+          log.date.startsWith(activeMonth) &&
+          log.payment_status === 'paid'
+        );
+
+        fixedPayBtn = `
+          <div style="margin:0.8rem 0;padding:0.8rem;background:${isCurrentMonthPaid ? '#dcfce7' : '#fef3c7'};border-radius:8px;display:flex;flex-direction:column;gap:0.6rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
+              <span style="font-size:0.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;">Billing Month</span>
+              <input type="month" value="${activeMonth}" style="padding:0.25rem 0.4rem;font-size:0.8rem;max-width:140px;height:30px;background:#fff;" 
+                onchange="handleMonthSelectionChange(${c.id}, this.value)"/>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(13,35,83,0.06);padding-top:0.5rem;margin-top:0.2rem">
+              <span style="font-size:0.82rem;font-weight:600;color:${isCurrentMonthPaid ? '#166534' : '#92400e'}">
+                ${isCurrentMonthPaid ? '✅ Received' : '⏳ Pending'}
+              </span>
+              <button class="btn-sm ${isCurrentMonthPaid ? 'btn-outline' : 'btn-green'}"
+                onclick="toggleFixedPayment(${c.id}, '${isCurrentMonthPaid ? 'unpaid' : 'paid'}', '${activeMonth}')">
+                ${isCurrentMonthPaid ? 'Mark unpaid' : 'Mark paid ✓'}
+              </button>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div class="card" style="margin-bottom:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.8rem">
+            <div>
+              <div style="font-weight:600;font-size:1rem">${c.name}</div>
+              <div style="font-size:0.82rem;color:var(--ink3)">${c.company || c.email}</div>
+            </div>
+            <span class="badge ${c.is_active ? 'badge-green' : 'badge-gray'}">${c.is_active ? 'Active' : 'Inactive'}</span>
+          </div>
+          <div style="display:flex;gap:1rem;font-size:0.82rem;color:var(--ink2);margin-bottom:0.8rem;flex-wrap:wrap">
+            <span>⏱ ${parseFloat(c.total_hours||0).toFixed(1)}h logged</span>
+            <span>📋 ${c.log_count || 0} entries</span>
+            <span>💰 ${rateInfo}</span>
+          </div>
+          ${fixedPayBtn}
+          <div style="display:flex;gap:0.6rem;margin-top:0.5rem">
+            <button class="btn-sm btn-outline" onclick='openEdit(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Edit</button>
+            <button class="btn-sm btn-red" onclick="deleteClient(${c.id}, '${c.name}')">Remove</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+function handleMonthSelectionChange(clientId, targetValue) {
+  if (!targetValue) return;
+  currentSelectedMonths[clientId] = targetValue;
+  loadClients(); // Reload interface context to compute the correct ledger state badge
+}
+
+async function toggleFixedPayment(clientId, newStatus, targetMonth) {
+  try {
+    await apiFetch('/clients/' + clientId + '/fixed-payment', {
+      method: 'PATCH',
+      body: JSON.stringify({ fixed_payment_status: newStatus, month: targetMonth })
+    });
+    loadClients();
+  } catch(e) { alert('Failed updating monthly retainer status: ' + e.message); }
+}
+
+function openEdit(c) {
+  document.getElementById('edit-id').value          = c.id;
+  document.getElementById('edit-name').value        = c.name;
+  document.getElementById('edit-company').value     = c.company || '';
+  document.getElementById('edit-notes').value       = c.notes || '';
+  document.getElementById('edit-rate-type').value   = c.rate_type || 'hourly';
+  document.getElementById('edit-hourly-rate').value = c.hourly_rate || '';
+  document.getElementById('edit-fixed-price').value = c.fixed_price || '';
+  toggleRateFields('edit');
+  document.getElementById('modal-edit').classList.add('open');
+}
+
+async function addClient(e) {
+  e.preventDefault();
+  const status = document.getElementById('add-status');
+  try {
+    await apiFetch('/clients', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+    status.className = 'form-status success';
+    status.textContent = '✓ Client created!';
+    e.target.reset();
+    setTimeout(() => { document.getElementById('modal-add').classList.remove('open'); status.textContent=''; }, 1200);
+    loadClients();
+  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+}
+
+async function saveClient(e) {
+  e.preventDefault();
+  const status = document.getElementById('edit-status');
+  const data = Object.fromEntries(new FormData(e.target));
+  try {
+    await apiFetch('/clients/' + data.id, { method: 'PUT', body: JSON.stringify(data) });
+    status.className = 'form-status success'; status.textContent = '✓ Saved!';
+    setTimeout(() => { document.getElementById('modal-edit').classList.remove('open'); status.textContent=''; }, 1000);
+    loadClients();
+  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+}
+
+async function deleteClient(id, name) {
+  if (!confirm(`Remove client "${name}"?`)) return;
+  try { await apiFetch('/clients/' + id, { method: 'DELETE' }); loadClients(); }
+  catch(e) { alert('Failed: ' + e.message); }
+}
+
+loadClients();
+</script>
+</body>
+</html>
