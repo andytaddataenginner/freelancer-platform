@@ -412,7 +412,15 @@ async function load(){
     }else{
       bt.innerHTML=st.clientBreakdown.map(c=>{
         const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
-        const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
+        
+        let badge='';
+        if(c.rate_type==='fixed') {
+          badge=ap
+            ? `<button class="btn btn-g btn-sm" style="padding:0.18rem 0.65rem; font-size:0.68rem; border-radius:100px; cursor:pointer;" onclick="toggleFixedPayment(${c.client_id},'paid')">✅ Paid</button>`
+            : `<button class="btn btn-r btn-sm" style="padding:0.18rem 0.65rem; font-size:0.68rem; border-radius:100px; cursor:pointer;" onclick="toggleFixedPayment(${c.client_id},'unpaid')">⏳ Unpaid</button>`;
+        } else {
+          badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
+        }
         
         let rt='';
         if(c.rate_type==='fixed'){
@@ -455,6 +463,24 @@ async function load(){
       }).join('');
     }
   }catch(e){console.error(e);}
+}
+
+async function toggleFixedPayment(clientId, currentStatus) {
+  const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
+  const targetMonth = document.getElementById('mpicker').value;
+
+  try {
+    await api('/clients/' + clientId + '/fixed-payment', {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        fixed_payment_status: newStatus,
+        month: targetMonth
+      })
+    });
+    load(); 
+  } catch(e) {
+    alert('Action tracking failed: ' + e.message);
+  }
 }
 
 async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
