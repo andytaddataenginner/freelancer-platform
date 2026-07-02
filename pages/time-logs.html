@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Time Logs — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -308,7 +308,7 @@
         <div>
           <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold2);font-weight:700;margin-bottom:0.3rem">Fixed Price Client</div>
           <h3 id="fixed-client-name">Client</h3>
-          <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-top:0.2rem">Billed at a fixed project rate — no hourly logs tracked</div>
+          <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-top:0.2rem">Billed at a fixed project rate — individual month/year parameters tracked below</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:2rem;font-weight:700;font-family:var(--serif)" id="fixed-client-price">$0</div>
@@ -529,10 +529,8 @@ async function loadLogs() {
   const statsRow    = document.getElementById('stats-row');
 
   if (isFixed && clientId) {
-    // Show fixed notice, hide logs table
+    // Show fixed notice summary layout profile element
     fixedNotice.style.display = 'flex';
-    logsCard.style.display    = 'none';
-    statsRow.style.display    = 'none';
     document.getElementById('fixed-client-name').textContent  = selectedOpt.text.split(' — ')[0];
     document.getElementById('fixed-client-price').textContent = '$' + parseFloat(selectedOpt.dataset.fixed||0).toFixed(2);
     const isPaid = selectedOpt.dataset.fixedstatus === 'paid';
@@ -542,11 +540,11 @@ async function loadLogs() {
     document.getElementById('fixed-client-btn').innerHTML = isPaid
       ? `<button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3);font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'unpaid')">Mark unpaid</button>`
       : `<button class="btn btn-green" style="font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'paid')">Mark paid ✓</button>`;
-    return;
+  } else {
+    fixedNotice.style.display = 'none';
   }
 
-  // Hourly — show normal table
-  fixedNotice.style.display = 'none';
+  // Always keep normal structural elements visible so individual monthly logs load safely underneath
   logsCard.style.display    = 'block';
   statsRow.style.display    = 'grid';
 
