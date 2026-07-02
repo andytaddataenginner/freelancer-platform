@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fixed Invoices — QFA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d2353; --accent: #1a5cff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --white: #fff; --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+    }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--ink); display: flex; }
+    .sidebar { width: 240px; background: var(--navy); min-height: 100vh; padding: 1.5rem; color: #fff; flex-shrink: 0; }
+    .sidebar a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; padding: 0.8rem 0; font-size: 0.9rem; }
+    .sidebar a.active { color: #fff; font-weight: 600; border-right: 3px solid #f5c842; }
+    .main { flex: 1; padding: 2rem; }
+    .card { background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    input, select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; margin-top: 0.4rem; }
+    button { padding: 0.8rem 1.5rem; background: var(--navy); color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h3>QFA Agency</h3>
+    <a href="dashboard.html">📊 Overview</a>
+    <a href="time-logs.html">⏱ Time Logs</a>
+    <a href="fixed-invoices.html" class="active">💰 Fixed Invoices</a>
+  </div>
+  <main class="main">
+    <div class="card">
+      <h2>Manage Fixed Invoices</h2>
+      <form onsubmit="saveInvoice(event)" style="margin-top:2rem">
+        <div class="grid-form">
+          <input type="text" name="client" placeholder="Client Name" required />
+          <input type="number" name="amount" placeholder="Amount ($)" step="0.01" required />
+          <input type="number" name="month" placeholder="Month (1-12)" min="1" max="12" required />
+          <input type="number" name="year" placeholder="Year" required />
+        </div>
+        <button type="submit">Add Fixed Invoice</button>
+      </form>
+      <table>
+        <thead><tr><th>Client</th><th>Period</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="invoice-body"></tbody>
+      </table>
+    </div>
+  </main>
+  <script>
+    function saveInvoice(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd);
+      data.id = Date.now();
+      data.status = 'Pending';
+      let led = JSON.parse(localStorage.getItem('fixedLedger') || '[]');
+      led.push(data);
+      localStorage.setItem('fixedLedger', JSON.stringify(led));
+      e.target.reset();
+      render();
+    }
+    function render() {
+      const led = JSON.parse(localStorage.getItem('fixedLedger') || '[]');
+      document.getElementById('invoice-body').innerHTML = led.map(i => `
+        <tr>
+          <td>${i.client}</td>
+          <td>${i.month}/${i.year}</td>
+          <td>$${parseFloat(i.amount).toFixed(2)}</td>
+          <td>${i.status}</td>
+          <td>${i.status === 'Pending' ? `<button onclick="markPaid(${i.id})">Mark Paid</button>` : 'Paid'}</td>
+        </tr>
+      `).join('');
+    }
+    function markPaid(id) {
+      let led = JSON.parse(localStorage.getItem('fixedLedger'));
+      const idx = led.findIndex(i => i.id === id);
+      led[idx].status = 'Paid';
+      localStorage.setItem('fixedLedger', JSON.stringify(led));
+      render();
+    }
+    render();
+  </script>
+</body>
+</html>
