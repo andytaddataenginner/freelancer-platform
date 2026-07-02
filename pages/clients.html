@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clients — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -15,11 +15,9 @@
       --green: #166534; --green-bg: #dcfce7;
       --amber: #92400e; --amber-bg: #fef3c7;
       --red: #b91c1c; --red-bg: #fee2e2;
-      --gray: #4b5563; --gray-bg: #f3f4f6;
       --sans: 'Outfit', system-ui, sans-serif;
       --serif: 'Playfair Display', serif;
       --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
-      --paper3: rgba(13,35,83,0.1);
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
@@ -99,54 +97,35 @@
       margin-bottom: 1.2rem; display: flex; flex-direction: column; justify-content: space-between;
     }
     
-    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
     .badge-green { background: var(--green-bg); color: var(--green); }
-    .badge-amber { background: var(--amber-bg); color: var(--amber); }
     .badge-blue  { background: #dbeafe; color: #1e40af; }
     .badge-gray  { background: var(--gray-bg); color: var(--gray); }
 
-    .btn-primary { background: var(--navy); color: white; padding: 0.65rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .btn-primary { background: var(--navy); color: white; padding: 0.65rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
     .btn-primary:hover { background: var(--accent); }
-    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; }
     .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
     .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
-    .btn-red { background: var(--red-bg); color: var(--red); }
-    .btn-red:hover { background: var(--red); color: white; }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); animation: modalIn 0.25s ease; }
-    @keyframes modalIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); }
     .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
-    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
-    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
-    .modal-close:hover { background: var(--red-bg); color: var(--red); }
+    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     
-    .modal-form { display: flex; flex-direction: column; gap: 0.9rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
     .form-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--ink2); }
-    .form-group input, .form-group select, .form-group textarea { padding: 0.65rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; background: var(--bg); font-family: var(--sans); font-size: 0.88rem; color: var(--navy); }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
-    .form-status { font-size: 0.8rem; margin-top: 0.2rem; display: block; }
+    .form-group input, .form-group select, .form-group textarea { padding: 0.65rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; background: var(--bg); font-family: var(--sans); font-size: 0.88rem; color: var(--navy); width: 100%; }
+    .form-status { font-size: 0.8rem; margin-top: 0.2rem; }
     .form-status.success { color: var(--green); }
     .form-status.error { color: var(--red); }
-
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); width: 240px; }
-      .main { margin-left: 0; padding-top: 56px; }
-      .mobile-header { display: flex; }
-      .topbar { top: 56px; }
-      .content { padding: 1rem; }
-    }
   </style>
 </head>
 <body>
 
   <div class="mobile-header" id="mobile-header">
-    <div class="mobile-logo">
-      <img src="../QFA_Logo.png" alt="QFA"/>
-      <span>QFA</span>
-    </div>
+    <div class="mobile-logo"><img src="../QFA_Logo.png" alt="QFA"/><span>QFA</span></div>
     <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
   </div>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -176,8 +155,8 @@
       <div class="topbar">
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:1rem;">
           <div>
-            <h2>Clients Management</h2>
-            <p>Manage pricing contracts and base rates directly from here.</p>
+            <h2>Clients Directory</h2>
+            <p>View current configuration architectures and available credits layout profiles.</p>
           </div>
           <button class="btn-primary" onclick="openModal('modal-add')">＋ Add New Client</button>
         </div>
@@ -189,82 +168,56 @@
     </div>
   </div>
 
+  <!-- MODAL: ADD CLIENT -->
   <div class="modal-overlay" id="modal-add">
     <div class="modal">
       <div class="modal-header">
-        <h3>Add Client Profile</h3>
+        <h3>Add Client</h3>
         <button class="modal-close" onclick="closeModal('modal-add')">×</button>
       </div>
-      <form class="modal-form" onsubmit="addClient(e)">
+      <form onsubmit="addClient(event)">
+        <div class="form-group"><label>Full Name</label><input type="text" name="name" required/></div>
+        <div class="form-group"><label>Email</label><input type="email" name="email" required/></div>
+        <div class="form-group"><label>Company</label><input type="text" name="company"/></div>
         <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" name="name" required placeholder="John Doe"/>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" name="email" required placeholder="john@company.com"/>
-        </div>
-        <div class="form-group">
-          <label>Company</label>
-          <input type="text" name="company" placeholder="Acme Corp"/>
-        </div>
-        <div class="form-group">
-          <label>Contract Billing Model</label>
-          <select name="rate_type" onchange="toggleFormRateFields(this.value, 'add')" required>
-            <option value="hourly">🕒 Hourly Rate Basis</option>
-            <option value="fixed">⚡ Fixed Price Retention</option>
+          <label>Rate Strategy Type</label>
+          <select name="rate_type" onchange="toggleFormRateFields(this.value, 'add')">
+            <option value="hourly">Hourly Basis</option>
+            <option value="fixed">Fixed Price Project</option>
           </select>
         </div>
-        <div class="form-group" id="add-hourly-box">
-          <label>Hourly Rate ($)</label>
-          <input type="number" step="0.01" name="hourly_rate" value="50.00"/>
-        </div>
-        <div class="form-group" id="add-fixed-box" style="display:none;">
-          <label>Fixed Price Rate ($/mo)</label>
-          <input type="number" step="0.01" name="fixed_price" value="1000.00"/>
-        </div>
-        <div class="form-group">
-          <label>Internal Workspace Notes</label>
-          <textarea name="notes" rows="2" placeholder="Project parameters, schedules..."></textarea>
-        </div>
+        <div class="form-group" id="add-hourly-box"><label>Hourly Rate ($)</label><input type="number" step="0.01" name="hourly_rate" value="0.00"/></div>
+        <div class="form-group" id="add-fixed-box" style="display:none;"><label>Fixed Rate ($)</label><input type="number" step="0.01" name="fixed_price" value="0.00"/></div>
+        <div class="form-group"><label>Initial Account Credit Balance ($)</label><input type="number" step="0.01" name="credit_balance" value="0.00"/></div>
         <div id="add-status" class="form-status"></div>
-        <button type="submit" class="btn-primary" style="justify-content:center; margin-top:0.5rem;">Save Client Account</button>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:0.5rem;">Create Client Record</button>
       </form>
     </div>
   </div>
 
+  <!-- MODAL: EDIT CLIENT -->
   <div class="modal-overlay" id="modal-edit">
     <div class="modal">
       <div class="modal-header">
-        <h3>Edit Client Profile</h3>
+        <h3>Edit Client Parameters</h3>
         <button class="modal-close" onclick="closeModal('modal-edit')">×</button>
       </div>
-      <form class="modal-form" onsubmit="saveClient(event)">
+      <form onsubmit="saveClient(event)">
         <input type="hidden" id="edit-id" name="id"/>
+        <div class="form-group"><label>Full Name</label><input type="text" id="edit-name" name="name" required/></div>
+        <div class="form-group"><label>Company</label><input type="text" id="edit-company" name="company"/></div>
         <div class="form-group">
-          <label>Internal Notes & Directives</label>
-          <textarea id="edit-notes" name="notes" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Billing Model Strategy</label>
-          <select id="edit-rate-type" name="rate_type" onchange="toggleFormRateFields(this.value, 'edit')" required>
-            <option value="hourly">🕒 Hourly Rate Basis</option>
-            <option value="fixed">⚡ Fixed Price Retention</option>
+          <label>Rate Strategy Type</label>
+          <select id="edit-rate-type" name="rate_type" onchange="toggleFormRateFields(this.value, 'edit')">
+            <option value="hourly">Hourly Basis</option>
+            <option value="fixed">Fixed Price Project</option>
           </select>
         </div>
-        <div class="form-group" id="edit-hourly-box">
-          <label>Hourly Rate ($)</label>
-          <input type="number" step="0.01" id="edit-hourly-rate" name="hourly_rate"/>
-        </div>
-        <div class="form-group" id="edit-fixed-box" style="display:none;">
-          <label>Fixed Price Configuration ($)</label>
-          <input type="number" step="0.01" id="edit-fixed-price" name="fixed_price"/>
-        </div>
+        <div class="form-group" id="edit-hourly-box"><label>Hourly Rate ($)</label><input type="number" step="0.01" id="edit-hourly-rate" name="hourly_rate"/></div>
+        <div class="form-group" id="edit-fixed-box" style="display:none;"><label>Fixed Rate ($)</label><input type="number" step="0.01" id="edit-fixed-price" name="fixed_price"/></div>
+        <div class="form-group"><label>Modify Credits Balance ($)</label><input type="number" step="0.01" id="edit-credit-balance" name="credit_balance"/></div>
         <div id="edit-status" class="form-status"></div>
-        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-          <button type="submit" class="btn-primary" style="flex:1; justify-content:center;">Save Changes</button>
-          <button type="button" class="btn-red" id="delete-client-btn" style="border-radius:8px;">Delete</button>
-        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top:0.5rem;">Save Ledger Profile</button>
       </form>
     </div>
   </div>
@@ -272,84 +225,71 @@
   <script src="../js/common.js"></script>
   <script>
     let allClients = [];
-
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('mobile-open');
       document.getElementById('sidebar-overlay').classList.toggle('open');
     }
-
     function toggleFormRateFields(val, prefix) {
-      if(val === 'fixed') {
-        document.getElementById(`${prefix}-hourly-box`).style.display = 'none';
-        document.getElementById(`${prefix}-fixed-box`).style.display = 'block';
-      } else {
-        document.getElementById(`${prefix}-hourly-box`).style.display = 'block';
-        document.getElementById(`${prefix}-fixed-box`).style.display = 'none';
-      }
+      document.getElementById(`${prefix}-hourly-box`).style.display = val === 'fixed' ? 'none' : 'block';
+      document.getElementById(`${prefix}-fixed-box`).style.display = val === 'fixed' ? 'block' : 'none';
     }
-
     function openModal(id) { document.getElementById(id).classList.add('open'); }
-    function closeModal(id) { 
-      document.getElementById(id).classList.remove('open'); 
-      document.getElementById('add-status').textContent = '';
-      document.getElementById('edit-status').textContent = '';
-    }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
     async function loadClients() {
       try {
-        const nameData = await apiFetch('/auth/me');
-        if(nameData && nameData.name) document.getElementById('user-name').textContent = nameData.name;
-        
+        const u = await apiFetch('/auth/me');
+        if(u) document.getElementById('user-name').textContent = u.name;
         allClients = await apiFetch('/clients');
         renderClients(allClients);
-      } catch(e) {
-        console.error(e);
-        if(e.message.includes('401')) window.location.href = 'login.html';
-      }
+      } catch(e) { window.location.href = 'login.html'; }
     }
 
     function renderClients(clients) {
       const container = document.getElementById('clients-list');
       if(!clients.length) {
-        container.innerHTML = `<p style="grid-column:1/-1; color:var(--ink3); font-size:0.9rem; text-align:center; padding:3rem 0;">No active clients registered yet.</p>`;
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--ink3);">No active profiles mapped.</p>`;
         return;
       }
-      container.innerHTML = clients.map(c => `
-        <div class="card">
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:start;">
-              <div>
-                <h3 style="font-size:1.1rem; color:var(--navy); font-weight:600;">${escapeHTML(c.name)}</h3>
-                <p style="font-size:0.8rem; color:var(--ink3);">${escapeHTML(c.company || 'Individual Freelancer')}</p>
+      container.innerHTML = clients.map(c => {
+        const credit = parseFloat(c.credit_balance || 0);
+        return `
+          <div class="card">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.5rem;">
+                <div>
+                  <h3 style="font-size:1.1rem; color:var(--navy); font-weight:600;">${escapeHTML(c.name)}</h3>
+                  <p style="font-size:0.8rem; color:var(--ink3);">${escapeHTML(c.company || 'Individual')}</p>
+                </div>
+                <span class="badge ${c.rate_type === 'fixed' ? 'badge-blue' : 'badge-gray'}">${c.rate_type}</span>
               </div>
-              <span class="badge ${c.rate_type === 'fixed' ? 'badge-blue' : 'badge-gray'}">
-                ${c.rate_type === 'fixed' ? '⚡ Fixed Price' : '🕒 Hourly Basis'}
-              </span>
+              <div style="margin-top:1rem; padding-top:0.5rem; border-top:1px solid var(--bg2); font-size:0.85rem;">
+                <p style="margin-bottom:0.3rem;"><strong>Contract Rate:</strong> ${c.rate_type==='fixed' ? `$${parseFloat(c.fixed_price||0).toFixed(2)}` : `$${parseFloat(c.hourly_rate||0).toFixed(2)}/hr`}</p>
+                
+                <!-- CREDIT BALANCES REMITTANCE LEDGER MONITOR -->
+                <div style="margin-top:0.8rem; padding:0.6rem 0.8rem; background:${credit > 0 ? 'var(--green-bg)' : 'var(--bg2)'}; border-radius:6px;">
+                  <span style="font-size:0.7rem; font-weight:700; color:var(--ink2); text-transform:uppercase; display:block;">Available Credits Ledger</span>
+                  <strong style="font-size:1.05rem; color:${credit > 0 ? 'var(--green)' : 'var(--navy)'};">$${credit.toFixed(2)}</strong>
+                </div>
+              </div>
             </div>
-            <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--bg2); font-size:0.85rem; color:var(--ink2);">
-              <p style="margin-bottom:0.3rem;"><strong>Email:</strong> ${escapeHTML(c.email)}</p>
-              <p style="margin-bottom:0.3rem;"><strong>Rate Strategy:</strong> ${c.rate_type === 'fixed' ? `$${c.fixed_price || 0}/mo` : `$${c.hourly_rate || 0}/hr`}</p>
-              <p><strong>Total Log Volume:</strong> ${c.log_count || 0} entries</p>
-            </div>
+            <button class="btn-outline btn-sm" style="margin-top:1rem; width:100%; text-align:center;" onclick="openEditModal(${c.id})">Configure Rates / Credits</button>
           </div>
-          <div style="margin-top:1.2rem; display:flex; gap:0.5rem; justify-content:flex-end;">
-            <button class="btn-outline btn-sm" onclick="openEditModal(${c.id})">Configure Contract</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function openEditModal(id) {
       const c = allClients.find(item => item.id == id);
       if(!c) return;
       document.getElementById('edit-id').value = c.id;
-      document.getElementById('edit-notes').value = c.notes || '';
+      document.getElementById('edit-name').value = c.name;
+      document.getElementById('edit-company').value = c.company || '';
       document.getElementById('edit-rate-type').value = c.rate_type || 'hourly';
-      document.getElementById('edit-hourly-rate').value = c.hourly_rate || '';
-      document.getElementById('edit-fixed-price').value = c.fixed_price || '';
-      
+      document.getElementById('edit-hourly-rate').value = c.hourly_rate || 0;
+      document.getElementById('edit-fixed-price').value = c.fixed_price || 0;
+      document.getElementById('edit-credit-balance').value = c.credit_balance || 0;
       toggleFormRateFields(c.rate_type, 'edit');
-      document.getElementById('delete-client-btn').onclick = () => deleteClient(c.id, c.name);
       openModal('modal-edit');
     }
 
@@ -358,40 +298,24 @@
       const status = document.getElementById('add-status');
       try {
         await apiFetch('/clients', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
-        status.className = 'form-status success';
-        status.textContent = '✓ Client created successfully!';
-        e.target.reset();
-        setTimeout(() => { closeModal('modal-add'); }, 1000);
-        loadClients();
-      } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+        closeModal('modal-add'); loadClients();
+      } catch(err) { status.textContent = err.message; }
     }
 
     async function saveClient(e) {
       e.preventDefault();
       const status = document.getElementById('edit-status');
-      const data = Object.fromEntries(new FormData(e.target));
       try {
+        const data = Object.fromEntries(new FormData(e.target));
         await apiFetch('/clients/' + data.id, { method: 'PUT', body: JSON.stringify(data) });
-        status.className = 'form-status success'; status.textContent = '✓ Strategy configurations saved!';
-        setTimeout(() => { closeModal('modal-edit'); }, 1000);
-        loadClients();
-      } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
-    }
-
-    async function deleteClient(id, name) {
-      if(!confirm(`Are you completely sure you want to drop client balance mapping for ${name}?`)) return;
-      try {
-        await apiFetch('/clients/' + id, { method: 'DELETE' });
-        closeModal('modal-edit');
-        loadClients();
-      } catch(e) { alert('Operation Failed: ' + e.message); }
+        closeModal('modal-edit'); loadClients();
+      } catch(err) { status.textContent = err.message; }
     }
 
     function escapeHTML(str) {
       if(!str) return '';
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
-
     window.addEventListener('DOMContentLoaded', loadClients);
   </script>
 </body>
