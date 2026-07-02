@@ -2,13 +2,14 @@ const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/timelogs
+// GET /api/timelogs — Returns filtered logs
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { client_id, from, to, limit = 200, offset = 0, payment_status } = req.query;
     let where = ['t.freelancer_id = $1'];
     let params = [req.user.id];
     let i = 2;
+
     if (client_id)      { where.push(`t.client_id = $${i++}`);       params.push(client_id); }
     if (from)           { where.push(`t.date >= $${i++}::date`);      params.push(from); }
     if (to)             { where.push(`t.date <= $${i++}::date`);      params.push(to); }
@@ -22,76 +23,68 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       ORDER BY t.date DESC, t.created_at DESC
       LIMIT $${i++} OFFSET $${i++}
     `, [...params, limit, offset]);
+
     res.json(rows);
   } catch (e) { next(e); }
 });
 
-// POST /api/timelogs
-// Creates a log entry and automatically checks if the client has credit available to cover it instantly
+// POST /api/timelogs — Write a single transactional tracking row
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
-    const { client_id, date, hours, task_description, source = 'manual' } = req.body;
-    if (!client_id || !date || !hours || !task_description)
-      return res.status(400).json({ error: 'client_id, date, hours, task_description required' });
+    const { client_id, hours, task_description, date, source } = req.body;
+    const hrs = parseFloat(hours || 0);
 
-    // Auto-calculate amount from client billing rate
-    const clientInfo = await pool.query(
-      'SELECT c.rate_type, c.hourly_rate, c.fixed_price, COALESCE(c.credit_balance, 0)::float AS credit_balance FROM clients c WHERE c.user_id = $1',
-      [client_id]
+    // Fetch account terms
+    const clientRes = await pool.query(
+      'SELECT rate_type, hourly_rate, credit_balance FROM clients WHERE user_id=$1 AND freelancer_id=$2',
+      [client_id, req.user.id]
     );
-    const c = clientInfo.rows[0] || {};
-    const rate_type = c.rate_type || 'hourly';
+    if (!clientRes.rows.length) return res.status(404).json({ error: 'Client relationship profile target missed' });
+    const c = clientRes.rows[0];
+
     let amount = 0;
-    if (rate_type === 'hourly' && c.hourly_rate) {
-      amount = parseFloat(hours) * parseFloat(c.hourly_rate);
-    } else if (rate_type === 'fixed' && c.fixed_price) {
-      amount = parseFloat(c.fixed_price);
+    let payment_status = 'unpaid';
+
+    if (c.rate_type === 'credit') {
+      amount = 0; 
+      payment_status = 'paid'; // Deductions bypass manual invoicing metrics
+      
+      // Update credit ledger pools
+      await pool.query(
+        'UPDATE clients SET credit_balance = credit_balance - $1 WHERE user_id=$2',
+        [hrs, client_id]
+      );
+    } else if (c.rate_type === 'hourly') {
+      amount = hrs * parseFloat(c.hourly_rate || 0);
+    } else if (c.rate_type === 'fixed') {
+      amount = 0; // Fixed amounts are mapped directly via invoicing route hooks
     }
 
-    let paymentStatus = 'unpaid';
-    let currentCredit = c.credit_balance || 0;
+    const logRes = await pool.query(`
+      INSERT INTO time_logs (freelancer_id, client_id, date, hours, amount, payment_status, task_description, source)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
+    `, [req.user.id, client_id, date || new Date(), hrs, amount, payment_status, task_description || '', source || 'manual']);
 
-    // Auto-consume credit balance if there's a surplus available
-    if (currentCredit >= amount && amount > 0) {
-      paymentStatus = 'paid';
-      currentCredit -= amount;
-    }
-
-    const { rows } = await pool.query(`
-      INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, rate_type, amount, payment_status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
-    `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2), paymentStatus]);
-
-    // Commit updated balance back to database
-    await pool.query(
-      'UPDATE clients SET credit_balance = $1 WHERE user_id = $2',
-      [currentCredit, client_id]
-    );
-
-    res.status(201).json(rows[0]);
+    res.status(201).json(logRes.rows[0]);
   } catch (e) { next(e); }
 });
 
-// PATCH /api/timelogs/:id/payment
+// PATCH /api/timelogs/:id/payment — Single-row flag updates
 router.patch('/:id/payment', requireFreelancer, async (req, res, next) => {
   try {
     const { payment_status } = req.body;
-    if (!['paid','unpaid'].includes(payment_status))
-      return res.status(400).json({ error: 'payment_status must be paid or unpaid' });
-    const { rows } = await pool.query(
-      'UPDATE time_logs SET payment_status=$1 WHERE id=$2 AND freelancer_id=$3 RETURNING *',
-      [payment_status, req.params.id, req.user.id]
+    await pool.query(
+      'UPDATE time_logs SET payment_status=$1 WHERE id=$2 AND freelancer_id=$3',
+      [payment_status || 'paid', req.params.id, req.user.id]
     );
-    if (!rows.length) return res.status(404).json({ error: 'Log not found' });
-    res.json(rows[0]);
+    res.json({ message: 'Payment status modified successfully' });
   } catch (e) { next(e); }
 });
 
-// PATCH /api/timelogs/bulk-payment
+// PATCH /api/timelogs/bulk-payment — Bulk processing hook
 router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   try {
     const { ids, payment_status } = req.body;
-    if (!ids || !ids.length) return res.status(400).json({ error: 'ids required' });
     await pool.query(
       'UPDATE time_logs SET payment_status=$1 WHERE id=ANY($2) AND freelancer_id=$3',
       [payment_status || 'paid', ids, req.user.id]
@@ -100,34 +93,49 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/timelogs/:id
-// Recalculates value shifts and handles dynamic credit accounting adjustments smoothly
+// PUT /api/timelogs/:id — Modify structural data parameters and balance sheets
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
 
-    const oldLog = await pool.query('SELECT client_id, amount FROM time_logs WHERE id=$1', [req.params.id]);
+    const oldLog = await pool.query('SELECT client_id, amount, hours FROM time_logs WHERE id=$1', [req.params.id]);
     if (!oldLog.rows.length) return res.status(404).json({ error: 'Not found' });
     
     const client_id = oldLog.rows[0].client_id;
-    const oldAmount = parseFloat(oldLog.rows[0].amount || 0);
+    const oldHours = parseFloat(oldLog.rows[0].hours || 0);
 
     let finalAmount = amount;
+    
+    // Auto-calculate billing amounts for standard hourly configurations if not specified
     if (finalAmount === undefined || finalAmount === null) {
       const clientInfo = await pool.query(
-        'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id=$1',
+        'SELECT c.rate_type, c.hourly_rate FROM clients c WHERE c.user_id=$1',
         [client_id]
       );
       const c = clientInfo.rows[0] || {};
       if (c.rate_type === 'hourly' && c.hourly_rate) {
-        finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
+        finalAmount = parseFloat(hours) * parseFloat(c.hourly_rate);
+      } else if (c.rate_type === 'credit') {
+        finalAmount = 0;
+        const diff = parseFloat(hours) - oldHours;
+        // Adjust the client's prepaid credit balance based on the updated time value
+        await pool.query(
+          'UPDATE clients SET credit_balance = credit_balance - $1 WHERE user_id=$2',
+          [diff, client_id]
+        );
       } else {
-        finalAmount = oldAmount;
+        finalAmount = 0;
       }
     }
 
-    const { rows } = await pool.query(`
-      UPDATE time_logs
-      SET hours=$1, task_description=$2, date=$3, amount=COALESCE($4::numeric, amount)
-      WHERE id=$5 AND freelancer_id=$6 RETURNING *
-    `,
+    await pool.query(
+      `UPDATE time_logs 
+       SET hours=$1, task_description=$2, date=$3, amount=$4 
+       WHERE id=$5 AND freelancer_id=$6`,
+      [hours, task_description, date, finalAmount, req.params.id, req.user.id]
+    );
+    res.json({ message: 'Updated' });
+  } catch (e) { next(e); }
+});
+
+module.exports = router;
