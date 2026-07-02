@@ -223,8 +223,8 @@
       </div>
       <div class="tw">
         <table>
-          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th></tr></thead>
-          <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="btable"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -392,6 +392,13 @@ function toggleRate(){
 }
 function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
 
+async function toggleFixed(recordId, newStatus){
+  try{
+    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
+    load();
+  }catch(e){alert('Failed: '+e.message);}
+}
+
 async function load(){
   const mo=document.getElementById('mpicker').value;
   const ml=new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
@@ -408,7 +415,7 @@ async function load(){
 
     const bt=document.getElementById('btable');
     if(!st.clientBreakdown||!st.clientBreakdown.length){
-      bt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
+      bt.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
     }else{
       bt.innerHTML=st.clientBreakdown.map(c=>{
         const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
@@ -429,7 +436,15 @@ async function load(){
         const unpaidDisplay=isCredit?(c.remaining_credits?parseFloat(c.remaining_credits).toFixed(1)+'h left':'0h left'):'$'+parseFloat(c.unpaid).toFixed(2);
         const unpaidColor=isCredit?'color:var(--ink2)':'color:var(--amber)';
 
-        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>${totalDisplay}</strong></td><td style="color:var(--green)">${paidDisplay}</td><td style="${unpaidColor}">${unpaidDisplay}</td><td>${isCredit?'<span class="badge bg-g">Prepaid</span>':badge}</td></tr>`;
+        let actionCell = '';
+        if(c.rate_type==='fixed' && c.fixed_record_id){
+          const isPaidFixed = c.fixed_record_status==='paid';
+          actionCell = isPaidFixed
+            ? `<button class="btn btn-o btn-sm" onclick="toggleFixed(${c.fixed_record_id},'unpaid')">Mark unpaid</button>`
+            : `<button class="btn btn-g btn-sm" onclick="toggleFixed(${c.fixed_record_id},'paid')">Mark paid ✓</button>`;
+        }
+
+        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>${totalDisplay}</strong></td><td style="color:var(--green)">${paidDisplay}</td><td style="${unpaidColor}">${unpaidDisplay}</td><td>${isCredit?'<span class="badge bg-g">Prepaid</span>':badge}</td><td>${actionCell}</td></tr>`;
       }).join('');
     }
 
