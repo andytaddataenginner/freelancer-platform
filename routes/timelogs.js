@@ -27,11 +27,12 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 });
 
 // POST /api/timelogs
+// Creates a log entry and automatically checks if the client has credit available to cover it instantly
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { client_id, date, hours, task_description, source = 'manual' } = req.body;
-    if (!client_id || !date || !task_description)
-      return res.status(400).json({ error: 'client_id, date, and task_description required' });
+    if (!client_id || !date || !hours || !task_description)
+      return res.status(400).json({ error: 'client_id, date, hours, task_description required' });
 
     // Auto-calculate amount from client billing rate
     const clientInfo = await pool.query(
@@ -40,15 +41,11 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     );
     const c = clientInfo.rows[0] || {};
     const rate_type = c.rate_type || 'hourly';
-    
     let amount = 0;
-    let finalHours = hours ? parseFloat(hours) : 0;
-
     if (rate_type === 'hourly' && c.hourly_rate) {
-      amount = finalHours * parseFloat(c.hourly_rate);
+      amount = parseFloat(hours) * parseFloat(c.hourly_rate);
     } else if (rate_type === 'fixed' && c.fixed_price) {
       amount = parseFloat(c.fixed_price);
-      if (!finalHours) finalHours = 0; // Fixed entries can be assigned 0 or placeholder hours
     }
 
     let paymentStatus = 'unpaid';
@@ -63,7 +60,7 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     const { rows } = await pool.query(`
       INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, rate_type, amount, payment_status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
-    `, [client_id, req.user.id, date, finalHours, task_description, source, rate_type, amount.toFixed(2), paymentStatus]);
+    `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2), paymentStatus]);
 
     // Commit updated balance back to database
     await pool.query(
@@ -104,16 +101,16 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
 });
 
 // PUT /api/timelogs/:id
+// Recalculates value shifts and handles dynamic credit accounting adjustments smoothly
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
 
-    const oldLog = await pool.query('SELECT client_id, amount, rate_type FROM time_logs WHERE id=$1', [req.params.id]);
+    const oldLog = await pool.query('SELECT client_id, amount FROM time_logs WHERE id=$1', [req.params.id]);
     if (!oldLog.rows.length) return res.status(404).json({ error: 'Not found' });
     
     const client_id = oldLog.rows[0].client_id;
     const oldAmount = parseFloat(oldLog.rows[0].amount || 0);
-    const log_rate_type = oldLog.rows[0].rate_type;
 
     let finalAmount = amount;
     if (finalAmount === undefined || finalAmount === null) {
@@ -122,10 +119,10 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
         [client_id]
       );
       const c = clientInfo.rows[0] || {};
-      if (log_rate_type === 'hourly' && c.hourly_rate) {
+      if (c.rate_type === 'hourly' && c.hourly_rate) {
         finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
       } else {
-        finalAmount = oldAmount; // Keep its fixed price snapshot intact if not specified
+        finalAmount = oldAmount;
       }
     }
 
@@ -133,10 +130,4 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
       UPDATE time_logs
       SET hours=$1, task_description=$2, date=$3, amount=COALESCE($4::numeric, amount)
       WHERE id=$5 AND freelancer_id=$6 RETURNING *
-    `, [hours || 0, task_description, date, finalAmount, req.params.id, req.user.id]);
-
-    res.json(rows[0]);
-  } catch (e) { next(e); }
-});
-
-module.exports = router;
+    `,
