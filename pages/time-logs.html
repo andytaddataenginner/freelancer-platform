@@ -117,7 +117,7 @@
     .stat-num { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; display: block; }
     .stat-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); margin-top: 0.2rem; }
 
-    /* ── FILTERS & ADMINISTRATIVE FORMS ── */
+    /* ── FILTERS ── */
     .filters, .payment-form-flex { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
     .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 130px; }
     .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); }
@@ -354,8 +354,8 @@
             <thead>
               <tr>
                 <th style="width:32px"><input type="checkbox" id="check-all" onchange="toggleAll(this)"/></th>
-                <th>Client</th><th>Date</th><th>Hours</th><th>Rate</th>
-                <th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th>
+                <th>Client</th><th>Billing Date / Period</th><th>Hours</th><th>Rate</th>
+                <th>Amount</th><th>Payment</th><th>Task Description / Cycle Note</th><th>Actions</th>
               </tr>
             </thead>
             <tbody id="logs-table">
@@ -384,14 +384,14 @@
       <label>Date</label>
       <input type="date" id="edit-date" required/>
     </div>
-    <div class="mfg">
+    <div class="mfg" id="hours-input-group">
       <label>Hours spent</label>
-      <input type="number" id="edit-hours" min="0.01" max="24" step="any" required oninput="previewAmount()"/>
+      <input type="number" id="edit-hours" min="0" max="24" step="any" oninput="previewAmount()"/>
       <div class="hint">💡 20min = 0.33 · 45min = 0.75 · 1h 20min = 1.33</div>
     </div>
     <div id="amount-preview" style="background:#e8f0ff;border-radius:8px;padding:0.6rem 1rem;margin-bottom:0.8rem;font-size:0.85rem;color:var(--accent);font-weight:600;display:none"></div>
     <div class="mfg">
-      <label>Task description</label>
+      <label>Task description / Cycle Note</label>
       <textarea id="edit-task" rows="3" required></textarea>
     </div>
     <button class="btn btn-navy" style="width:100%;padding:0.8rem;font-size:0.9rem" onclick="saveEdit()">Save changes</button>
@@ -420,7 +420,6 @@ async function apiFetch(path, options = {}) {
 })();
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
-// Mobile sidebar toggle
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('mobile-open');
   document.getElementById('sidebar-overlay').classList.toggle('open');
@@ -429,7 +428,6 @@ function toggleSidebar() {
 let selectedIds = new Set();
 let allClients  = [];
 
-// ── Fetch & Populate Client Dropdowns ────────────────────────
 async function fetchAndPopulateClients() {
   try {
     allClients = await apiFetch('/clients');
@@ -451,12 +449,9 @@ async function fetchAndPopulateClients() {
   } catch(e) { console.error('Error fetching clients:', e); }
 }
 
-// ── Init ─────────────────────────────────────────────────────
 async function init() {
-  // Default the payment form date field to today
   document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
   
-  // Configure default date range to show ONLY the last 5 days initially
   const today = new Date();
   const fiveDaysAgo = new Date();
   fiveDaysAgo.setDate(today.getDate() - 5);
@@ -468,7 +463,6 @@ async function init() {
   loadLogs();
 }
 
-// ── Submit Payment Remittance ──────────────────────
 async function handleRecordPayment(event) {
   event.preventDefault();
   const clientId = document.getElementById('payment-client').value;
@@ -492,11 +486,8 @@ async function handleRecordPayment(event) {
     });
 
     alert(`Success! ${result.message}\nRecalculated surplus retainer balance of $${result.remainingCreditSurplus.toFixed(2)} credited forward.`);
-    
-    // Clear dynamic payment inputs
     document.getElementById('payment-amount').value = '';
     
-    // Re-fetch client values to instantly update data-credit metrics and reload
     await fetchAndPopulateClients();
     loadLogs();
   } catch (err) {
@@ -504,18 +495,15 @@ async function handleRecordPayment(event) {
   }
 }
 
-// ── Load logs ────────────────────────────────────────────────
 async function loadLogs() {
   const clientId      = document.getElementById('filter-client').value;
   const payment       = document.getElementById('filter-payment').value;
   const from          = document.getElementById('filter-from').value;
   const to            = document.getElementById('filter-to').value;
 
-  // Check if selected client is fixed rate
   const selectedOpt = document.getElementById('filter-client').selectedOptions[0];
   const isFixed = selectedOpt && selectedOpt.value !== "" && selectedOpt.dataset.rate === 'fixed';
 
-  // Live credit display setup
   const creditDisplay = document.getElementById('client-credit-display');
   if (selectedOpt && selectedOpt.value !== "") {
     const balance = parseFloat(selectedOpt.dataset.credit || 0);
@@ -529,7 +517,6 @@ async function loadLogs() {
   const statsRow    = document.getElementById('stats-row');
 
   if (isFixed && clientId) {
-    // Show fixed notice summary layout profile element
     fixedNotice.style.display = 'flex';
     document.getElementById('fixed-client-name').textContent  = selectedOpt.text.split(' — ')[0];
     document.getElementById('fixed-client-price').textContent = '$' + parseFloat(selectedOpt.dataset.fixed||0).toFixed(2);
@@ -538,13 +525,12 @@ async function loadLogs() {
       ? '<span style="background:rgba(34,197,94,0.2);color:#86efac;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.78rem;font-weight:700">✅ Paid</span>'
       : '<span style="background:rgba(245,158,11,0.2);color:#fcd34d;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.78rem;font-weight:700">⏳ Pending</span>';
     document.getElementById('fixed-client-btn').innerHTML = isPaid
-      ? `<button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3);font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'unpaid')">Mark unpaid</button>`
-      : `<button class="btn btn-green" style="font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'paid')">Mark paid ✓</button>`;
+      ? `<button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3);font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'unpaid')">Mark contract unpaid</button>`
+      : `<button class="btn btn-green" style="font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'paid')">Mark contract paid ✓</button>`;
   } else {
     fixedNotice.style.display = 'none';
   }
 
-  // Always keep normal structural elements visible so individual monthly logs load safely underneath
   logsCard.style.display    = 'block';
   statsRow.style.display    = 'grid';
 
@@ -567,18 +553,23 @@ async function loadLogs() {
         const amount  = parseFloat(l.amount||0);
         if (isPaid) totalPaid += amount; else totalUnpaid += amount;
         totalHours += parseFloat(l.hours||0);
+        
         const badge  = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
         const payBtn = isPaid
           ? `<button class="btn btn-outline" onclick="togglePayment(${l.id},'unpaid')">Undo</button>`
           : `<button class="btn btn-green" onclick="togglePayment(${l.id},'paid')">Paid ✓</button>`;
         const checked = selectedIds.has(l.id) ? 'checked' : '';
-        // Find client data for edit
         const cl = allClients.find(c => c.id === l.client_id) || {};
+        
+        // Render dynamic date parsing labels to help easily spotlight month/year tags inside grid view layout
+        const dateObj = new Date(l.date);
+        const periodLabel = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric', day: 'numeric' });
+
         return `<tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
           <td><input type="checkbox" class="row-check" value="${l.id}" ${checked} onchange="updateSel(${l.id},this.checked)"/></td>
           <td><strong>${l.client_name}</strong></td>
-          <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
-          <td>${fmtHours(parseFloat(l.hours))}</td>
+          <td style="white-space:nowrap">📅 ${periodLabel}</td>
+          <td>${l.rate_type === 'fixed' ? '—' : fmtHours(parseFloat(l.hours))}</td>
           <td><span class="badge ${l.rate_type==='fixed'?'badge-blue':'badge-green'}">${l.rate_type||'hourly'}</span></td>
           <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
           <td>${badge}</td>
@@ -600,25 +591,23 @@ async function loadLogs() {
 }
 
 function fmtHours(h) {
+  if (!h || isNaN(h)) return '0h';
   const hrs=Math.floor(h), mins=Math.round((h-hrs)*60);
   if(hrs===0) return `${mins}min`;
   if(mins===0) return `${hrs}h`;
   return `${hrs}h ${mins}min`;
 }
 
-// ── Fixed payment toggle from time-logs page ─────────────────
 async function toggleFixedPayment(clientId, newStatus) {
   try {
     await apiFetch('/clients/' + clientId + '/fixed-payment', {
       method: 'PATCH', body: JSON.stringify({ fixed_payment_status: newStatus })
     });
-    // Refresh the dropdown data and reload
     await fetchAndPopulateClients();
     loadLogs();
   } catch(e) { alert('Failed: ' + e.message); }
 }
 
-// ── Payment toggle ────────────────────────────────────────────
 async function togglePayment(id, status) {
   try {
     await apiFetch('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:status})});
@@ -626,25 +615,31 @@ async function togglePayment(id, status) {
   } catch(e){alert('Failed: '+e.message);}
 }
 
-// ── Edit log ─────────────────────────────────────────────────
 function openEdit(id, date, hours, task, clientId, rateType, hourlyRate) {
   document.getElementById('edit-id').value         = id;
   document.getElementById('edit-client-id').value  = clientId;
   document.getElementById('edit-rate-type').value  = rateType;
   document.getElementById('edit-hourly-rate').value = hourlyRate;
   document.getElementById('edit-date').value        = date.slice(0,10);
-  document.getElementById('edit-hours').value       = hours;
+  document.getElementById('edit-hours').value       = hours || 0;
   document.getElementById('edit-task').value        = task;
   document.getElementById('edit-status').textContent = '';
 
-  // Show client info
   const cl = allClients.find(c => c.id === clientId);
   if (cl) {
     const rateLabel = rateType === 'hourly'
       ? `Hourly @ $${hourlyRate}/hr`
-      : `Fixed @ $${cl.fixed_price}`;
+      : `Fixed Retainer @ $${cl.fixed_price}`;
     document.getElementById('edit-client-info').innerHTML =
       `<strong>${cl.name}</strong> &nbsp;·&nbsp; ${rateLabel}`;
+  }
+
+  // Toggle hours display depending on rate structure parameters
+  const hoursGroup = document.getElementById('hours-input-group');
+  if (rateType === 'fixed') {
+    hoursGroup.style.display = 'none';
+  } else {
+    hoursGroup.style.display = 'flex';
   }
 
   previewAmount();
@@ -657,7 +652,7 @@ function previewAmount() {
   const hourlyRate = parseFloat(document.getElementById('edit-hourly-rate').value || 0);
   const preview    = document.getElementById('amount-preview');
 
-  if (hours > 0 && rateType === 'hourly' && hourlyRate > 0) {
+  if (rateType === 'hourly' && hours > 0 && hourlyRate > 0) {
     const amount = (hours * hourlyRate).toFixed(2);
     preview.textContent = `💰 New amount: $${amount} (${fmtHours(hours)} × $${hourlyRate}/hr)`;
     preview.style.display = 'block';
@@ -669,22 +664,21 @@ function previewAmount() {
 async function saveEdit() {
   const status     = document.getElementById('edit-status');
   const id         = document.getElementById('edit-id').value;
-  const hours      = parseFloat(document.getElementById('edit-hours').value);
+  const hours      = parseFloat(document.getElementById('edit-hours').value || 0);
   const rateType   = document.getElementById('edit-rate-type').value;
   const hourlyRate = parseFloat(document.getElementById('edit-hourly-rate').value || 0);
   const date       = document.getElementById('edit-date').value;
   const task       = document.getElementById('edit-task').value;
 
-  // Recalculate amount
-  let amount = 0;
+  let amount = null;
   if (rateType === 'hourly' && hourlyRate > 0) {
-    amount = hours * hourlyRate;
+    amount = (hours * hourlyRate).toFixed(2);
   }
 
   try {
     await apiFetch('/timelogs/' + id, {
       method: 'PUT',
-      body: JSON.stringify({ hours, task_description: task, date, amount: amount.toFixed(2) })
+      body: JSON.stringify({ hours, task_description: task, date, amount })
     });
     status.className = 'form-status success';
     status.textContent = '✓ Updated!';
@@ -697,7 +691,6 @@ async function saveEdit() {
 
 function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
 
-// ── Selection ─────────────────────────────────────────────────
 function updateSel(id, checked) {
   if(checked) selectedIds.add(id); else selectedIds.delete(id);
   updateBulkBar();
