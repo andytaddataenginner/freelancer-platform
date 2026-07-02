@@ -8,11 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    html {
-      overflow-y: scroll;
-    }
-
     :root {
       --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
@@ -21,588 +16,461 @@
       --amber: #92400e; --amber-bg: #fef3c7;
       --red: #b91c1c; --red-bg: #fee2e2;
       --sans: 'Outfit', system-ui, sans-serif;
-      --serif: 'Playfair Display', Georgia, serif;
-      --shadow: 0 4px 20px rgba(13,35,83,0.06);
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
     }
-    body { font-family: var(--sans); background: var(--bg); color: var(--ink); padding: 0; }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
-    /* MOBILE NAVIGATION */
-    .mob-bar {
-      display: none; position: fixed; top: 0; left: 0; right: 0; height: 56px;
-      background: var(--navy); z-index: 200; align-items: center;
-      justify-content: space-between; padding: 0 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease;
     }
-    .mob-brand { display: flex; align-items: center; gap: 0.6rem; }
-    .mob-brand img { height: 30px; background: #fff; border-radius: 6px; padding: 2px; }
-    .mob-brand span { color: #fff; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.02em; }
-    .mob-toggle { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 38px; height: 38px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 149; backdrop-filter: blur(2px); }
-    .overlay.open { display: block; }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
 
-    /* LAYOUT STYLING */
-    .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
-    .sb-brand { padding: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
-    .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; padding: 3px; flex-shrink: 0; }
-    .sb-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .sb-text strong { display: block; color: #fff; font-size: 0.8rem; font-weight: 700; }
-    .sb-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
-    
-    .sb-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
-    .sb-nav a { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 1.2rem; font-size: 0.88rem; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; border-right: 3px solid transparent; transition: all 0.2s; }
-    .sb-nav a:hover { color: #fff; background: rgba(255,255,255,0.04); }
-    .sb-nav a.active { color: #fff; background: rgba(26,92,255,0.15); border-right-color: var(--gold2); font-weight: 600; }
-    
-    .sb-user { padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); }
-    .sb-user strong { display: block; color: #fff; font-size: 0.88rem; }
-    .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
-    .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
 
-    .main { margin-left: 240px; min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar { background: #fff; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-    .topbar h2 { font-family: var(--serif); font-size: 1.5rem; color: var(--navy); }
-    .content { padding: 1.5rem; flex: 1; }
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
-    /* FILTERS COMPONENT */
-    .filter-card { background: #fff; padding: 1.2rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-    .fg { display: flex; flex-direction: column; gap: 0.3rem; min-width: 140px; }
-    .fg.flex1 { flex: 1; min-width: 180px; }
-    .fg label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink3); }
-    select, input, textarea { padding: 0.55rem 0.8rem; font-family: var(--sans); font-size: 0.88rem; border: 1.5px solid var(--bg2); border-radius: 8px; background: var(--bg); color: var(--ink); outline: none; transition: border-color 0.2s; width: 100%; }
-    select:focus, input:focus, textarea:focus { border-color: var(--accent); background: #fff; }
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
 
-    /* ACTION BUTTONS */
-    .btn { padding: 0.55rem 1.2rem; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; white-space: nowrap; text-decoration: none; }
-    .btn-p { background: var(--navy); color: #fff; }
-    .btn-p:hover { background: var(--accent); }
-    .btn-o { background: transparent; border: 1.5px solid var(--bg2); color: var(--ink2); }
-    .btn-o:hover { border-color: var(--navy); color: var(--navy); background: var(--bg); }
-    .btn-g { background: var(--green-bg); color: var(--green); }
-    .btn-g:hover { background: var(--green); color: #fff; }
-    .btn-r { background: var(--red-bg); color: var(--red); }
-    .btn-r:hover { background: var(--red); color: #fff; }
-    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; border-radius: 6px; }
+    .main { margin-left: 220px; flex: 1; }
+    .topbar {
+      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
+      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
+    }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
 
-    /* BULK ACTION INTERACTIVE FLOATER */
-    .bulk-bar { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--navy); padding: 0.8rem 1.5rem; border-radius: 50px; display: flex; align-items: center; gap: 1.2rem; color: #fff; box-shadow: 0 10px 30px rgba(13,35,83,0.3); transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; }
-    .bulk-bar.open { bottom: 24px; }
-    .bulk-bar span { font-size: 0.85rem; font-weight: 500; color: var(--gold2); border-right: 1px solid rgba(255,255,255,0.15); padding-right: 1.2rem; }
+    .content { padding: 1.5rem; }
 
-    /* DATA LAYOUT GRID */
-    .card-table { background: #fff; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
-    .table-w { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 750px; }
-    th { background: #fff; padding: 0.8rem 1rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); border-bottom: 2px solid var(--bg2); text-align: left; }
-    td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--bg2); vertical-align: middle; color: var(--ink2); }
+    .card {
+      background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.2rem;
+    }
+    .card-header {
+      padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
+
+    .filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
+    .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 130px; }
+    .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--ink3); }
+    select, input[type=date], input[type=number], input[type=month] {
+      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 8px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.85rem; color: var(--navy); width: 100%;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--accent); }
+
+    .bulk-bar {
+      display: none; background: var(--navy); color: white;
+      padding: 0.7rem 1.2rem; border-radius: 10px; margin-bottom: 1rem;
+      align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .bulk-bar.open { display: flex; }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 700px; }
+    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; white-space: nowrap; }
+    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: var(--bg); }
 
-    /* BADGES */
-    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
-    .bg-g { background: var(--green-bg); color: var(--green); }
-    .bg-a { background: var(--amber-bg); color: var(--amber); }
-    .bg-b { background: #dbeafe; color: #1e40af; }
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-blue  { background: #dbeafe; color: #1e40af; }
 
-    /* EDIT MODAL DIALOGS */
-    .modal-ov { position: fixed; inset: 0; background: rgba(13,35,83,0.4); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 300; padding: 1rem; }
-    .modal-ov.open { display: flex; }
-    .modal { background: #fff; border-radius: 16px; padding: 1.6rem; width: 100%; max-width: 460px; box-shadow: 0 20px 50px rgba(13,35,83,0.15); animation: mSlide 0.2s ease-out; }
-    @keyframes mSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-    .modal-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
-    .modal-h h3 { font-family: var(--serif); font-size: 1.25rem; color: var(--navy); }
-    .modal-close { background: var(--bg); border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; color: var(--ink3); }
-    .modal-close:hover { background: var(--red-bg); color: var(--red); }
-    .form-status { font-size: 0.8rem; margin-top: 0.5rem; font-weight: 500; }
+    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-family: var(--sans); font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .btn-green  { background: var(--green-bg); color: var(--green); }
+    .btn-green:hover { background: var(--green); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
+    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+    .btn-navy   { background: var(--navy); color: white; }
+    .btn-navy:hover { background: var(--accent); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
+    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
+    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    
+    .mfg { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+    .mfg label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--ink2); }
+    .mfg input, .mfg textarea, .mfg select { padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 9px; background: var(--bg); font-family: var(--sans); font-size: 0.88rem; color: var(--navy); width: 100%; }
+    .mfg input:focus, .mfg textarea:focus, .mfg select:focus { outline: none; border-color: var(--accent); }
+    .form-status { font-size: 0.8rem; margin-top: 0.4rem; }
     .form-status.success { color: var(--green); }
-    .form-status.error { color: var(--red); }
+    .form-status.error   { color: var(--red); }
 
-    /* RESPONSIVE LAYOUT RESPONSES */
     @media (max-width: 768px) {
-      .mob-bar { display: flex; }
-      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease-in-out; }
-      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 25px rgba(0,0,0,0.2); }
+      .sidebar { transform: translateX(-100%); }
       .main { margin-left: 0; padding-top: 56px; }
-      .topbar { position: static !important; padding: 1.2rem 1rem 0.8rem !important; }
+      .mobile-header { display: flex; }
+      .topbar { top: 56px; }
       .content { padding: 1rem; }
-      .filter-card { flex-direction: column; align-items: stretch; gap: 0.8rem; }
-      .fg { min-width: 100%; }
-      .btn { width: 100%; justify-content: center; }
-      .bulk-bar { width: calc(100% - 2rem); border-radius: 12px; justify-content: space-between; }
     }
   </style>
 </head>
 <body>
 
-<div class="mob-bar">
-  <div class="mob-brand">
-    <img src="../QFA_Logo.png" alt="QFA"/>
-    <span>Quick Freelancing Agency</span>
-  </div>
-  <button class="mob-toggle" onclick="toggleMobSidebar()">&#9776;</button>
-</div>
-<div class="overlay" id="sidebar-overlay" onclick="toggleMobSidebar()"></div>
-
-<aside class="sidebar" id="app-sidebar">
-  <div class="sb-brand">
-    <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
-    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency · System</span></div>
-  </div>
-  <nav class="sb-nav">
-    <a href="dashboard.html">📊 Overview</a>
-    <a href="time-logs.html" class="active">⏱ Time Logs</a>
-    <a href="clients.html">👥 Clients</a>
-    <a href="schedule.html">📅 Schedule</a>
-    <a href="portfolio-admin.html">🖼 Portfolio</a>
-    <a href="../index.html" target="_blank">🌐 Public Site</a>
-  </nav>
-  <div class="sb-user">
-    <strong id="user-display-name">Loading…</strong>
-    <span>Freelancer Account</span>
-    <a href="#" onclick="processSignOut()">Sign out →</a>
-  </div>
-</aside>
-
-<div class="main">
-  <div class="topbar">
-    <div>
-      <h2>Time Logs Ledger</h2>
-      <p style="font-size: 0.82rem; color: var(--ink3); margin-top: 0.1rem;">Track work records, hourly analytics, and prepaid asset boxes</p>
+  <div class="mobile-header" id="mobile-header">
+    <div class="mobile-logo">
+      <img src="../QFA_Logo.png" alt="QFA"/>
+      <span>QFA</span>
     </div>
+    <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
   </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-  <div class="content">
-    <div class="filter-card">
-      <div class="fg flex1">
-        <label>Client Filter</label>
-        <select id="filter-client" onchange="loadLogs()">
-          <option value="">All active clients</option>
-        </select>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+        <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
       </div>
-      <div class="fg">
-        <label>Payment Status</label>
-        <select id="filter-status" onchange="loadLogs()">
-          <option value="">All invoices</option>
-          <option value="unpaid">Unpaid</option>
-          <option value="paid">Paid</option>
-        </select>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">📊 Overview</a>
+        <a href="time-logs.html" class="active">⏱ Time Logs</a>
+        <a href="clients.html">👥 Clients</a>
+        <a href="schedule.html">📅 Schedule</a>
+        <a href="portfolio-admin.html">🖼 Portfolio</a>
+        <a href="../index.html" target="_blank">🌐 Public Site</a>
+      </nav>
+      <div class="sidebar-user">
+        <strong id="user-name">Loading…</strong>
+        <span>Freelancer · QFA</span>
+        <a href="#" onclick="logout()">Sign out →</a>
       </div>
-      <div class="fg">
-        <label>From Date</label>
-        <input type="date" id="filter-from" onchange="loadLogs()"/>
-      </div>
-      <div class="fg">
-        <label>To Date</label>
-        <input type="date" id="filter-to" onchange="loadLogs()"/>
-      </div>
-      <button class="btn btn-o" onclick="resetFilters()">Reset</button>
-    </div>
+    </aside>
 
-    <div class="card-table">
-      <div class="table-w">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 40px; text-align: center; padding-right: 0;">
-                <input type="checkbox" id="check-all" onchange="toggleAll(this)"/>
-              </th>
-              <th>Client</th>
-              <th>Date</th>
-              <th>Hours</th>
-              <th>Billing Amount</th>
-              <th>Status</th>
-              <th>Task Description</th>
-              <th style="text-align: right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="logs-tbody">
-            <tr>
-              <td colspan="8" style="text-align: center; padding: 3rem; color: var(--ink3);">
-                Loading time logs ledger metrics…
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="bulk-bar" id="bulk-bar">
-  <span id="bulk-count">0 selected</span>
-  <div style="display: flex; gap: 0.5rem;">
-    <button class="btn btn-g btn-sm" onclick="bulkMarkPaid()">✓ Mark Paid</button>
-    <button class="btn btn-o btn-sm" onclick="clearSelection()" style="color: #fff; border-color: rgba(255,255,255,0.2);">Cancel</button>
-  </div>
-</div>
-
-<div class="modal-ov" id="modal-edit-log">
-  <div class="modal">
-    <div class="modal-h">
-      <h3>Modify Log Transaction</h3>
-      <button class="modal-close" onclick="closeEditModal()">✕</button>
-    </div>
-    <div id="edit-meta-rate" style="background: var(--bg); border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.8rem; color: var(--ink2); margin-bottom: 1rem;"></div>
-    
-    <form onsubmit="saveLogEdits(event)">
-      <input type="hidden" id="edit-log-id" name="id"/>
-      <input type="hidden" id="edit-client-rate" name="rate_context"/>
-      
-      <div class="fg" style="margin-bottom: 0.8rem;">
-        <label>Date</label>
-        <input type="date" id="edit-log-date" name="date" required/>
-      </div>
-      
-      <div class="fg" style="margin-bottom: 0.8rem;">
-        <label>Hours Logged</label>
-        <input type="number" id="edit-log-hours" name="hours" step="any" min="0.01" max="24" required oninput="calculateDynamicPreview()"/>
-      </div>
-      
-      <div id="edit-amount-preview" style="background: #e8f0ff; border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.82rem; color: var(--accent); font-weight: 600; margin-bottom: 0.8rem; display: none;"></div>
-
-      <div class="fg" style="margin-bottom: 1rem;">
-        <label>Task Description</label>
-        <textarea id="edit-log-task" name="task_description" rows="3" required></textarea>
+    <div class="main">
+      <div class="topbar">
+        <h2>Time Logs & Remittances</h2>
+        <p>Log your working sessions or manage monthly fixed remittances securely.</p>
       </div>
 
-      <button type="submit" class="btn btn-p" style="width: 100%; padding: 0.7rem;">Save Log Parameters</button>
-      <div id="edit-status" class="form-status"></div>
-    </form>
-  </div>
-</div>
+      <div class="content">
+        <div class="bulk-bar" id="bulk-bar">
+          <span id="bulk-count" style="font-weight:600; font-size:0.85rem;">0 selected</span>
+          <button class="btn btn-green" onclick="bulkMarkPaid()" style="padding:0.35rem 0.8rem;">✓ Mark Paid</button>
+        </div>
 
-<script>
-const BASE_URL = 'https://freelancer-platform-9jut.onrender.com/api';
-let selectedIds = new Set();
-let globalClientsMap = {};
-
-const authSession = {
-  token: () => localStorage.getItem('token'),
-  user: () => { try { return JSON.parse(localStorage.getItem('user')) } catch { return null } },
-  validate: () => {
-    if (!localStorage.getItem('token')) return false;
-    const loginTime = parseInt(localStorage.getItem('login_time') || 0);
-    if ((Date.now() - loginTime) / 3600000 > 8) { authSession.destroy(); return false; }
-    return true;
-  },
-  destroy: () => ['token', 'user', 'login_time'].forEach(k => localStorage.removeItem(k))
-};
-
-async function apiFetch(endpoint, options = {}) {
-  const response = await fetch(BASE_URL + endpoint, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + authSession.token(),
-      ...(options.headers || {})
-    }
-  });
-  if (response.status === 401) { authSession.destroy(); window.location.href = 'login.html'; return; }
-  if (!response.ok) {
-    const fallbackErr = await response.json().catch(() => ({}));
-    throw new Error(fallbackErr.error || 'API Connection Failure');
-  }
-  return response.json();
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-  if (!authSession.validate()) { window.location.href = 'login.html'; return; }
-  const profile = authSession.user();
-  if (profile && profile.role !== 'freelancer') { window.location.href = 'client-portal.html'; return; }
-  
-  document.getElementById('user-display-name').textContent = profile ? profile.name : 'Freelancer';
-  
-  await loadClientsDropdown();
-  await loadLogs();
-});
-
-function toggleMobSidebar() {
-  document.getElementById('app-sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
-}
-
-function processSignOut() {
-  authSession.destroy();
-  window.location.href = 'login.html';
-}
-
-async function loadClientsDropdown() {
-  try {
-    const clients = await apiFetch('/clients');
-    const select = document.getElementById('filter-client');
-    
-    clients.forEach(c => {
-      globalClientsMap[c.id] = c;
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = `${c.name} ${c.company ? `(${c.company})` : ''}`;
-      select.appendChild(opt);
-    });
-  } catch (err) { console.error('Error fetching client definitions:', err); }
-}
-
-function formatHours(h) {
-  const hrs = Math.floor(h);
-  const mins = Math.round((h - hrs) * 60);
-  if (hrs === 0) return mins + 'min';
-  if (mins === 0) return hrs + 'h';
-  return `${hrs}h ${mins}min`;
-}
-
-function resetFilters() {
-  document.getElementById('filter-client').value = '';
-  document.getElementById('filter-status').value = '';
-  document.getElementById('filter-from').value = '';
-  document.getElementById('filter-to').value = '';
-  loadLogs();
-}
-
-async function loadLogs() {
-  const clientFilter = document.getElementById('filter-client').value;
-  const statusFilter = document.getElementById('filter-status').value;
-  const fromFilter = document.getElementById('filter-from').value;
-  const toFilter = document.getElementById('filter-to').value;
-
-  let queryParams = [];
-  if (clientFilter) queryParams.push(`client_id=${clientFilter}`);
-  if (statusFilter) queryParams.push(`payment_status=${statusFilter}`);
-  if (fromFilter) queryParams.push(`from=${fromFilter}`);
-  if (toFilter) queryParams.push(`to=${toFilter}`);
-  
-  const queryString = queryParams.length ? '?' + queryParams.join('&') : '';
-  
-  try {
-    const logs = await apiFetch('/timelogs' + queryString);
-    const tbody = document.getElementById('logs-tbody');
-    
-    if (!logs.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 3rem; color: var(--ink3);">No logging records matching selected filters found.</td></tr>`;
-      clearSelection();
-      return;
-    }
-
-    tbody.innerHTML = logs.map(log => {
-      const isPaid = log.payment_status === 'paid';
-      const clientMeta = globalClientsMap[log.client_id] || {};
-      const isFixed = log.source === 'fixed_billing' || clientMeta.rate_type === 'fixed';
-      const isCredit = log.rate_type === 'credit' || clientMeta.rate_type === 'credit';
-
-      // 1. FORMAT THE TASK TASK DESCRIPTION WITH DYNAMIC MONTH/YEAR FOR FIXED RATE RECORDS
-      let descriptionDisplay = log.task_description;
-      if (isFixed && log.date) {
-        try {
-          const parsedDate = new Date(log.date);
-          const periodString = parsedDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-          descriptionDisplay = `<strong>[${periodString} Remittance]</strong> — ${log.task_description}`;
-        } catch(e) { /* Fallback to standard data if parsing breaks */ }
-      }
-
-      // 2. RENDER THE CORRECT COMPLIANT REVENUE/ASSET BADGES
-      let amountDisplay = `$${parseFloat(log.amount || 0).toFixed(2)}`;
-      let statusBadge = isPaid ? '<span class="badge bg-g">✓ Paid</span>' : '<span class="badge bg-a">Unpaid</span>';
-      
-      if (isCredit) {
-        amountDisplay = '<small style="color: var(--green); font-weight: 600;">Credit Deduction</small>';
-        statusBadge = '<span class="badge bg-b">Deducted</span>';
-      } else if (isFixed) {
-        // Render fixed price indicators
-        amountDisplay = `$${parseFloat(log.amount || clientMeta.fixed_price || 0).toFixed(2)}`;
-      }
-
-      // 3. COMPILE INTERACTIVE TOGGLE BUTTON HOOKS OR RENDER STATIC VALUES ACCORDINGLY
-      let actionColumn = '';
-      if (isCredit) {
-        actionColumn = '<span style="font-size: 0.75rem; color: var(--ink3);">No Actions</span>';
-      } else if (isFixed) {
-        // Connect directly to the client's localized billing logic hooks
-        actionColumn = isPaid 
-          ? `<button class="btn btn-o btn-sm" onclick="toggleFixedPricePayment(${log.client_id}, 'paid', '${log.date.slice(0,7)}')">Mark Unpaid</button>`
-          : `<button class="btn btn-g btn-sm" onclick="toggleFixedPricePayment(${log.client_id}, 'unpaid', '${log.date.slice(0,7)}')">Mark Paid</button>`;
-      } else {
-        actionColumn = isPaid
-          ? `<button class="btn btn-o btn-sm" onclick="modifyPaymentState(${log.id}, 'unpaid')">Undo</button>`
-          : `<button class="btn btn-g btn-sm" onclick="modifyPaymentState(${log.id}, 'paid')">Mark Paid</button>`;
-      }
-
-      // Append standard asset modifier trigger if the transaction matrix context permits it
-      const editTriggerButton = `<button class="btn btn-o btn-sm" style="padding: 0.35rem 0.5rem;" onclick="triggerEditModal(${log.id}, '${log.date}', ${log.hours}, '${log.task_description.replace(/'/g, "\\'")}', ${clientMeta.hourly_rate || 0}, '${clientMeta.rate_type || 'hourly'}')">✏️</button>`;
-
-      return `
-        <tr>
-          <td style="text-align: center; padding-right: 0;">
-            <input type="checkbox" class="row-check" value="${log.id}" ${selectedIds.has(log.id) ? 'checked' : ''} onchange="updateSelectionState(this)"/>
-          </td>
-          <td>
-            <strong>${log.client_name}</strong>
-            ${log.client_company ? `<br/><small style="color: var(--ink3); font-size: 0.75rem;">${log.client_company}</small>` : ''}
-          </td>
-          <td style="white-space: nowrap;">${log.date ? log.date.split('T')[0] : '—'}</td>
-          <td>${formatHours(parseFloat(log.hours))}</td>
-          <td><strong>${amountDisplay}</strong></td>
-          <td>${statusBadge}</td>
-          <td style="max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${log.task_description}">${descriptionDisplay}</td>
-          <td>
-            <div style="display: flex; gap: 0.3rem; justify-content: flex-end; align-items: center;">
-              ${actionColumn}
-              ${editTriggerButton}
+        <div class="card">
+          <div class="card-header">
+            <h3>Filter Logs Workspace</h3>
+            <button class="btn btn-navy" onclick="openAddModal()">＋ Create Entry Log</button>
+          </div>
+          <div class="filters">
+            <div class="fg">
+              <label>Filter Client</label>
+              <select id="filter-client" onchange="loadLogs()"><option value="">All Clients</option></select>
             </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
+            <div class="fg">
+              <label>Payment Status</label>
+              <select id="filter-status" onchange="loadLogs()">
+                <option value="">All States</option>
+                <option value="unpaid">⚠️ Unpaid</option>
+                <option value="paid">✅ Paid</option>
+              </select>
+            </div>
+          </div>
 
-    updateBulkActionBarVisibility();
-  } catch (err) {
-    document.getElementById('logs-tbody').innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 3rem; color: var(--red); font-weight: 500;">Failed loading metrics: ${err.message}</td></tr>`;
-  }
-}
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40px; text-align:center;"><input type="checkbox" id="check-all" onchange="toggleAll(this)"/></th>
+                  <th>Date</th>
+                  <th>Client</th>
+                  <th>Task Description / Remittance Context</th>
+                  <th>Volume Context</th>
+                  <th>Calculated Amount</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="logs-tbody">
+                <tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--ink3);">Loading log items...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-async function toggleFixedPricePayment(clientId, currentStatus, targetMonth) {
-  const nextStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
-  try {
-    await apiFetch(`/clients/${clientId}/fixed-payment`, {
-      method: 'PATCH',
-      body: JSON.stringify({ fixed_payment_status: nextStatus, month: targetMonth })
-    });
-    loadLogs();
-  } catch(e) { alert('Fixed transaction processing failed: ' + e.message); }
-}
+  <div class="modal-overlay" id="modal-add">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create Entry Log</h3>
+        <button class="modal-close" onclick="closeModal('modal-add')">×</button>
+      </div>
+      <form onsubmit="saveNewLog(event)">
+        <div class="mfg">
+          <label>Assign Client</label>
+          <select id="add-client-id" name="client_id" onchange="onClientSelectChange(this.value)" required>
+            <option value="">Select account...</option>
+          </select>
+        </div>
 
-async function modifyPaymentState(id, targetState) {
-  try {
-    await apiFetch(`/timelogs/${id}/payment`, {
-      method: 'PATCH',
-      body: JSON.stringify({ payment_status: targetState })
-    });
-    loadLogs();
-  } catch (err) { alert('Failed updating row: ' + err.message); }
-}
+        <div id="fixed-remittance-panel" style="display:none; background:var(--bg2); padding:1rem; border-radius:10px; margin-bottom:1rem; border-left:4px solid var(--accent);">
+          <p style="font-size:0.72rem; font-weight:700; color:var(--navy); margin-bottom:0.6rem; text-transform:uppercase;">⚡ Fixed-Rate Target Parameter</p>
+          <div style="display:flex; gap:0.5rem;">
+            <div style="flex:1;">
+              <label style="font-size:0.68rem; font-weight:700; display:block; margin-bottom:0.2rem;">Remittance Month</label>
+              <input type="month" id="add-remittance-month" name="remittance_month"/>
+            </div>
+            <div style="flex:1;">
+              <label style="font-size:0.68rem; font-weight:700; display:block; margin-bottom:0.2rem;">Payment Context</label>
+              <select id="add-payment-status" name="payment_status">
+                <option value="unpaid">⚠️ Unpaid / Pending</option>
+                <option value="paid">✅ Mark Paid Now</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-/* SELECTION METRIC MANAGEMENT MANAGERS */
-function updateSelectionState(checkbox) {
-  const id = parseInt(checkbox.value);
-  if (checkbox.checked) selectedIds.add(id); else selectedIds.delete(id);
-  updateBulkActionBarVisibility();
-}
+        <div class="mfg" id="hours-wrapper">
+          <label id="hours-label">Hours Worked</label>
+          <input type="number" step="0.01" id="add-hours" name="hours" value="0.00" required/>
+        </div>
+        <div class="mfg">
+          <label>Date</label>
+          <input type="date" id="add-date" name="date" required/>
+        </div>
+        <div class="mfg">
+          <label>Task Description / Log Note</label>
+          <textarea name="task_description" rows="2" placeholder="Describe tracking tasks or milestones..."></textarea>
+        </div>
+        <div id="add-status" class="form-status"></div>
+        <button type="submit" class="btn btn-navy" style="width:100%; justify-content:center; padding:0.65rem; margin-top:0.5rem;">Save Entry</button>
+      </form>
+    </div>
+  </div>
 
-function toggleAll(masterCheckbox) {
-  document.querySelectorAll('.row-check').forEach(box => {
-    box.checked = masterCheckbox.checked;
-    const id = parseInt(box.value);
-    if (masterCheckbox.checked) selectedIds.add(id); else selectedIds.delete(id);
-  });
-  updateBulkActionBarVisibility();
-}
+  <script src="../js/common.js"></script>
+  <script>
+    let clientsCache = [];
+    let selectedIds = new Set();
 
-function clearSelection() {
-  selectedIds.clear();
-  document.querySelectorAll('.row-check').forEach(box => box.checked = false);
-  document.getElementById('check-all').checked = false;
-  updateBulkActionBarVisibility();
-}
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('mobile-open');
+      document.getElementById('sidebar-overlay').classList.toggle('open');
+    }
 
-function updateBulkActionBarVisibility() {
-  const bar = document.getElementById('bulk-bar');
-  if (selectedIds.size > 0) {
-    bar.classList.add('open');
-    document.getElementById('bulk-count').textContent = `${selectedIds.size} log records selected`;
-  } else {
-    bar.classList.remove('open');
-  }
-}
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+      document.getElementById('add-status').textContent = '';
+    }
 
-async function bulkMarkPaid() {
-  if (!selectedIds.size) return;
-  if (!confirm(`Mark all ${selectedIds.size} selected row logs as paid transaction parameters?`)) return;
-  
-  try {
-    await apiFetch('/timelogs/bulk-payment', {
-      method: 'PATCH',
-      body: JSON.stringify({ ids: [...selectedIds], payment_status: 'paid' })
-    });
-    clearSelection();
-    loadLogs();
-  } catch (err) { alert('Bulk execution failed: ' + err.message); }
-}
+    function onClientSelectChange(clientId) {
+      const client = clientsCache.find(c => c.id == clientId);
+      const remPanel = document.getElementById('fixed-remittance-panel');
+      const hoursWrapper = document.getElementById('hours-wrapper');
+      const hoursInput = document.getElementById('add-hours');
 
-/* TRANSACTION FACTORY DIALOG MODAL LAYOUT HANDLERS */
-function triggerEditModal(id, date, hours, taskDescription, hourlyRate, rateType) {
-  document.getElementById('edit-log-id').value = id;
-  document.getElementById('edit-client-rate').value = hourlyRate;
-  document.getElementById('edit-log-date').value = date.split('T')[0];
-  document.getElementById('edit-log-hours').value = hours;
-  document.getElementById('edit-log-task').value = taskDescription;
-  
-  const metaContainer = document.getElementById('edit-meta-rate');
-  metaContainer.setAttribute('data-rate-type', rateType);
-  document.getElementById('edit-status').textContent = '';
-  
-  if (rateType === 'credit') {
-    metaContainer.textContent = 'Account Billing Context: Prepaid Asset Credit Box';
-  } else if (rateType === 'fixed') {
-    metaContainer.textContent = 'Account Billing Context: Fixed Retainer Project Agreement';
-  } else {
-    metaContainer.textContent = hourlyRate > 0 ? `Hourly Rate Setup: $${hourlyRate}/hr` : 'No baseline hourly value set';
-  }
+      if(client && client.rate_type === 'fixed') {
+        remPanel.style.display = 'block';
+        hoursWrapper.style.display = 'none';
+        hoursInput.removeAttribute('required');
+        hoursInput.value = "0";
+        document.getElementById('add-remittance-month').value = new Date().toISOString().slice(0, 7);
+      } else {
+        remPanel.style.display = 'none';
+        hoursWrapper.style.display = 'block';
+        hoursInput.setAttribute('required', 'true');
+      }
+    }
 
-  calculateDynamicPreview();
-  document.getElementById('modal-edit-log').classList.add('open');
-}
+    async function openAddModal() {
+      document.getElementById('add-date').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('fixed-remittance-panel').style.display = 'none';
+      document.getElementById('hours-wrapper').style.display = 'block';
+      openModal('modal-add');
+    }
 
-function closeEditModal() {
-  document.getElementById('modal-edit-log').classList.remove('open');
-}
+    async function initializeWorkspace() {
+      try {
+        const u = await apiFetch('/auth/me');
+        if(u) document.getElementById('user-name').textContent = u.name;
 
-function calculateDynamicPreview() {
-  const container = document.getElementById('edit-meta-rate');
-  const type = container.getAttribute('data-rate-type');
-  const h = parseFloat(document.getElementById('edit-log-hours').value || 0);
-  const hr = parseFloat(document.getElementById('edit-client-rate').value || 0);
-  const previewDiv = document.getElementById('edit-amount-preview');
-  
-  if (type === 'credit') {
-    previewDiv.textContent = `⚙️ Action will adjust credit deduction pool metrics by ${h.toFixed(2)} hours.`;
-    previewDiv.style.display = 'block';
-  } else if (type === 'fixed') {
-    previewDiv.style.display = 'none';
-  } else if (h > 0 && hr > 0) {
-    previewDiv.textContent = `💰 Financial Preview Shift: $${(h * hr).toFixed(2)} (${formatHours(h)} × $${hr}/hr)`;
-    previewDiv.style.display = 'block';
-  } else {
-    previewDiv.style.display = 'none';
-  }
-}
+        clientsCache = await apiFetch('/clients');
+        
+        const fClient = document.getElementById('filter-client');
+        const aClient = document.getElementById('add-client-id');
+        
+        clientsCache.forEach(c => {
+          const opt = `<option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.company || 'No Company')})</option>`;
+          fClient.innerHTML += opt;
+          aClient.innerHTML += opt;
+        });
 
-async function saveLogEdits(e) {
-  e.preventDefault();
-  const statusDiv = document.getElementById('edit-status');
-  const id = document.getElementById('edit-log-id').value;
-  const hours = parseFloat(document.getElementById('edit-log-hours').value);
-  const hr = parseFloat(document.getElementById('edit-client-rate').value || 0);
-  const rateType = document.getElementById('edit-meta-rate').getAttribute('data-rate-type');
-  
-  const amountValue = (rateType === 'credit' || rateType === 'fixed') ? undefined : (hr > 0 ? (hours * hr).toFixed(2) : undefined);
+        loadLogs();
+      } catch(e) { window.location.href = 'login.html'; }
+    }
 
-  try {
-    await apiFetch(`/timelogs/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        hours,
-        task_description: document.getElementById('edit-log-task').value,
-        date: document.getElementById('edit-log-date').value,
-        amount: amountValue
-      })
-    });
-    
-    statusDiv.className = 'form-status success';
-    statusDiv.textContent = '✓ Log adjustments committed successfully!';
-    setTimeout(() => {
-      closeEditModal();
-      loadLogs();
-    }, 700);
-  } catch (err) {
-    statusDiv.className = 'form-status error';
-    statusDiv.textContent = err.message;
-  }
-}
-</script>
+    async function loadLogs() {
+      try {
+        let url = '/timelogs?limit=200';
+        const cl = document.getElementById('filter-client').value;
+        const st = document.getElementById('filter-status').value;
+        if(cl) url += '&client_id=' + cl;
+        if(st) url += '&payment_status=' + st;
+
+        const data = await apiFetch(url);
+        renderLogsTable(data);
+      } catch(e) { alert(e.message); }
+    }
+
+    function renderLogsTable(rows) {
+      const tbody = document.getElementById('logs-tbody');
+      if(!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--ink3);">No matching tracking entries found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(r => {
+        const isPaid = r.payment_status === 'paid';
+        const formattedDate = new Date(r.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' });
+        
+        return `
+          <tr>
+            <td style="text-align:center;"><input type="checkbox" class="row-check" value="${r.id}" ${selectedIds.has(r.id)?'checked':''} onchange="onRowCheck(this)"/></td>
+            <td style="white-space:nowrap; font-weight:500;">${formattedDate}</td>
+            <td><strong>${escapeHTML(r.client_name)}</strong></td>
+            <td>${escapeHTML(r.task_description || 'General Remittance Period')}</td>
+            <td>${parseFloat(r.hours) > 0 ? `${r.hours} hrs` : `<span style="color:var(--accent); font-weight:600;">⚡ Fixed Model</span>`}</td>
+            <td style="font-weight:600; color:var(--navy);">$${parseFloat(r.amount || 0).toFixed(2)}</td>
+            <td>
+              <span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">
+                ${isPaid ? '✅ Paid' : '⚠️ Unpaid'}
+              </span>
+            </td>
+            <td style="text-align:right;">
+              ${!isPaid ? `<button class="btn btn-green" onclick="instantMarkPaid(${r.id})" style="padding:0.25rem 0.5rem; font-size:0.7rem;">Mark Paid</button>` : `<span style="font-size:0.72rem; color:var(--ink3);">Processed</span>`}
+            </td>
+          </tr>
+        `;
+      }).join('');
+      updateBulkBar();
+    }
+
+    async function saveNewLog(e) {
+      e.preventDefault();
+      const status = document.getElementById('add-status');
+      const payload = Object.fromEntries(new FormData(e.target));
+      
+      try {
+        await apiFetch('/timelogs', { method: 'POST', body: JSON.stringify(payload) });
+        status.className = 'form-status success';
+        status.textContent = '✓ Entry item cataloged perfectly!';
+        e.target.reset();
+        setTimeout(() => { closeModal('modal-add'); loadLogs(); }, 1000);
+      } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+    }
+
+    async function instantMarkPaid(id) {
+      try {
+        // Concrete payment path execution tracks timestamp date context automatically under-the-hood via backend trigger execution
+        await apiFetch(`/timelogs/bulk-payment`, {
+          method: 'PATCH',
+          body: JSON.stringify({ ids: [id], payment_status: 'paid' })
+        });
+        loadLogs();
+      } catch(e) { alert('Action failed: ' + e.message); }
+    }
+
+    function onRowCheck(cb) {
+      const id = parseInt(cb.value);
+      if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+      updateBulkBar();
+    }
+
+    function toggleAll(cb) {
+      document.querySelectorAll('.row-check').forEach(c => {
+        c.checked = cb.checked;
+        const id = parseInt(c.value);
+        if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+      });
+      updateBulkBar();
+    }
+
+    function updateBulkBar() {
+      const bar = document.getElementById('bulk-bar');
+      if(selectedIds.size > 0) {
+        bar.classList.add('open');
+        document.getElementById('bulk-count').textContent = `${selectedIds.size} row items selected`;
+      } else {
+        bar.classList.remove('open');
+      }
+    }
+
+    async function bulkMarkPaid() {
+      if(!selectedIds.size) return;
+      try {
+        await apiFetch('/timelogs/bulk-payment', {
+          method: 'PATCH',
+          body: JSON.stringify({ ids: [...selectedIds], payment_status: 'paid' })
+        });
+        selectedIds.clear();
+        document.getElementById('check-all').checked = false;
+        loadLogs();
+      } catch(e) { alert('Failed: ' + e.message); }
+    }
+
+    function escapeHTML(str) {
+      if(!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    window.addEventListener('DOMContentLoaded', initializeWorkspace);
+  </script>
 </body>
 </html>
