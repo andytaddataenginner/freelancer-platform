@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Time Logs — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -14,163 +14,63 @@
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
       --green: #166534; --green-bg: #dcfce7;
       --amber: #92400e; --amber-bg: #fef3c7;
-      --red: #b91c1c; --red-bg: #fee2e2;
-      --sans: 'Outfit', system-ui, sans-serif;
-      --serif: 'Playfair Display', serif;
-      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --red: #b91c1c; --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif; --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
     .layout { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 220px; background: var(--navy); position: fixed;
-      top: 0; left: 0; height: 100vh; display: flex;
-      flex-direction: column; z-index: 50;
-      transition: transform 0.3s ease;
-    }
-    .sidebar-brand {
-      padding: 1.1rem 1.2rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; align-items: center; gap: 0.6rem;
-    }
-    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
+    .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; }
     .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
     .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
-    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
-
-    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
-    .sidebar-nav a {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
-      color: rgba(255,255,255,0.55); text-decoration: none;
-      transition: all 0.2s; border-right: 3px solid transparent;
-    }
-    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
-    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
-
-    .sidebar-user {
-      padding: 1rem 1.2rem;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      font-size: 0.8rem;
-    }
-    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
-    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
-    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
-
-    .mobile-header {
-      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
-      background: var(--navy); padding: 0.8rem 1rem;
-      align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
-    }
-    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
-    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
-    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
-    .hamburger-btn {
-      background: rgba(255,255,255,0.1); border: none; color: white;
-      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
-    .sidebar-overlay.open { display: block; }
-    .sidebar.mobile-open { transform: translateX(0) !important; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; }
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; color: rgba(255,255,255,0.55); text-decoration: none; font-weight: 500; }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right: 3px solid var(--gold2); }
+    .sidebar-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: white; }
 
     .main { margin-left: 220px; flex: 1; }
-    .topbar {
-      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
-      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
-    }
+    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
-    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
-
     .content { padding: 1.5rem; }
 
-    .card {
-      background: white; border-radius: var(--radius);
-      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
-      margin-bottom: 1.2rem;
-    }
-    .card-header {
-      padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
-    }
-    .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
-
-    .filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
-    .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 130px; }
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.2rem; }
+    .card-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; }
+    
+    .filters { display: flex; gap: 0.8rem; padding: 1rem 1.2rem; flex-wrap: wrap; }
+    .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 140px; }
     .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--ink3); }
-    select, input[type=date], input[type=number], input[type=month] {
-      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1);
-      border-radius: 8px; background: var(--bg); font-family: var(--sans);
-      font-size: 0.85rem; color: var(--navy); width: 100%;
-    }
-    select:focus, input:focus { outline: none; border-color: var(--accent); }
+    select, input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; background: var(--bg); font-size: 0.85rem; color: var(--navy); }
 
-    .bulk-bar {
-      display: none; background: var(--navy); color: white;
-      padding: 0.7rem 1.2rem; border-radius: 10px; margin-bottom: 1rem;
-      align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-    }
-    .bulk-bar.open { display: flex; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; color: var(--ink3); border-bottom: 2px solid var(--bg2); text-align: left; }
+    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); }
 
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 700px; }
-    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; white-space: nowrap; }
-    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--bg); }
-
-    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; }
     .badge-green { background: var(--green-bg); color: var(--green); }
     .badge-amber { background: var(--amber-bg); color: var(--amber); }
-    .badge-blue  { background: #dbeafe; color: #1e40af; }
 
-    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-family: var(--sans); font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
-    .btn-green  { background: var(--green-bg); color: var(--green); }
+    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; text-decoration: none; }
+    .btn-green { background: var(--green-bg); color: var(--green); }
     .btn-green:hover { background: var(--green); color: white; }
-    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
-    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
-    .btn-navy   { background: var(--navy); color: white; }
+    .btn-navy { background: var(--navy); color: white; }
     .btn-navy:hover { background: var(--accent); }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
-    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
-    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    
+    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
     .mfg { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
     .mfg label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--ink2); }
-    .mfg input, .mfg textarea, .mfg select { padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 9px; background: var(--bg); font-family: var(--sans); font-size: 0.88rem; color: var(--navy); width: 100%; }
-    .mfg input:focus, .mfg textarea:focus, .mfg select:focus { outline: none; border-color: var(--accent); }
-    .form-status { font-size: 0.8rem; margin-top: 0.4rem; }
-    .form-status.success { color: var(--green); }
-    .form-status.error   { color: var(--red); }
-
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
-      .main { margin-left: 0; padding-top: 56px; }
-      .mobile-header { display: flex; }
-      .topbar { top: 56px; }
-      .content { padding: 1rem; }
-    }
   </style>
 </head>
 <body>
 
-  <div class="mobile-header" id="mobile-header">
-    <div class="mobile-logo">
-      <img src="../QFA_Logo.png" alt="QFA"/>
-      <span>QFA</span>
-    </div>
-    <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
-  </div>
-  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
   <div class="layout">
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar">
       <div class="sidebar-brand">
         <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
         <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
@@ -181,41 +81,51 @@
         <a href="clients.html">👥 Clients</a>
         <a href="schedule.html">📅 Schedule</a>
         <a href="portfolio-admin.html">🖼 Portfolio</a>
-        <a href="../index.html" target="_blank">🌐 Public Site</a>
       </nav>
-      <div class="sidebar-user">
-        <strong id="user-name">Loading…</strong>
-        <span>Freelancer · QFA</span>
-        <a href="#" onclick="logout()">Sign out →</a>
-      </div>
+      <div class="sidebar-user"><strong id="user-name">Freelancer</strong></div>
     </aside>
 
     <div class="main">
       <div class="topbar">
-        <h2>Time Logs & Remittances</h2>
-        <p>Log your working sessions or manage monthly fixed remittances securely.</p>
+        <h2>Workspace Time Tracking</h2>
       </div>
 
-      <div class="content">
-        <div class="bulk-bar" id="bulk-bar">
-          <span id="bulk-count" style="font-weight:600; font-size:0.85rem;">0 selected</span>
-          <button class="btn btn-green" onclick="bulkMarkPaid()" style="padding:0.35rem 0.8rem;">✓ Mark Paid</button>
-        </div>
-
-        <div class="card">
+      <div class="content" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- REMITTANCE OVERFLOW BALANCE ALLOCATION WIDGET -->
+        <div class="card" style="border-left: 4px solid var(--gold2);">
           <div class="card-header">
-            <h3>Filter Logs Workspace</h3>
-            <button class="btn btn-navy" onclick="openAddModal()">＋ Create Entry Log</button>
+            <h3 style="font-size:0.95rem;">💰 Excess Payments & Credit Balance Remittance Control</h3>
           </div>
-          <div class="filters">
+          <form style="padding: 1rem 1.2rem; display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end;" onsubmit="allocateRemittance(event)">
             <div class="fg">
-              <label>Filter Client</label>
-              <select id="filter-client" onchange="loadLogs()"><option value="">All Clients</option></select>
+              <label>Select Client Target</label>
+              <select id="remit-client-id" required><option value="">Select Account...</option></select>
             </div>
             <div class="fg">
-              <label>Payment Status</label>
+              <label>Received Amount ($)</label>
+              <input type="number" step="0.01" id="remit-amount" placeholder="e.g. 1500.00" required/>
+            </div>
+            <div class="fg">
+              <label>Execution/Payment Date</label>
+              <input type="date" id="remit-date" required/>
+            </div>
+            <button type="submit" class="btn btn-navy" style="height: 38px;">Process Remittance Balance</button>
+          </form>
+        </div>
+
+        <!-- TIMELOGS ENTRY DATA TABLE WORKSPACE -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Time Log Records</h3>
+            <button class="btn btn-navy" onclick="openAddModal()">＋ Create Item Log</button>
+          </div>
+          <div class="filters">
+            <div class="fg"><label>Filter Client</label><select id="filter-client" onchange="loadLogs()"><option value="">All Clients</option></select></div>
+            <div class="fg">
+              <label>Status</label>
               <select id="filter-status" onchange="loadLogs()">
-                <option value="">All States</option>
+                <option value="">All Logs</option>
                 <option value="unpaid">⚠️ Unpaid</option>
                 <option value="paid">✅ Paid</option>
               </select>
@@ -226,131 +136,67 @@
             <table>
               <thead>
                 <tr>
-                  <th style="width:40px; text-align:center;"><input type="checkbox" id="check-all" onchange="toggleAll(this)"/></th>
-                  <th>Date</th>
+                  <th>Date Logged</th>
+                  <th>Payment Date</th>
                   <th>Client</th>
-                  <th>Task Description / Remittance Context</th>
-                  <th>Volume Context</th>
-                  <th>Calculated Amount</th>
-                  <th>Status</th>
-                  <th style="text-align:right;">Actions</th>
+                  <th>Description</th>
+                  <th>Volume Tracked</th>
+                  <th>Calculated Total</th>
+                  <th>Status State</th>
+                  <th style="text-align:right;">Actions Ledger</th>
                 </tr>
               </thead>
               <tbody id="logs-tbody">
-                <tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--ink3);">Loading log items...</td></tr>
+                <tr><td colspan="8">Gathering log architectures...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 
+  <!-- MODAL: CREATE TIMELOG ITEM -->
   <div class="modal-overlay" id="modal-add">
     <div class="modal">
       <div class="modal-header">
-        <h3>Create Entry Log</h3>
-        <button class="modal-close" onclick="closeModal('modal-add')">×</button>
+        <h3>Create Log Entry</h3>
+        <button onclick="closeModal('modal-add')">×</button>
       </div>
       <form onsubmit="saveNewLog(event)">
-        <div class="mfg">
-          <label>Assign Client</label>
-          <select id="add-client-id" name="client_id" onchange="onClientSelectChange(this.value)" required>
-            <option value="">Select account...</option>
-          </select>
-        </div>
-
-        <div id="fixed-remittance-panel" style="display:none; background:var(--bg2); padding:1rem; border-radius:10px; margin-bottom:1rem; border-left:4px solid var(--accent);">
-          <p style="font-size:0.72rem; font-weight:700; color:var(--navy); margin-bottom:0.6rem; text-transform:uppercase;">⚡ Fixed-Rate Target Parameter</p>
-          <div style="display:flex; gap:0.5rem;">
-            <div style="flex:1;">
-              <label style="font-size:0.68rem; font-weight:700; display:block; margin-bottom:0.2rem;">Remittance Month</label>
-              <input type="month" id="add-remittance-month" name="remittance_month"/>
-            </div>
-            <div style="flex:1;">
-              <label style="font-size:0.68rem; font-weight:700; display:block; margin-bottom:0.2rem;">Payment Context</label>
-              <select id="add-payment-status" name="payment_status">
-                <option value="unpaid">⚠️ Unpaid / Pending</option>
-                <option value="paid">✅ Mark Paid Now</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="mfg" id="hours-wrapper">
-          <label id="hours-label">Hours Worked</label>
-          <input type="number" step="0.01" id="add-hours" name="hours" value="0.00" required/>
-        </div>
-        <div class="mfg">
-          <label>Date</label>
-          <input type="date" id="add-date" name="date" required/>
-        </div>
-        <div class="mfg">
-          <label>Task Description / Log Note</label>
-          <textarea name="task_description" rows="2" placeholder="Describe tracking tasks or milestones..."></textarea>
-        </div>
-        <div id="add-status" class="form-status"></div>
-        <button type="submit" class="btn btn-navy" style="width:100%; justify-content:center; padding:0.65rem; margin-top:0.5rem;">Save Entry</button>
+        <div class="mfg"><label>Client Account</label><select id="add-client-id" name="client_id" required><option value="">Select...</option></select></div>
+        <div class="mfg"><label>Date</label><input type="date" id="add-date" name="date" required/></div>
+        <div class="mfg"><label>Hours Mapped</label><input type="number" step="0.01" name="hours" required/></div>
+        <div class="mfg"><label>Task Details</label><input type="text" name="task_description" placeholder="Development work..." required/></div>
+        <button type="submit" class="btn btn-navy" style="width:100%; justify-content:center; padding:0.6rem;">Save System Entry</button>
       </form>
     </div>
   </div>
 
   <script src="../js/common.js"></script>
   <script>
-    let clientsCache = [];
-    let selectedIds = new Set();
-
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('mobile-open');
-      document.getElementById('sidebar-overlay').classList.toggle('open');
-    }
-
-    function openModal(id) { document.getElementById(id).classList.add('open'); }
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('open');
-      document.getElementById('add-status').textContent = '';
-    }
-
-    function onClientSelectChange(clientId) {
-      const client = clientsCache.find(c => c.id == clientId);
-      const remPanel = document.getElementById('fixed-remittance-panel');
-      const hoursWrapper = document.getElementById('hours-wrapper');
-      const hoursInput = document.getElementById('add-hours');
-
-      if(client && client.rate_type === 'fixed') {
-        remPanel.style.display = 'block';
-        hoursWrapper.style.display = 'none';
-        hoursInput.removeAttribute('required');
-        hoursInput.value = "0";
-        document.getElementById('add-remittance-month').value = new Date().toISOString().slice(0, 7);
-      } else {
-        remPanel.style.display = 'none';
-        hoursWrapper.style.display = 'block';
-        hoursInput.setAttribute('required', 'true');
-      }
-    }
-
-    async function openAddModal() {
+    let clients = [];
+    function openAddModal() {
       document.getElementById('add-date').value = new Date().toISOString().slice(0, 10);
-      document.getElementById('fixed-remittance-panel').style.display = 'none';
-      document.getElementById('hours-wrapper').style.display = 'block';
-      openModal('modal-add');
+      document.getElementById('modal-add').classList.add('open');
     }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-    async function initializeWorkspace() {
+    async function initializePage() {
       try {
         const u = await apiFetch('/auth/me');
         if(u) document.getElementById('user-name').textContent = u.name;
+        document.getElementById('remit-date').value = new Date().toISOString().slice(0, 10);
 
-        clientsCache = await apiFetch('/clients');
-        
+        clients = await apiFetch('/clients');
         const fClient = document.getElementById('filter-client');
         const aClient = document.getElementById('add-client-id');
-        
-        clientsCache.forEach(c => {
-          const opt = `<option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.company || 'No Company')})</option>`;
-          fClient.innerHTML += opt;
-          aClient.innerHTML += opt;
+        const rClient = document.getElementById('remit-client-id');
+
+        clients.forEach(c => {
+          const opt = `<option value="${c.id}">${escapeHTML(c.name)}</option>`;
+          fClient.innerHTML += opt; aClient.innerHTML += opt; rClient.innerHTML += opt;
         });
 
         loadLogs();
@@ -359,118 +205,85 @@
 
     async function loadLogs() {
       try {
-        let url = '/timelogs?limit=200';
+        let path = '/timelogs?limit=200';
         const cl = document.getElementById('filter-client').value;
         const st = document.getElementById('filter-status').value;
-        if(cl) url += '&client_id=' + cl;
-        if(st) url += '&payment_status=' + st;
+        if(cl) path += '&client_id=' + cl;
+        if(st) path += '&payment_status=' + st;
 
-        const data = await apiFetch(url);
-        renderLogsTable(data);
-      } catch(e) { alert(e.message); }
-    }
-
-    function renderLogsTable(rows) {
-      const tbody = document.getElementById('logs-tbody');
-      if(!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--ink3);">No matching tracking entries found.</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = rows.map(r => {
-        const isPaid = r.payment_status === 'paid';
-        const formattedDate = new Date(r.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' });
+        const data = await apiFetch(path);
+        const tbody = document.getElementById('logs-tbody');
         
-        return `
-          <tr>
-            <td style="text-align:center;"><input type="checkbox" class="row-check" value="${r.id}" ${selectedIds.has(r.id)?'checked':''} onchange="onRowCheck(this)"/></td>
-            <td style="white-space:nowrap; font-weight:500;">${formattedDate}</td>
-            <td><strong>${escapeHTML(r.client_name)}</strong></td>
-            <td>${escapeHTML(r.task_description || 'General Remittance Period')}</td>
-            <td>${parseFloat(r.hours) > 0 ? `${r.hours} hrs` : `<span style="color:var(--accent); font-weight:600;">⚡ Fixed Model</span>`}</td>
-            <td style="font-weight:600; color:var(--navy);">$${parseFloat(r.amount || 0).toFixed(2)}</td>
-            <td>
-              <span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">
-                ${isPaid ? '✅ Paid' : '⚠️ Unpaid'}
-              </span>
-            </td>
-            <td style="text-align:right;">
-              ${!isPaid ? `<button class="btn btn-green" onclick="instantMarkPaid(${r.id})" style="padding:0.25rem 0.5rem; font-size:0.7rem;">Mark Paid</button>` : `<span style="font-size:0.72rem; color:var(--ink3);">Processed</span>`}
-            </td>
-          </tr>
-        `;
-      }).join('');
-      updateBulkBar();
+        if(!data.length) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No tracking lines active.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.map(r => {
+          const isPaid = r.payment_status === 'paid';
+          const logD = new Date(r.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
+          const payD = r.payment_date ? new Date(r.payment_date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
+          
+          return `
+            <tr>
+              <td><strong>${logD}</strong></td>
+              <td style="color:var(--ink3);">${payD}</td>
+              <td>${escapeHTML(r.client_name)}</td>
+              <td>${escapeHTML(r.task_description)}</td>
+              <td>${r.hours} hrs</td>
+              <td style="font-weight:600; color:var(--navy);">$${parseFloat(r.amount||0).toFixed(2)}</td>
+              <td><span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">${r.payment_status}</span></td>
+              <td style="text-align:right;">
+                ${!isPaid ? `<button class="btn btn-green" onclick="executeMarkPaid(${r.id})" style="padding:0.25rem 0.5rem; font-size:0.7rem;">Mark Paid</button>` : `<span style="font-size:0.72rem; color:var(--ink3);">Settled Ledger</span>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch(e) { console.error(e); }
     }
 
     async function saveNewLog(e) {
       e.preventDefault();
-      const status = document.getElementById('add-status');
-      const payload = Object.fromEntries(new FormData(e.target));
-      
       try {
-        await apiFetch('/timelogs', { method: 'POST', body: JSON.stringify(payload) });
-        status.className = 'form-status success';
-        status.textContent = '✓ Entry item cataloged perfectly!';
-        e.target.reset();
-        setTimeout(() => { closeModal('modal-add'); loadLogs(); }, 1000);
-      } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+        await apiFetch('/timelogs', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+        closeModal('modal-add'); e.target.reset(); loadLogs();
+      } catch(err) { alert(err.message); }
     }
 
-    async function instantMarkPaid(id) {
+    async function executeMarkPaid(id) {
       try {
-        // Concrete payment path execution tracks timestamp date context automatically under-the-hood via backend trigger execution
+        // Enforces actual tracking parameters: updates payment state alongside automated backend payment_date stamping
         await apiFetch(`/timelogs/bulk-payment`, {
           method: 'PATCH',
-          body: JSON.stringify({ ids: [id], payment_status: 'paid' })
+          body: JSON.stringify({ ids: [id], payment_status: 'paid', payment_date: new Date().toISOString().slice(0,10) })
         });
         loadLogs();
-      } catch(e) { alert('Action failed: ' + e.message); }
+      } catch(e) { alert(e.message); }
     }
 
-    function onRowCheck(cb) {
-      const id = parseInt(cb.value);
-      if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
-      updateBulkBar();
-    }
+    async function allocateRemittance(e) {
+      e.preventDefault();
+      const client_id = document.getElementById('remit-client-id').value;
+      const amount = parseFloat(document.getElementById('remit-amount').value);
+      const date = document.getElementById('remit-date').value;
 
-    function toggleAll(cb) {
-      document.querySelectorAll('.row-check').forEach(c => {
-        c.checked = cb.checked;
-        const id = parseInt(c.value);
-        if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
-      });
-      updateBulkBar();
-    }
-
-    function updateBulkBar() {
-      const bar = document.getElementById('bulk-bar');
-      if(selectedIds.size > 0) {
-        bar.classList.add('open');
-        document.getElementById('bulk-count').textContent = `${selectedIds.size} row items selected`;
-      } else {
-        bar.classList.remove('open');
-      }
-    }
-
-    async function bulkMarkPaid() {
-      if(!selectedIds.size) return;
       try {
-        await apiFetch('/timelogs/bulk-payment', {
-          method: 'PATCH',
-          body: JSON.stringify({ ids: [...selectedIds], payment_status: 'paid' })
+        // Post explicit payment allocation directly to evaluate excess allocations to credit balances
+        await apiFetch(`/clients/${client_id}/remittance`, {
+          method: 'POST',
+          body: JSON.stringify({ amount, date })
         });
-        selectedIds.clear();
-        document.getElementById('check-all').checked = false;
+        alert('Remittance and credits balance ledger processed cleanly!');
+        document.getElementById('remit-amount').value = '';
         loadLogs();
-      } catch(e) { alert('Failed: ' + e.message); }
+      } catch(err) { alert('Remittance Error: ' + err.message); }
     }
 
     function escapeHTML(str) {
       if(!str) return '';
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
-
-    window.addEventListener('DOMContentLoaded', initializeWorkspace);
+    window.addEventListener('DOMContentLoaded', initializePage);
   </script>
 </body>
 </html>
