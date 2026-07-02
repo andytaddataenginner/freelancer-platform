@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Time Logs — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -14,276 +14,736 @@
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
       --green: #166534; --green-bg: #dcfce7;
       --amber: #92400e; --amber-bg: #fef3c7;
-      --red: #b91c1c; --sans: 'Outfit', system-ui, sans-serif;
-      --serif: 'Playfair Display', serif; --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
+    /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
-    .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
-    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
     .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
-    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; }
-    .sidebar-nav { flex: 1; padding: 0.8rem 0; }
-    .sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; color: rgba(255,255,255,0.55); text-decoration: none; font-weight: 500; }
-    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right: 3px solid var(--gold2); }
-    .sidebar-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: white; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
 
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE NAV ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
+
+    /* ── MAIN ── */
     .main { margin-left: 220px; flex: 1; }
-    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; }
+
+    .topbar {
+      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
+      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
+    }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+
     .content { padding: 1.5rem; }
 
-    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.2rem; }
-    .card-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; }
-    
-    .filters { display: flex; gap: 0.8rem; padding: 1rem 1.2rem; flex-wrap: wrap; }
-    .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 140px; }
-    .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--ink3); }
-    select, input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; background: var(--bg); font-size: 0.85rem; color: var(--navy); }
+    /* ── CARDS ── */
+    .card {
+      background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.2rem;
+    }
+    .card-header {
+      padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
 
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; color: var(--ink3); border-bottom: 2px solid var(--bg2); text-align: left; }
-    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); }
+    /* ── STATS ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1rem; margin-bottom: 1.2rem;
+    }
+    .stat-card {
+      background: white; border-radius: var(--radius); padding: 1.1rem 1.3rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+    }
+    .stat-num { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; display: block; }
+    .stat-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); margin-top: 0.2rem; }
 
-    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; }
+    /* ── FILTERS & ADMINISTRATIVE FORMS ── */
+    .filters, .payment-form-flex { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
+    .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 130px; }
+    .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); }
+    select, input[type=date], input[type=number] {
+      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 8px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.85rem; color: var(--navy); width: 100%;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── BULK BAR ── */
+    .bulk-bar {
+      display: none; background: var(--navy); color: white;
+      padding: 0.7rem 1.2rem; border-radius: 10px; margin-bottom: 1rem;
+      align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .bulk-bar.open { display: flex; }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 700px; }
+    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; white-space: nowrap; }
+    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg); }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
     .badge-green { background: var(--green-bg); color: var(--green); }
     .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-blue  { background: #dbeafe; color: #1e40af; }
 
-    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; text-decoration: none; }
-    .btn-green { background: var(--green-bg); color: var(--green); }
+    /* ── BUTTONS ── */
+    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-family: var(--sans); font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .btn-green  { background: var(--green-bg); color: var(--green); }
     .btn-green:hover { background: var(--green); color: white; }
-    .btn-navy { background: var(--navy); color: white; }
+    .btn-red    { background: var(--red-bg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
+    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+    .btn-navy   { background: var(--navy); color: white; }
     .btn-navy:hover { background: var(--accent); }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
+    /* ── FIXED CLIENT NOTICE ── */
+    .fixed-notice {
+      background: linear-gradient(135deg, var(--navy), #1a3a7a);
+      border-radius: var(--radius); padding: 1.5rem; color: white;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 1.2rem;
+    }
+    .fixed-notice h3 { font-family: var(--serif); font-size: 1.5rem; }
+
+    /* ── MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); animation: modalIn 0.25s ease; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
+    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
+    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: var(--red-bg); color: var(--red); }
     .mfg { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
-    .mfg label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--ink2); }
+    .mfg label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink2); }
+    .mfg input, .mfg textarea {
+      padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 9px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.88rem; color: var(--navy); width: 100%;
+    }
+    .mfg input:focus, .mfg textarea:focus { outline: none; border-color: var(--accent); }
+    .hint { font-size: 0.7rem; color: var(--ink3); margin-top: 0.2rem; }
+    .form-status { font-size: 0.8rem; margin-top: 0.4rem; }
+    .form-status.success { color: var(--green); }
+    .form-status.error   { color: var(--red); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 240px; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .mobile-header { display: flex; }
+      .topbar { top: 56px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .filters, .payment-form-flex { gap: 0.6rem; }
+      .fg { min-width: 100px; }
+      .content { padding: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+      .stat-num { font-size: 1.3rem; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
-        <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
-      </div>
-      <nav class="sidebar-nav">
-        <a href="dashboard.html">📊 Overview</a>
-        <a href="time-logs.html" class="active">⏱ Time Logs</a>
-        <a href="clients.html">👥 Clients</a>
-        <a href="schedule.html">📅 Schedule</a>
-        <a href="portfolio-admin.html">🖼 Portfolio</a>
-      </nav>
-      <div class="sidebar-user"><strong id="user-name">Freelancer</strong></div>
-    </aside>
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-    <div class="main">
-      <div class="topbar">
-        <h2>Workspace Time Tracking</h2>
-      </div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html" class="active">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer · QFA</span>
+      <a href="#" onclick="logout()">Sign out →</a>
+    </div>
+  </aside>
 
-      <div class="content" style="display: flex; flex-direction: column; gap: 1.5rem;">
-        
-        <!-- REMITTANCE OVERFLOW BALANCE ALLOCATION WIDGET -->
-        <div class="card" style="border-left: 4px solid var(--gold2);">
-          <div class="card-header">
-            <h3 style="font-size:0.95rem;">💰 Excess Payments & Credit Balance Remittance Control</h3>
-          </div>
-          <form style="padding: 1rem 1.2rem; display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end;" onsubmit="allocateRemittance(event)">
-            <div class="fg">
-              <label>Select Client Target</label>
-              <select id="remit-client-id" required><option value="">Select Account...</option></select>
-            </div>
-            <div class="fg">
-              <label>Received Amount ($)</label>
-              <input type="number" step="0.01" id="remit-amount" placeholder="e.g. 1500.00" required/>
-            </div>
-            <div class="fg">
-              <label>Execution/Payment Date</label>
-              <input type="date" id="remit-date" required/>
-            </div>
-            <button type="submit" class="btn btn-navy" style="height: 38px;">Process Remittance Balance</button>
-          </form>
+  <div class="main">
+    <div class="topbar">
+      <h2>Time Logs</h2>
+      <p>All your logged hours. Mark entries as paid when client pays you.</p>
+    </div>
+
+    <div class="content">
+
+      <div class="card" style="border-left: 4px solid #10b981;">
+        <div class="card-header" style="padding-bottom: 0.2rem; border-bottom: none;">
+          <h3 style="color: #10b981;">💰 Record Client Payment Remittance</h3>
         </div>
-
-        <!-- TIMELOGS ENTRY DATA TABLE WORKSPACE -->
-        <div class="card">
-          <div class="card-header">
-            <h3>Time Log Records</h3>
-            <button class="btn btn-navy" onclick="openAddModal()">＋ Create Item Log</button>
-          </div>
-          <div class="filters">
-            <div class="fg"><label>Filter Client</label><select id="filter-client" onchange="loadLogs()"><option value="">All Clients</option></select></div>
-            <div class="fg">
-              <label>Status</label>
-              <select id="filter-status" onchange="loadLogs()">
-                <option value="">All Logs</option>
-                <option value="unpaid">⚠️ Unpaid</option>
-                <option value="paid">✅ Paid</option>
+        <form id="record-payment-form" onsubmit="handleRecordPayment(event)">
+          <div class="payment-form-flex">
+            <div class="fg" style="min-width: 200px;">
+              <label>Target Client</label>
+              <select id="payment-client" required>
+                <option value="">Select client...</option>
               </select>
             </div>
+            <div class="fg" style="min-width: 120px;">
+              <label>Amount Remitted ($)</label>
+              <input type="number" id="payment-amount" step="0.01" min="0.01" required placeholder="100.00"/>
+            </div>
+            <div class="fg" style="min-width: 130px;">
+              <label>Payment Date</label>
+              <input type="date" id="payment-date" required/>
+            </div>
+            <button type="submit" class="btn btn-navy" style="background: #10b981; padding: 0.65rem 1.2rem; font-size: 0.85rem; height: 38px;">
+              Apply Remittance
+            </button>
           </div>
+        </form>
+      </div>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date Logged</th>
-                  <th>Payment Date</th>
-                  <th>Client</th>
-                  <th>Description</th>
-                  <th>Volume Tracked</th>
-                  <th>Calculated Total</th>
-                  <th>Status State</th>
-                  <th style="text-align:right;">Actions Ledger</th>
-                </tr>
-              </thead>
-              <tbody id="logs-tbody">
-                <tr><td colspan="8">Gathering log architectures...</td></tr>
-              </tbody>
-            </table>
+      <div class="card">
+        <div class="filters">
+          <div class="fg">
+            <label>Client Filter <span id="client-credit-display" style="margin-left: 6px; color: #1a5cff; font-weight: 600; text-transform: none;"></span></label>
+            <select id="filter-client" onchange="loadLogs()">
+              <option value="">All clients</option>
+            </select>
           </div>
+          <div class="fg">
+            <label>Payment</label>
+            <select id="filter-payment" onchange="loadLogs()">
+              <option value="">All</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>From</label>
+            <input type="date" id="filter-from" onchange="loadLogs()"/>
+          </div>
+          <div class="fg">
+            <label>To</label>
+            <input type="date" id="filter-to" onchange="loadLogs()"/>
+          </div>
+          <button class="btn btn-outline" onclick="clearFilters()" style="padding:0.5rem 1rem;margin-top:1rem">Clear</button>
         </div>
-
       </div>
+
+      <div class="fixed-notice" id="fixed-notice" style="display:none">
+        <div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold2);font-weight:700;margin-bottom:0.3rem">Fixed Price Client</div>
+          <h3 id="fixed-client-name">Client</h3>
+          <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-top:0.2rem">Billed at a fixed project rate — no hourly logs tracked</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:2rem;font-weight:700;font-family:var(--serif)" id="fixed-client-price">$0</div>
+          <div id="fixed-client-status" style="margin-top:0.4rem"></div>
+          <div id="fixed-client-btn" style="margin-top:0.6rem"></div>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card" style="border-left:4px solid #22c55e">
+          <span class="stat-num" id="total-paid" style="color:var(--green)">$0</span>
+          <div class="stat-label">Total paid</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #f59e0b">
+          <span class="stat-num" id="total-unpaid" style="color:var(--amber)">$0</span>
+          <div class="stat-label">Total unpaid</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="total-hours">0h</span>
+          <div class="stat-label">Total hours</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="total-entries">0</span>
+          <div class="stat-label">Log entries</div>
+        </div>
+      </div>
+
+      <div class="bulk-bar" id="bulk-bar">
+        <span id="bulk-count" style="font-size:0.88rem">0 selected</span>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="bulkMarkPaid()">✓ Mark selected as Paid</button>
+          <button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="clearSelection()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card" id="logs-card">
+        <div class="card-header">
+          <h3>All Time Logs</h3>
+          <button class="btn btn-outline" onclick="selectAllVisible()" style="font-size:0.75rem">Select all</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:32px"><input type="checkbox" id="check-all" onchange="toggleAll(this)"/></th>
+                <th>Client</th><th>Date</th><th>Hours</th><th>Rate</th>
+                <th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table">
+              <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
+</div>
 
-  <!-- MODAL: CREATE TIMELOG ITEM -->
-  <div class="modal-overlay" id="modal-add">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Create Log Entry</h3>
-        <button onclick="closeModal('modal-add')">×</button>
-      </div>
-      <form onsubmit="saveNewLog(event)">
-        <div class="mfg"><label>Client Account</label><select id="add-client-id" name="client_id" required><option value="">Select...</option></select></div>
-        <div class="mfg"><label>Date</label><input type="date" id="add-date" name="date" required/></div>
-        <div class="mfg"><label>Hours Mapped</label><input type="number" step="0.01" name="hours" required/></div>
-        <div class="mfg"><label>Task Details</label><input type="text" name="task_description" placeholder="Development work..." required/></div>
-        <button type="submit" class="btn btn-navy" style="width:100%; justify-content:center; padding:0.6rem;">Save System Entry</button>
-      </form>
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Log Entry</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
+    <div id="edit-client-info" style="background:var(--bg);border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="edit-id"/>
+    <input type="hidden" id="edit-client-id"/>
+    <input type="hidden" id="edit-rate-type"/>
+    <input type="hidden" id="edit-hourly-rate"/>
+    <div class="mfg">
+      <label>Date</label>
+      <input type="date" id="edit-date" required/>
+    </div>
+    <div class="mfg">
+      <label>Hours spent</label>
+      <input type="number" id="edit-hours" min="0.01" max="24" step="any" required oninput="previewAmount()"/>
+      <div class="hint">💡 20min = 0.33 · 45min = 0.75 · 1h 20min = 1.33</div>
+    </div>
+    <div id="amount-preview" style="background:#e8f0ff;border-radius:8px;padding:0.6rem 1rem;margin-bottom:0.8rem;font-size:0.85rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="mfg">
+      <label>Task description</label>
+      <textarea id="edit-task" rows="3" required></textarea>
+    </div>
+    <button class="btn btn-navy" style="width:100%;padding:0.8rem;font-size:0.9rem" onclick="saveEdit()">Save changes</button>
+    <div id="edit-status" class="form-status"></div>
   </div>
+</div>
 
-  <script src="../js/common.js"></script>
-  <script>
-    let clients = [];
-    function openAddModal() {
-      document.getElementById('add-date').value = new Date().toISOString().slice(0, 10);
-      document.getElementById('modal-add').classList.add('open');
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+// Mobile sidebar toggle
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+let selectedIds = new Set();
+let allClients  = [];
+
+// ── Fetch & Populate Client Dropdowns ────────────────────────
+async function fetchAndPopulateClients() {
+  try {
+    allClients = await apiFetch('/clients');
+    const opts = allClients.map(c =>
+      `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-fixedstatus="${c.fixed_payment_status||'unpaid'}" data-credit="${c.credit_balance||0}">${c.name}${c.company?' — '+c.company:''}</option>`
+    ).join('');
+    
+    const filterSelect = document.getElementById('filter-client');
+    const paymentSelect = document.getElementById('payment-client');
+    
+    const previousFilterVal = filterSelect.value;
+    const previousPaymentVal = paymentSelect.value;
+
+    filterSelect.innerHTML = '<option value="">All clients</option>' + opts;
+    paymentSelect.innerHTML = '<option value="">Select client...</option>' + opts;
+    
+    filterSelect.value = previousFilterVal;
+    paymentSelect.value = previousPaymentVal;
+  } catch(e) { console.error('Error fetching clients:', e); }
+}
+
+// ── Init ─────────────────────────────────────────────────────
+async function init() {
+  // Default the payment form date field to today
+  document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+  
+  // Configure default date range to show ONLY the last 5 days initially
+  const today = new Date();
+  const fiveDaysAgo = new Date();
+  fiveDaysAgo.setDate(today.getDate() - 5);
+  
+  document.getElementById('filter-to').value = today.toISOString().split('T')[0];
+  document.getElementById('filter-from').value = fiveDaysAgo.toISOString().split('T')[0];
+  
+  await fetchAndPopulateClients();
+  loadLogs();
+}
+
+// ── Submit Payment Remittance ──────────────────────
+async function handleRecordPayment(event) {
+  event.preventDefault();
+  const clientId = document.getElementById('payment-client').value;
+  const amount = document.getElementById('payment-amount').value;
+  const date = document.getElementById('payment-date').value;
+
+  if (!clientId || !amount || !date) {
+    alert('Please fill out all fields.');
+    return;
+  }
+
+  try {
+    const result = await apiFetch('/payments/record-admin', {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: parseInt(clientId),
+        amount: parseFloat(amount),
+        date: date,
+        notes: `Manual balance posting via Freelancer Time Logs layout UI.`
+      })
+    });
+
+    alert(`Success! ${result.message}\nRecalculated surplus retainer balance of $${result.remainingCreditSurplus.toFixed(2)} credited forward.`);
+    
+    // Clear dynamic payment inputs
+    document.getElementById('payment-amount').value = '';
+    
+    // Re-fetch client values to instantly update data-credit metrics and reload
+    await fetchAndPopulateClients();
+    loadLogs();
+  } catch (err) {
+    alert('Payment Allocation Error: ' + err.message);
+  }
+}
+
+// ── Load logs ────────────────────────────────────────────────
+async function loadLogs() {
+  const clientId      = document.getElementById('filter-client').value;
+  const payment       = document.getElementById('filter-payment').value;
+  const from          = document.getElementById('filter-from').value;
+  const to            = document.getElementById('filter-to').value;
+
+  // Check if selected client is fixed rate
+  const selectedOpt = document.getElementById('filter-client').selectedOptions[0];
+  const isFixed = selectedOpt && selectedOpt.value !== "" && selectedOpt.dataset.rate === 'fixed';
+
+  // Live credit display setup
+  const creditDisplay = document.getElementById('client-credit-display');
+  if (selectedOpt && selectedOpt.value !== "") {
+    const balance = parseFloat(selectedOpt.dataset.credit || 0);
+    creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
+  } else {
+    creditDisplay.textContent = '';
+  }
+
+  const fixedNotice = document.getElementById('fixed-notice');
+  const logsCard    = document.getElementById('logs-card');
+  const statsRow    = document.getElementById('stats-row');
+
+  if (isFixed && clientId) {
+    // Show fixed notice, hide logs table
+    fixedNotice.style.display = 'flex';
+    logsCard.style.display    = 'none';
+    statsRow.style.display    = 'none';
+    document.getElementById('fixed-client-name').textContent  = selectedOpt.text.split(' — ')[0];
+    document.getElementById('fixed-client-price').textContent = '$' + parseFloat(selectedOpt.dataset.fixed||0).toFixed(2);
+    const isPaid = selectedOpt.dataset.fixedstatus === 'paid';
+    document.getElementById('fixed-client-status').innerHTML = isPaid
+      ? '<span style="background:rgba(34,197,94,0.2);color:#86efac;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.78rem;font-weight:700">✅ Paid</span>'
+      : '<span style="background:rgba(245,158,11,0.2);color:#fcd34d;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.78rem;font-weight:700">⏳ Pending</span>';
+    document.getElementById('fixed-client-btn').innerHTML = isPaid
+      ? `<button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3);font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'unpaid')">Mark unpaid</button>`
+      : `<button class="btn btn-green" style="font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'paid')">Mark paid ✓</button>`;
+    return;
+  }
+
+  // Hourly — show normal table
+  fixedNotice.style.display = 'none';
+  logsCard.style.display    = 'block';
+  statsRow.style.display    = 'grid';
+
+  let url = '/timelogs?limit=200';
+  if (clientId) url += '&client_id=' + clientId;
+  if (payment)  url += '&payment_status=' + payment;
+  if (from)     url += '&from=' + from;
+  if (to)       url += '&to='   + to;
+
+  try {
+    const logs  = await apiFetch(url);
+    const tbody = document.getElementById('logs-table');
+    let totalPaid=0, totalUnpaid=0, totalHours=0;
+
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">No logs found.</td></tr>';
+    } else {
+      tbody.innerHTML = logs.map(l => {
+        const isPaid  = l.payment_status === 'paid';
+        const amount  = parseFloat(l.amount||0);
+        if (isPaid) totalPaid += amount; else totalUnpaid += amount;
+        totalHours += parseFloat(l.hours||0);
+        const badge  = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
+        const payBtn = isPaid
+          ? `<button class="btn btn-outline" onclick="togglePayment(${l.id},'unpaid')">Undo</button>`
+          : `<button class="btn btn-green" onclick="togglePayment(${l.id},'paid')">Paid ✓</button>`;
+        const checked = selectedIds.has(l.id) ? 'checked' : '';
+        // Find client data for edit
+        const cl = allClients.find(c => c.id === l.client_id) || {};
+        return `<tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
+          <td><input type="checkbox" class="row-check" value="${l.id}" ${checked} onchange="updateSel(${l.id},this.checked)"/></td>
+          <td><strong>${l.client_name}</strong></td>
+          <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
+          <td>${fmtHours(parseFloat(l.hours))}</td>
+          <td><span class="badge ${l.rate_type==='fixed'?'badge-blue':'badge-green'}">${l.rate_type||'hourly'}</span></td>
+          <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+          <td>${badge}</td>
+          <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
+          <td style="display:flex;gap:0.3rem;flex-wrap:wrap">
+            ${payBtn}
+            <button class="btn btn-outline" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${l.client_id},'${l.rate_type||'hourly'}',${cl.hourly_rate||0})">✏️</button>
+          </td>
+        </tr>`;
+      }).join('');
     }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-    async function initializePage() {
-      try {
-        const u = await apiFetch('/auth/me');
-        if(u) document.getElementById('user-name').textContent = u.name;
-        document.getElementById('remit-date').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('total-paid').textContent   = '$' + totalPaid.toFixed(2);
+    document.getElementById('total-unpaid').textContent = '$' + totalUnpaid.toFixed(2);
+    document.getElementById('total-hours').textContent  = fmtHours(totalHours);
+    document.getElementById('total-entries').textContent = logs.length;
+    updateBulkBar();
+  } catch(e) { console.error(e); }
+}
 
-        clients = await apiFetch('/clients');
-        const fClient = document.getElementById('filter-client');
-        const aClient = document.getElementById('add-client-id');
-        const rClient = document.getElementById('remit-client-id');
+function fmtHours(h) {
+  const hrs=Math.floor(h), mins=Math.round((h-hrs)*60);
+  if(hrs===0) return `${mins}min`;
+  if(mins===0) return `${hrs}h`;
+  return `${hrs}h ${mins}min`;
+}
 
-        clients.forEach(c => {
-          const opt = `<option value="${c.id}">${escapeHTML(c.name)}</option>`;
-          fClient.innerHTML += opt; aClient.innerHTML += opt; rClient.innerHTML += opt;
-        });
+// ── Fixed payment toggle from time-logs page ─────────────────
+async function toggleFixedPayment(clientId, newStatus) {
+  try {
+    await apiFetch('/clients/' + clientId + '/fixed-payment', {
+      method: 'PATCH', body: JSON.stringify({ fixed_payment_status: newStatus })
+    });
+    // Refresh the dropdown data and reload
+    await fetchAndPopulateClients();
+    loadLogs();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
 
-        loadLogs();
-      } catch(e) { window.location.href = 'login.html'; }
-    }
+// ── Payment toggle ────────────────────────────────────────────
+async function togglePayment(id, status) {
+  try {
+    await apiFetch('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:status})});
+    loadLogs();
+  } catch(e){alert('Failed: '+e.message);}
+}
 
-    async function loadLogs() {
-      try {
-        let path = '/timelogs?limit=200';
-        const cl = document.getElementById('filter-client').value;
-        const st = document.getElementById('filter-status').value;
-        if(cl) path += '&client_id=' + cl;
-        if(st) path += '&payment_status=' + st;
+// ── Edit log ─────────────────────────────────────────────────
+function openEdit(id, date, hours, task, clientId, rateType, hourlyRate) {
+  document.getElementById('edit-id').value         = id;
+  document.getElementById('edit-client-id').value  = clientId;
+  document.getElementById('edit-rate-type').value  = rateType;
+  document.getElementById('edit-hourly-rate').value = hourlyRate;
+  document.getElementById('edit-date').value        = date.slice(0,10);
+  document.getElementById('edit-hours').value       = hours;
+  document.getElementById('edit-task').value        = task;
+  document.getElementById('edit-status').textContent = '';
 
-        const data = await apiFetch(path);
-        const tbody = document.getElementById('logs-tbody');
-        
-        if(!data.length) {
-          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No tracking lines active.</td></tr>`;
-          return;
-        }
+  // Show client info
+  const cl = allClients.find(c => c.id === clientId);
+  if (cl) {
+    const rateLabel = rateType === 'hourly'
+      ? `Hourly @ $${hourlyRate}/hr`
+      : `Fixed @ $${cl.fixed_price}`;
+    document.getElementById('edit-client-info').innerHTML =
+      `<strong>${cl.name}</strong> &nbsp;·&nbsp; ${rateLabel}`;
+  }
 
-        tbody.innerHTML = data.map(r => {
-          const isPaid = r.payment_status === 'paid';
-          const logD = new Date(r.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
-          const payD = r.payment_date ? new Date(r.payment_date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
-          
-          return `
-            <tr>
-              <td><strong>${logD}</strong></td>
-              <td style="color:var(--ink3);">${payD}</td>
-              <td>${escapeHTML(r.client_name)}</td>
-              <td>${escapeHTML(r.task_description)}</td>
-              <td>${r.hours} hrs</td>
-              <td style="font-weight:600; color:var(--navy);">$${parseFloat(r.amount||0).toFixed(2)}</td>
-              <td><span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">${r.payment_status}</span></td>
-              <td style="text-align:right;">
-                ${!isPaid ? `<button class="btn btn-green" onclick="executeMarkPaid(${r.id})" style="padding:0.25rem 0.5rem; font-size:0.7rem;">Mark Paid</button>` : `<span style="font-size:0.72rem; color:var(--ink3);">Settled Ledger</span>`}
-              </td>
-            </tr>
-          `;
-        }).join('');
-      } catch(e) { console.error(e); }
-    }
+  previewAmount();
+  document.getElementById('modal-edit').classList.add('open');
+}
 
-    async function saveNewLog(e) {
-      e.preventDefault();
-      try {
-        await apiFetch('/timelogs', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
-        closeModal('modal-add'); e.target.reset(); loadLogs();
-      } catch(err) { alert(err.message); }
-    }
+function previewAmount() {
+  const hours      = parseFloat(document.getElementById('edit-hours').value || 0);
+  const rateType   = document.getElementById('edit-rate-type').value;
+  const hourlyRate = parseFloat(document.getElementById('edit-hourly-rate').value || 0);
+  const preview    = document.getElementById('amount-preview');
 
-    async function executeMarkPaid(id) {
-      try {
-        // Enforces actual tracking parameters: updates payment state alongside automated backend payment_date stamping
-        await apiFetch(`/timelogs/bulk-payment`, {
-          method: 'PATCH',
-          body: JSON.stringify({ ids: [id], payment_status: 'paid', payment_date: new Date().toISOString().slice(0,10) })
-        });
-        loadLogs();
-      } catch(e) { alert(e.message); }
-    }
+  if (hours > 0 && rateType === 'hourly' && hourlyRate > 0) {
+    const amount = (hours * hourlyRate).toFixed(2);
+    preview.textContent = `💰 New amount: $${amount} (${fmtHours(hours)} × $${hourlyRate}/hr)`;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
 
-    async function allocateRemittance(e) {
-      e.preventDefault();
-      const client_id = document.getElementById('remit-client-id').value;
-      const amount = parseFloat(document.getElementById('remit-amount').value);
-      const date = document.getElementById('remit-date').value;
+async function saveEdit() {
+  const status     = document.getElementById('edit-status');
+  const id         = document.getElementById('edit-id').value;
+  const hours      = parseFloat(document.getElementById('edit-hours').value);
+  const rateType   = document.getElementById('edit-rate-type').value;
+  const hourlyRate = parseFloat(document.getElementById('edit-hourly-rate').value || 0);
+  const date       = document.getElementById('edit-date').value;
+  const task       = document.getElementById('edit-task').value;
 
-      try {
-        // Post explicit payment allocation directly to evaluate excess allocations to credit balances
-        await apiFetch(`/clients/${client_id}/remittance`, {
-          method: 'POST',
-          body: JSON.stringify({ amount, date })
-        });
-        alert('Remittance and credits balance ledger processed cleanly!');
-        document.getElementById('remit-amount').value = '';
-        loadLogs();
-      } catch(err) { alert('Remittance Error: ' + err.message); }
-    }
+  // Recalculate amount
+  let amount = 0;
+  if (rateType === 'hourly' && hourlyRate > 0) {
+    amount = hours * hourlyRate;
+  }
 
-    function escapeHTML(str) {
-      if(!str) return '';
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-    window.addEventListener('DOMContentLoaded', initializePage);
-  </script>
+  try {
+    await apiFetch('/timelogs/' + id, {
+      method: 'PUT',
+      body: JSON.stringify({ hours, task_description: task, date, amount: amount.toFixed(2) })
+    });
+    status.className = 'form-status success';
+    status.textContent = '✓ Updated!';
+    setTimeout(() => { closeModal(); loadLogs(); }, 700);
+  } catch(err) {
+    status.className = 'form-status error';
+    status.textContent = err.message;
+  }
+}
+
+function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
+
+// ── Selection ─────────────────────────────────────────────────
+function updateSel(id, checked) {
+  if(checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkBar();
+}
+function toggleAll(cb) {
+  document.querySelectorAll('.row-check').forEach(c => { c.checked=cb.checked; updateSel(parseInt(c.value),cb.checked); });
+}
+function selectAllVisible() {
+  document.querySelectorAll('.row-check').forEach(c => { c.checked=true; selectedIds.add(parseInt(c.value)); });
+  updateBulkBar();
+}
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('.row-check').forEach(c=>c.checked=false);
+  document.getElementById('check-all').checked=false;
+  updateBulkBar();
+}
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  if(selectedIds.size>0) {
+    bar.classList.add('open');
+    document.getElementById('bulk-count').textContent = selectedIds.size+' selected';
+  } else {
+    bar.classList.remove('open');
+  }
+}
+async function bulkMarkPaid() {
+  if(!selectedIds.size) return;
+  if(!confirm(`Mark ${selectedIds.size} log(s) as paid?`)) return;
+  try {
+    await apiFetch('/timelogs/bulk-payment',{method:'PATCH',body:JSON.stringify({ids:[...selectedIds],payment_status:'paid'})});
+    clearSelection(); loadLogs();
+  } catch(e){alert('Failed: '+e.message);}
+}
+
+function clearFilters() {
+  document.getElementById('filter-client').value  = '';
+  document.getElementById('filter-payment').value = '';
+  document.getElementById('filter-from').value    = '';
+  document.getElementById('filter-to').value      = '';
+  loadLogs();
+}
+
+init();
+</script>
 </body>
 </html>
