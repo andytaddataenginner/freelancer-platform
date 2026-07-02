@@ -7,7 +7,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html { overflow-y: scroll; }
+    
+    /* Force persistent vertical scrollbar track to stop width layout popping */
+    html {
+      overflow-y: scroll;
+    }
+
     :root{
       --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
       --white:#fff;--bg:#f4f6fb;--bg2:#eef1f8;
@@ -19,112 +24,592 @@
     }
     body{font-family:var(--sans);background:var(--bg);color:var(--ink)}
 
-    /* ── SIDEBAR & MAIN (Simplified for brevity) ── */
+    /* ── MOBILE TOP BAR ── */
+    .mob-bar{
+      display:none;position:fixed;top:0;left:0;right:0;height:52px;
+      background:var(--navy);z-index:200;
+      align-items:center;justify-content:space-between;
+      padding:0 1rem;box-shadow:0 2px 12px rgba(0,0,0,.2);
+    }
+    .mob-brand{display:flex;align-items:center;gap:.5rem}
+    .mob-brand img{height:28px;background:#fff;border-radius:6px;padding:2px}
+    .mob-brand span{color:#fff;font-size:.82rem;font-weight:700}
+    .mob-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149}
+    .overlay.on{display:block}
+
+    /* ── SIDEBAR ── */
     .sidebar{width:240px;background:var(--navy);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;}
     .sb-brand{padding:1.1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.7rem}
+    .sb-logo{width:36px;height:36px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0}
+    .sb-logo img{width:100%;height:100%;object-fit:contain}
+    .sb-text strong{display:block;color:#fff;font-size:.8rem;font-weight:700}
+    .sb-text span{font-size:.62rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em}
     .sb-nav{flex:1;padding:.8rem 0;overflow-y:auto}
-    .sb-nav a{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;font-size:.85rem;color:rgba(255,255,255,.55);text-decoration:none;border-right:3px solid transparent}
+    .sb-nav a{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;font-size:.85rem;font-weight:500;color:rgba(255,255,255,.55);text-decoration:none;transition:all .2s;border-right:3px solid transparent}
+    .sb-nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
     .sb-nav a.active{color:#fff;background:rgba(26,92,255,.2);border-right-color:var(--gold2)}
-    .main{margin-left:240px;min-height:100vh;padding:1.5rem}
+    .sb-user{padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.08)}
+    .sb-user strong{display:block;color:#fff;font-size:.88rem}
+    .sb-user span{font-size:.72rem;color:rgba(255,255,255,.4)}
+    .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none}
 
-    /* ── CARDS & FORM ── */
+    /* ── MAIN ── */
+    .main{margin-left:240px;min-height:100vh;overflow-x:hidden;}
+    .topbar{background:#fff;border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
+    .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em}
+    .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.1rem}
+    .topbar-right{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+    .mpick{display:flex;align-items:center;gap:.5rem}
+    .mpick label{font-size:.78rem;font-weight:700;color:var(--ink2)}
+    .mpick input{padding:.4rem .8rem;border:1.5px solid rgba(13,35,83,.1);border-radius:8px;font-family:var(--sans);font-size:.82rem;color:var(--navy);background:var(--bg)}
+    .content{padding:1.5rem}
+
+    /* ── STATS ── */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:1rem;margin-bottom:1.5rem}
+    .sc{background:#fff;border-radius:var(--r);padding:1.2rem 1.4rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);position:relative;overflow:hidden;transition:transform .2s}
+    .sc:hover{transform:translateY(-2px)}
+    .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .sc.green::before{background:linear-gradient(90deg,#22c55e,#86efac)}
+    .sc.amber::before{background:linear-gradient(90deg,#f59e0b,#fcd34d)}
+    .sc.blue::before{background:linear-gradient(90deg,var(--accent),#60a5fa)}
+    .sc.navy::before{background:linear-gradient(90deg,var(--navy),var(--navy2))}
+    .sc.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+    .sc-icon{position:absolute;top:1rem;right:1rem;font-size:1.4rem;opacity:.12}
+    .sc-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:.5rem}
+    .sc-num{font-family:var(--serif);font-size:1.8rem;font-weight:700;line-height:1;display:block}
+    .sc-sub{font-size:.72rem;color:var(--ink3);margin-top:.3rem}
+
+    /* ── CARDS ── */
     .card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);margin-bottom:1.2rem}
-    .ch{padding:1rem 1.4rem;border-bottom:1px solid var(--bg2);font-weight:700}
+    .ch{padding:1rem 1.4rem;border-bottom:1px solid var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+    .ch h3{font-size:.9rem;font-weight:700}
     .cb{padding:1.4rem}
+    .two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:1.2rem;align-items:start}
+
+    /* ── FORM ── */
     .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem}
-    .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--ink2)}
-    input,select,textarea{width:100%;padding:.7rem .9rem;border:1.5px solid rgba(13,35,83,.1);border-radius:9px;background:var(--bg)}
-    .btn{padding:.6rem 1.2rem;border-radius:8px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
-    .btn-p{background:var(--navy);color:#fff}
-    
-    /* ── LAYOUT FIX FOR NEW SECTION ── */
-    .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+    input,textarea,select{width:100%;padding:.7rem .9rem;border:1.5px solid rgba(13,35,83,.1);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--navy);transition:border-color .2s}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,92,255,.08)}
+    .hint{font-size:.7rem;color:var(--ink3);margin-top:.2rem}
+    .fs{font-size:.8rem;margin-top:.3rem}
+    .fs.ok{color:var(--green)}.fs.er{color:var(--red)}
+
+    /* ── BUTTONS ── */
+    .btn{padding:.55rem 1.2rem;border-radius:8px;font-family:var(--sans);font-size:.82rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+    .btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--accent)}
+    .btn-g{background:var(--gbg);color:var(--green)}.btn-g:hover{background:var(--green);color:#fff}
+    .btn-r{background:var(--rbg);color:var(--red)}.btn-r:hover{background:var(--red);color:#fff}
+    .btn-o{background:transparent;border:1.5px solid rgba(13,35,83,.15);color:var(--ink2)}.btn-o:hover{border-color:var(--navy);color:var(--navy)}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff}
+    .btn-sm{padding:.38rem .8rem;font-size:.75rem}
+
+    /* ── TIMER ── */
+    .timer-disp{font-family:var(--serif);font-size:3rem;text-align:center;color:var(--navy);padding:.8rem;background:var(--bg);border-radius:10px;margin:.8rem 0;letter-spacing:.04em}
+    .timer-btns{display:flex;gap:.6rem;justify-content:center}
+
+    /* ── TABLE ── */
+    .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
+    th{padding:.6rem .9rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.8rem .9rem;border-bottom:1px solid var(--bg2);color:var(--ink2);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--bg)}
+
+    /* ── BADGES ── */
+    .badge{display:inline-block;padding:.18rem .65rem;border-radius:100px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+    .bg-g{background:var(--gbg);color:var(--green)}
+    .bg-a{background:var(--abg);color:var(--amber)}
+    .bg-b{background:#dbeafe;color:#1e40af}
+
+    /* ── MODAL ── */
+    .modal-ov{position:fixed;inset:0;background:rgba(13,35,83,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:1rem;backdrop-filter:blur(4px)}
+    .modal-ov.on{display:flex}
+    .modal{background:#fff;border-radius:18px;padding:1.8rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(13,35,83,.2);animation:mIn .25s ease}
+    @keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
+    .mh h3{font-family:var(--serif);font-size:1.2rem}
+    .mc{background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;color:var(--ink3);display:flex;align-items:center;justify-content:center}
+    .mc:hover{background:var(--rbg);color:var(--red)}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px){
+      .stats-row{grid-template-columns:repeat(3,1fr)}
+      .two-col{grid-template-columns:1fr}
+    }
+    @media(max-width:768px){
+      .mob-bar{display:flex}
+      .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:150}
+      .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
+      .main{margin-left:0;padding-top:52px}
+      
+      /* FIX: Unpinned sticky configuration to align elements natively on mobile viewports */
+      .topbar{position:static !important;padding:1.2rem 1rem 0.8rem !important}
+      
+      .stats-row{grid-template-columns:1fr 1fr !important;gap:.8rem}
+      .two-col{grid-template-columns:1fr}
+      .content{padding:1rem}
+      .sc-num{font-size:1.4rem}
+      .topbar-right{width:100%}
+    }
+    @media(max-width:420px){
+      .stats-row{grid-template-columns:1fr 1fr !important;gap:.6rem}
+      .sc-num{font-size:1.2rem}
+      .content{padding:.8rem}
+    }
   </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sb-brand"><strong>Quick Freelancing Agency</strong></div>
+<div class="mob-bar" id="mob-bar">
+  <div class="mob-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>Quick Freelancing Agency</span>
+  </div>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
+</div>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency · Dashboard</span></div>
+  </div>
   <nav class="sb-nav">
     <a href="dashboard.html" class="active">📊 Overview</a>
     <a href="time-logs.html">⏱ Time Logs</a>
     <a href="clients.html">👥 Clients</a>
+    <a href="schedule.html">📅 Schedule</a>
+    <a href="portfolio-admin.html">🖼 Portfolio</a>
+    <a href="../index.html" target="_blank">🌐 Public Site</a>
   </nav>
+  <div class="sb-user">
+    <strong id="uname">Loading…</strong>
+    <span>Freelancer · QFA</span>
+    <a href="#" onclick="logout()">Sign out →</a>
+  </div>
 </aside>
 
-<main class="main">
-  <h2>Dashboard</h2>
-  
-  <div class="grid-container">
-    <div class="card">
-      <div class="ch">⏱ Live Timer</div>
-      <div class="cb">
-        <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
-        <div class="timer-disp" id="tdisp" style="font-size:2rem; text-align:center; margin:1rem 0;">00:00:00</div>
-        <button class="btn btn-p" onclick="startTimer()" id="tstart">▶ Start</button>
-      </div>
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2 id="ptitle">Overview</h2>
+      <p id="greeting">Good morning</p>
     </div>
-
-    <div class="card">
-      <div class="ch">🧾 Generate Fixed Invoice</div>
-      <div class="cb">
-        <form onsubmit="generateFixedInvoice(event)">
-          <div class="fg"><label>Fixed Rate Client</label><select id="invoice-client-target" required></select></div>
-          <div style="display:flex; gap: 0.5rem;">
-            <div class="fg" style="flex:1;"><label>Month</label><input type="number" id="invoice-month" min="1" max="12" required/></div>
-            <div class="fg" style="flex:1;"><label>Year</label><input type="number" id="invoice-year" required/></div>
-          </div>
-          <button type="submit" class="btn btn-p" style="width:100%">Generate Invoice</button>
-        </form>
+    <div class="topbar-right">
+      <div class="mpick">
+        <label>Month</label>
+        <input type="month" id="mpicker" onchange="load()"/>
       </div>
+      <button class="btn btn-gold btn-sm" onclick="show('modal-client')">+ Add Client</button>
     </div>
   </div>
-</main>
+
+  <div class="content">
+    <div class="stats-row">
+      <div class="sc green"><div class="sc-icon">✅</div><div class="sc-label">Paid this month</div><span class="sc-num" id="s-paid">$0</span><div class="sc-sub">Received</div></div>
+      <div class="sc amber"><div class="sc-icon">⏳</div><div class="sc-label">Unpaid this month</div><span class="sc-num" id="s-unpaid">$0</span><div class="sc-sub">Outstanding</div></div>
+      <div class="sc blue"><div class="sc-icon">💰</div><div class="sc-label">Total expected</div><span class="sc-num" id="s-exp">$0</span><div class="sc-sub">Hourly + Fixed</div></div>
+      <div class="sc navy"><div class="sc-icon">👥</div><div class="sc-label">Clients this month</div><span class="sc-num" id="s-clients">0</span><div class="sc-sub">Active</div></div>
+      <div class="sc gold"><div class="sc-icon">⏱</div><div class="sc-label">Hours this month</div><span class="sc-num" id="s-hours">0h</span><div class="sc-sub">Logged</div></div>
+      <div class="sc navy"><div class="sc-icon">📅</div><div class="sc-label">Upcoming</div><span class="sc-num" id="s-book">0</span><div class="sc-sub">Bookings</div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <h3>💰 Payment Breakdown — <span id="bmonth"></span></h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all logs →</a>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th></tr></thead>
+          <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="ch"><h3>⏱ Live Timer</h3></div>
+        <div class="cb">
+          <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
+          <div class="fg"><label>Task</label><input type="text" id="tt" placeholder="What are you working on?"/></div>
+          <div class="timer-disp" id="tdisp">00:00:00</div>
+          <div class="timer-btns">
+            <button class="btn btn-g" id="tstart" onclick="startTimer()">▶ Start</button>
+            <button class="btn btn-o" id="tpause" onclick="pauseTimer()" style="display:none">⏸ Pause</button>
+            <button class="btn btn-g" id="tresume" onclick="startTimer()" style="display:none">▶ Resume</button>
+            <button class="btn btn-r" id="tstop" onclick="stopTimer()" style="display:none">■ Stop & Save</button>
+            <button class="btn btn-o btn-sm" onclick="resetTimer()">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
+        <div class="cb">
+          <form onsubmit="submitLog(event)">
+            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+              <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
+              <div class="fg">
+                <label>Hours (any value)</label>
+                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
+                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
+              </div>
+            </div>
+            <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
+            <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
+            <div id="ls" class="fs"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <h3>Recent Logs</h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Client</th><th>Date</th><th>Hours</th><th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th></tr></thead>
+          <tbody id="rtable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn btn-p" onclick="show('modal-client')">+ Add New Client</button>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-client">
+  <div class="modal">
+    <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
+    <form onsubmit="addClient(event)">
+      <div class="fg"><label>Full name</label><input type="text" name="name" required/></div>
+      <div class="fg"><label>Email</label><input type="email" name="email" required/></div>
+      <div class="fg"><label>Company (optional)</label><input type="text" name="company"/></div>
+      <div class="fg"><label>Temporary password</label><input type="text" name="password" required/></div>
+      <div style="border-top:1px solid var(--bg2);padding-top:1rem;margin-top:.5rem">
+        <div class="fg"><label>Rate type</label>
+          <select name="rate_type" id="art" onchange="toggleRate()">
+            <option value="hourly">Hourly rate</option>
+            <option value="fixed">Fixed price</option>
+            <option value="credit">Prepaid Credit Bucket</option>
+          </select>
+        </div>
+        <div class="fg" id="ahr"><label>Hourly rate ($)</label><input type="number" name="hourly_rate" min="1" step="0.5" placeholder="e.g. 25"/></div>
+        <div class="fg" id="afp" style="display:none"><label>Fixed price ($)</label><input type="number" name="fixed_price" min="1" step="1" placeholder="e.g. 500"/></div>
+        <div class="fg" id="acr" style="display:none"><label>Prepaid Credit Hours</label><input type="number" name="prepaid_credits" min="0.1" step="any" placeholder="e.g. 20"/></div>
+      </div>
+      <button type="submit" class="btn btn-p" style="width:100%">Create client</button>
+      <div id="cs" class="fs"></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-edit">
+  <div class="modal">
+    <div class="mh"><h3>Edit Log Entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
+    <div id="einfo" style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="eid"/>
+    <input type="hidden" id="ehr"/>
+    <div class="fg"><label>Date</label><input type="date" id="edate" required/></div>
+    <div class="fg">
+      <label>Hours</label>
+      <input type="number" id="ehours" min="0.01" max="24" step="any" required oninput="previewAmt()"/>
+      <div class="hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</div>
+    </div>
+    <div id="aprev" style="background:#e8f0ff;border-radius:8px;padding:.6rem 1rem;margin-bottom:.8rem;font-size:.84rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="fg"><label>Task description</label><textarea id="etask" rows="3" required></textarea></div>
+    <button class="btn btn-p" style="width:100%;padding:.8rem" onclick="saveEdit()">Save changes</button>
+    <div id="es" class="fs"></div>
+  </div>
+</div>
 
 <script>
-const API = 'https://freelancer-platform-9jut.onrender.com/api';
-// Helper to include auth headers
-const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') });
+const API='https://freelancer-platform-9jut.onrender.com/api';
+const SH=8;
 
-// Load initial data
-async function init() {
-  const res = await fetch(API + '/clients', { headers: getHeaders() });
-  const clients = await res.json();
-  
-  // Populate dropdowns
-  const opts = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  document.getElementById('tc').innerHTML += opts;
-  document.getElementById('invoice-client-target').innerHTML = '<option value="">Select client...</option>' + opts;
+const auth={
+  token:()=>localStorage.getItem('token'),
+  user:()=>{try{return JSON.parse(localStorage.getItem('user'))}catch{return null}},
+  save:(t,u)=>{localStorage.setItem('token',t);localStorage.setItem('user',JSON.stringify(u));localStorage.setItem('login_time',Date.now());},
+  clear:()=>['token','user','login_time'].forEach(k=>localStorage.removeItem(k)),
+  ok:()=>{
+    if(!localStorage.getItem('token'))return false;
+    if((Date.now()-parseInt(localStorage.getItem('login_time')||0))/3600000>SH){auth.clear();return false;}
+    return true;
+  },
+  hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')})
+};
 
-  // Set default dates
-  document.getElementById('invoice-month').value = new Date().getMonth() + 1;
-  document.getElementById('invoice-year').value = new Date().getFullYear();
+async function api(path,opts={}){
+  const r=await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
+  if(r.status===401){auth.clear();go('login.html');return;}
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Failed');}
+  return r.json();
 }
 
-// Function to handle Fixed Invoice Generation
-async function generateFixedInvoice(e) {
-  e.preventDefault();
-  const client_id = document.getElementById('invoice-client-target').value;
-  const billing_month = document.getElementById('invoice-month').value;
-  const billing_year = document.getElementById('invoice-year').value;
+document.addEventListener('DOMContentLoaded', () => {
+  if(!auth.ok()){go('login.html');return;}
+  const u=auth.user();
+  if(u&&u.role!=='freelancer'){go('client-portal.html');return;}
+  document.getElementById('uname').textContent=u?u.name:'';
+  const h=new Date().getHours();
+  document.getElementById('greeting').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon 🌤':'Good evening 🌙';
+  document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
+  document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+  
+  load();
+});
 
-  try {
-    const res = await fetch(API + '/fixed-invoices', {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ client_id: parseInt(client_id), billing_month: parseInt(billing_month), billing_year: parseInt(billing_year) })
-    });
-    if (!res.ok) throw new Error('Generation failed');
-    alert('Invoice Snapshot Created!');
-  } catch (err) {
-    alert(err.message);
+function go(p){window.location.href=p;}
+function logout(){auth.clear();go('login.html');}
+function show(id){document.getElementById(id).classList.add('on');}
+function hide(id){document.getElementById(id).classList.remove('on');}
+
+function sbOpen(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function sbClose(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.sb-nav a').forEach(a=>
+  a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();})
+);
+
+function toggleRate(){
+  const t=document.getElementById('art').value;
+  document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';
+  document.getElementById('afp').style.display=t==='fixed'?'flex':'none';
+  document.getElementById('acr').style.display=t==='credit'?'flex':'none';
+}
+function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
+
+async function load(){
+  const mo=document.getElementById('mpicker').value;
+  const ml=new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
+  document.getElementById('bmonth').textContent=ml;
+  document.getElementById('ptitle').textContent='Overview — '+ml;
+  try{
+    const [st,cl,lg]=await Promise.all([api('/stats/freelancer?month='+mo),api('/clients'),api('/timelogs?limit=8')]);
+    document.getElementById('s-paid').textContent='$'+parseFloat(st.totalEarned||0).toFixed(2);
+    document.getElementById('s-unpaid').textContent='$'+parseFloat(st.totalUnpaid||0).toFixed(2);
+    document.getElementById('s-exp').textContent='$'+parseFloat(st.totalExpected||0).toFixed(2);
+    document.getElementById('s-clients').textContent=st.clientsThisMonth||0;
+    document.getElementById('s-hours').textContent=fmtH(parseFloat(st.hoursThisMonth||0));
+    document.getElementById('s-book').textContent=st.upcomingBookings||0;
+
+    const bt=document.getElementById('btable');
+    if(!st.clientBreakdown||!st.clientBreakdown.length){
+      bt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
+    }else{
+      bt.innerHTML=st.clientBreakdown.map(c=>{
+        const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
+        const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
+        
+        let rt='';
+        if(c.rate_type==='fixed'){
+          rt='<span class="badge bg-b">Fixed</span>';
+        }else if(c.rate_type==='credit'){
+          rt='<span class="badge" style="background:#f0fdf4;color:#166534">Credit</span>';
+        }else{
+          rt='<span class="badge" style="background:#e8f0ff;color:var(--accent)">Hourly</span>';
+        }
+
+        const isCredit=c.rate_type==='credit';
+        const totalDisplay=isCredit?'—':'$'+parseFloat(c.total).toFixed(2);
+        const paidDisplay=isCredit?'—':'$'+parseFloat(c.paid).toFixed(2);
+        const unpaidDisplay=isCredit?(c.remaining_credits?parseFloat(c.remaining_credits).toFixed(1)+'h left':'0h left'):'$'+parseFloat(c.unpaid).toFixed(2);
+        const unpaidColor=isCredit?'color:var(--ink2)':'color:var(--amber)';
+
+        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>${totalDisplay}</strong></td><td style="color:var(--green)">${paidDisplay}</td><td style="${unpaidColor}">${unpaidDisplay}</td><td>${isCredit?'<span class="badge bg-g">Prepaid</span>':badge}</td></tr>`;
+      }).join('');
+    }
+
+    const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
+    document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
+    document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
+
+    const rt=document.getElementById('rtable');
+    if(!lg.length){
+      rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
+    }else{
+      rt.innerHTML=lg.map(l=>{
+        const ip=l.payment_status==='paid';
+        const badge=ip?'<span class="badge bg-g">✓ Paid</span>':'<span class="badge bg-a">Unpaid</span>';
+        const pb=ip?`<button class="btn btn-o btn-sm" onclick="pay(${l.id},'unpaid')">Undo</button>`:`<button class="btn btn-g btn-sm" onclick="pay(${l.id},'paid')">Mark paid</button>`;
+        const cl2=cl.find(c=>c.id===l.client_id)||{};
+        const isCreditLog=l.rate_type==='credit'||cl2.rate_type==='credit';
+        
+        const amountDisplay=isCreditLog?'<small style="color:var(--green);font-weight:600">Credit Deduction</small>':(parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—');
+        const paymentBadge=isCreditLog?'<span class="badge bg-g">Deduct</span>':badge;
+
+        return`<tr><td><strong>${l.client_name}</strong></td><td style="white-space:nowrap">${l.date?l.date.split('T')[0]:'—'}</td><td>${fmtH(parseFloat(l.hours))}</td><td>${amountDisplay}</td><td>${paymentBadge}</td><td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td><td style="display:flex;gap:.3rem;flex-wrap:wrap">${isCreditLog?'<span class="fs" style="color:var(--ink3);font-size:0.75rem">No Actions</span>':pb}<button class="btn btn-o btn-sm" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${isCreditLog?0:cl2.hourly_rate||0},'${isCreditLog?'credit':'hourly'}')">✏️</button></td></tr>`;
+      }).join('');
+    }
+  }catch(e){console.error(e);}
+}
+
+async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
+
+function openEdit(id,date,hours,task,hr,type='hourly'){
+  document.getElementById('eid').value=id;
+  document.getElementById('ehr').value=hr;
+  document.getElementById('edate').value=date.slice(0,10);
+  document.getElementById('ehours').value=hours;
+  document.getElementById('etask').value=task;
+  
+  document.getElementById('modal-edit').setAttribute('data-rate-type',type);
+  document.getElementById('es').textContent='';
+  
+  if(type==='credit'){
+    document.getElementById('einfo').textContent='Account Type: Prepaid Credit Box';
+  }else{
+    document.getElementById('einfo').textContent=hr>0?`Hourly rate: $${hr}/hr`:'No rate set';
+  }
+  
+  previewAmt();
+  show('modal-edit');
+}
+function previewAmt(){
+  const m=document.getElementById('modal-edit');
+  const type=m.getAttribute('data-rate-type');
+  const h=parseFloat(document.getElementById('ehours').value||0);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const p=document.getElementById('aprev');
+  
+  if(type==='credit'){
+    p.textContent=`降低 Will deduct ${h.toFixed(2)} hours from client credit pool.`;
+    p.style.display='block';
+  }else if(h>0&&hr>0){
+    p.textContent='💰 New amount: $'+(h*hr).toFixed(2)+' ('+fmtH(h)+' × $'+hr+'/hr)';
+    p.style.display='block';
+  }else{
+    p.style.display='none';
+  }
+}
+async function saveEdit(){
+  const s=document.getElementById('es');
+  const id=document.getElementById('eid').value;
+  const hours=parseFloat(document.getElementById('ehours').value);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const type=document.getElementById('modal-edit').getAttribute('data-rate-type');
+  
+  const amount=type==='credit'?undefined:(hr>0?(hours*hr).toFixed(2):undefined);
+  
+  try{
+    await api('/timelogs/'+id,{method:'PUT',body:JSON.stringify({hours,task_description:document.getElementById('etask').value,date:document.getElementById('edate').value,amount})});
+    s.className='fs ok';s.textContent='✓ Updated!';
+    setTimeout(()=>{hide('modal-edit');load();},700);
+  }catch(e){s.className='fs er';s.textContent=e.message;}
+}
+
+/* ── COMPLETE ACTIVE LIVE TRACKER FUNCTIONALITY ── */
+let tiv=null,ts=0,tr=false;
+
+function tdsp(){
+  const h=Math.floor(ts/3600).toString().padStart(2,'0'),
+        m=Math.floor((ts%3600)/60).toString().padStart(2,'0'),
+        s=(ts%60).toString().padStart(2,'0');
+  document.getElementById('tdisp').textContent=`${h}:${m}:${s}`;
+}
+
+function startTimer(){
+  if(tr) return;
+  tr=true;
+  tiv=setInterval(()=>{ts++;tdsp();},1000);
+  
+  document.getElementById('tstart').style.display='none';
+  document.getElementById('tresume').style.display='none';
+  document.getElementById('tpause').style.display='inline-flex';
+  document.getElementById('tstop').style.display='inline-flex';
+}
+
+function pauseTimer(){
+  if(!tr) return;
+  clearInterval(tiv);
+  tr=false;
+  
+  document.getElementById('tpause').style.display='none';
+  document.getElementById('tresume').style.display='inline-flex';
+}
+
+async function stopTimer(){
+  clearInterval(tiv);
+  const tempTr = tr;
+  tr=false;
+  
+  const hours=Math.round(ts/3600*100)/100;
+  const cid=document.getElementById('tc').value;
+  const task=document.getElementById('tt').value;
+  
+  if(!cid){
+    alert('Select a client first.');
+    if(tempTr) { startTimer(); } else { pauseTimer(); }
+    return;
+  }
+  if(hours<0.01){
+    alert('Too short to log.');
+    resetTimer();
+    return;
+  }
+  
+  if(!confirm(`Are you sure you want to stop and save this session?\nTotal recorded time: ${fmtH(hours)} (${hours} hrs).`)){
+    if(tempTr) { startTimer(); } else { pauseTimer(); }
+    return;
+  }
+  
+  try{
+    await api('/timelogs',{method:'POST',body:JSON.stringify({client_id:cid,hours,task_description:task||'Timed session',date:new Date().toISOString().slice(0,10),source:'timer'})});
+    alert('✓ Logged '+fmtH(hours));
+    resetTimer();
+    load();
+  }catch(e){
+    alert('Failed: '+e.message);
+    if(tempTr) { startTimer(); } else { pauseTimer(); }
   }
 }
 
-// Existing timer logic (placeholder for brevity)
-function startTimer() { alert('Timer started (logic from original file)'); }
+function resetTimer(){
+  clearInterval(tiv);
+  tr=false;
+  ts=0;
+  tdsp();
+  document.getElementById('tt').value='';
+  document.getElementById('tc').value='';
+  document.getElementById('tstart').style.display='inline-flex';
+  document.getElementById('tpause').style.display='none';
+  document.getElementById('tresume').style.display='none';
+  document.getElementById('tstop').style.display='none';
+}
 
-init();
+async function submitLog(e){
+  e.preventDefault();
+  const st=document.getElementById('ls');
+  try{
+    await api('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
+    st.className='fs ok';st.textContent='✓ Log saved!';
+    e.target.reset();document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+    load();setTimeout(()=>st.textContent='',3000);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+
+async function addClient(e){
+  e.preventDefault();
+  const st=document.getElementById('cs');
+  try{
+    await api('/clients',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
+    st.className='fs ok';st.textContent='✓ Client created!';
+    e.target.reset();setTimeout(()=>{hide('modal-client');st.textContent='';},1200);load();
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
 </script>
 </body>
 </html>
