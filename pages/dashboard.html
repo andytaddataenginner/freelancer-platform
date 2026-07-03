@@ -223,9 +223,21 @@
       </div>
       <div class="tw">
         <table>
-          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>Action</th></tr></thead>
+          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th></tr></thead>
           <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
         </table>
+      </div>
+    </div>
+
+
+    <!-- ── FIXED CLIENT MONTHLY PAYMENTS ── -->
+    <div class="card" id="fixed-payments-card" style="display:none">
+      <div class="ch">
+        <h3>📌 Fixed Client Payments — <span id="fixed-month-label"></span></h3>
+        <span style="font-size:.78rem;color:var(--ink3)">Mark each fixed client paid/unpaid per month</span>
+      </div>
+      <div id="fixed-payments-body" style="padding:.5rem 0">
+        <p style="padding:1.5rem;color:var(--ink3);text-align:center">Loading…</p>
       </div>
     </div>
 
@@ -393,13 +405,18 @@ function toggleRate(){
 function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
 
 
-// ── Toggle fixed monthly payment status ──────────────────────
-async function toggleFixed(recordId, newStatus){
+async function toggleFixed(recordId, newStatus, btn){
   try{
-    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
-    load(); // Refresh dashboard
+    btn.disabled=true;
+    btn.textContent='Saving…';
+    await api('/fixed-payments/'+recordId+'/status',{
+      method:'PATCH',
+      body:JSON.stringify({status:newStatus})
+    });
+    load();
   }catch(e){
-    alert('Failed to update: '+e.message);
+    alert('Failed: '+e.message);
+    btn.disabled=false;
   }
 }
 
@@ -423,11 +440,7 @@ async function load(){
     }else{
       bt.innerHTML=st.clientBreakdown.map(c=>{
         const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
-        // For fixed clients use their monthly record status
-        const fixedIsPaid = c.rate_type==='fixed' && c.fixed_record_status==='paid';
-        const badge = c.rate_type==='fixed'
-          ? (fixedIsPaid ? '<span class="badge bg-g">Paid ✓</span>' : '<span class="badge bg-a">Unpaid</span>')
-          : (ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>');
+        const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
         
         let rt='';
         if(c.rate_type==='fixed'){
@@ -444,18 +457,43 @@ async function load(){
         const unpaidDisplay=isCredit?(c.remaining_credits?parseFloat(c.remaining_credits).toFixed(1)+'h left':'0h left'):'$'+parseFloat(c.unpaid).toFixed(2);
         const unpaidColor=isCredit?'color:var(--ink2)':'color:var(--amber)';
 
-        // Fixed clients get a Mark Paid / Mark Unpaid button per month
-        let actionCell = '—';
-        if(c.rate_type==='fixed' && c.fixed_record_id){
-          const fixedIsPaid = c.fixed_record_status==='paid';
-          actionCell = fixedIsPaid
-            ? `<button class="btn btn-o btn-sm" onclick="toggleFixed(${c.fixed_record_id},'unpaid')">↩ Mark unpaid</button>`
-            : `<button class="btn btn-g btn-sm" onclick="toggleFixed(${c.fixed_record_id},'paid')">✓ Mark paid</button>`;
-        } else if(c.rate_type==='hourly' || isCredit){
-          actionCell = '—';
-        }
-        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>${totalDisplay}</strong></td><td style="color:var(--green)">${paidDisplay}</td><td style="${unpaidColor}">${unpaidDisplay}</td><td>${isCredit?'<span class="badge bg-g">Prepaid</span>':badge}</td><td>${actionCell}</td></tr>`;
+        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>${totalDisplay}</strong></td><td style="color:var(--green)">${paidDisplay}</td><td style="${unpaidColor}">${unpaidDisplay}</td><td>${isCredit?'<span class="badge bg-g">Prepaid</span>':badge}</td></tr>`;
       }).join('');
+    }
+
+    // ── Render fixed monthly payments section ────────────────
+    const fixedCard = document.getElementById('fixed-payments-card');
+    const fixedBody = document.getElementById('fixed-payments-body');
+    const fixedLabel = document.getElementById('fixed-month-label');
+    const ml2 = new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
+    fixedLabel.textContent = ml2;
+
+    if(st.fixedMonthlyRecords && st.fixedMonthlyRecords.length){
+      fixedCard.style.display='block';
+      fixedBody.innerHTML = st.fixedMonthlyRecords.map(r=>{
+        const isPaid = r.status==='paid';
+        const paidAt = r.paid_at ? ' · Paid on '+new Date(r.paid_at).toLocaleDateString() : '';
+        const btnLabel = isPaid ? '↩ Mark unpaid' : '✓ Mark paid';
+        const btnClass = isPaid ? 'btn btn-o btn-sm' : 'btn btn-g btn-sm';
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.4rem;border-bottom:1px solid var(--bg2);flex-wrap:wrap;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+              <div>
+                <div style="font-weight:700;font-size:.9rem">${r.client_name}</div>
+                ${r.client_company?`<div style="font-size:.75rem;color:var(--ink3)">${r.client_company}</div>`:''}
+              </div>
+              <div style="font-family:var(--serif);font-size:1.2rem;font-weight:700;color:var(--navy)">$${parseFloat(r.amount).toFixed(2)}</div>
+              ${isPaid
+                ? `<span class="badge bg-g">✓ Paid${paidAt}</span>`
+                : `<span class="badge bg-a">⏳ Unpaid</span>`}
+            </div>
+            <button class="${btnClass}" onclick="toggleFixed(${r.id},'${isPaid?'unpaid':'paid'}',this)">${btnLabel}</button>
+          </div>`;
+      }).join('') + `<div style="padding:.8rem 1.4rem;font-size:.78rem;color:var(--ink3)">
+        <strong>${st.fixedMonthlyRecords.filter(r=>r.status==='paid').length}</strong> of <strong>${st.fixedMonthlyRecords.length}</strong> fixed clients paid this month
+      </div>`;
+    } else {
+      fixedCard.style.display='none';
     }
 
     const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
