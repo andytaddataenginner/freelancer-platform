@@ -229,18 +229,6 @@
       </div>
     </div>
 
-
-    <!-- ── FIXED CLIENT MONTHLY PAYMENTS ── -->
-    <div class="card" id="fixed-payments-card" style="display:none">
-      <div class="ch">
-        <h3>📌 Fixed Client Payments — <span id="fixed-month-label"></span></h3>
-        <span style="font-size:.78rem;color:var(--ink3)">Mark each fixed client paid/unpaid per month</span>
-      </div>
-      <div id="fixed-payments-body" style="padding:.5rem 0">
-        <p style="padding:1.5rem;color:var(--ink3);text-align:center">Loading…</p>
-      </div>
-    </div>
-
     <div class="two-col">
       <div class="card">
         <div class="ch"><h3>⏱ Live Timer</h3></div>
@@ -261,13 +249,22 @@
         <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
         <div class="cb">
           <form onsubmit="submitLog(event)">
-            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
+            <div class="fg"><label>Client</label><select name="client_id" id="mc" required onchange="onClientChange()"><option value="">Select client…</option></select></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
               <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
-              <div class="fg">
+              <!-- HOURLY: show hours input -->
+              <div class="fg" id="hours-field">
                 <label>Hours (any value)</label>
-                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
+                <input type="number" name="hours" id="hours-input" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min"/>
                 <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
+              </div>
+              <!-- FIXED: show fixed amount (read only) -->
+              <div class="fg" id="fixed-field" style="display:none">
+                <label>Fixed price</label>
+                <div id="fixed-price-display" style="padding:.7rem .9rem;background:#e8f0ff;border-radius:9px;color:var(--accent);font-weight:700;font-size:1rem;border:1.5px solid rgba(26,92,255,.2)">$0.00</div>
+                <div class="hint">💡 Fixed rate — amount set on client profile</div>
+                <!-- hidden input so form still submits hours=1 for fixed -->
+                <input type="hidden" name="hours" id="fixed-hours-hidden" value="1"/>
               </div>
             </div>
             <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
@@ -405,18 +402,35 @@ function toggleRate(){
 function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
 
 
-async function toggleFixed(recordId, newStatus, btn){
-  try{
-    btn.disabled=true;
-    btn.textContent='Saving…';
-    await api('/fixed-payments/'+recordId+'/status',{
-      method:'PATCH',
-      body:JSON.stringify({status:newStatus})
-    });
-    load();
-  }catch(e){
-    alert('Failed: '+e.message);
-    btn.disabled=false;
+// ── Smart form: adapt to fixed vs hourly client ──────────────
+function onClientChange(){
+  const sel = document.getElementById('mc');
+  const opt = sel.selectedOptions[0];
+  if(!opt || !opt.value) return;
+
+  const rateType  = opt.dataset.rate   || 'hourly';
+  const fixedPrice = parseFloat(opt.dataset.fixed || 0);
+
+  const hoursField = document.getElementById('hours-field');
+  const fixedField = document.getElementById('fixed-field');
+  const hoursInput = document.getElementById('hours-input');
+  const fixedDisp  = document.getElementById('fixed-price-display');
+  const fixedHours = document.getElementById('fixed-hours-hidden');
+
+  if(rateType === 'fixed'){
+    // Fixed client — hide hours, show fixed price
+    hoursField.style.display = 'none';
+    fixedField.style.display = 'flex';
+    hoursInput.removeAttribute('required');
+    hoursInput.value = '';
+    fixedHours.value = '1'; // 1 unit = full fixed price
+    fixedDisp.textContent = '$' + fixedPrice.toFixed(2);
+  } else {
+    // Hourly client — show hours, hide fixed
+    hoursField.style.display = 'flex';
+    fixedField.style.display = 'none';
+    hoursInput.setAttribute('required','required');
+    fixedHours.value = '';
   }
 }
 
@@ -461,42 +475,8 @@ async function load(){
       }).join('');
     }
 
-    // ── Render fixed monthly payments section ────────────────
-    const fixedCard = document.getElementById('fixed-payments-card');
-    const fixedBody = document.getElementById('fixed-payments-body');
-    const fixedLabel = document.getElementById('fixed-month-label');
-    const ml2 = new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
-    fixedLabel.textContent = ml2;
-
-    if(st.fixedMonthlyRecords && st.fixedMonthlyRecords.length){
-      fixedCard.style.display='block';
-      fixedBody.innerHTML = st.fixedMonthlyRecords.map(r=>{
-        const isPaid = r.status==='paid';
-        const paidAt = r.paid_at ? ' · Paid on '+new Date(r.paid_at).toLocaleDateString() : '';
-        const btnLabel = isPaid ? '↩ Mark unpaid' : '✓ Mark paid';
-        const btnClass = isPaid ? 'btn btn-o btn-sm' : 'btn btn-g btn-sm';
-        return `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.4rem;border-bottom:1px solid var(--bg2);flex-wrap:wrap;gap:.5rem">
-            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-              <div>
-                <div style="font-weight:700;font-size:.9rem">${r.client_name}</div>
-                ${r.client_company?`<div style="font-size:.75rem;color:var(--ink3)">${r.client_company}</div>`:''}
-              </div>
-              <div style="font-family:var(--serif);font-size:1.2rem;font-weight:700;color:var(--navy)">$${parseFloat(r.amount).toFixed(2)}</div>
-              ${isPaid
-                ? `<span class="badge bg-g">✓ Paid${paidAt}</span>`
-                : `<span class="badge bg-a">⏳ Unpaid</span>`}
-            </div>
-            <button class="${btnClass}" onclick="toggleFixed(${r.id},'${isPaid?'unpaid':'paid'}',this)">${btnLabel}</button>
-          </div>`;
-      }).join('') + `<div style="padding:.8rem 1.4rem;font-size:.78rem;color:var(--ink3)">
-        <strong>${st.fixedMonthlyRecords.filter(r=>r.status==='paid').length}</strong> of <strong>${st.fixedMonthlyRecords.length}</strong> fixed clients paid this month
-      </div>`;
-    } else {
-      fixedCard.style.display='none';
-    }
-
-    const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
+    // Store rate info on each option for smart form behaviour
+    const opts=cl.map(c=>`<option value="${c.id}" data-rate="${c.rate_type||'hourly'}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
     document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
     document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
 
@@ -656,12 +636,34 @@ function resetTimer(){
 async function submitLog(e){
   e.preventDefault();
   const st=document.getElementById('ls');
+
+  // Build payload — handle fixed vs hourly
+  const formData = Object.fromEntries(new FormData(e.target));
+  const sel = document.getElementById('mc');
+  const opt = sel.selectedOptions[0];
+  const rateType = opt ? opt.dataset.rate : 'hourly';
+
+  // For fixed clients, hours=1 and backend will use fixed_price as amount
+  if(rateType === 'fixed'){
+    formData.hours = '1';
+  }
+
+  // Validate hours for hourly clients
+  if(rateType === 'hourly' && (!formData.hours || parseFloat(formData.hours) <= 0)){
+    st.className='fs er'; st.textContent='Please enter hours spent.'; return;
+  }
+
   try{
-    await api('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
+    await api('/timelogs',{method:'POST',body:JSON.stringify({...formData,source:'manual'})});
     st.className='fs ok';st.textContent='✓ Log saved!';
-    e.target.reset();document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+    e.target.reset();
+    document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+    // Reset form to hourly mode
+    document.getElementById('hours-field').style.display='flex';
+    document.getElementById('fixed-field').style.display='none';
+    document.getElementById('hours-input').setAttribute('required','required');
     load();setTimeout(()=>st.textContent='',3000);
-  }catch(e){st.className='fs er';st.textContent=e.message;}
+  }catch(err){st.className='fs er';st.textContent=err.message;}
 }
 
 async function addClient(e){
