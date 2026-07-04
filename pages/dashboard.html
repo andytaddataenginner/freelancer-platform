@@ -223,7 +223,7 @@
       </div>
       <div class="tw">
         <table>
-          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th></tr></thead>
+          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
         </table>
       </div>
@@ -249,22 +249,13 @@
         <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
         <div class="cb">
           <form onsubmit="submitLog(event)">
-            <div class="fg"><label>Client</label><select name="client_id" id="mc" required onchange="onClientChange()"><option value="">Select client…</option></select></div>
+            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
               <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
-              <!-- HOURLY: show hours input -->
-              <div class="fg" id="hours-field">
+              <div class="fg">
                 <label>Hours (any value)</label>
-                <input type="number" name="hours" id="hours-input" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min"/>
+                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
                 <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
-              </div>
-              <!-- FIXED: show fixed amount (read only) -->
-              <div class="fg" id="fixed-field" style="display:none">
-                <label>Fixed price</label>
-                <div id="fixed-price-display" style="padding:.7rem .9rem;background:#e8f0ff;border-radius:9px;color:var(--accent);font-weight:700;font-size:1rem;border:1.5px solid rgba(26,92,255,.2)">$0.00</div>
-                <div class="hint">💡 Fixed rate — amount set on client profile</div>
-                <!-- hidden input so form still submits hours=1 for fixed -->
-                <input type="hidden" name="hours" id="fixed-hours-hidden" value="1"/>
               </div>
             </div>
             <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
@@ -402,35 +393,13 @@ function toggleRate(){
 function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
 
 
-// ── Smart form: adapt to fixed vs hourly client ──────────────
-function onClientChange(){
-  const sel = document.getElementById('mc');
-  const opt = sel.selectedOptions[0];
-  if(!opt || !opt.value) return;
-
-  const rateType  = opt.dataset.rate   || 'hourly';
-  const fixedPrice = parseFloat(opt.dataset.fixed || 0);
-
-  const hoursField = document.getElementById('hours-field');
-  const fixedField = document.getElementById('fixed-field');
-  const hoursInput = document.getElementById('hours-input');
-  const fixedDisp  = document.getElementById('fixed-price-display');
-  const fixedHours = document.getElementById('fixed-hours-hidden');
-
-  if(rateType === 'fixed'){
-    // Fixed client — hide hours, show fixed price
-    hoursField.style.display = 'none';
-    fixedField.style.display = 'flex';
-    hoursInput.removeAttribute('required');
-    hoursInput.value = '';
-    fixedHours.value = '1'; // 1 unit = full fixed price
-    fixedDisp.textContent = '$' + fixedPrice.toFixed(2);
-  } else {
-    // Hourly client — show hours, hide fixed
-    hoursField.style.display = 'flex';
-    fixedField.style.display = 'none';
-    hoursInput.setAttribute('required','required');
-    fixedHours.value = '';
+// ── Toggle fixed monthly payment status ──────────────────────
+async function toggleFixed(recordId, newStatus){
+  try{
+    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
+    load(); // Refresh dashboard
+  }catch(e){
+    alert('Failed to update: '+e.message);
   }
 }
 
@@ -454,7 +423,11 @@ async function load(){
     }else{
       bt.innerHTML=st.clientBreakdown.map(c=>{
         const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
-        const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
+        // For fixed clients use their monthly record status
+        const fixedIsPaid = c.rate_type==='fixed' && c.fixed_record_status==='paid';
+        const badge = c.rate_type==='fixed'
+          ? (fixedIsPaid ? '<span class="badge bg-g">Paid ✓</span>' : '<span class="badge bg-a">Unpaid</span>')
+          : (ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>');
         
         let rt='';
         if(c.rate_type==='fixed'){
@@ -471,12 +444,21 @@ async function load(){
         const unpaidDisplay=isCredit?(c.remaining_credits?parseFloat(c.remaining_credits).toFixed(1)+'h left':'0h left'):'$'+parseFloat(c.unpaid).toFixed(2);
         const unpaidColor=isCredit?'color:var(--ink2)':'color:var(--amber)';
 
-        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>${totalDisplay}</strong></td><td style="color:var(--green)">${paidDisplay}</td><td style="${unpaidColor}">${unpaidDisplay}</td><td>${isCredit?'<span class="badge bg-g">Prepaid</span>':badge}</td></tr>`;
+        // Fixed clients get a Mark Paid / Mark Unpaid button per month
+        let actionCell = '—';
+        if(c.rate_type==='fixed' && c.fixed_record_id){
+          const fixedIsPaid = c.fixed_record_status==='paid';
+          actionCell = fixedIsPaid
+            ? `<button class="btn btn-o btn-sm" onclick="toggleFixed(${c.fixed_record_id},'unpaid')">↩ Mark unpaid</button>`
+            : `<button class="btn btn-g btn-sm" onclick="toggleFixed(${c.fixed_record_id},'paid')">✓ Mark paid</button>`;
+        } else if(c.rate_type==='hourly' || isCredit){
+          actionCell = '—';
+        }
+        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>${totalDisplay}</strong></td><td style="color:var(--green)">${paidDisplay}</td><td style="${unpaidColor}">${unpaidDisplay}</td><td>${isCredit?'<span class="badge bg-g">Prepaid</span>':badge}</td><td>${actionCell}</td></tr>`;
       }).join('');
     }
 
-    // Store rate info on each option for smart form behaviour
-    const opts=cl.map(c=>`<option value="${c.id}" data-rate="${c.rate_type||'hourly'}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
+    const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
     document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
     document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
 
@@ -636,34 +618,12 @@ function resetTimer(){
 async function submitLog(e){
   e.preventDefault();
   const st=document.getElementById('ls');
-
-  // Build payload — handle fixed vs hourly
-  const formData = Object.fromEntries(new FormData(e.target));
-  const sel = document.getElementById('mc');
-  const opt = sel.selectedOptions[0];
-  const rateType = opt ? opt.dataset.rate : 'hourly';
-
-  // For fixed clients, hours=1 and backend will use fixed_price as amount
-  if(rateType === 'fixed'){
-    formData.hours = '1';
-  }
-
-  // Validate hours for hourly clients
-  if(rateType === 'hourly' && (!formData.hours || parseFloat(formData.hours) <= 0)){
-    st.className='fs er'; st.textContent='Please enter hours spent.'; return;
-  }
-
   try{
-    await api('/timelogs',{method:'POST',body:JSON.stringify({...formData,source:'manual'})});
+    await api('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
     st.className='fs ok';st.textContent='✓ Log saved!';
-    e.target.reset();
-    document.getElementById('ld').value=new Date().toISOString().slice(0,10);
-    // Reset form to hourly mode
-    document.getElementById('hours-field').style.display='flex';
-    document.getElementById('fixed-field').style.display='none';
-    document.getElementById('hours-input').setAttribute('required','required');
+    e.target.reset();document.getElementById('ld').value=new Date().toISOString().slice(0,10);
     load();setTimeout(()=>st.textContent='',3000);
-  }catch(err){st.className='fs er';st.textContent=err.message;}
+  }catch(e){st.className='fs er';st.textContent=e.message;}
 }
 
 async function addClient(e){
