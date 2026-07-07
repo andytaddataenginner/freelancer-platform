@@ -4,7 +4,7 @@ const { requireFreelancer } = require('../middleware/auth');
 
 const TYPE_LABELS = { call:'Video call / meeting', review:'Project review', workshop:'Working session', other:'Other' };
 
-// GET /api/schedule — only THIS freelancer's bookings
+// GET /api/schedule — only THIS freelancer's bookings sorted by newest creation
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { from, to, status } = req.query;
@@ -18,7 +18,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       FROM bookings b
       JOIN users u ON u.id = b.client_id
       WHERE ${where.join(' AND ')}
-      ORDER BY b.date, b.time
+      ORDER BY b.created_at DESC
     `, params);
     res.json(rows.map(r => ({ ...r, type_label: TYPE_LABELS[r.type] || r.type })));
   } catch (e) { next(e); }
