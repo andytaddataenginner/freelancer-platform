@@ -196,6 +196,7 @@
           <button class="btn-sm btn-outline btn-filter-toggle active" id="filter-all" onclick="filterBookings('all')">All</button>
           <button class="btn-sm btn-outline btn-filter-toggle" id="filter-pending" onclick="filterBookings('pending')">Pending</button>
           <button class="btn-sm btn-outline btn-filter-toggle" id="filter-confirmed" onclick="filterBookings('confirmed')">Confirmed</button>
+          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-cancelled" onclick="filterBookings('cancelled')">Cancelled</button>
         </div>
       </div>
       <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
@@ -261,19 +262,27 @@ let activeTab = 'all';
 
 async function loadBookings() {
   try {
-    allBookings = await apiFetch('/schedule');
+    const data = await apiFetch('/schedule');
+    
+    // Sort array by created_at in descending order (Latest entries first)
+    allBookings = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
     const now = new Date();
     const in7 = new Date(); in7.setDate(in7.getDate()+7);
+    
     document.getElementById('s-pending').textContent   = allBookings.filter(b=>b.status==='pending').length;
     document.getElementById('s-confirmed').textContent = allBookings.filter(b=>b.status==='confirmed').length;
     document.getElementById('s-upcoming').textContent  = allBookings.filter(b=>new Date(b.date)>=now && new Date(b.date)<=in7 && b.status!=='cancelled').length;
+    
     filterBookings(activeTab);
   } catch(e) { console.error(e); }
 }
 
 function filterBookings(status) {
   activeTab = status;
-  ['all', 'pending', 'confirmed'].forEach(t => {
+  
+  // Dynamic class toggle now tracks the new 'cancelled' tab element ID
+  ['all', 'pending', 'confirmed', 'cancelled'].forEach(t => {
     const btn = document.getElementById('filter-' + t);
     if (btn) {
       if (t === status) btn.classList.add('active');
