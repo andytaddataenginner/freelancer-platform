@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Schedule — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -119,7 +119,6 @@
       .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
       .main { margin-left: 0; padding-top: 52px; }
       
-      /* FIX: Changes sticky position to static on mobile so it cleanly scrolls out of view */
       .topbar { position: static !important; padding: 1.2rem 1rem 0.8rem !important; } 
       
       .content { padding: 1rem; }
@@ -184,4 +183,170 @@
         <span class="stat-label">Confirmed</span>
       </div>
       <div class="stat-card">
-        <span class="stat-num" id="
+        <span class="stat-num" id="s-upcoming">—</span>
+        <span class="stat-label">Upcoming (7 days)</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.2rem;">
+        <h3 style="font-family: var(--serif); font-size: 1.1rem; font-weight: 700;">Recent Bookings (Top 5)</h3>
+        <div style="display:flex;gap:0.4rem">
+          <button class="btn-sm btn-outline btn-filter-toggle active" id="filter-all" onclick="filterBookings('all')">All</button>
+          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-pending" onclick="filterBookings('pending')">Pending</button>
+          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-confirmed" onclick="filterBookings('confirmed')">Confirmed</button>
+          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-cancelled" onclick="filterBookings('cancelled')">Cancelled</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Date & Time</th>
+              <th>Type</th>
+              <th>Duration</th>
+              <th>Message</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-table">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+function sbOpen(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function sbClose(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.sb-nav a').forEach(a=>
+  a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();})
+);
+
+let allBookings = [];
+let activeTab = 'all';
+
+async function loadBookings() {
+  try {
+    const data = await apiFetch('/schedule');
+    allBookings = Array.isArray(data) ? data : [];
+    
+    const now = new Date();
+    const in7 = new Date(); in7.setDate(in7.getDate()+7);
+    
+    document.getElementById('s-pending').textContent   = allBookings.filter(b=>b && b.status==='pending').length;
+    document.getElementById('s-confirmed').textContent = allBookings.filter(b=>b && b.status==='confirmed').length;
+    document.getElementById('s-upcoming').textContent  = allBookings.filter(b => {
+      if(!b || !b.date) return false;
+      const d = new Date(b.date);
+      return d >= now && d <= in7 && b.status !== 'cancelled';
+    }).length;
+    
+    filterBookings(activeTab);
+  } catch(e) { 
+    console.error(e);
+    document.getElementById('bookings-table').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--red)">Failed to load data. Please check connection.</td></tr>`;
+  }
+}
+
+function filterBookings(status) {
+  activeTab = status;
+  ['all', 'pending', 'confirmed', 'cancelled'].forEach(t => {
+    const btn = document.getElementById('filter-' + t);
+    if (btn) {
+      if (t === status) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+
+  const filtered = status === 'all' ? allBookings : allBookings.filter(b => b && b.status === status);
+  renderBookings(filtered.slice(0, 5));
+}
+
+function renderBookings(bookings) {
+  const tbody = document.getElementById('bookings-table');
+  if (!tbody) return;
+  if (!bookings || !bookings.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No bookings found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = bookings.map(b => {
+    if(!b) return '';
+    const badgeClass = b.status==='confirmed' ? 'badge-green' : b.status==='pending' ? 'badge-amber' : 'badge-gray';
+    const actions = b.status === 'pending'
+      ? `<div style="display:flex; gap:4px; min-width:130px;">
+           <button class="btn-sm btn-green" onclick="updateStatus(${b.id},'confirmed')">Confirm</button>
+           <button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')">Cancel</button>
+         </div>`
+      : b.status === 'confirmed'
+      ? `<button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')">Cancel</button>`
+      : '—';
+      
+    let formattedDate = '—';
+    if(b.date) {
+      try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
+    }
+    
+    return `
+      <tr>
+        <td><strong>${b.client_name || 'Unknown'}</strong><br/><span style="font-size:0.78rem;color:var(--ink3)">${b.client_email || ''}</span></td>
+        <td>${formattedDate} at ${b.time || '—'}</td>
+        <td>${b.type_label || b.type || '—'}</td>
+        <td>${b.duration || 0}h</td>
+        <td>
+          <div style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${b.message || ''}">
+            ${b.message || '—'}
+          </div>
+        </td>
+        <td><span class="badge ${badgeClass}">${b.status || 'pending'}</span></td>
+        <td>${actions}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function updateStatus(id, status) {
+  try {
+    await apiFetch('/schedule/' + id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
+    loadBookings();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+loadBookings();
+</script>
+</body>
+</html>
