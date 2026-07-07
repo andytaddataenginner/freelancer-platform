@@ -40,6 +40,8 @@
     .sb-user span{font-size:.72rem;color:rgba(255,255,255,.4)}
     .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none}
     .main{margin-left:240px;min-height:100vh;overflow-x:hidden}
+    
+    /* Desktop sticky styles */
     .topbar{background:#fff;border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
     .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em}
     .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.1rem}
@@ -80,6 +82,7 @@
     .btn-o{background:transparent;border:1.5px solid rgba(13,35,83,.15);color:var(--ink2)}.btn-o:hover{border-color:var(--navy);color:var(--navy)}
     .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff}
     .btn-sm{padding:.38rem .8rem;font-size:.75rem}
+    
     /* ── TIMER ── */
     .timer-disp{font-family:var(--serif);font-size:3rem;text-align:center;padding:.8rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.04em;transition:color .3s}
     .timer-disp.running{color:var(--green)}
@@ -87,6 +90,7 @@
     .timer-disp.idle{color:var(--navy)}
     .timer-status{text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;height:1rem}
     .timer-btns{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap}
+    
     /* ── TABLE ── */
     .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
@@ -106,18 +110,28 @@
     .mh h3{font-family:var(--serif);font-size:1.2rem}
     .mc{background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;color:var(--ink3);display:flex;align-items:center;justify-content:center}
     .mc:hover{background:var(--rbg);color:var(--red)}
+
     @media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
+    
+    /* ── SYSTEM RESPONSIVE UPGRADE ENGINE (MOBILE FIXED) ── */
     @media(max-width:768px){
       .mob-bar{display:flex}
       .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:150}
       .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
-      .main{margin-left:0;padding-top:52px}
+      
+      .main{
+        margin-left:0;
+        padding-top:52px !important; /* Pushes layout cleanly underneath fixed bar */
+      }
+      
+      /* MODIFIED: Fixes text header shifting errors on mobile displays */
       .topbar{
-        position: sticky;
-        top: 52px; /* Places it precisely underneath the mobile bar */
-        padding: 1rem 1rem !important;
-        box-shadow: 0 1px 3px rgba(13,35,83,0.04);
-          }
+        position: relative !important;
+        top: 0 !important;
+        padding: 1rem !important;
+        border-bottom: 1px solid rgba(13,35,83,.08);
+      }
+      
       .stats-row{grid-template-columns:1fr 1fr !important;gap:.8rem}
       .two-col{grid-template-columns:1fr}
       .content{padding:1rem}
@@ -197,28 +211,23 @@
     </div>
 
     <div class="two-col">
-      <!-- Timer card -->
       <div class="card">
         <div class="ch"><h3>⏱ Live Timer</h3></div>
         <div class="cb">
           <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
           <div class="fg"><label>Task</label><input type="text" id="tt" placeholder="What are you working on?"/></div>
-          <!-- Status label -->
           <div class="timer-status" id="t-status" style="color:var(--ink3)">Ready</div>
-          <!-- Timer display -->
           <div class="timer-disp idle" id="tdisp">00:00:00</div>
-          <!-- Buttons -->
           <div class="timer-btns">
-            <button class="btn btn-g"  id="t-start"  onclick="timerStart()">▶ Start</button>
-            <button class="btn" id="t-pause"  onclick="timerPause()"  style="display:none;background:var(--abg);color:var(--amber)">⏸ Pause</button>
-            <button class="btn btn-g"  id="t-resume" onclick="timerResume()" style="display:none">▶ Resume</button>
-            <button class="btn btn-r"  id="t-stop"   onclick="timerStop()"   style="display:none">■ Stop & Save</button>
+            <button class="btn btn-g" id="t-start" onclick="timerStart()">▶ Start</button>
+            <button class="btn" id="t-pause" onclick="timerPause()" style="display:none;background:var(--abg);color:var(--amber)">⏸ Pause</button>
+            <button class="btn btn-g" id="t-resume" onclick="timerResume()" style="display:none">▶ Resume</button>
+            <button class="btn btn-r" id="t-stop" onclick="timerStop()" style="display:none">■ Stop & Save</button>
             <button class="btn btn-o btn-sm" onclick="timerReset()">↺ Reset</button>
           </div>
         </div>
       </div>
 
-      <!-- Manual log card -->
       <div class="card">
         <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
         <div class="cb">
@@ -257,7 +266,6 @@
   </div>
 </div>
 
-<!-- Add Client Modal -->
 <div class="modal-ov" id="modal-client">
   <div class="modal">
     <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
@@ -282,7 +290,6 @@
   </div>
 </div>
 
-<!-- Edit Log Modal -->
 <div class="modal-ov" id="modal-edit">
   <div class="modal">
     <div class="mh"><h3>Edit Log Entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
@@ -345,8 +352,6 @@ document.querySelectorAll('.sb-nav a').forEach(a=>a.addEventListener('click',()=
 function toggleRate(){const t=document.getElementById('art').value;document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';document.getElementById('afp').style.display=t==='fixed'?'flex':'none';}
 function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
 
-// ── Load dashboard ─────────────────────────────────────────
-
 async function toggleFixed(recordId, newStatus){
   try{
     await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
@@ -376,7 +381,6 @@ async function load(){
         const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
         const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
         const rt=c.rate_type==='fixed'?'<span class="badge bg-b">Fixed</span>':'<span class="badge" style="background:#e8f0ff;color:var(--accent)">Hourly</span>';
-        // Fixed clients get a pay/unpay button per month
         let actionCell = '';
         if(c.rate_type==='fixed' && c.fixed_record_id){
           const isPaidFixed = c.fixed_record_status==='paid';
@@ -409,7 +413,6 @@ async function load(){
 
 async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
 
-// ── Edit log ───────────────────────────────────────────────
 function openEdit(id,date,hours,task,hr){
   document.getElementById('eid').value=id;
   document.getElementById('ehr').value=hr;
@@ -441,8 +444,6 @@ async function saveEdit(){
   }catch(e){s.className='fs er';s.textContent=e.message;}
 }
 
-// ── TIMER with Pause / Resume ──────────────────────────────
-// States: 'idle' | 'running' | 'paused'
 let tiv=null, tSecs=0, tState='idle';
 
 function tDisp(){
@@ -456,7 +457,6 @@ function tSetUI(state){
   tState=state;
   const el=id=>document.getElementById(id);
   const disp=el('tdisp'), status=el('t-status');
-  // Hide all action buttons first
   ['t-start','t-pause','t-resume','t-stop'].forEach(id=>el(id).style.display='none');
   if(state==='idle'){
     el('t-start').style.display='inline-flex';
@@ -495,7 +495,6 @@ function timerResume(){
 
 async function timerStop(){
   if(tState==='idle') return;
-  // Pause while we confirm
   clearInterval(tiv); tiv=null;
 
   const hours=Math.round(tSecs/3600*100)/100;
@@ -504,14 +503,12 @@ async function timerStop(){
 
   if(!cid){
     alert('Please select a client before saving.');
-    // Resume if was running
     if(tState==='running'){ tiv=setInterval(()=>{tSecs++;tDisp();},1000); }
     return;
   }
   if(hours<0.01){ alert('Timer too short to log.'); timerReset(); return; }
 
   if(!confirm(`Save ${fmtH(hours)} to logs?`)){
-    // User cancelled — go back to paused so time is not lost
     tSetUI('paused'); return;
   }
 
@@ -526,7 +523,7 @@ async function timerStop(){
     timerReset(); load();
   }catch(e){
     alert('Failed to save: '+e.message);
-    tSetUI('paused'); // Keep time so user can retry
+    tSetUI('paused');
   }
 }
 
@@ -536,7 +533,6 @@ function timerReset(){
   document.getElementById('tt').value='';
 }
 
-// ── Manual log ─────────────────────────────────────────────
 async function submitLog(e){
   e.preventDefault();
   const st=document.getElementById('ls');
@@ -548,7 +544,6 @@ async function submitLog(e){
   }catch(e){st.className='fs er';st.textContent=e.message;}
 }
 
-// ── Add client ─────────────────────────────────────────────
 async function addClient(e){
   e.preventDefault();
   const st=document.getElementById('cs');
