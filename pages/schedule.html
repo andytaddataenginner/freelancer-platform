@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Schedule — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -106,6 +106,20 @@
       border-color: var(--navy) !important;
     }
 
+    /* ── DATE INPUT CUSTOM DESIGN ── */
+    .date-picker-input {
+      border: 1.5px solid rgba(13,35,83,0.15);
+      padding: 0.3rem 0.5rem;
+      font-size: 0.75rem;
+      border-radius: 5px;
+      font-family: var(--sans);
+      color: var(--ink2);
+      outline: none;
+    }
+    .date-picker-input:focus {
+      border-color: var(--accent);
+    }
+
     /* ── TABLES ── */
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
     th { padding: 0.8rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); border-bottom: 1px solid var(--bg2); }
@@ -127,7 +141,7 @@
     @media (max-width: 480px) {
       .stats-row { grid-template-columns: 1fr !important; }
       .card-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.8rem !important; }
-      .card-header div { width: 100%; display: flex; gap: 0.4rem; }
+      .card-header div { width: 100%; display: flex; gap: 0.4rem; flex-wrap: wrap; }
       .card-header button { flex: 1; text-align: center; }
     }
   </style>
@@ -189,8 +203,17 @@
     </div>
 
     <div class="card">
-      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.2rem;">
-        <h3 style="font-family: var(--serif); font-size: 1.1rem; font-weight: 700;">Recent Bookings (Top 5)</h3>
+      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.2rem;">
+        <h3 style="font-family: var(--serif); font-size: 1.1rem; font-weight: 700;">Bookings List</h3>
+        
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:0.75rem; font-weight:500; color:var(--ink3)">From:</label>
+          <input type="date" id="date-from" class="date-picker-input" onchange="loadBookings()"/>
+          <label style="font-size:0.75rem; font-weight:500; color:var(--ink3)">To:</label>
+          <input type="date" id="date-to" class="date-picker-input" onchange="loadBookings()"/>
+          <button class="btn-sm btn-outline" onclick="clearDateRange()" style="padding:0.3rem 0.5rem;">Clear Range</button>
+        </div>
+
         <div style="display:flex;gap:0.4rem">
           <button class="btn-sm btn-outline btn-filter-toggle active" id="filter-all" onclick="filterBookings('all')">All</button>
           <button class="btn-sm btn-outline btn-filter-toggle" id="filter-pending" onclick="filterBookings('pending')">Pending</button>
@@ -263,7 +286,19 @@ let activeTab = 'all';
 
 async function loadBookings() {
   try {
-    const data = await apiFetch('/schedule');
+    const fromVal = document.getElementById('date-from').value;
+    const toVal = document.getElementById('date-to').value;
+    
+    // Builds API query string matching backend logic
+    let url = '/schedule';
+    let queryParams = [];
+    if (fromVal) queryParams.push(`from=${fromVal}`);
+    if (toVal) queryParams.push(`to=${toVal}`);
+    if (queryParams.length > 0) {
+      url += '?' + queryParams.join('&');
+    }
+
+    const data = await apiFetch(url);
     allBookings = Array.isArray(data) ? data : [];
     
     const now = new Date();
@@ -284,6 +319,12 @@ async function loadBookings() {
   }
 }
 
+function clearDateRange() {
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  loadBookings();
+}
+
 function filterBookings(status) {
   activeTab = status;
   ['all', 'pending', 'confirmed', 'cancelled'].forEach(t => {
@@ -295,6 +336,7 @@ function filterBookings(status) {
   });
 
   const filtered = status === 'all' ? allBookings : allBookings.filter(b => b && b.status === status);
+  // Show only top 5 of the scoped timeline view
   renderBookings(filtered.slice(0, 5));
 }
 
@@ -302,7 +344,7 @@ function renderBookings(bookings) {
   const tbody = document.getElementById('bookings-table');
   if (!tbody) return;
   if (!bookings || !bookings.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No bookings found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No bookings found for the selected view.</td></tr>';
     return;
   }
   tbody.innerHTML = bookings.map(b => {
