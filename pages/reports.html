@@ -19,8 +19,6 @@
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
     .layout { display: flex; min-height: 100vh; }
-
-    /* ── SIDEBAR ── */
     .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
     .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
     .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; }
@@ -32,7 +30,6 @@
     .sidebar-nav a:hover, .sidebar-nav a.active { color: white; background: rgba(255,255,255,0.06); }
     .sidebar-nav a.active { background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
 
-    /* ── MAIN CONTENT ── */
     .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
     .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
@@ -43,7 +40,6 @@
     
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     
-    /* ── BAR CHART PREVIEW ── */
     .chart-container { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem; }
     .chart-row { display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; }
     .chart-label { width: 120px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -51,16 +47,12 @@
     .chart-bar { background: linear-gradient(90deg, var(--navy), var(--accent)); height: 100%; width: 0%; transition: width 0.6s ease; }
     .chart-val { width: 80px; text-align: right; font-weight: 600; }
 
-    /* Tables */
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     th { text-align: left; padding: 0.6rem 0.8rem; color: var(--ink3); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--bg2); }
     td { padding: 0.8rem 0.8rem; border-bottom: 1px solid var(--bg2); }
 
     .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; }
     .btn:hover { background: var(--accent); }
-    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
-    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
-    
     input[type="month"] { padding: 0.4rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); }
   </style>
 </head>
@@ -89,29 +81,24 @@
 
     <div class="content">
       <div class="grid-2">
-        <!-- Earnings Chart Card -->
         <div class="card">
           <div class="card-header"><h3>Revenue Share by Client</h3></div>
-          <div class="chart-container" id="revenue-chart">
-            <!-- Dynamic rows inject here -->
-          </div>
+          <div class="chart-container" id="revenue-chart"></div>
         </div>
 
-        <!-- CSV Engine Export Card -->
         <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div class="card-header"><h3>📊 Export Data Matrix</h3></div>
+            <div class="card-header"><h3>📊 Export Filtered Logs</h3></div>
             <p style="font-size:0.88rem; color:var(--ink2); line-height:1.5;">
-              Download a complete chronological structural database layout spreadsheet containing matching parameters of your tracking profiles, calculated sums, milestones, descriptions, and structural rates.
+              Download a complete chronological structural database layout spreadsheet containing logs matching your selected time range window.
             </p>
           </div>
           <div style="margin-top:1.5rem; display:flex; gap:0.5rem;">
-            <button class="btn" onclick="exportTimeLogsCSV()">📥 Export Time Logs (.CSV)</button>
+            <button class="btn" onclick="exportFilteredCSV()">📥 Export Filtered CSV</button>
           </div>
         </div>
       </div>
 
-      <!-- Top Performing Accounts Breakdown -->
       <div class="card">
         <div class="card-header"><h3>Performance Leaderboard Matrix</h3></div>
         <table>
@@ -124,9 +111,7 @@
               <th>Total Processed</th>
             </tr>
           </thead>
-          <tbody id="leaderboard-body">
-            <tr><td colspan="5" style="text-align:center; color:var(--ink3)">Select a target analytics month above...</td></tr>
-          </tbody>
+          <tbody id="leaderboard-body"></tbody>
         </table>
       </div>
     </div>
@@ -157,9 +142,7 @@ async function loadReportData() {
       return;
     }
 
-    // Find Max Value for scaling Chart lengths safely
     const maxVal = Math.max(...data.clientBreakdown.map(c => parseFloat(c.total || 0)), 1);
-
     chartContainer.innerHTML = '';
     leaderboard.innerHTML = '';
 
@@ -167,17 +150,13 @@ async function loadReportData() {
       const totalAmt = parseFloat(c.total || 0);
       const pct = (totalAmt / maxVal) * 100;
 
-      // Render custom CSS chart bar node
       chartContainer.innerHTML += `
         <div class="chart-row">
           <div class="chart-label">${c.client_name}</div>
-          <div class="chart-bar-wrapper">
-            <div class="chart-bar" style="width: ${pct}%"></div>
-          </div>
+          <div class="chart-bar-wrapper"><div class="chart-bar" style="width: ${pct}%"></div></div>
           <div class="chart-val">$${totalAmt.toFixed(2)}</div>
         </div>`;
 
-      // Append Leaderboard elements
       leaderboard.innerHTML += `
         <tr>
           <td><strong>${c.client_name}</strong></td>
@@ -187,23 +166,29 @@ async function loadReportData() {
           <td style="color:green">$${parseFloat(c.paid || 0).toFixed(2)}</td>
         </tr>`;
     });
-
-  } catch(e) { console.error("Error loading report metrics:", e); }
+  } catch(e) { console.error("Error:", e); }
 }
 
-async function exportTimeLogsCSV() {
+async function exportFilteredCSV() {
+  const monthFilter = document.getElementById('report-month').value; // e.g., "2026-07"
   try {
     const res = await fetch(`${API}/timelogs`, { headers: headers() });
     const logs = await res.json();
     
-    if(!logs || !logs.length) { alert("No logs available to export."); return; }
+    if(!logs || !logs.length) { alert("No logs available."); return; }
 
-    // Build standard structure header array matrix 
+    // Filter purely on date range match matching the selected year and month
+    const filteredLogs = logs.filter(l => l.date && l.date.startsWith(monthFilter));
+
+    if(!filteredLogs.length) {
+      alert(`No time logs found for the selected date range: ${monthFilter}`);
+      return;
+    }
+
     const headersArray = ['Log_ID', 'Client', 'Date', 'Hours', 'Calculated_Amount', 'Payment_Status', 'Task_Description'];
-    
     const csvRows = [
-      headersArray.join(','), // CSV header row
-      ...logs.map(l => [
+      headersArray.join(','),
+      ...filteredLogs.map(l => [
         l.id,
         `"${l.client_name.replace(/"/g, '""')}"`,
         l.date.slice(0,10),
@@ -216,14 +201,13 @@ async function exportTimeLogsCSV() {
 
     const csvBlob = new Blob([csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     const blobUrl = URL.createObjectURL(csvBlob);
-    
     const downloadAnchor = document.createElement('a');
     downloadAnchor.href = blobUrl;
-    downloadAnchor.setAttribute('download', `QFA_TimeLogs_Export_${new Date().toISOString().slice(0,10)}.csv`);
+    downloadAnchor.setAttribute('download', `QFA_TimeLogs_${monthFilter}.csv`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
-  } catch(e) { alert("Failed to execute data array export pipeline: " + e.message); }
+  } catch(e) { alert("Export error: " + e.message); }
 }
 </script>
 </body>
