@@ -123,7 +123,6 @@ router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => 
 // DELETE /api/clients/:id
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
-    // Only delete if this client belongs to this freelancer
     const check = await pool.query(
       'SELECT id FROM clients WHERE user_id=$1 AND freelancer_id=$2',
       [req.params.id, req.user.id]
