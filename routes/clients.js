@@ -28,7 +28,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 });
 
 // GET /api/clients/outstanding — Dedicated endpoint for invoice calculations
-// Counts log records and aggregates total hours only for 'unpaid' status items
+// Uses distinct IDs to cleanly isolate counts
 router.get('/outstanding', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
