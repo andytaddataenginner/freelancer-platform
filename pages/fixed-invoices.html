@@ -20,18 +20,67 @@
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
+    /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
-    .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
-    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
     .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
     .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
-    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
-    .sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; border-right: 3px solid transparent; }
-    .sidebar-nav a:hover, .sidebar-nav a.active { color: white; background: rgba(255,255,255,0.06); }
-    .sidebar-nav a.active { background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
 
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE NAV ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
+
+    /* ── MAIN CONTENT ── */
     .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
     .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
@@ -41,7 +90,7 @@
     .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
     .card-header h3 { font-size: 1rem; font-weight: 600; }
     
-    /* Fixed Filter Width Constraint */
+    /* Responsive Flex Parameters Panel */
     .filter-row { display: grid; grid-template-columns: repeat(3, minmax(200px, 300px)) 160px; gap: 1.25rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); max-width: 1100px; }
     .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
     .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -62,26 +111,50 @@
     .badge { display: inline-block; padding: 4px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
     .badge-paid { color: var(--green); background: var(--green-bg); }
     .badge-outstanding { color: #b45309; background: var(--amber-bg); }
+
+    /* ── RESPONSIVE MEDIA QUERIES matching time_logs.html ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 240px; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .mobile-header { display: flex; }
+      .topbar { position: relative !important; top: 0 !important; }
+      .content { padding: 1rem; }
+      .filter-row { grid-template-columns: 1fr; max-width: 100%; }
+    }
   </style>
 </head>
 <body>
 
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="layout">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
       <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
     </div>
     <nav class="sidebar-nav">
-    <a href="dashboard.html" class="active">📊 Overview</a>
-    <a href="time-logs.html">⏱ Time Logs</a>
-    <a href="clients.html">👥 Clients</a>
-    <a href="schedule.html">📅 Schedule</a>
-    <a href="reports.html">📈 Reports</a> <!-- Add this link -->
-    <a href="fixed-invoices.html">📄 Invoices</a> <!-- Add this link -->
-    <a href="portfolio-admin.html">🖼 Portfolio</a>
-    <a href="../index.html" target="_blank">🌐 Public Site</a>
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="reports.html">📈 Reports</a>
+      <a href="fixed-invoices.html" class="active">📄 Invoices</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
     </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer · QFA</span>
+      <a href="#" onclick="logout()">Sign out →</a>
+    </div>
   </aside>
 
   <div class="main">
@@ -112,7 +185,6 @@
         </div>
       </div>
 
-      <!-- Ledger Master Table Grid -->
       <div class="card">
         <div class="card-header"><h3>💼 System Invoice Records Matrix</h3></div>
         <div style="overflow-x: auto;">
@@ -140,7 +212,25 @@
 
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
-const headers = () => ({ 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Content-Type': 'application/json' });
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
 
 let rawLogsData = [];
 
@@ -155,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function populateClientSelector() {
   try {
-    const res = await fetch(`${API}/clients`, { headers: headers() });
+    const res = await fetch(`${API}/clients`, { headers: auth.headers() });
     const clients = await res.json();
     const selector = document.getElementById('client-select');
     clients.forEach(c => {
@@ -166,7 +256,7 @@ async function populateClientSelector() {
 
 async function fetchMasterLogs() {
   try {
-    const res = await fetch(`${API}/timelogs`, { headers: headers() });
+    const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
     rawLogsData = await res.json();
     applyTimeWindowFilters();
   } catch(e) { console.error("Logs pull error:", e); }
@@ -177,7 +267,6 @@ function applyTimeWindowFilters() {
   const startVal = document.getElementById('start-date').value;
   const endVal = document.getElementById('end-date').value;
 
-  // Set precise timestamps for boundaries to eliminate timezone drift mismatch
   const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
   const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
 
@@ -299,7 +388,7 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
         <div class="meta-box">
           <h3>Prepared For:</h3>
           <strong style="color: #0d2353; font-size: 15px;">${clientName}</strong><br/>
-          <span style="display:inline-block; margin-top: 6px;">Freelancing</span>
+          <span style="display:inline-block; margin-top: 6px;">Corporate Billing Department</span>
         </div>
       </div>
 
