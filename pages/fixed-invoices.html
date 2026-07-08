@@ -3,85 +3,253 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fixed Invoices — QFA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Invoice Hub — QFA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy: #0d2353; --accent: #1a5cff; --bg: #f4f6fb; --bg2: #eef1f8;
-      --white: #fff; --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
     }
-    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--ink); display: flex; }
-    .sidebar { width: 240px; background: var(--navy); min-height: 100vh; padding: 1.5rem; color: #fff; flex-shrink: 0; }
-    .sidebar a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; padding: 0.8rem 0; font-size: 0.9rem; }
-    .sidebar a.active { color: #fff; font-weight: 600; border-right: 3px solid #f5c842; }
-    .main { flex: 1; padding: 2rem; }
-    .card { background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    input, select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; margin-top: 0.4rem; }
-    button { padding: 0.8rem 1.5rem; background: var(--navy); color: #fff; border: none; border-radius: 8px; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
-    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
+    .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; border-right: 3px solid transparent; }
+    .sidebar-nav a:hover, .sidebar-nav a.active { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .content { padding: 1.5rem; flex: 1; }
+
+    .card { background: white; border-radius: var(--radius); padding: 1.2rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.2rem; }
+    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { text-align: left; padding: 0.6rem 0.8rem; color: var(--ink3); font-size: 0.68rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); }
+    td { padding: 0.8rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); }
+
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem; }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
+    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <h3>QFA Agency</h3>
-    <a href="dashboard.html">📊 Overview</a>
-    <a href="time-logs.html">⏱ Time Logs</a>
-    <a href="fixed-invoices.html" class="active">💰 Fixed Invoices</a>
-  </div>
-  <main class="main">
-    <div class="card">
-      <h2>Manage Fixed Invoices</h2>
-      <form onsubmit="saveInvoice(event)" style="margin-top:2rem">
-        <div class="grid-form">
-          <input type="text" name="client" placeholder="Client Name" required />
-          <input type="number" name="amount" placeholder="Amount ($)" step="0.01" required />
-          <input type="number" name="month" placeholder="Month (1-12)" min="1" max="12" required />
-          <input type="number" name="year" placeholder="Year" required />
-        </div>
-        <button type="submit">Add Fixed Invoice</button>
-      </form>
-      <table>
-        <thead><tr><th>Client</th><th>Period</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody id="invoice-body"></tbody>
-      </table>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
     </div>
-  </main>
-  <script>
-    function saveInvoice(e) {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const data = Object.fromEntries(fd);
-      data.id = Date.now();
-      data.status = 'Pending';
-      let led = JSON.parse(localStorage.getItem('fixedLedger') || '[]');
-      led.push(data);
-      localStorage.setItem('fixedLedger', JSON.stringify(led));
-      e.target.reset();
-      render();
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="reports.html">📈 Reports</a>
+      <a href="fixed-invoices.html" class="active">📄 Invoices</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h2>Invoice History Engine</h2>
+    </div>
+
+    <div class="content">
+      <div class="card">
+        <div class="card-header">
+          <h3>System Invoice Records Matrix</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice ID</th>
+              <th>Client</th>
+              <th>Type</th>
+              <th>Amount Due</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="invoice-records-table">
+            <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--ink3)">Loading accounts matrix...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const headers = () => ({ 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Content-Type': 'application/json' });
+
+document.addEventListener('DOMContentLoaded', loadInvoiceRecords);
+
+async function loadInvoiceRecords() {
+  try {
+    // Collect stats mapping breakdown arrays to draw current invoice entities
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const res = await fetch(`${API}/stats/freelancer?month=${currentMonth}`, { headers: headers() });
+    const data = await res.json();
+    
+    const tableBody = document.getElementById('invoice-records-table');
+    if(!data.clientBreakdown || !data.clientBreakdown.length) {
+      tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--ink3)">No outstanding client records located.</td></tr>';
+      return;
     }
-    function render() {
-      const led = JSON.parse(localStorage.getItem('fixedLedger') || '[]');
-      document.getElementById('invoice-body').innerHTML = led.map(i => `
+
+    tableBody.innerHTML = data.clientBreakdown.map((inv, idx) => {
+      const invId = `INV-2026-${1000 + idx}`;
+      const totalAmt = parseFloat(inv.total || 0);
+      const isPaid = parseFloat(inv.unpaid) === 0;
+
+      return `
         <tr>
-          <td>${i.client}</td>
-          <td>${i.month}/${i.year}</td>
-          <td>$${parseFloat(i.amount).toFixed(2)}</td>
-          <td>${i.status}</td>
-          <td>${i.status === 'Pending' ? `<button onclick="markPaid(${i.id})">Mark Paid</button>` : 'Paid'}</td>
-        </tr>
-      `).join('');
-    }
-    function markPaid(id) {
-      let led = JSON.parse(localStorage.getItem('fixedLedger'));
-      const idx = led.findIndex(i => i.id === id);
-      led[idx].status = 'Paid';
-      localStorage.setItem('fixedLedger', JSON.stringify(led));
-      render();
-    }
-    render();
-  </script>
+          <td><strong>${invId}</strong></td>
+          <td>
+            <strong>${inv.client_name}</strong>
+            ${inv.company ? `<br/><small style="color:var(--ink3)">${inv.company}</small>` : ''}
+          </td>
+          <td><span class="badge" style="background:#e8f0ff; color:var(--accent)">${inv.rate_type.toUpperCase()}</span></td>
+          <td><strong>$${totalAmt.toFixed(2)}</strong></td>
+          <td>
+            ${isPaid ? '<span class="badge badge-green">Paid</span>' : '<span class="badge badge-amber">Outstanding</span>'}
+          </td>
+          <td>
+            <button class="btn-sm btn-outline" onclick="printInvoicePDF('${invId}', '${inv.client_name.replace(/'/g, "\\'")}', '${inv.company || ''}', '${inv.rate_type}', ${inv.hours}, ${totalAmt})">
+              📄 Generate Invoice PDF
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+
+  } catch(e) { console.error(e); }
+}
+
+function printInvoicePDF(invId, clientName, company, rateType, hours, totalAmount) {
+  // Setup print document iframe runtime sandbox to handle standard page viewport bypass safely
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = 'none';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow.document;
+  
+  // High-fidelity structural inline vector invoice canvas markup
+  const invoiceHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #0d2353; padding: 40px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eef1f8; padding-bottom: 20px; }
+        .logo-section h2 { font-size: 24px; margin: 0; color: #0d2353; }
+        .logo-section span { font-size: 12px; color: #f5c842; text-transform: uppercase; letter-spacing: 1px; }
+        .inv-details { text-align: right; font-size: 14px; line-height: 1.6; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; font-size: 14px; }
+        .meta-box h3 { font-size: 12px; text-transform: uppercase; color: #7a8aaa; margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 50px; font-size: 14px; }
+        th { background: #f4f6fb; text-align: left; padding: 12px; font-size: 12px; text-transform: uppercase; color: #3a4a6a; }
+        td { padding: 12px; border-bottom: 1px solid #eef1f8; }
+        .totals { display: flex; flex-direction: column; align-items: flex-end; margin-top: 30px; font-size: 15px; }
+        .totals div { padding: 6px 0; }
+        .grand-total { font-size: 20px; font-weight: bold; color: #1a5cff; border-top: 2px solid #0d2353; padding-top: 10px; margin-top: 10px; }
+        .footer { margin-top: 100px; text-align: center; font-size: 12px; color: #7a8aaa; border-top: 1px solid #eef1f8; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="logo-section">
+          <h2>Quick Freelancing Agency</h2>
+          <span>Professional Services Invoice</span>
+        </div>
+        <div class="inv-details">
+          <strong>Invoice ID:</strong> ${invId}<br/>
+          <strong>Date:</strong> ${new Date().toLocaleDateString()}<br/>
+          <strong>Due Date:</strong> Date of Receipt
+        </div>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-box">
+          <h3>Issued By:</h3>
+          <strong>Quick Freelancing Agency (QFA)</strong><br/>
+          Operations Management Office<br/>
+          billing@qfa.platform
+        </div>
+        <div class="meta-box">
+          <h3>Prepared For:</h3>
+          <strong>${clientName}</strong><br/>
+          ${company ? company : 'Internal Client Account'}<br/>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Description of Services</th>
+            <th>Billing Strategy</th>
+            <th>Quantity / Metric</th>
+            <th>Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Professional Freelancing & Project Operations Development</td>
+            <td style="text-transform: capitalize;">${rateType} Tracked</td>
+            <td>${hours > 0 ? `${hours.toFixed(2)} Hours` : '1 Item (Fixed)'}</td>
+            <td><strong>$${totalAmount.toFixed(2)}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div>Subtotal: $${totalAmount.toFixed(2)}</div>
+        <div>Tax Assessment (0%): $0.00</div>
+        <div class="grand-total">Total Amount Due: $${totalAmount.toFixed(2)}</div>
+      </div>
+
+      <div class="footer">
+        Thank you for your business. For billing inquiries, please contact operations billing support.<br/>
+        <strong>Quick Freelancing Agency Portfolio System — 2026</strong>
+      </div>
+    </body>
+    </html>
+  `;
+
+  doc.open();
+  doc.write(invoiceHTML);
+  doc.close();
+
+  // Run native sandboxed device execution loop
+  iframe.contentWindow.focus();
+  setTimeout(() => {
+    iframe.contentWindow.print();
+    document.body.removeChild(iframe);
+  }, 500);
+}
+</script>
 </body>
 </html>
