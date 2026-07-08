@@ -112,7 +112,7 @@
     .badge-paid { color: var(--green); background: var(--green-bg); }
     .badge-outstanding { color: #b45309; background: var(--amber-bg); }
 
-    /* ── RESPONSIVE MEDIA QUERIES matching time_logs.html ── */
+    /* ── RESPONSIVE MEDIA QUERIES ── */
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 240px; }
       .main { margin-left: 0; padding-top: 56px; }
@@ -163,7 +163,6 @@
     </div>
 
     <div class="content">
-      <!-- Parameters Setup Panel -->
       <div class="card">
         <div class="card-header"><h3>🔍 Filter Matrix Statement Parameters</h3></div>
         <div class="filter-row">
@@ -232,7 +231,9 @@ function toggleSidebar() {
   document.getElementById('sidebar-overlay').classList.toggle('open');
 }
 
+// Stores the structured arrays directly fetched from database streams
 let rawLogsData = [];
+let databaseClientsData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date().toISOString().slice(0, 10);
@@ -246,9 +247,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function populateClientSelector() {
   try {
     const res = await fetch(`${API}/clients`, { headers: auth.headers() });
-    const clients = await res.json();
+    // This catches rows containing .company and .log_count directly from the database query
+    databaseClientsData = await res.json(); 
+    
     const selector = document.getElementById('client-select');
-    clients.forEach(c => {
+    databaseClientsData.forEach(c => {
       selector.innerHTML += `<option value="${c.name}">${c.name}</option>`;
     });
   } catch(e) { console.error("Client selector error:", e); }
@@ -304,15 +307,20 @@ function applyTimeWindowFilters() {
     return;
   }
 
-  tableBody.innerHTML = groupsArray.map((client, idx) => {
-    const data = clientGroups[client];
+  tableBody.innerHTML = groupsArray.map((clientName, idx) => {
+    const data = clientGroups[clientName];
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
+    
+    // Look up company and total log metrics directly from the client's database match
+    const dbMatch = databaseClientsData.find(c => c.name === clientName);
+    const dbCompanyName = dbMatch && dbMatch.company ? dbMatch.company : clientName;
+    const dbLogCount = dbMatch ? dbMatch.log_count : 0;
     
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
-        <td><strong>${client}</strong></td>
+        <td><strong>${clientName}</strong></td>
         <td>${data.unpaidHours.toFixed(2)} Hrs</td>
         <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${data.totalUnpaid.toFixed(2)}</td>
         <td style="color:#10b981;">$${data.totalPaid.toFixed(2)}</td>
@@ -321,7 +329,7 @@ function applyTimeWindowFilters() {
                            : '<span class="badge badge-paid">Fully Settled</span>'}
         </td>
         <td>
-          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${client}', ${data.unpaidHours}, ${data.totalUnpaid}, '${startVal}', '${endVal}')">
+          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${clientName}', '${dbCompanyName}', ${dbLogCount}, ${data.unpaidHours}, ${data.totalUnpaid}, '${startVal}', '${endVal}')">
             📄 Generate Invoice
           </button>
         </td>
@@ -329,7 +337,7 @@ function applyTimeWindowFilters() {
   }).join('');
 }
 
-function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end) {
+function generateTimeWindowPDF(invId, clientName, companyName, totalLogs, hours, totalAmount, start, end) {
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none';
   document.body.appendChild(iframe);
@@ -395,15 +403,19 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
       <table>
         <thead>
           <tr>
-            <th style="width: 55%;">Description of Services</th>
-            <th style="width: 20%; text-align: center;">Volume Metrics</th>
-            <th style="width: 25%; text-align: right;">Outstanding Balance Due</th>
+            <th style="width: 25%;">Client Company</th>
+            <th style="width: 35%;">Description of Services</th>
+            <th style="width: 15%; text-align: center;">Total Logs</th>
+            <th style="width: 15%; text-align: center;">Volume Metrics</th>
+            <th style="width: 10%; text-align: right;">Outstanding Balance Due</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="font-weight: 500; color: #0d2353;">Professional Freelance & Technical Consulting Services</td>
-            <td style="text-align: center;">${hours > 0 ? `${hours.toFixed(2)} Hours` : 'Fixed Term Block'}</td>
+            <td style="font-weight: 600; color: #0d2353;">${companyName}</td>
+            <td style="color: #3a4a6a;">Professional Freelance & Technical Consulting Services</td>
+            <td style="text-align: center; font-weight: 500;">${totalLogs} Logs</td>
+            <td style="text-align: center;">${hours > 0 ? `${hours.toFixed(2)} Hours` : '0.00 Hours'}</td>
             <td style="color: #1a5cff; font-weight: 700; text-align: right;">$${totalAmount.toFixed(2)}</td>
           </tr>
         </tbody>
