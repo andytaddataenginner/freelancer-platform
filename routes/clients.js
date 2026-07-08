@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/clients — returns general client stats (unaltered for other modules)
+// GET /api/clients — only returns THIS freelancer's clients
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
@@ -27,38 +27,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// GET /api/clients/outstanding — Bulletproof Analytical Query Matrix
-router.get('/outstanding', requireFreelancer, async (req, res, next) => {
-  try {
-    const { rows } = await pool.query(`
-      SELECT 
-        u.id::text as id, 
-        u.name, 
-        u.email, 
-        COALESCE(u.company, 'N/A') AS company,
-        COUNT(t.id)::int AS unpaid_log_count,
-        COALESCE(SUM(t.hours), 0)::float AS unpaid_hours,
-        COALESCE(SUM(t.amount), 0)::float AS outstanding_balance,
-        COALESCE((
-          SELECT SUM(amount) 
-          FROM time_logs 
-          WHERE client_id = u.id AND freelancer_id = $1 AND payment_status = 'paid'
-        ), 0)::float AS total_paid
-      FROM users u
-      JOIN clients c ON c.user_id = u.id
-      LEFT JOIN time_logs t ON t.client_id = u.id 
-                           AND t.freelancer_id = $1 
-                           AND (t.payment_status = 'unpaid' OR t.payment_status IS NULL OR t.payment_status = '')
-      WHERE u.role = 'client'
-        AND c.freelancer_id = $1
-      GROUP BY u.id, u.name, u.email, u.company
-      ORDER BY u.name
-    `, [req.user.id]);
-    res.json(rows);
-  } catch (e) { next(e); }
-});
-
-// POST /api/clients
+// POST /api/clients — creates client and links to THIS freelancer
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price } = req.body;
@@ -89,7 +58,7 @@ router.post('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/clients/:id
+// PUT /api/clients/:id — only update if belongs to this freelancer
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price } = req.body;
@@ -127,6 +96,7 @@ router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => 
 // DELETE /api/clients/:id
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
+    // Only delete if this client belongs to this freelancer
     const check = await pool.query(
       'SELECT id FROM clients WHERE user_id=$1 AND freelancer_id=$2',
       [req.params.id, req.user.id]
