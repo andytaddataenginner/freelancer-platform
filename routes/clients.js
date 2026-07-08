@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/clients — only returns THIS freelancer's clients
+// GET /api/clients — returns general client stats (unaltered for other modules)
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
@@ -16,6 +16,33 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       FROM users u
       JOIN clients c ON c.user_id = u.id
       LEFT JOIN time_logs t ON t.client_id = u.id AND t.freelancer_id = $1
+      WHERE u.role = 'client'
+        AND c.freelancer_id = $1
+      GROUP BY u.id, u.name, u.email, u.company,
+               c.is_active, c.notes, c.rate_type, c.hourly_rate, 
+               c.fixed_price, c.fixed_payment_status, c.credit_balance
+      ORDER BY u.name
+    `, [req.user.id]);
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
+// GET /api/clients/outstanding — Dedicated endpoint for invoice calculations
+// Counts log records and aggregates total hours only for 'unpaid' status items
+router.get('/outstanding', requireFreelancer, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT u.id, u.name, u.email, u.company,
+             c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
+             c.fixed_payment_status,
+             COALESCE(c.credit_balance, 0)::float AS credit_balance,
+             COUNT(t.id)::int AS log_count,
+             COALESCE(SUM(t.hours),0)::float AS total_hours
+      FROM users u
+      JOIN clients c ON c.user_id = u.id
+      LEFT JOIN time_logs t ON t.client_id = u.id 
+                           AND t.freelancer_id = $1 
+                           AND t.payment_status = 'unpaid'
       WHERE u.role = 'client'
         AND c.freelancer_id = $1
       GROUP BY u.id, u.name, u.email, u.company,
