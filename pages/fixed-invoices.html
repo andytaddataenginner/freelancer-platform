@@ -150,18 +150,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function fetchOutstandingMatrix() {
+  const tableBody = document.getElementById('invoice-records-table');
   try {
+    console.log("Fetching outstanding records from API...");
     const res = await fetch(`${API}/clients/outstanding`, { headers: auth.headers() });
+    
+    if(!res.ok) {
+      throw new Error(`HTTP Server Error: Status ${res.status}`);
+    }
+    
     masterOutstandingData = await res.json();
+    console.log("Data received from server successfully:", masterOutstandingData);
     
     const selector = document.getElementById('client-select');
     selector.innerHTML = '<option value="">-- All Dynamic Clients --</option>';
-    masterOutstandingData.forEach(c => {
-      selector.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-    });
+    
+    if(Array.isArray(masterOutstandingData)) {
+      masterOutstandingData.forEach(c => {
+        if(c && c.id) {
+          selector.innerHTML += `<option value="${c.id}">${c.name || 'Unnamed Client'}</option>`;
+        }
+      });
+    }
     
     renderInvoiceTable();
-  } catch(e) { console.error("Database sync issue:", e); }
+  } catch(e) { 
+    console.error("Database sync issue occurred:", e); 
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:red; font-weight:bold;">Error fetching data from API: ${e.message}</td></tr>`;
+  }
 }
 
 function renderInvoiceTable() {
@@ -169,34 +185,38 @@ function renderInvoiceTable() {
   const startVal = document.getElementById('start-date').value;
   const endVal = document.getElementById('end-date').value;
 
-  let filtered = masterOutstandingData;
+  let filtered = Array.isArray(masterOutstandingData) ? masterOutstandingData : [];
   if(selectedId) {
-    filtered = filtered.filter(c => String(c.id) === String(selectedId));
+    filtered = filtered.filter(c => c && String(c.id) === String(selectedId));
   }
 
   const tableBody = document.getElementById('invoice-records-table');
   if(!filtered.length) {
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;">No records found.</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;">No records returned from your database stream.</td></tr>';
     return;
   }
 
   tableBody.innerHTML = filtered.map((c, idx) => {
     const dummyInvId = `INV-2026-${3000 + idx}`;
-    const hasOutstanding = c.outstanding_balance > 0;
+    const hours = parseFloat(c.unpaid_hours || 0);
+    const balance = parseFloat(c.outstanding_balance || 0);
+    const paid = parseFloat(c.total_paid || 0);
+    const logsCount = parseInt(c.unpaid_log_count || 0);
+    const hasOutstanding = balance > 0;
     
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
-        <td><strong>${c.name}</strong></td>
-        <td>${c.unpaid_hours.toFixed(2)} Hrs</td>
-        <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${c.outstanding_balance.toFixed(2)}</td>
-        <td style="color:#10b981;">$${c.total_paid.toFixed(2)}</td>
+        <td><strong>${c.name || 'N/A'}</strong></td>
+        <td>${hours.toFixed(2)} Hrs</td>
+        <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${balance.toFixed(2)}</td>
+        <td style="color:#10b981;">$${paid.toFixed(2)}</td>
         <td>
           ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding Balance</span>' 
                            : '<span class="badge badge-paid">Fully Settled</span>'}
         </td>
         <td>
-          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${c.name}', '${c.company}', ${c.unpaid_log_count}, ${c.unpaid_hours}, ${c.outstanding_balance}, '${startVal}', '${endVal}')">
+          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${c.name || 'Client'}', '${c.company || 'N/A'}', ${logsCount}, ${hours}, ${balance}, '${startVal}', '${endVal}')">
             📄 Generate Invoice
           </button>
         </td>
