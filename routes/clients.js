@@ -27,12 +27,12 @@ router.get('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// GET /api/clients/outstanding — Pre-calculated backend analytics matrix
+// GET /api/clients/outstanding — Bulletproof Analytical Query Matrix
 router.get('/outstanding', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT 
-        u.id, 
+        u.id::text as id, 
         u.name, 
         u.email, 
         COALESCE(u.company, 'N/A') AS company,
@@ -48,7 +48,7 @@ router.get('/outstanding', requireFreelancer, async (req, res, next) => {
       JOIN clients c ON c.user_id = u.id
       LEFT JOIN time_logs t ON t.client_id = u.id 
                            AND t.freelancer_id = $1 
-                           AND (t.payment_status IS NULL OR t.payment_status != 'paid')
+                           AND (t.payment_status = 'unpaid' OR t.payment_status IS NULL OR t.payment_status = '')
       WHERE u.role = 'client'
         AND c.freelancer_id = $1
       GROUP BY u.id, u.name, u.email, u.company
@@ -58,7 +58,7 @@ router.get('/outstanding', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/clients — creates client
+// POST /api/clients
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price } = req.body;
