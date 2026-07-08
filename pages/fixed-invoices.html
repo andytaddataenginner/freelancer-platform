@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Invoice Hub — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -14,49 +14,128 @@
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
       --green: #10b981; --green-bg: #dcfce7;
       --amber: #f59e0b; --amber-bg: #fffbeb;
-      --sans: 'Outfit', system-ui, sans;
+      --sans: 'Outfit', system-ui, sans-serif;
       --serif: 'Playfair Display', serif;
       --radius: 16px; --shadow: 0 4px 30px rgba(13,35,83,0.06);
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
+    /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
-    .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
     .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
     .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
     .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+
     .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
-    .sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; }
-    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right: 3px solid var(--gold2); }
-    .sidebar-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; }
-    .sidebar-user strong { display: block; color: white; }
-    .sidebar-user a { display: block; margin-top: 0.4rem; color: var(--gold2); text-decoration: none; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE NAV ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
+
+    /* ── MAIN CONTENT ── */
     .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40; }
+    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .content { padding: 1.5rem; flex: 1; }
-    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; border: 1px solid rgba(13,35,83,0.04); }
-    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); margin-bottom: 1.2rem; }
+
+    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.04); margin-bottom: 1.5rem; }
+    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
     .card-header h3 { font-size: 1rem; font-weight: 600; }
-    .filter-row { display: grid; grid-template-columns: repeat(3, minmax(200px, 300px)) 160px; gap: 1.25rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); }
-    .filter-row select, .filter-row input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; width: 100%; background: white; outline: none; }
+    
+    /* Responsive Flex Parameters Panel */
+    .filter-row { display: grid; grid-template-columns: repeat(3, minmax(200px, 300px)) 160px; gap: 1.25rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); max-width: 1100px; }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-row select, .filter-row input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; outline: none; background: white; transition: border-color 0.2s; width: 100%; }
+    .filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
+
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 600; }
+    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 600; letter-spacing: 0.05em; }
     td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); }
-    .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; width: 100%; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; transition: background 0.2s; }
     .btn:hover { background: var(--accent); }
     .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--navy); }
     .btn-outline:hover { border-color: var(--navy); background: rgba(13,35,83,0.02); }
+    
     .badge { display: inline-block; padding: 4px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
     .badge-paid { color: var(--green); background: var(--green-bg); }
     .badge-outstanding { color: #b45309; background: var(--amber-bg); }
+
+    /* ── RESPONSIVE MEDIA QUERIES matching time_logs.html ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 240px; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .mobile-header { display: flex; }
+      .topbar { position: relative !important; top: 0 !important; }
+      .content { padding: 1rem; }
+      .filter-row { grid-template-columns: 1fr; max-width: 100%; }
+    }
   </style>
 </head>
 <body>
 
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="layout">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
       <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
@@ -73,31 +152,36 @@
     </nav>
     <div class="sidebar-user">
       <strong id="user-name">Loading…</strong>
+      <span>Freelancer · QFA</span>
       <a href="#" onclick="logout()">Sign out →</a>
     </div>
   </aside>
 
   <div class="main">
-    <div class="topbar"><h2>Invoice History Engine</h2></div>
+    <div class="topbar">
+      <h2>Invoice History Engine</h2>
+    </div>
+
     <div class="content">
+      <!-- Parameters Setup Panel -->
       <div class="card">
         <div class="card-header"><h3>🔍 Filter Matrix Statement Parameters</h3></div>
         <div class="filter-row">
-          <div style="display:flex; flex-direction:column; gap:0.35rem;">
-            <label style="font-size:0.75rem; font-weight:600;">Select Target Account</label>
-            <select id="client-select" onchange="renderInvoiceTable()">
+          <div class="filter-group">
+            <label>Select Target Account</label>
+            <select id="client-select">
               <option value="">-- All Dynamic Clients --</option>
             </select>
           </div>
-          <div style="display:flex; flex-direction:column; gap:0.35rem;">
-            <label style="font-size:0.75rem; font-weight:600;">Start Timeline</label>
-            <input type="date" id="start-date" onchange="renderInvoiceTable()"/>
+          <div class="filter-group">
+            <label>Start Timeline</label>
+            <input type="date" id="start-date"/>
           </div>
-          <div style="display:flex; flex-direction:column; gap:0.35rem;">
-            <label style="font-size:0.75rem; font-weight:600;">End Timeline</label>
-            <input type="date" id="end-date" onchange="renderInvoiceTable()"/>
+          <div class="filter-group">
+            <label>End Timeline</label>
+            <input type="date" id="end-date"/>
           </div>
-          <button class="btn" style="height:40px;" onclick="renderInvoiceTable()">Apply Filters</button>
+          <button class="btn" style="height: 40px; width: 100%;" onclick="applyTimeWindowFilters()">Apply Filters</button>
         </div>
       </div>
 
@@ -136,87 +220,108 @@ const auth = {
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
 
-if (!auth.isLoggedIn()) { window.location.href = 'login.html'; }
-else { document.getElementById('user-name').textContent = auth.user()?.name || ''; }
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
 
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
-let masterOutstandingData = [];
-
-document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('start-date').value = "2026-01-01";
-  document.getElementById('end-date').value = new Date().toISOString().slice(0, 10);
-  await fetchOutstandingMatrix();
-});
-
-async function fetchOutstandingMatrix() {
-  const tableBody = document.getElementById('invoice-records-table');
-  try {
-    console.log("Fetching outstanding records from API...");
-    const res = await fetch(`${API}/clients/outstanding`, { headers: auth.headers() });
-    
-    if(!res.ok) {
-      throw new Error(`HTTP Server Error: Status ${res.status}`);
-    }
-    
-    masterOutstandingData = await res.json();
-    console.log("Data received from server successfully:", masterOutstandingData);
-    
-    const selector = document.getElementById('client-select');
-    selector.innerHTML = '<option value="">-- All Dynamic Clients --</option>';
-    
-    if(Array.isArray(masterOutstandingData)) {
-      masterOutstandingData.forEach(c => {
-        if(c && c.id) {
-          selector.innerHTML += `<option value="${c.id}">${c.name || 'Unnamed Client'}</option>`;
-        }
-      });
-    }
-    
-    renderInvoiceTable();
-  } catch(e) { 
-    console.error("Database sync issue occurred:", e); 
-    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:red; font-weight:bold;">Error fetching data from API: ${e.message}</td></tr>`;
-  }
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
 }
 
-function renderInvoiceTable() {
-  const selectedId = document.getElementById('client-select').value;
+let rawLogsData = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('start-date').value = "2026-01-01";
+  document.getElementById('end-date').value = today;
+
+  await populateClientSelector();
+  await fetchMasterLogs();
+});
+
+async function populateClientSelector() {
+  try {
+    const res = await fetch(`${API}/clients`, { headers: auth.headers() });
+    const clients = await res.json();
+    const selector = document.getElementById('client-select');
+    clients.forEach(c => {
+      selector.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+    });
+  } catch(e) { console.error("Client selector error:", e); }
+}
+
+async function fetchMasterLogs() {
+  try {
+    const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
+    rawLogsData = await res.json();
+    applyTimeWindowFilters();
+  } catch(e) { console.error("Logs pull error:", e); }
+}
+
+function applyTimeWindowFilters() {
+  const selectedClient = document.getElementById('client-select').value;
   const startVal = document.getElementById('start-date').value;
   const endVal = document.getElementById('end-date').value;
 
-  let filtered = Array.isArray(masterOutstandingData) ? masterOutstandingData : [];
-  if(selectedId) {
-    filtered = filtered.filter(c => c && String(c.id) === String(selectedId));
-  }
+  const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
+  const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
+
+  let records = rawLogsData.filter(l => {
+    if (!l.date) return false;
+    const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
+    
+    const matchesClient = !selectedClient || l.client_name === selectedClient;
+    const matchesStart = !startTime || logTime >= startTime;
+    const matchesEnd = !endTime || logTime <= endTime;
+    return matchesClient && matchesStart && matchesEnd;
+  });
+
+  const clientGroups = {};
+  records.forEach(r => {
+    if(!clientGroups[r.client_name]) {
+      clientGroups[r.client_name] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
+    }
+    const amt = parseFloat(r.amount || 0);
+    const hrs = parseFloat(r.hours || 0);
+    
+    if(r.payment_status !== 'paid') {
+      clientGroups[r.client_name].unpaidHours += hrs;
+      clientGroups[r.client_name].totalUnpaid += amt;
+    } else {
+      clientGroups[r.client_name].totalPaid += amt;
+    }
+  });
 
   const tableBody = document.getElementById('invoice-records-table');
-  if(!filtered.length) {
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;">No records returned from your database stream.</td></tr>';
+  const groupsArray = Object.keys(clientGroups);
+
+  if(!groupsArray.length) {
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--ink3)">No records match parameters.</td></tr>';
     return;
   }
 
-  tableBody.innerHTML = filtered.map((c, idx) => {
+  tableBody.innerHTML = groupsArray.map((client, idx) => {
+    const data = clientGroups[client];
     const dummyInvId = `INV-2026-${3000 + idx}`;
-    const hours = parseFloat(c.unpaid_hours || 0);
-    const balance = parseFloat(c.outstanding_balance || 0);
-    const paid = parseFloat(c.total_paid || 0);
-    const logsCount = parseInt(c.unpaid_log_count || 0);
-    const hasOutstanding = balance > 0;
+    const hasOutstanding = data.totalUnpaid > 0;
     
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
-        <td><strong>${c.name || 'N/A'}</strong></td>
-        <td>${hours.toFixed(2)} Hrs</td>
-        <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${balance.toFixed(2)}</td>
-        <td style="color:#10b981;">$${paid.toFixed(2)}</td>
+        <td><strong>${client}</strong></td>
+        <td>${data.unpaidHours.toFixed(2)} Hrs</td>
+        <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${data.totalUnpaid.toFixed(2)}</td>
+        <td style="color:#10b981;">$${data.totalPaid.toFixed(2)}</td>
         <td>
           ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding Balance</span>' 
                            : '<span class="badge badge-paid">Fully Settled</span>'}
         </td>
         <td>
-          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${c.name || 'Client'}', '${c.company || 'N/A'}', ${logsCount}, ${hours}, ${balance}, '${startVal}', '${endVal}')">
+          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${client}', ${data.unpaidHours}, ${data.totalUnpaid}, '${startVal}', '${endVal}')">
             📄 Generate Invoice
           </button>
         </td>
@@ -224,10 +329,11 @@ function renderInvoiceTable() {
   }).join('');
 }
 
-function generateTimeWindowPDF(invId, clientName, companyName, totalLogs, hours, totalAmount, start, end) {
+function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end) {
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none';
   document.body.appendChild(iframe);
+
   const doc = iframe.contentWindow.document;
 
   const invoiceHTML = `
@@ -236,25 +342,34 @@ function generateTimeWindowPDF(invId, clientName, companyName, totalLogs, hours,
     <head>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
       <style>
-        body { font-family: 'Outfit', sans-serif; color: #0d2353; padding: 45px; line-height: 1.6; }
+        body { font-family: 'Outfit', sans-serif; color: #0d2353; padding: 45px; line-height: 1.6; background: #fff; }
         .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0d2353; padding-bottom: 25px; align-items: center; }
-        .logo-section h2 { font-size: 26px; margin: 0; color: #0d2353; }
-        .inv-details { text-align: right; font-size: 13px; color: #3a4a6a; }
-        .inv-details h1 { font-size: 28px; margin: 0; color: #0d2353; }
-        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 35px; }
-        .meta-box { background: #f8fafc; padding: 22px; border-radius: 12px; border: 1px solid #eef1f8; font-size: 14px; }
-        .meta-box h3 { font-size: 11px; text-transform: uppercase; color: #7a8aaa; margin: 0 0 10px 0; }
+        .logo-section { display: flex; align-items: center; gap: 14px; }
+        .logo-img { width: 55px; height: 55px; border-radius: 10px; object-fit: contain; }
+        .logo-section h2 { font-size: 26px; margin: 0; font-weight: 700; color: #0d2353; letter-spacing: -0.5px; }
+        .logo-section span { font-size: 11px; color: #1a5cff; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; display: block; margin-top: 2px; }
+        .inv-details { text-align: right; font-size: 13px; color: #3a4a6a; line-height: 1.5; }
+        .inv-details h1 { font-size: 28px; color: #0d2353; margin: 0 0 5px 0; font-weight: 700; text-transform: uppercase; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 35px; font-size: 14px; }
+        .meta-box { background: #f8fafc; padding: 22px; border-radius: 12px; border: 1px solid #eef1f8; }
+        .meta-box h3 { font-size: 11px; text-transform: uppercase; color: #7a8aaa; margin-bottom: 10px; margin-top: 0; letter-spacing: 0.8px; font-weight: 600; }
         table { width: 100%; border-collapse: collapse; margin-top: 40px; font-size: 14px; }
-        th { background: #0d2353; text-align: left; padding: 14px 16px; color: #fff; font-size: 11px; text-transform: uppercase; }
+        th { background: #0d2353; text-align: left; padding: 14px 16px; font-size: 11px; text-transform: uppercase; color: #fff; font-weight: 600; letter-spacing: 0.8px; }
         td { padding: 16px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; }
-        .totals { display: flex; flex-direction: column; align-items: flex-end; margin-top: 40px; font-size: 14px; }
-        .grand-total { font-size: 22px; font-weight: 700; color: #1a5cff; border-top: 2px solid #eef1f8; padding-top: 12px; width: 280px; text-align: right; }
+        .totals { display: flex; flex-direction: column; align-items: flex-end; margin-top: 40px; font-size: 14px; padding-right: 16px; }
+        .grand-total { font-size: 22px; font-weight: 700; color: #1a5cff; border-top: 2px solid #eef1f8; padding-top: 12px; margin-top: 8px; width: 280px; text-align: right; }
         .footer { margin-top: 100px; text-align: center; font-size: 11px; color: #7a8aaa; border-top: 1px solid #eef1f8; padding-top: 20px; }
       </style>
     </head>
     <body>
       <div class="header">
-        <div><h2>Quick Freelancing Agency</h2></div>
+        <div class="logo-section">
+          <img src="../QFA_Logo.png" class="logo-img" alt="QFA" onerror="this.style.display='none'"/>
+          <div>
+            <h2>Quick Freelancing Agency</h2>
+            <span>Premium Performance Ecosystem</span>
+          </div>
+        </div>
         <div class="inv-details">
           <h1>INVOICE</h1>
           <strong>Invoice Ref:</strong> ${invId}<br/>
@@ -262,48 +377,60 @@ function generateTimeWindowPDF(invId, clientName, companyName, totalLogs, hours,
           <strong>Issued Date:</strong> ${new Date().toLocaleDateString()}
         </div>
       </div>
+
       <div class="meta-grid">
         <div class="meta-box">
           <h3>Issued By:</h3>
-          <strong>Quick Freelancing Agency (QFA)</strong><br/>📧 ndy.andupa@gmail.com
+          <strong style="color: #0d2353; font-size: 15px;">Quick Freelancing Agency (QFA)</strong><br/>
+          <span style="display:inline-block; margin-top: 6px;">📧 Email: ndy.andupa@gmail.com</span><br/>
+          📞 Phone: +251911859866
         </div>
         <div class="meta-box">
           <h3>Prepared For:</h3>
-          <strong>${clientName}</strong><br/>
-          <span style="color:#1a5cff; font-weight:600;">${companyName}</span>
+          <strong style="color: #0d2353; font-size: 15px;">${clientName}</strong><br/>
+          <span style="display:inline-block; margin-top: 6px;">Corporate Billing Department</span>
         </div>
       </div>
+
       <table>
         <thead>
           <tr>
-            <th>Client Company</th>
-            <th>Description of Services</th>
-            <th style="text-align: center;">Total Unpaid Logs</th>
-            <th style="text-align: center;">Volume Metrics</th>
-            <th style="text-align: right;">Outstanding Balance Due</th>
+            <th style="width: 55%;">Description of Services</th>
+            <th style="width: 20%; text-align: center;">Volume Metrics</th>
+            <th style="width: 25%; text-align: right;">Outstanding Balance Due</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="font-weight:600;">${companyName}</td>
-            <td>Professional Technical Consulting Services</td>
-            <td style="text-align: center;">${totalLogs} Logs</td>
-            <td style="text-align: center;">${hours.toFixed(2)} Hours</td>
+            <td style="font-weight: 500; color: #0d2353;">Professional Freelance & Technical Consulting Services</td>
+            <td style="text-align: center;">${hours > 0 ? `${hours.toFixed(2)} Hours` : 'Fixed Term Block'}</td>
             <td style="color: #1a5cff; font-weight: 700; text-align: right;">$${totalAmount.toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
+
       <div class="totals">
+        <div style="color: #7a8aaa; font-weight: 500;">Subtotal Outstanding: &nbsp;&nbsp;$${totalAmount.toFixed(2)}</div>
         <div class="grand-total">Total Amount Due: &nbsp;&nbsp;$${totalAmount.toFixed(2)}</div>
       </div>
-      <div class="footer">QFA Automated Billing Architecture — 2026</div>
+
+      <div class="footer">
+        Thank you for your business. For immediate electronic clearance inquiries, please reference your coordinates above.<br/>
+        <strong>QFA Automated Billing System Architecture — 2026</strong>
+      </div>
     </body>
     </html>
   `;
 
-  doc.open(); doc.write(invoiceHTML); doc.close();
+  doc.open();
+  doc.write(invoiceHTML);
+  doc.close();
+
   iframe.contentWindow.focus();
-  setTimeout(() => { iframe.contentWindow.print(); document.body.removeChild(iframe); }, 600);
+  setTimeout(() => {
+    iframe.contentWindow.print();
+    document.body.removeChild(iframe);
+  }, 600);
 }
 </script>
 </body>
