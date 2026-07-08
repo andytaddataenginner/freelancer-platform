@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reports & Analytics — QFA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+    }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
+    .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; border-right: 3px solid transparent; }
+    .sidebar-nav a:hover, .sidebar-nav a.active { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    /* ── MAIN CONTENT ── */
+    .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .content { padding: 1.5rem; flex: 1; }
+
+    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.5rem; }
+    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    
+    /* ── BAR CHART PREVIEW ── */
+    .chart-container { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem; }
+    .chart-row { display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; }
+    .chart-label { width: 120px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chart-bar-wrapper { flex: 1; background: var(--bg2); height: 20px; border-radius: 4px; overflow: hidden; position: relative; }
+    .chart-bar { background: linear-gradient(90deg, var(--navy), var(--accent)); height: 100%; width: 0%; transition: width 0.6s ease; }
+    .chart-val { width: 80px; text-align: right; font-weight: 600; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { text-align: left; padding: 0.6rem 0.8rem; color: var(--ink3); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--bg2); }
+    td { padding: 0.8rem 0.8rem; border-bottom: 1px solid var(--bg2); }
+
+    .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .btn:hover { background: var(--accent); }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
+    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+    
+    input[type="month"] { padding: 0.4rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="reports.html" class="active">📈 Reports</a>
+      <a href="fixed-invoices.html">📄 Invoices</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h2>Reports & Analytics</h2>
+      <input type="month" id="report-month" onchange="loadReportData()"/>
+    </div>
+
+    <div class="content">
+      <div class="grid-2">
+        <!-- Earnings Chart Card -->
+        <div class="card">
+          <div class="card-header"><h3>Revenue Share by Client</h3></div>
+          <div class="chart-container" id="revenue-chart">
+            <!-- Dynamic rows inject here -->
+          </div>
+        </div>
+
+        <!-- CSV Engine Export Card -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div class="card-header"><h3>📊 Export Data Matrix</h3></div>
+            <p style="font-size:0.88rem; color:var(--ink2); line-height:1.5;">
+              Download a complete chronological structural database layout spreadsheet containing matching parameters of your tracking profiles, calculated sums, milestones, descriptions, and structural rates.
+            </p>
+          </div>
+          <div style="margin-top:1.5rem; display:flex; gap:0.5rem;">
+            <button class="btn" onclick="exportTimeLogsCSV()">📥 Export Time Logs (.CSV)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Performing Accounts Breakdown -->
+      <div class="card">
+        <div class="card-header"><h3>Performance Leaderboard Matrix</h3></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Client Name</th>
+              <th>Billing Type</th>
+              <th>Hours Tracked</th>
+              <th>Total Value Owed</th>
+              <th>Total Processed</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <tr><td colspan="5" style="text-align:center; color:var(--ink3)">Select a target analytics month above...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const headers = () => ({ 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Content-Type': 'application/json' });
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('report-month').value = new Date().toISOString().slice(0, 7);
+  loadReportData();
+});
+
+async function loadReportData() {
+  const month = document.getElementById('report-month').value;
+  try {
+    const res = await fetch(`${API}/stats/freelancer?month=${month}`, { headers: headers() });
+    const data = await res.json();
+    
+    const chartContainer = document.getElementById('revenue-chart');
+    const leaderboard = document.getElementById('leaderboard-body');
+    
+    if(!data.clientBreakdown || data.clientBreakdown.length === 0) {
+      chartContainer.innerHTML = '<p style="color:var(--ink3); font-size:0.85rem;">No revenue streams matching timeline query.</p>';
+      leaderboard.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink3)">No data recorded.</td></tr>';
+      return;
+    }
+
+    // Find Max Value for scaling Chart lengths safely
+    const maxVal = Math.max(...data.clientBreakdown.map(c => parseFloat(c.total || 0)), 1);
+
+    chartContainer.innerHTML = '';
+    leaderboard.innerHTML = '';
+
+    data.clientBreakdown.forEach(c => {
+      const totalAmt = parseFloat(c.total || 0);
+      const pct = (totalAmt / maxVal) * 100;
+
+      // Render custom CSS chart bar node
+      chartContainer.innerHTML += `
+        <div class="chart-row">
+          <div class="chart-label">${c.client_name}</div>
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar" style="width: ${pct}%"></div>
+          </div>
+          <div class="chart-val">$${totalAmt.toFixed(2)}</div>
+        </div>`;
+
+      // Append Leaderboard elements
+      leaderboard.innerHTML += `
+        <tr>
+          <td><strong>${c.client_name}</strong></td>
+          <td><span style="text-transform:capitalize">${c.rate_type}</span></td>
+          <td>${parseFloat(c.hours).toFixed(2)} hrs</td>
+          <td><strong>$${totalAmt.toFixed(2)}</strong></td>
+          <td style="color:green">$${parseFloat(c.paid || 0).toFixed(2)}</td>
+        </tr>`;
+    });
+
+  } catch(e) { console.error("Error loading report metrics:", e); }
+}
+
+async function exportTimeLogsCSV() {
+  try {
+    const res = await fetch(`${API}/timelogs`, { headers: headers() });
+    const logs = await res.json();
+    
+    if(!logs || !logs.length) { alert("No logs available to export."); return; }
+
+    // Build standard structure header array matrix 
+    const headersArray = ['Log_ID', 'Client', 'Date', 'Hours', 'Calculated_Amount', 'Payment_Status', 'Task_Description'];
+    
+    const csvRows = [
+      headersArray.join(','), // CSV header row
+      ...logs.map(l => [
+        l.id,
+        `"${l.client_name.replace(/"/g, '""')}"`,
+        l.date.slice(0,10),
+        l.hours,
+        l.amount || 0,
+        l.payment_status,
+        `"${(l.task_description || '').replace(/"/g, '""')}"`
+      ].join(','))
+    ];
+
+    const csvBlob = new Blob([csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const blobUrl = URL.createObjectURL(csvBlob);
+    
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.href = blobUrl;
+    downloadAnchor.setAttribute('download', `QFA_TimeLogs_Export_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    document.body.removeChild(downloadAnchor);
+  } catch(e) { alert("Failed to execute data array export pipeline: " + e.message); }
+}
+</script>
+</body>
+</html>
