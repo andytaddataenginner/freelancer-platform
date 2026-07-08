@@ -12,9 +12,11 @@
       --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --green: #10b981; --green-bg: #dcfce7;
+      --amber: #f59e0b; --amber-bg: #fffbeb;
       --sans: 'Outfit', system-ui, sans-serif;
       --serif: 'Playfair Display', serif;
-      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --radius: 16px; --shadow: 0 4px 30px rgba(13,35,83,0.06);
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
@@ -35,22 +37,30 @@
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .content { padding: 1.5rem; flex: 1; }
 
-    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.2rem; }
-    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.04); margin-bottom: 1.5rem; }
+    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+    .card-header h3 { font-size: 1rem; font-weight: 600; }
     
-    .filter-row { display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem; background: #eef1f8; padding: 1rem; border-radius: 8px; }
-    .filter-group { display: flex; flex-direction: column; gap: 0.3rem; }
-    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); }
-    .filter-row select, .filter-row input { padding: 0.45rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 6px; font-family: var(--sans); min-width: 160px; }
+    .filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 1rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-row select, .filter-row input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; outline: none; background: white; transition: border-color 0.2s; }
+    .filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th { text-align: left; padding: 0.6rem 0.8rem; color: var(--ink3); font-size: 0.68rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); }
-    td { padding: 0.8rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 600; letter-spacing: 0.05em; }
+    td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
 
-    .btn { background: var(--navy); color: white; padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; transition: background 0.2s; }
     .btn:hover { background: var(--accent); }
-    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
-    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--navy); }
+    .btn-outline:hover { border-color: var(--navy); background: rgba(13,35,83,0.02); }
+    
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
+    .badge-paid { color: var(--green); background: var(--green-bg); }
+    .badge-outstanding { color: #b45309; background: var(--amber-bg); }
   </style>
 </head>
 <body>
@@ -76,9 +86,8 @@
     </div>
 
     <div class="content">
-      <!-- Advanced Query Controls Area -->
       <div class="card">
-        <div class="card-header"><h3>Filter Matrix Statement Parameters</h3></div>
+        <div class="card-header"><h3>🔍 Filter Matrix Statement Parameters</h3></div>
         <div class="filter-row">
           <div class="filter-group">
             <label>Select Target Account</label>
@@ -94,29 +103,30 @@
             <label>End Timeline</label>
             <input type="date" id="end-date"/>
           </div>
-          <button class="btn" onclick="applyTimeWindowFilters()">🔍 Filter Ledger</button>
+          <button class="btn" style="height: 42px;" onclick="applyTimeWindowFilters()">Apply Filters</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header">
-          <h3>System Invoice Records Matrix</h3>
+        <div class="card-header"><h3>💼 System Invoice Records Matrix</h3></div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice Ref</th>
+                <th>Client Profile</th>
+                <th>Total Unpaid Hours</th>
+                <th>Outstanding Balance</th>
+                <th>Cleared (Paid)</th>
+                <th>Status Matrix</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invoice-records-table">
+              <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--ink3)">Applying database streams...</td></tr>
+            </tbody>
+          </table>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Invoice ID</th>
-              <th>Client Profile Details</th>
-              <th>Hours Tracked</th>
-              <th>Total Billing Volume</th>
-              <th>Status Matrix</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="invoice-records-table">
-            <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--ink3)">Applying data streams...</td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -129,7 +139,7 @@ const headers = () => ({ 'Authorization': 'Bearer ' + localStorage.getItem('toke
 let rawLogsData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Set default timeline window to current year start until today
+  // Setup default historical bounds
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('start-date').value = "2026-01-01";
   document.getElementById('end-date').value = today;
@@ -146,7 +156,7 @@ async function populateClientSelector() {
     clients.forEach(c => {
       selector.innerHTML += `<option value="${c.name}">${c.name}</option>`;
     });
-  } catch(e) { console.error("Client selector setup failure:", e); }
+  } catch(e) { console.error("Client selector error:", e); }
 }
 
 async function fetchMasterLogs() {
@@ -154,7 +164,7 @@ async function fetchMasterLogs() {
     const res = await fetch(`${API}/timelogs`, { headers: headers() });
     rawLogsData = await res.json();
     applyTimeWindowFilters();
-  } catch(e) { console.error("Logs processing error:", e); }
+  } catch(e) { console.error("Logs pull error:", e); }
 }
 
 function applyTimeWindowFilters() {
@@ -162,7 +172,6 @@ function applyTimeWindowFilters() {
   const start = document.getElementById('start-date').value;
   const end = document.getElementById('end-date').value;
 
-  // Filter out records based on structural input criteria ranges
   let records = rawLogsData.filter(l => {
     const logDate = l.date.slice(0, 10);
     const matchesClient = !selectedClient || l.client_name === selectedClient;
@@ -171,43 +180,49 @@ function applyTimeWindowFilters() {
     return matchesClient && matchesStart && matchesEnd;
   });
 
-  // Group items cleanly by client name for multi-month rollup visibility
   const clientGroups = {};
   records.forEach(r => {
     if(!clientGroups[r.client_name]) {
-      clientGroups[r.client_name] = { hours: 0, total: 0, items: [], unpaid: false };
+      clientGroups[r.client_name] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
     }
-    clientGroups[r.client_name].hours += parseFloat(r.hours || 0);
-    clientGroups[r.client_name].total += parseFloat(r.amount || 0);
-    clientGroups[r.client_name].items.push(r);
-    if(r.payment_status !== 'paid') clientGroups[r.client_name].unpaid = true;
+    const amt = parseFloat(r.amount || 0);
+    const hrs = parseFloat(r.hours || 0);
+    
+    if(r.payment_status !== 'paid') {
+      clientGroups[r.client_name].unpaidHours += hrs;
+      clientGroups[r.client_name].totalUnpaid += amt;
+    } else {
+      clientGroups[r.client_name].totalPaid += amt;
+    }
   });
 
   const tableBody = document.getElementById('invoice-records-table');
   const groupsArray = Object.keys(clientGroups);
 
   if(!groupsArray.length) {
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--ink3)">No records match the requested parameter ranges.</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--ink3)">No records match parameters.</td></tr>';
     return;
   }
 
   tableBody.innerHTML = groupsArray.map((client, idx) => {
     const data = clientGroups[client];
-    const dummyInvId = `INV-2026-${2000 + idx}`;
+    const dummyInvId = `INV-2026-${3000 + idx}`;
+    const hasOutstanding = data.totalUnpaid > 0;
     
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
         <td><strong>${client}</strong></td>
-        <td>${data.hours.toFixed(2)} Hrs</td>
-        <td><strong>$${data.total.toFixed(2)}</strong></td>
+        <td>${data.unpaidHours.toFixed(2)} Hrs</td>
+        <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${data.totalUnpaid.toFixed(2)}</td>
+        <td style="color:#10b981;">$${data.totalPaid.toFixed(2)}</td>
         <td>
-          ${data.unpaid ? '<span style="color:#92400e; background:#fef3c7; padding:2px 8px; border-radius:10px; font-size:11px;">Outstanding Balance</span>' 
-                        : '<span style="color:#166534; background:#dcfce7; padding:2px 8px; border-radius:10px; font-size:11px;">Paid</span>'}
+          ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding Balance</span>' 
+                           : '<span class="badge badge-paid">Fully Settled</span>'}
         </td>
         <td>
-          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${client}', ${data.hours}, ${data.total}, '${start}', '${end}')">
-            📄 Generate Invoice PDF
+          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${client}', ${data.unpaidHours}, ${data.totalUnpaid}, '${start}', '${end}')">
+            📄 Generate Invoice
           </button>
         </td>
       </tr>`;
@@ -226,27 +241,27 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
     <html>
     <head>
       <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #0d2353; padding: 40px; line-height: 1.5; }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eef1f8; padding-bottom: 20px; align-items: center; }
-        .logo-section { display: flex; align-items: center; gap: 15px; }
-        .logo-img { width: 50px; height: 50px; border-radius: 8px; border: 1px solid #eef1f8; }
-        .logo-section h2 { font-size: 22px; margin: 0; color: #0d2353; }
-        .logo-section span { font-size: 11px; color: #f5c842; text-transform: uppercase; letter-spacing: 1px; display: block; }
-        .inv-details { text-align: right; font-size: 13px; }
-        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; font-size: 13px; }
-        .meta-box h3 { font-size: 11px; text-transform: uppercase; color: #7a8aaa; margin-bottom: 6px; margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 40px; font-size: 13px; }
-        th { background: #f4f6fb; text-align: left; padding: 10px; font-size: 11px; text-transform: uppercase; color: #3a4a6a; }
-        td { padding: 12px 10px; border-bottom: 1px solid #eef1f8; }
-        .totals { display: flex; flex-direction: column; align-items: flex-end; margin-top: 30px; font-size: 14px; }
-        .grand-total { font-size: 18px; font-weight: bold; color: #1a5cff; border-top: 2px solid #0d2353; padding-top: 8px; margin-top: 8px; }
-        .footer { margin-top: 80px; text-align: center; font-size: 11px; color: #7a8aaa; border-top: 1px solid #eef1f8; padding-top: 15px; }
+        body { font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif; color: #0d2353; padding: 45px; line-height: 1.6; background: #fff; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eef1f8; padding-bottom: 25px; align-items: center; }
+        .logo-section { display: flex; align-items: center; gap: 14px; }
+        .logo-img { width: 55px; height: 55px; border-radius: 10px; object-fit: contain; }
+        .logo-section h2 { font-size: 24px; margin: 0; font-weight: 700; color: #0d2353; letter-spacing: -0.5px; }
+        .logo-section span { font-size: 11px; color: #f5c842; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; display: block; margin-top: 2px; }
+        .inv-details { text-align: right; font-size: 13px; color: #3a4a6a; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 35px; font-size: 14px; }
+        .meta-box { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #eef1f8; }
+        .meta-box h3 { font-size: 11px; text-transform: uppercase; color: #7a8aaa; margin-bottom: 8px; margin-top: 0; letter-spacing: 0.5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 40px; font-size: 14px; }
+        th { background: #0d2353; text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; color: #fff; font-weight: 600; letter-spacing: 0.5px; }
+        td { padding: 14px 12px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; }
+        .totals { display: flex; flex-direction: column; align-items: flex-end; margin-top: 35px; font-size: 14px; }
+        .grand-total { font-size: 20px; font-weight: 700; color: #1a5cff; border-top: 2px solid #0d2353; padding-top: 10px; margin-top: 8px; }
+        .footer { margin-top: 90px; text-align: center; font-size: 11px; color: #7a8aaa; border-top: 1px solid #eef1f8; padding-top: 20px; }
       </style>
     </head>
     <body>
       <div class="header">
         <div class="logo-section">
-          <!-- Dynamically referencing asset relative to root -->
           <img src="../QFA_Logo.png" class="logo-img" alt="QFA" onerror="this.style.display='none'"/>
           <div>
             <h2>Quick Freelancing Agency</h2>
@@ -263,13 +278,13 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
       <div class="meta-grid">
         <div class="meta-box">
           <h3>Issued By:</h3>
-          <strong>Quick Freelancing Agency (QFA)</strong><br/>
+          <strong style="color: #0d2353;">Quick Freelancing Agency (QFA)</strong><br/>
           📧 Email: ndy.andupa@gmail.com<br/>
           📞 Phone: +251911859866
         </div>
         <div class="meta-box">
           <h3>Prepared For:</h3>
-          <strong>Client Account: ${clientName}</strong><br/>
+          <strong style="color: #0d2353;">Client Account: ${clientName}</strong><br/>
           Corporate Accounts Management Group
         </div>
       </div>
@@ -279,25 +294,25 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
           <tr>
             <th>Description of Services Block</th>
             <th>Calculated Volume Metrics</th>
-            <th>Total Outstanding Balance</th>
+            <th>Outstanding Balance Due</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Aggregated Contract Deliverables and Time Tracking Sessions accrued inside requested timeline snapshot window.</td>
-            <td>${hours > 0 ? `${hours.toFixed(2)} Hours Accumulated` : 'Fixed Structure Rate Segment'}</td>
-            <td><strong>$${totalAmount.toFixed(2)}</strong></td>
+            <td>Aggregated Contract Deliverables and Tracked Sessions remaining unpaid inside requested timeline snapshot window.</td>
+            <td>${hours > 0 ? `${hours.toFixed(2)} Hours Accumulated` : 'Fixed Structure Segment'}</td>
+            <td style="color: #1a5cff; font-weight: 600;">$${totalAmount.toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
 
       <div class="totals">
-        <div>Subtotal Accumulation: $${totalAmount.toFixed(2)}</div>
+        <div style="color: #7a8aaa;">Subtotal Outstanding: $${totalAmount.toFixed(2)}</div>
         <div class="grand-total">Total Balance Due: $${totalAmount.toFixed(2)}</div>
       </div>
 
       <div class="footer">
-        Thank you for choosing Quick Freelancing Agency. For immediate validation requests, use our secure channel coordinates listed above.<br/>
+        Thank you for choosing Quick Freelancing Agency. For immediate validation requests, use our secure coordinates listed above.<br/>
         <strong>QFA Portfolio System Architecture — 2026</strong>
       </div>
     </body>
