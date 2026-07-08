@@ -92,8 +92,6 @@
     
     /* Parameters Setup Panel */
     .filter-row { display: grid; grid-template-columns: repeat(3, minmax(200px, 300px)) 160px; gap: 1.25rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); max-width: 1100px; }
-    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
-    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
     .filter-row select, .filter-row input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; outline: none; background: white; transition: border-color 0.2s; width: 100%; }
     .filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
 
@@ -103,7 +101,7 @@
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #f8fafc; }
 
-    .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; transition: background 0.2s; }
+    .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; transition: background 0.2s; width: 100%; }
     .btn:hover { background: var(--accent); }
     .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--navy); }
     .btn-outline:hover { border-color: var(--navy); background: rgba(13,35,83,0.02); }
@@ -112,20 +110,17 @@
     .badge-paid { color: var(--green); background: var(--green-bg); }
     .badge-outstanding { color: #b45309; background: var(--amber-bg); }
 
-    /* ── RESPONSIVE MEDIA QUERIES ── */
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 240px; }
       .main { margin-left: 0; padding-top: 56px; }
       .mobile-header { display: flex; }
-      .topbar { position: relative !important; top: 0 !important; }
-      .content { padding: 1rem; }
       .filter-row { grid-template-columns: 1fr; max-width: 100%; }
     }
   </style>
 </head>
 <body>
 
-<div class="mobile-header" id="mobile-header">
+<div class="mobile-header">
   <div class="mobile-logo">
     <img src="../QFA_Logo.png" alt="QFA"/>
     <span>QFA</span>
@@ -166,21 +161,21 @@
       <div class="card">
         <div class="card-header"><h3>🔍 Filter Matrix Statement Parameters</h3></div>
         <div class="filter-row">
-          <div class="filter-group">
-            <label>Select Target Account</label>
+          <div style="display:flex; flex-direction:column; gap:0.35rem;">
+            <label style="font-size:0.75rem; font-weight:600; color:var(--ink2);">Select Target Account</label>
             <select id="client-select">
               <option value="">-- All Dynamic Clients --</option>
             </select>
           </div>
-          <div class="filter-group">
-            <label>Start Timeline</label>
+          <div style="display:flex; flex-direction:column; gap:0.35rem;">
+            <label style="font-size:0.75rem; font-weight:600; color:var(--ink2);">Start Timeline</label>
             <input type="date" id="start-date"/>
           </div>
-          <div class="filter-group">
-            <label>End Timeline</label>
+          <div style="display:flex; flex-direction:column; gap:0.35rem;">
+            <label style="font-size:0.75rem; font-weight:600; color:var(--ink2);">End Timeline</label>
             <input type="date" id="end-date"/>
           </div>
-          <button class="btn" style="height: 40px; width: 100%;" onclick="applyTimeWindowFilters()">Apply Filters</button>
+          <button class="btn" style="height:40px;" onclick="applyTimeWindowFilters()">Apply Filters</button>
         </div>
       </div>
 
@@ -231,7 +226,6 @@ function toggleSidebar() {
   document.getElementById('sidebar-overlay').classList.toggle('open');
 }
 
-// Stores structured arrays fetched directly from the database stream
 let rawLogsData = [];
 let databaseClientsData = [];
 
@@ -246,7 +240,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function populateClientSelector() {
   try {
-    // Streams from our dedicated, isolated endpoint that handles company names and unpaid statistics accurately
     const res = await fetch(`${API}/clients/outstanding`, { headers: auth.headers() });
     databaseClientsData = await res.json(); 
     
@@ -277,7 +270,8 @@ function applyTimeWindowFilters() {
     if (!l.date) return false;
     const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
     
-    const matchesClient = !selectedClient || l.client_name === selectedClient;
+    // Check both standard field options to ensure safe matching across components
+    const matchesClient = !selectedClient || l.client_name === selectedClient || l.name === selectedClient;
     const matchesStart = !startTime || logTime >= startTime;
     const matchesEnd = !endTime || logTime <= endTime;
     return matchesClient && matchesStart && matchesEnd;
@@ -285,17 +279,20 @@ function applyTimeWindowFilters() {
 
   const clientGroups = {};
   records.forEach(r => {
-    if(!clientGroups[r.client_name]) {
-      clientGroups[r.client_name] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
+    const currentName = r.client_name || r.name;
+    if(!currentName) return;
+
+    if(!clientGroups[currentName]) {
+      clientGroups[currentName] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
     }
     const amt = parseFloat(r.amount || 0);
     const hrs = parseFloat(r.hours || 0);
     
     if(r.payment_status !== 'paid') {
-      clientGroups[r.client_name].unpaidHours += hrs;
-      clientGroups[r.client_name].totalUnpaid += amt;
+      clientGroups[currentName].unpaidHours += hrs;
+      clientGroups[currentName].totalUnpaid += amt;
     } else {
-      clientGroups[r.client_name].totalPaid += amt;
+      clientGroups[currentName].totalPaid += amt;
     }
   });
 
@@ -312,7 +309,7 @@ function applyTimeWindowFilters() {
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
     
-    // Looks up the true database records mapped against the updated endpoint matrix
+    // Explicit cross-reference check
     const dbMatch = databaseClientsData.find(c => c.name === clientName);
     const dbCompanyName = dbMatch && dbMatch.company ? dbMatch.company : 'N/A';
     const dbLogCount = dbMatch ? dbMatch.log_count : 0;
@@ -396,7 +393,7 @@ function generateTimeWindowPDF(invId, clientName, companyName, totalLogs, hours,
         <div class="meta-box">
           <h3>Prepared For:</h3>
           <strong style="color: #0d2353; font-size: 15px;">${clientName}</strong><br/>
-          <span style="display:inline-block; margin-top: 6px;">Corporate Billing Department</span>
+          <span style="display:inline-block; margin-top: 6px; font-weight: 500; color: #1a5cff;">${companyName}</span>
         </div>
       </div>
 
