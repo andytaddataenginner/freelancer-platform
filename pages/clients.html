@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard — QFA</title>
+  <title>Clients — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
+      --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
       --green: #166534; --green-bg: #dcfce7;
@@ -84,63 +84,24 @@
     .sidebar.mobile-open { transform: translateX(0) !important; }
 
     /* ── MAIN CONTENT ── */
-    .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .main { margin-left: 220px; flex: 1; }
 
     .topbar {
       background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
       padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem;
     }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
-    .topbar-right { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
-    .month-picker-group { display: flex; align-items: center; gap: 0.5rem; }
-    .month-picker-group label { font-size: 0.78rem; font-weight: 700; color: var(--ink2); }
-    .month-picker-group input { padding: 0.4rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.82rem; color: var(--navy); background: var(--bg); }
 
-    .content { padding: 1.5rem; flex: 1; }
+    .content { padding: 1.5rem; }
 
-    /* ── STATS CARDS ── */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .scard { background: white; border-radius: var(--radius); padding: 1.2rem 1.4rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); position: relative; overflow: hidden; transition: transform 0.2s; }
-    .scard:hover { transform: translateY(-2px); }
-    .scard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-    .scard.green::before { background: linear-gradient(90deg, #22c55e, #86efac); }
-    .scard.amber::before { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
-    .scard.blue::before { background: linear-gradient(90deg, var(--accent), #60a5fa); }
-    .scard.navy::before { background: linear-gradient(90deg, var(--navy), var(--navy2)); }
-    .scard.gold::before { background: linear-gradient(90deg, #c9952a, var(--gold2)); }
-    .scard-icon { position: absolute; top: 1rem; right: 1rem; font-size: 1.4rem; opacity: 0.12; }
-    .scard-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink3); margin-bottom: 0.5rem; }
-    .scard-num { font-family: var(--serif); font-size: 1.8rem; font-weight: 700; line-height: 1; display: block; }
-    .scard-sub { font-size: 0.72rem; color: var(--ink3); margin-top: 0.3rem; }
-
-    /* ── CARDS & TABLES ── */
+    /* ── CARDS ── */
     .card {
       background: white; border-radius: var(--radius); padding: 1.2rem;
       box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
       margin-bottom: 1.2rem;
     }
-    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
-    .card-header h3 { font-size: 0.9rem; font-weight: 700; }
     
-    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; min-width: 600px; }
-    th { padding: 0.6rem 0.9rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; white-space: nowrap; }
-    td { padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--bg); }
-
-    .two-column-layout { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.2rem; align-items: start; }
-
-    /* ── TIMER STYLES ── */
-    .timer-display { font-family: var(--serif); font-size: 3rem; text-align: center; padding: 0.8rem; background: var(--bg); border-radius: 10px; margin: 0.6rem 0; letter-spacing: 0.04em; transition: color 0.3s; }
-    .timer-display.running { color: var(--green); }
-    .timer-display.paused { color: var(--amber); }
-    .timer-display.idle { color: var(--navy); }
-    .timer-status { text-align: center; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.4rem; height: 1rem; }
-    .timer-buttons { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
-
     /* ── BADGES ── */
     .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
     .badge-green { background: var(--green-bg); color: var(--green); }
@@ -149,9 +110,9 @@
     .badge-gray  { background: var(--gray-bg); color: var(--gray); }
 
     /* ── BUTTONS ── */
-    .btn-primary { background: var(--navy); color: white; padding: 0.65rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .btn-primary { background: var(--navy); color: white; padding: 0.65rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
     .btn-primary:hover { background: var(--accent); }
-    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem; }
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
     .btn-green  { background: var(--green-bg); color: var(--green); }
     .btn-green:hover { background: var(--green); color: white; }
     .btn-red    { background: var(--red-bg); color: var(--red); }
@@ -181,26 +142,14 @@
     .form-status { font-size: 0.8rem; margin-top: 0.4rem; font-weight: 500; }
     .form-status.success { color: var(--green); }
     .form-status.error   { color: var(--red); }
-    .hint { font-size: 0.7rem; color: var(--ink3); margin-top: 0.2rem; }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      .two-column-layout { grid-template-columns: 1fr; }
-    }
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 240px; }
       .main { margin-left: 0; padding-top: 56px; }
       .mobile-header { display: flex; }
-      .topbar { position: relative !important; top: 0 !important; }
+      .topbar { top: 56px; }
       .content { padding: 1rem; }
-      .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 0.8rem; }
-      .scard-num { font-size: 1.4rem; }
-      .topbar-right { width: 100%; }
-    }
-    @media (max-width: 420px) {
-      .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 0.6rem; }
-      .scard-num { font-size: 1.2rem; }
-      .content { padding: 0.8rem; }
     }
   </style>
 </head>
@@ -222,10 +171,12 @@
       <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
     </div>
     <nav class="sidebar-nav">
-      <a href="dashboard.html" class="active">📊 Overview</a>
+      <a href="dashboard.html">📊 Overview</a>
       <a href="time-logs.html">⏱ Time Logs</a>
-      <a href="clients.html">👥 Clients</a>
+      <a href="clients.html" class="active">👥 Clients</a>
       <a href="schedule.html">📅 Schedule</a>
+       <a href="reports.html">📈 Reports</a> <!-- Add this link -->
+      <a href="fixed-invoices.html">📄 Invoices</a> <!-- Add this link -->
       <a href="portfolio-admin.html">🖼 Portfolio</a>
       <a href="../index.html" target="_blank">🌐 Public Site</a>
     </nav>
@@ -238,130 +189,27 @@
 
   <div class="main">
     <div class="topbar">
-      <div>
-        <h2 id="page-title">Overview</h2>
-        <p id="greeting">Good morning</p>
-      </div>
-      <div class="topbar-right">
-        <div class="month-picker-group">
-          <label>Month</label>
-          <input type="month" id="mpicker" onchange="loadDashboard()"/>
-        </div>
-        <button class="btn-primary btn-sm" onclick="document.getElementById('modal-add-client').classList.add('open')">+ Add Client</button>
-      </div>
+      <h2>Clients</h2>
+      <p>Manage clients, billing rates, and payment status.</p>
     </div>
 
     <div class="content">
-      <!-- Stats Container Grid -->
-      <div class="stats-grid">
-        <div class="scard green"><div class="scard-icon">✅</div><div class="scard-label">Paid this month</div><span class="scard-num" id="s-paid">$0</span><div class="scard-sub">Received</div></div>
-        <div class="scard amber"><div class="scard-icon">⏳</div><div class="scard-label">Unpaid this month</div><span class="scard-num" id="s-unpaid">$0</span><div class="scard-sub">Outstanding</div></div>
-        <div class="scard blue"><div class="scard-icon">💰</div><div class="scard-label">Total expected</div><span class="scard-num" id="s-exp">$0</span><div class="scard-sub">Hourly + Fixed</div></div>
-        <div class="scard navy"><div class="scard-icon">👥</div><div class="scard-label">Clients this month</div><span class="scard-num" id="s-clients">0</span><div class="scard-sub">Active</div></div>
-        <div class="scard gold"><div class="scard-icon">⏱</div><div class="scard-label">Hours this month</div><span class="scard-num" id="s-hours">0h</span><div class="scard-sub">Logged</div></div>
-        <div class="scard navy"><div class="scard-icon">📅</div><div class="scard-label">Upcoming</div><span class="scard-num" id="s-book">0</span><div class="scard-sub">Bookings</div></div>
+      <div style="margin-bottom:1.5rem">
+        <button class="btn-primary" onclick="document.getElementById('modal-add').classList.add('open')">+ Add New Client</button>
       </div>
 
-      <!-- Payment Breakdown Table Card -->
-      <div class="card">
-        <div class="card-header">
-          <h3>💰 Payment Breakdown — <span id="breakdown-month"></span></h3>
-          <a href="time-logs.html" style="font-size:0.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all logs →</a>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Type</th>
-                <th>Hours</th>
-                <th>Total</th>
-                <th>Paid</th>
-                <th>Unpaid</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="breakdown-table">
-              <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Two-Column Operational Layout Split -->
-      <div class="two-column-layout">
-        <!-- Live Workspace Session Tracking Card -->
-        <div class="card">
-          <div class="card-header"><h3>⏱ Live Timer</h3></div>
-          <div class="form-group" style="margin-bottom:0.9rem"><label>Client</label><select id="timer-client"><option value="">Select client…</option></select></div>
-          <div class="form-group" style="margin-bottom:0.9rem"><label>Task</label><input type="text" id="timer-task" placeholder="What are you working on?"/></div>
-          <div class="timer-status" id="timer-status-msg" style="color:var(--ink3)">Ready</div>
-          <div class="timer-display idle" id="timer-clock">00:00:00</div>
-          <div class="timer-buttons">
-            <button class="btn-sm btn-green" id="t-start" onclick="timerStart()">▶ Start</button>
-            <button class="btn-sm" id="t-pause" style="display:none;background:var(--amber-bg);color:var(--amber)" onclick="timerPause()">⏸ Pause</button>
-            <button class="btn-sm btn-green" id="t-resume" style="display:none" onclick="timerResume()">▶ Resume</button>
-            <button class="btn-sm btn-red" id="t-stop" style="display:none" onclick="timerStop()">■ Stop & Save</button>
-            <button class="btn-sm btn-outline" onclick="timerReset()">↺ Reset</button>
-          </div>
-        </div>
-
-        <!-- Manual Backdated Work Submission Form -->
-        <div class="card">
-          <div class="card-header"><h3>✏️ Manual Log Entry</h3></div>
-          <form class="modal-form" onsubmit="submitManualLog(event)">
-            <div class="form-group"><label>Client</label><select name="client_id" id="manual-client-select" required><option value="">Select client…</option></select></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
-              <div class="form-group"><label>Date</label><input type="date" name="date" id="manual-log-date" required/></div>
-              <div class="form-group">
-                <label>Hours (any value)</label>
-                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
-                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
-              </div>
-            </div>
-            <div class="form-group"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
-            <button type="submit" class="btn-primary" style="justify-content:center">Add Log Entry</button>
-            <div id="manual-log-status" class="form-status"></div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Historical Logs Ledger Stream Card -->
-      <div class="card" style="margin-top:1.2rem">
-        <div class="card-header">
-          <h3>Recent Logs</h3>
-          <a href="time-logs.html" style="font-size:0.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Date</th>
-                <th>Hours</th>
-                <th>Amount</th>
-                <th>Payment</th>
-                <th>Task</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="recent-logs-table">
-              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div id="clients-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem">
+        <p style="color:var(--ink3)">Loading…</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Dialog Viewport Overlays -->
-<div class="modal-overlay" id="modal-add-client">
+<div class="modal-overlay" id="modal-add">
   <div class="modal">
     <div class="modal-header">
       <h3>Add New Client</h3>
-      <button class="modal-close" onclick="document.getElementById('modal-add-client').classList.remove('open')">✕</button>
+      <button class="modal-close" onclick="document.getElementById('modal-add').classList.remove('open')">✕</button>
     </div>
     <form class="modal-form" onsubmit="addClient(event)">
       <div class="form-group"><label>Full name</label><input type="text" name="name" required/></div>
@@ -387,31 +235,42 @@
         </div>
       </div>
       <button type="submit" class="btn-primary">Create client</button>
-      <div id="add-client-status" class="form-status"></div>
+      <div id="add-status" class="form-status"></div>
     </form>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-edit-log">
+<div class="modal-overlay" id="modal-edit">
   <div class="modal">
     <div class="modal-header">
-      <h3>Edit Log Entry</h3>
-      <button class="modal-close" onclick="document.getElementById('modal-edit-log').classList.remove('open')">✕</button>
+      <h3>Edit Client</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-edit').classList.remove('open')">✕</button>
     </div>
-    <form class="modal-form" onsubmit="false">
-      <div id="edit-log-rate-info" style="background:var(--bg);border-radius:8px;padding:0.7rem 1rem;font-size:0.82rem;color:var(--ink2)"></div>
-      <input type="hidden" id="edit-log-id"/>
-      <input type="hidden" id="edit-log-rate-value"/>
-      <div class="form-group"><label>Date</label><input type="date" id="edit-log-date" required/></div>
-      <div class="form-group">
-        <label>Hours</label>
-        <input type="number" id="edit-log-hours" min="0.01" max="24" step="any" required oninput="previewEditAmount()"/>
-        <div class="hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</div>
+    <form class="modal-form" onsubmit="saveClient(event)">
+      <input type="hidden" name="id" id="edit-id"/>
+      <div class="form-group"><label>Full name</label><input type="text" name="name" id="edit-name" required/></div>
+      <div class="form-group"><label>Company</label><input type="text" name="company" id="edit-company"/></div>
+      <div class="form-group"><label>Notes</label><textarea name="notes" id="edit-notes" rows="2"></textarea></div>
+      <div style="border-top:1px solid var(--paper3);padding-top:1rem;margin-top:0.5rem">
+        <p style="font-size:0.85rem;font-weight:600;margin-bottom:0.8rem;color:var(--navy)">💰 Billing Settings</p>
+        <div class="form-group">
+          <label>Rate type</label>
+          <select name="rate_type" id="edit-rate-type" onchange="toggleRateFields('edit')">
+            <option value="hourly">Hourly rate</option>
+            <option value="fixed">Fixed price project</option>
+          </select>
+        </div>
+        <div class="form-group" id="edit-hourly-field">
+          <label>Your hourly rate ($)</label>
+          <input type="number" name="hourly_rate" id="edit-hourly-rate" min="1" step="0.5"/>
+        </div>
+        <div class="form-group" id="edit-fixed-field" style="display:none">
+          <label>Fixed project price ($)</label>
+          <input type="number" name="fixed_price" id="edit-fixed-price" min="1" step="1"/>
+        </div>
       </div>
-      <div id="edit-log-preview-amount" style="background:#e8f0ff;border-radius:8px;padding:0.6rem 1rem;font-size:0.84rem;color:var(--accent);font-weight:600;display:none"></div>
-      <div class="form-group"><label>Task description</label><textarea id="edit-log-task" rows="3" required></textarea></div>
-      <button type="button" class="btn-primary" style="justify-content:center" onclick="saveLogEdit()">Save changes</button>
-      <div id="edit-log-status" class="form-status"></div>
+      <button type="submit" class="btn-primary">Save changes</button>
+      <div id="edit-status" class="form-status"></div>
     </form>
   </div>
 </div>
@@ -425,21 +284,19 @@ const auth = {
   isLoggedIn: () => !!localStorage.getItem('token'),
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
-
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
   if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
   if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
   return res.json();
 }
-
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   document.getElementById('user-name').textContent = auth.user()?.name || '';
 })();
-
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
+// Mobile Sidebar Panel Controllers
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('mobile-open');
   document.getElementById('sidebar-overlay').classList.toggle('open');
@@ -451,278 +308,111 @@ function toggleRateFields(prefix) {
   document.getElementById(prefix + '-fixed-field').style.display  = type === 'fixed'  ? 'flex' : 'none';
 }
 
-function formatHours(h) {
-  const hr = Math.floor(h), mn = Math.round((h - hr) * 60);
-  if (hr === 0) return mn + 'min';
-  if (mn === 0) return hr + 'h';
-  return hr + 'h ' + mn + 'min';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (!auth.isLoggedIn()) return;
-  const hour = new Date().getHours();
-  document.getElementById('greeting').textContent = hour < 12 ? 'Good morning ☀️' : hour < 17 ? 'Good afternoon 🌤' : 'Good evening 🌙';
-  document.getElementById('mpicker').value = new Date().toISOString().slice(0, 7);
-  document.getElementById('manual-log-date').value = new Date().toISOString().slice(0, 10);
-  loadDashboard();
-});
-
-async function toggleFixedPayment(recordId, newStatus) {
+async function loadClients() {
   try {
-    await apiFetch('/fixed-payments/' + recordId + '/status', {
-      method: 'PATCH',
-      body: JSON.stringify({ status: newStatus })
-    });
-    loadDashboard();
-  } catch(e) { alert('Failed: ' + e.message); }
-}
-
-async function loadDashboard() {
-  const selectedMonth = document.getElementById('mpicker').value;
-  const monthLabel = new Date(selectedMonth + '-02').toLocaleString('default', { month: 'long', year: 'numeric' });
-  document.getElementById('breakdown-month').textContent = monthLabel;
-  document.getElementById('page-title').textContent = 'Overview — ' + monthLabel;
-
-  try {
-    const [stats, clients, logs] = await Promise.all([
-      apiFetch('/stats/freelancer?month=' + selectedMonth),
-      apiFetch('/clients'),
-      apiFetch('/timelogs?limit=8')
-    ]);
-
-    // Update Statistics Widgets
-    document.getElementById('s-paid').textContent = '$' + parseFloat(stats.totalEarned||0).toFixed(2);
-    document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
-    document.getElementById('s-exp').textContent = '$' + parseFloat(stats.totalExpected||0).toFixed(2);
-    document.getElementById('s-clients').textContent = stats.clientsThisMonth || 0;
-    document.getElementById('s-hours').textContent = formatHours(parseFloat(stats.hoursThisMonth||0));
-    document.getElementById('s-book').textContent = stats.upcomingBookings || 0;
-
-    // Render Breakdown Table Data
-    const bTable = document.getElementById('breakdown-table');
-    if (!stats.clientBreakdown || !stats.clientBreakdown.length) {
-      bTable.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
-    } else {
-      bTable.innerHTML = stats.clientBreakdown.map(c => {
-        const isPaid = parseFloat(c.unpaid) === 0 && parseFloat(c.paid) > 0;
-        const statusBadge = isPaid 
-          ? '<span class="badge badge-green">All paid ✓</span>' 
-          : parseFloat(c.paid) > 0 
-            ? '<span class="badge badge-amber">Partial</span>' 
-            : '<span class="badge badge-gray">Unpaid</span>';
-        
-        const typeBadge = c.rate_type === 'fixed' 
-          ? '<span class="badge badge-blue">Fixed</span>' 
-          : '<span class="badge" style="background:#e8f0ff;color:var(--accent)">Hourly</span>';
-
-        let operationCell = '';
-        if (c.rate_type === 'fixed' && c.fixed_record_id) {
-          const isFixedPaid = c.fixed_record_status === 'paid';
-          operationCell = isFixedPaid
-            ? `<button class="btn-sm btn-outline" onclick="toggleFixedPayment(${c.fixed_record_id}, 'unpaid')">Mark unpaid</button>`
-            : `<button class="btn-sm btn-green" onclick="toggleFixedPayment(${c.fixed_record_id}, 'paid')">Mark paid ✓</button>`;
-        }
-
-        return `<tr>
-          <td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td>
-          <td>${typeBadge}</td>
-          <td>${formatHours(parseFloat(c.hours))}</td>
-          <td><strong>$${parseFloat(c.total).toFixed(2)}</strong></td>
-          <td style="color:var(--green)">$${parseFloat(c.paid).toFixed(2)}</td>
-          <td style="color:var(--amber)">$${parseFloat(c.unpaid).toFixed(2)}</td>
-          <td>${statusBadge}</td>
-          <td>${operationCell}</td>
-        </tr>`;
-      }).join('');
+    const clients = await apiFetch('/clients');
+    const grid = document.getElementById('clients-grid');
+    if (!clients.length) {
+      grid.innerHTML = '<p style="color:var(--ink3)">No clients yet. Add your first one!</p>';
+      return;
     }
+    grid.innerHTML = clients.map(c => {
+      const isFixed = c.rate_type === 'fixed';
+      const isPaid  = c.fixed_payment_status === 'paid';
 
-    // Populate Input Select Boxes
-    const dynamicOptions = clients.map(c => `<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
-    document.getElementById('timer-client').innerHTML = '<option value="">Select client…</option>' + dynamicOptions;
-    document.getElementById('manual-client-select').innerHTML = '<option value="">Select client…</option>' + dynamicOptions;
+      const rateInfo = isFixed
+        ? `<span class="badge badge-blue">Fixed</span> <strong>$${parseFloat(c.fixed_price||0).toFixed(2)}</strong>`
+        : `<span class="badge badge-green">Hourly</span> <strong>$${parseFloat(c.hourly_rate||0).toFixed(2)}/hr</strong>`;
 
-    // Render Recent Historical Activity Table Data
-    const rTable = document.getElementById('recent-logs-table');
-    if (!logs.length) {
-      rTable.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
-    } else {
-      rTable.innerHTML = logs.map(l => {
-        const isLogPaid = l.payment_status === 'paid';
-        const logBadge = isLogPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
-        const logActionBtn = isLogPaid 
-          ? `<button class="btn-sm btn-outline" onclick="changeLogPayment(${l.id}, 'unpaid')">Undo</button>` 
-          : `<button class="btn-sm btn-green" onclick="changeLogPayment(${l.id}, 'paid')">Mark paid</button>`;
-        
-        const matchedClient = clients.find(c => c.id === l.client_id) || {};
-        return `<tr>
-          <td><strong>${l.client_name}</strong></td>
-          <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
-          <td>${formatHours(parseFloat(l.hours))}</td>
-          <td>${parseFloat(l.amount||0) > 0 ? '$' + parseFloat(l.amount).toFixed(2) : '—'}</td>
-          <td>${logBadge}</td>
-          <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
-          <td style="display:flex;gap:0.3rem;flex-wrap:wrap">
-            ${logActionBtn}
-            <button class="btn-sm btn-outline" onclick="openLogEditModal(${l.id}, '${l.date}', ${l.hours}, '${l.task_description.replace(/'/g, "\\'")}', ${matchedClient.hourly_rate || 0})">✏️</button>
-          </td>
-        </tr>`;
-      }).join('');
-    }
+      const fixedPayBtn = isFixed ? `
+        <div style="margin:0.8rem 0;padding:0.8rem;background:${isPaid?'#dcfce7':'#fef3c7'};border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:0.82rem;font-weight:600;color:${isPaid?'#166534':'#92400e'}">
+            ${isPaid ? '✅ Fixed payment received' : '⏳ Fixed payment pending'}
+          </span>
+          <button class="btn-sm ${isPaid?'btn-outline':'btn-green'}"
+            onclick="toggleFixedPayment(${c.id}, '${isPaid?'unpaid':'paid'}')">
+            ${isPaid ? 'Mark unpaid' : 'Mark paid ✓'}
+          </button>
+        </div>` : '';
+
+      return `
+        <div class="card" style="margin-bottom:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.8rem">
+            <div>
+              <div style="font-weight:600;font-size:1rem">${c.name}</div>
+              <div style="font-size:0.82rem;color:var(--ink3)">${c.company || c.email}</div>
+            </div>
+            <span class="badge ${c.is_active ? 'badge-green' : 'badge-gray'}">${c.is_active ? 'Active' : 'Inactive'}</span>
+          </div>
+          <div style="display:flex;gap:1rem;font-size:0.82rem;color:var(--ink2);margin-bottom:0.8rem;flex-wrap:wrap">
+            <span>⏱ ${parseFloat(c.total_hours||0).toFixed(1)}h logged</span>
+            <span>📋 ${c.log_count || 0} entries</span>
+            <span>💰 ${rateInfo}</span>
+          </div>
+          ${fixedPayBtn}
+          <div style="display:flex;gap:0.6rem;margin-top:0.5rem">
+            <button class="btn-sm btn-outline" onclick='openEdit(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Edit</button>
+            <button class="btn-sm btn-red" onclick="deleteClient(${c.id}, '${c.name}')">Remove</button>
+          </div>
+        </div>`;
+    }).join('');
   } catch(e) { console.error(e); }
 }
 
-async function changeLogPayment(id, status) {
+async function toggleFixedPayment(clientId, newStatus) {
   try {
-    await apiFetch('/timelogs/' + id + '/payment', { method: 'PATCH', body: JSON.stringify({ payment_status: status }) });
-    loadDashboard();
-  } catch(e) { alert(e.message); }
-}
-
-function openLogEditModal(id, date, hours, task, hourlyRate) {
-  document.getElementById('edit-log-id').value = id;
-  document.getElementById('edit-log-rate-value').value = hourlyRate;
-  document.getElementById('edit-log-date').value = date.slice(0, 10);
-  document.getElementById('edit-log-hours').value = hours;
-  document.getElementById('edit-log-task').value = task;
-  document.getElementById('edit-log-status').textContent = '';
-  document.getElementById('edit-log-rate-info').textContent = hourlyRate > 0 ? `Hourly rate: $${hourlyRate}/hr` : 'No hourly billing rate set';
-  previewEditAmount();
-  document.getElementById('modal-edit-log').classList.add('open');
-}
-
-function previewEditAmount() {
-  const hoursValue = parseFloat(document.getElementById('edit-log-hours').value || 0);
-  const rateValue = parseFloat(document.getElementById('edit-log-rate-value').value || 0);
-  const container = document.getElementById('edit-log-preview-amount');
-  if (hoursValue > 0 && rateValue > 0) {
-    container.textContent = '💰 New amount: $' + (hoursValue * rateValue).toFixed(2) + ' (' + formatHours(hoursValue) + ' × $' + rateValue + '/hr)';
-    container.style.display = 'block';
-  } else {
-    container.style.display = 'none';
-  }
-}
-
-async function saveLogEdit() {
-  const statusEl = document.getElementById('edit-log-status');
-  const logId = document.getElementById('edit-log-id').value;
-  const hoursValue = parseFloat(document.getElementById('edit-log-hours').value);
-  const rateValue = parseFloat(document.getElementById('edit-log-rate-value').value || 0);
-  const rawAmount = rateValue > 0 ? (hoursValue * rateValue).toFixed(2) : undefined;
-  try {
-    await apiFetch('/timelogs/' + logId, {
-      method: 'PUT',
-      body: JSON.stringify({ hours: hoursValue, task_description: document.getElementById('edit-log-task').value, date: document.getElementById('edit-log-date').value, amount: rawAmount })
+    await apiFetch('/clients/' + clientId + '/fixed-payment', {
+      method: 'PATCH',
+      body: JSON.stringify({ fixed_payment_status: newStatus })
     });
-    statusEl.className = 'form-status success'; statusEl.textContent = '✓ Updated!';
-    setTimeout(() => { document.getElementById('modal-edit-log').classList.remove('open'); loadDashboard(); }, 700);
-  } catch(e) { statusEl.className = 'form-status error'; statusEl.textContent = e.message; }
+    loadClients();
+  } catch(e) { alert('Failed: ' + e.message); }
 }
 
-// Live Session Run Variables
-let timerInterval = null, timerSeconds = 0, timerState = 'idle';
-
-function updateTimerClockDisplay() {
-  const h = Math.floor(timerSeconds / 3600).toString().padStart(2, '0');
-  const m = Math.floor((timerSeconds % 3600) / 60).toString().padStart(2, '0');
-  const s = (timerSeconds % 60).toString().padStart(2, '0');
-  document.getElementById('timer-clock').textContent = `${h}:${m}:${s}`;
-}
-
-function alterTimerUIState(state) {
-  timerState = state;
-  const el = id => document.getElementById(id);
-  const display = el('timer-clock'), status = el('timer-status-msg');
-  ['t-start', 't-pause', 't-resume', 't-stop'].forEach(id => el(id).style.display = 'none');
-  
-  if (state === 'idle') {
-    el('t-start').style.display = 'inline-flex';
-    display.className = 'timer-display idle';
-    status.textContent = 'Ready'; status.style.color = 'var(--ink3)';
-  } else if (state === 'running') {
-    el('t-pause').style.display = 'inline-flex';
-    el('t-stop').style.display = 'inline-flex';
-    display.className = 'timer-display running';
-    status.textContent = '● Running'; status.style.color = 'var(--green)';
-  } else if (state === 'paused') {
-    el('t-resume').style.display = 'inline-flex';
-    el('t-stop').style.display = 'inline-flex';
-    display.className = 'timer-display paused';
-    status.textContent = '⏸ Paused — time preserved'; status.style.color = 'var(--amber)';
-  }
-}
-
-function timerStart() {
-  if (timerState !== 'idle') return;
-  timerInterval = setInterval(() => { timerSeconds++; updateTimerClockDisplay(); }, 1000);
-  alterTimerUIState('running');
-}
-
-function timerPause() {
-  if (timerState !== 'running') return;
-  clearInterval(timerInterval); timerInterval = null;
-  alterTimerUIState('paused');
-}
-
-function timerResume() {
-  if (timerState !== 'paused') return;
-  timerInterval = setInterval(() => { timerSeconds++; updateTimerClockDisplay(); }, 1000);
-  alterTimerUIState('running');
-}
-
-async function timerStop() {
-  if (timerState === 'idle') return;
-  clearInterval(timerInterval); timerInterval = null;
-
-  const finalHours = Math.round(timerSeconds / 3600 * 100) / 100;
-  const targetClient = document.getElementById('timer-client').value;
-  const targetTask = document.getElementById('timer-task').value;
-
-  if (!targetClient) {
-    alert('Please select a client before saving.');
-    if (timerState === 'running') { timerInterval = setInterval(() => { timerSeconds++; updateTimerClockDisplay(); }, 1000); }
-    return;
-  }
-  if (finalHours < 0.01) { alert('Timer runtime too short to generate validation log.'); timerReset(); return; }
-  if (!confirm(`Save ${formatHours(finalHours)} to your time logs?`)) { alterTimerUIState('paused'); return; }
-
-  try {
-    await apiFetch('/timelogs', {
-      method: 'POST',
-      body: JSON.stringify({ client_id: targetClient, hours: finalHours, task_description: targetTask || 'Timed session', date: new Date().toISOString().slice(0, 10), source: 'timer' })
-    });
-    alert('✓ Logged ' + formatHours(finalHours) + ' successfully!');
-    timerReset(); loadDashboard();
-  } catch(e) { alert('Failed to save log entry: ' + e.message); alterTimerUIState('paused'); }
-}
-
-function timerReset() {
-  clearInterval(timerInterval); timerInterval = null; timerSeconds = 0;
-  updateTimerClockDisplay(); alterTimerUIState('idle');
-  document.getElementById('timer-task').value = '';
-}
-
-async function submitManualLog(e) {
-  e.preventDefault();
-  const statusEl = document.getElementById('manual-log-status');
-  try {
-    await apiFetch('/timelogs', { method: 'POST', body: JSON.stringify({ ...Object.fromEntries(new FormData(e.target)), source: 'manual' }) });
-    statusEl.className = 'form-status success'; statusEl.textContent = '✓ Log saved!';
-    e.target.reset(); document.getElementById('manual-log-date').value = new Date().toISOString().slice(0, 10);
-    loadDashboard(); setTimeout(() => statusEl.textContent = '', 3000);
-  } catch(e) { statusEl.className = 'form-status error'; statusEl.textContent = e.message; }
+function openEdit(c) {
+  document.getElementById('edit-id').value          = c.id;
+  document.getElementById('edit-name').value        = c.name;
+  document.getElementById('edit-company').value     = c.company || '';
+  document.getElementById('edit-notes').value       = c.notes || '';
+  document.getElementById('edit-rate-type').value   = c.rate_type || 'hourly';
+  document.getElementById('edit-hourly-rate').value = c.hourly_rate || '';
+  document.getElementById('edit-fixed-price').value = c.fixed_price || '';
+  toggleRateFields('edit');
+  document.getElementById('modal-edit').classList.add('open');
 }
 
 async function addClient(e) {
   e.preventDefault();
-  const statusEl = document.getElementById('add-client-status');
+  const status = document.getElementById('add-status');
   try {
     await apiFetch('/clients', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
-    statusEl.className = 'form-status success'; statusEl.textContent = '✓ Client created!';
+    status.className = 'form-status success';
+    status.textContent = '✓ Client created!';
     e.target.reset();
-    setTimeout(() => { document.getElementById('modal-add-client').classList.remove('open'); statusEl.textContent = ''; }, 1200);
-    loadDashboard();
-  } catch(err) { statusEl.className = 'form-status error'; statusEl.textContent = err.message; }
+    setTimeout(() => { document.getElementById('modal-add').classList.remove('open'); status.textContent=''; }, 1200);
+    loadClients();
+  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
 }
+
+async function saveClient(e) {
+  e.preventDefault();
+  const status = document.getElementById('edit-status');
+  const data = Object.fromEntries(new FormData(e.target));
+  try {
+    await apiFetch('/clients/' + data.id, { method: 'PUT', body: JSON.stringify(data) });
+    status.className = 'form-status success'; status.textContent = '✓ Saved!';
+    setTimeout(() => { document.getElementById('modal-edit').classList.remove('open'); status.textContent=''; }, 1000);
+    loadClients();
+  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+}
+
+async function deleteClient(id, name) {
+  if (!confirm(`Remove client "${name}"?`)) return;
+  try { await apiFetch('/clients/' + id, { method: 'DELETE' }); loadClients(); }
+  catch(e) { alert('Failed: ' + e.message); }
+}
+
+loadClients();
 </script>
 </body>
 </html>
