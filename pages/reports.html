@@ -19,23 +19,78 @@
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
+    /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 220px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
-    .sidebar-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.6rem; }
-    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
     .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
     .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
-    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
-    .sidebar-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; border-right: 3px solid transparent; }
-    .sidebar-nav a:hover, .sidebar-nav a.active { color: white; background: rgba(255,255,255,0.06); }
-    .sidebar-nav a.active { background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
 
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE NAV ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
+
+    /* ── MAIN ── */
     .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+
+    .topbar {
+      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
+      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between;
+    }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .content { padding: 1.5rem; flex: 1; }
 
+    /* ── CARDS & METRICS ── */
     .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.04); margin-bottom: 1.5rem; position: relative; }
     .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
     .card-header h3 { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
@@ -73,12 +128,30 @@
     .btn:hover { background: var(--accent); }
     input[type="month"] { padding: 0.5rem 1rem; border: 1.5px solid rgba(13,35,83,0.12); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; color: var(--navy); outline: none; transition: border-color 0.2s; }
     input[type="month"]:focus { border-color: var(--accent); }
+
+    /* ── RESPONSIVE MEDIA QUERIES matching time_logs.html ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 240px; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .mobile-header { display: flex; }
+      .topbar { position: relative !important; top: 0 !important; }
+      .content { padding: 1rem; }
+    }
   </style>
 </head>
 <body>
 
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="layout">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
       <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
@@ -88,21 +161,25 @@
       <a href="time-logs.html">⏱ Time Logs</a>
       <a href="clients.html">👥 Clients</a>
       <a href="schedule.html">📅 Schedule</a>
-      <a href="reports.html">📈 Reports</a> <!-- Add this link -->
-      <a href="fixed-invoices.html">📄 Invoices</a> <!-- Add this link -->
+      <a href="reports.html" class="active">📈 Reports</a>
+      <a href="fixed-invoices.html">📄 Invoices</a>
       <a href="portfolio-admin.html">🖼 Portfolio</a>
       <a href="../index.html" target="_blank">🌐 Public Site</a>
     </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer · QFA</span>
+      <a href="#" onclick="logout()">Sign out →</a>
+    </div>
   </aside>
 
   <div class="main">
     <div class="topbar">
-      <h2>Reports & Analytics Engine</h2>
+      <h2>Reports & Analytics</h2>
       <input type="month" id="report-month" onchange="loadReportData()"/>
     </div>
 
     <div class="content">
-      <!-- Top Row Matrix: Three Panel Metric Grid -->
       <div class="grid-3">
         <!-- 1. Client Breakdown (Filterable) -->
         <div class="card">
@@ -132,7 +209,7 @@
           </div>
         </div>
 
-        <!-- 3. ALL-TIME GLOBAL SUMMARY CARD (All logs across all months) -->
+        <!-- 3. ALL-TIME GLOBAL SUMMARY CARD -->
         <div class="card" style="background: linear-gradient(180deg, #ffffff, #fdfeff); border: 1px solid rgba(26,92,255,0.15);">
           <div class="card-header" style="border-bottom-color: rgba(26,92,255,0.08);">
             <h3 style="color: var(--accent);">🌍 All-Time Global Ledger Summary</h3>
@@ -154,7 +231,6 @@
         </div>
       </div>
 
-      <!-- Bottom Section: Leaderboard Metrics Table -->
       <div class="card">
         <div class="card-header"><h3>📊 Performance Leaderboard Matrix (Selected Month)</h3></div>
         <div style="overflow-x: auto;">
@@ -178,7 +254,25 @@
 
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
-const headers = () => ({ 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Content-Type': 'application/json' });
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('report-month').value = new Date().toISOString().slice(0, 7);
@@ -188,12 +282,10 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadReportData() {
   const month = document.getElementById('report-month').value;
   try {
-    // 1. Fetch monthly analytical breakdowns
-    const res = await fetch(`${API}/stats/freelancer?month=${month}`, { headers: headers() });
+    const res = await fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() });
     const data = await res.json();
     
-    // 2. Fetch full global log metrics to compute macro values
-    const allLogsRes = await fetch(`${API}/timelogs`, { headers: headers() });
+    const allLogsRes = await fetch(`${API}/timelogs`, { headers: auth.headers() });
     const allLogs = await allLogsRes.json();
     
     let monthPaid = 0;
@@ -205,14 +297,12 @@ async function loadReportData() {
       const amt = parseFloat(log.amount || 0);
       const isPaid = log.payment_status === 'paid';
       
-      // Calculate All-Time Global Ledger Statistics
       if (isPaid) {
         macroPaid += amt;
       } else {
         macroUnpaid += amt;
       }
 
-      // Calculate Selected Monthly Target View Statistics
       if (log.date && log.date.startsWith(month)) {
         if (isPaid) {
           monthPaid += amt;
@@ -222,12 +312,10 @@ async function loadReportData() {
       }
     });
 
-    // Update Card 3: All-Time Global UI Indicators
     document.getElementById('global-total-all').textContent = `$${(macroPaid + macroUnpaid).toFixed(2)}`;
     document.getElementById('global-paid-all').textContent = `$${macroPaid.toFixed(2)}`;
     document.getElementById('global-unpaid-all').textContent = `$${macroUnpaid.toFixed(2)}`;
 
-    // Update Card 2: Selected Month Balance Progress UI Indicators
     document.getElementById('health-paid-val').textContent = `$${monthPaid.toFixed(2)}`;
     document.getElementById('health-unpaid-val').textContent = `$${monthUnpaid.toFixed(2)}`;
     
@@ -240,7 +328,6 @@ async function loadReportData() {
       document.getElementById('health-unpaid-bar').style.width = '0%';
     }
 
-    // Card 1 Layout Stream Mapping
     const chartContainer = document.getElementById('revenue-chart');
     const leaderboard = document.getElementById('leaderboard-body');
     
@@ -280,7 +367,7 @@ async function loadReportData() {
 async function exportFilteredCSV() {
   const monthFilter = document.getElementById('report-month').value;
   try {
-    const res = await fetch(`${API}/timelogs`, { headers: headers() });
+    const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
     const logs = await res.json();
     
     if(!logs || !logs.length) { alert("No logs available."); return; }
