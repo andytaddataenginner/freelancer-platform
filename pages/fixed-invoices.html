@@ -20,10 +20,8 @@
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
-    /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; }
 
-    /* ── SIDEBAR ── */
     .sidebar {
       width: 220px; background: var(--navy); position: fixed;
       top: 0; left: 0; height: 100vh; display: flex;
@@ -59,7 +57,6 @@
     .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
     .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
-    /* ── MOBILE NAV ── */
     .mobile-header {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
       background: var(--navy); padding: 0.8rem 1rem;
@@ -80,7 +77,6 @@
     .sidebar-overlay.open { display: block; }
     .sidebar.mobile-open { transform: translateX(0) !important; }
 
-    /* ── MAIN CONTENT ── */
     .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
     .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
@@ -90,7 +86,6 @@
     .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
     .card-header h3 { font-size: 1rem; font-weight: 600; }
     
-    /* Parameters Setup Panel */
     .filter-row { display: grid; grid-template-columns: repeat(3, minmax(200px, 300px)) 160px; gap: 1.25rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); max-width: 1100px; }
     .filter-row select, .filter-row input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; outline: none; background: white; transition: border-color 0.2s; width: 100%; }
     .filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
@@ -245,7 +240,8 @@ async function populateClientSelector() {
     
     const selector = document.getElementById('client-select');
     databaseClientsData.forEach(c => {
-      selector.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+      // Use Client ID as value to prevent text mismatch issues
+      selector.innerHTML += `<option value="${c.id}">${c.name}</option>`;
     });
   } catch(e) { console.error("Client selector error:", e); }
 }
@@ -259,7 +255,7 @@ async function fetchMasterLogs() {
 }
 
 function applyTimeWindowFilters() {
-  const selectedClient = document.getElementById('client-select').value;
+  const selectedClientId = document.getElementById('client-select').value;
   const startVal = document.getElementById('start-date').value;
   const endVal = document.getElementById('end-date').value;
 
@@ -270,8 +266,10 @@ function applyTimeWindowFilters() {
     if (!l.date) return false;
     const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
     
-    // Check both standard field options to ensure safe matching across components
-    const matchesClient = !selectedClient || l.client_name === selectedClient || l.name === selectedClient;
+    // Resolve matches safely using explicit client ID values
+    const targetId = l.client_id || l.user_id;
+    const matchesClient = !selectedClientId || String(targetId) === String(selectedClientId);
+    
     const matchesStart = !startTime || logTime >= startTime;
     const matchesEnd = !endTime || logTime <= endTime;
     return matchesClient && matchesStart && matchesEnd;
@@ -279,20 +277,30 @@ function applyTimeWindowFilters() {
 
   const clientGroups = {};
   records.forEach(r => {
-    const currentName = r.client_name || r.name;
-    if(!currentName) return;
+    const targetId = r.client_id || r.user_id;
+    if(!targetId) return;
 
-    if(!clientGroups[currentName]) {
-      clientGroups[currentName] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
+    if(!clientGroups[targetId]) {
+      // Find the client information block using the matching identifier
+      const dbInfo = databaseClientsData.find(c => String(c.id) === String(targetId));
+      clientGroups[targetId] = {
+        name: dbInfo ? dbInfo.name : (r.client_name || r.name || 'Unknown Client'),
+        company: dbInfo && dbInfo.company ? dbInfo.company : 'N/A',
+        logCount: dbInfo ? dbInfo.log_count : 0,
+        unpaidHours: 0,
+        totalUnpaid: 0,
+        totalPaid: 0
+      };
     }
+    
     const amt = parseFloat(r.amount || 0);
     const hrs = parseFloat(r.hours || 0);
     
     if(r.payment_status !== 'paid') {
-      clientGroups[currentName].unpaidHours += hrs;
-      clientGroups[currentName].totalUnpaid += amt;
+      clientGroups[targetId].unpaidHours += hrs;
+      clientGroups[targetId].totalUnpaid += amt;
     } else {
-      clientGroups[currentName].totalPaid += amt;
+      clientGroups[targetId].totalPaid += amt;
     }
   });
 
@@ -304,20 +312,15 @@ function applyTimeWindowFilters() {
     return;
   }
 
-  tableBody.innerHTML = groupsArray.map((clientName, idx) => {
-    const data = clientGroups[clientName];
+  tableBody.innerHTML = groupsArray.map((clientId, idx) => {
+    const data = clientGroups[clientId];
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
-    
-    // Explicit cross-reference check
-    const dbMatch = databaseClientsData.find(c => c.name === clientName);
-    const dbCompanyName = dbMatch && dbMatch.company ? dbMatch.company : 'N/A';
-    const dbLogCount = dbMatch ? dbMatch.log_count : 0;
     
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
-        <td><strong>${clientName}</strong></td>
+        <td><strong>${data.name}</strong></td>
         <td>${data.unpaidHours.toFixed(2)} Hrs</td>
         <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${data.totalUnpaid.toFixed(2)}</td>
         <td style="color:#10b981;">$${data.totalPaid.toFixed(2)}</td>
@@ -326,7 +329,7 @@ function applyTimeWindowFilters() {
                            : '<span class="badge badge-paid">Fully Settled</span>'}
         </td>
         <td>
-          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${clientName}', '${dbCompanyName}', ${dbLogCount}, ${data.unpaidHours}, ${data.totalUnpaid}, '${startVal}', '${endVal}')">
+          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${data.name}', '${data.company}', ${data.logCount}, ${data.unpaidHours}, ${data.totalUnpaid}, '${startVal}', '${endVal}')">
             📄 Generate Invoice
           </button>
         </td>
