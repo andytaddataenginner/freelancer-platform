@@ -98,52 +98,42 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
     ./* ── TOP DASHBOARD GRID ───────────────────────────── */
    /* ── REPORT TOP GRID ───────────────────────── */
+    /* ── REPORT DASHBOARD GRID ───────────────── */
 
 .grid-3 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1.8fr;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
     align-items: stretch;
 }
 
-/* Share by Client takes full width bottom row */
-.grid-3 > :first-child {
-    grid-column: 1 / -1;
-    order: 3;
-}
 
-/* Balance Sheet */
-.grid-3 > :nth-child(2) {
-    order: 2;
-}
-
-/* Global Ledger */
-.grid-3 > :nth-child(3) {
-    order: 1;
+/* Make cards equal height */
+.grid-3 .card {
+    height: 100%;
 }
 
 
-/* Tablets */
+/* Tablet */
 @media (max-width: 1200px) {
 
     .grid-3 {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
-    .grid-3 > :first-child,
-    .grid-3 > :nth-child(2),
-    .grid-3 > :nth-child(3) {
-        grid-column: auto;
+    .grid-3 > :last-child {
+        grid-column: 1 / -1;
     }
+
 }
 
 
 /* Mobile */
-@media (max-width: 768px) {
+@media (max-width:768px){
 
     .grid-3 {
-        grid-template-columns: 1fr;
+        grid-template-columns:1fr;
     }
 
 }
