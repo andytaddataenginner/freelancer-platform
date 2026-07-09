@@ -106,7 +106,7 @@
       /* REPORT DASHBOARD */
       .grid-3 {
           display: grid;
-          grid-template-columns: 280px 330px minmax(420px,1fr);
+          grid-template-columns: 260px 300px minmax(350px,1fr);
           gap: 1.5rem;
           width: 100%;
           margin-bottom: 1.5rem;
@@ -122,7 +122,7 @@
       
       /* Client Chart card */
       .grid-3 .card:nth-child(3) {
-          min-width: 500px;
+          min-width: 0;
       }
       
       
@@ -163,12 +163,17 @@
 
  .chart-row {
     display:grid;
-    grid-template-columns: 150px minmax(100px,1fr) 90px;
+    grid-template-columns: 120px minmax(0,1fr) 85px;
     align-items:center;
-    gap:12px;
+    gap:10px;
     width:100%;
-  }
-    #revenue-chart { overflow-x: auto; padding-bottom: 5px; min-height: 150px; }
+}
+    #revenue-chart {
+    overflow:hidden;
+    padding-bottom:5px;
+    min-height:150px;
+    width:100%;
+ }
     .chart-label { 
     font-weight:500;
     white-space:nowrap;
