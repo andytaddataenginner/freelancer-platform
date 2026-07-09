@@ -95,56 +95,77 @@
     .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
     .card-header h3 { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
     
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    ./* ── TOP DASHBOARD GRID ───────────────────────────── */
-   /* ── REPORT TOP GRID ───────────────────────── */
-    /* ── REPORT DASHBOARD GRID ───────────────── */
-
-.grid-3 {
+     .grid-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr 1.8fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
-    align-items: stretch;
-}
-
-
-/* Make cards equal height */
-.grid-3 .card {
-    height: 100%;
-}
-
-
-/* Tablet */
-@media (max-width: 1200px) {
-
-    .grid-3 {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .grid-3 > :last-child {
-        grid-column: 1 / -1;
-    }
-
-}
-
-
-/* Mobile */
-@media (max-width:768px){
-
-    .grid-3 {
-        grid-template-columns:1fr;
-    }
-
-}
-    .chart-container { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
-    .chart-row { 
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
-        font-size: 0.85rem; 
-        min-width: 280px; 
-        }
+      }
+      
+      
+      /* REPORT DASHBOARD */
+      .grid-3 {
+          display: grid;
+          grid-template-columns: 260px 320px minmax(500px, 1fr);
+          gap: 1.5rem;
+          width: 100%;
+          margin-bottom: 1.5rem;
+          align-items: stretch;
+      }
+      
+      
+      .grid-3 .card {
+          margin-bottom: 0;
+          min-width: 0;
+      }
+      
+      
+      /* Client Chart card */
+      .grid-3 .card:nth-child(3) {
+          min-width: 500px;
+      }
+      
+      
+      /* Tablet */
+      @media(max-width:1200px){
+      
+          .grid-3 {
+              grid-template-columns: 1fr 1fr;
+          }
+      
+          .grid-3 .card:nth-child(3){
+              grid-column:1 / -1;
+          }
+      
+      }
+      
+      
+      /* Mobile */
+      @media(max-width:768px){
+      
+          .grid-3 {
+              grid-template-columns:1fr;
+          }
+      
+          .grid-3 .card:nth-child(3){
+              min-width:auto;
+          }
+      
+      }
+    .chart-container { 
+      display:flex;
+      flex-direction:column;
+      gap:0.8rem;
+      margin-top:1rem;
+      width:100%;
+      }
+    .chart-row {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:0.85rem;
+    width:100%;
+      }
     #revenue-chart { overflow-x: auto; padding-bottom: 5px; min-height: 150px; }
     .chart-label { width: 160px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink2); }
     
