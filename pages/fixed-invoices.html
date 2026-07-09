@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Invoice Hub — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -90,7 +90,6 @@
     .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
     .card-header h3 { font-size: 1rem; font-weight: 600; }
     
-    /* Responsive Flex Parameters Panel */
     .filter-row { display: grid; grid-template-columns: repeat(3, minmax(200px, 300px)) 160px; gap: 1.25rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); max-width: 1100px; }
     .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
     .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -112,7 +111,6 @@
     .badge-paid { color: var(--green); background: var(--green-bg); }
     .badge-outstanding { color: #b45309; background: var(--amber-bg); }
 
-    /* ── RESPONSIVE MEDIA QUERIES matching time_logs.html ── */
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 240px; }
       .main { margin-left: 0; padding-top: 56px; }
@@ -163,7 +161,6 @@
     </div>
 
     <div class="content">
-      <!-- Parameters Setup Panel -->
       <div class="card">
         <div class="card-header"><h3>🔍 Filter Matrix Statement Parameters</h3></div>
         <div class="filter-row">
@@ -318,7 +315,7 @@ function applyTimeWindowFilters() {
         <td style="color:#10b981;">$${data.totalPaid.toFixed(2)}</td>
         <td>
           ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding Balance</span>' 
-                           : '<span class="badge badge-paid">Fully Settled</span>'}
+                            : '<span class="badge badge-paid">Fully Settled</span>'}
         </td>
         <td>
           <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${client}', ${data.unpaidHours}, ${data.totalUnpaid}, '${startVal}', '${endVal}')">
@@ -330,6 +327,10 @@ function applyTimeWindowFilters() {
 }
 
 function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end) {
+  // Pull current user info from auth helper
+  const currentUser = auth.user();
+  const freelancerName = currentUser ? currentUser.name : "Freelancer";
+
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none';
   document.body.appendChild(iframe);
@@ -388,7 +389,7 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
         <div class="meta-box">
           <h3>Prepared For:</h3>
           <strong style="color: #0d2353; font-size: 15px;">${clientName}</strong><br/>
-          <span style="display:inline-block; margin-top: 6px;">Freelancer:Anduamlak</span>
+          <span style="display:inline-block; margin-top: 6px;">Freelancer: ${freelancerName}</span>
         </div>
       </div>
 
