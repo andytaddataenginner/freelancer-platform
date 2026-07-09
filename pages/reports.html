@@ -97,36 +97,56 @@
     
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
     ./* ── TOP DASHBOARD GRID ───────────────────────────── */
+   /* ── REPORT TOP GRID ───────────────────────── */
+
 .grid-3 {
     display: grid;
-    grid-template-columns: 1.6fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
     margin-bottom: 1.5rem;
     align-items: stretch;
 }
 
+/* Share by Client takes full width bottom row */
+.grid-3 > :first-child {
+    grid-column: 1 / -1;
+    order: 3;
+}
+
+/* Balance Sheet */
+.grid-3 > :nth-child(2) {
+    order: 2;
+}
+
+/* Global Ledger */
+.grid-3 > :nth-child(3) {
+    order: 1;
+}
+
+
 /* Tablets */
 @media (max-width: 1200px) {
+
     .grid-3 {
-        grid-template-columns: 1.3fr 1fr;
+        grid-template-columns: 1fr;
     }
 
-    .grid-3 > :first-child {
-        grid-column: 1 / -1;
+    .grid-3 > :first-child,
+    .grid-3 > :nth-child(2),
+    .grid-3 > :nth-child(3) {
+        grid-column: auto;
     }
 }
+
 
 /* Mobile */
 @media (max-width: 768px) {
+
     .grid-3 {
         grid-template-columns: 1fr;
     }
 
-    .grid-2 {
-        grid-template-columns: 1fr;
-    }
 }
-    
     .chart-container { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
     .chart-row { 
         display: flex; 
@@ -217,11 +237,25 @@
 
     <div class="content">
       <div class="grid-3">
-        <div class="card">
-          <div class="card-header"><h3>💼 Share by Client (Selected Month)</h3></div>
-          <div class="chart-container" id="revenue-chart"></div>
-        </div>
-
+       <div class="card" style="background: linear-gradient(180deg, #ffffff, #fdfeff); border: 1px solid rgba(26,92,255,0.15);">
+            <div class="card-header" style="border-bottom-color: rgba(26,92,255,0.08);">
+              <h3 style="color: var(--accent);">🌍 All-Time Global Ledger Summary</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="macro-total-box" style="border-left-color: var(--navy)">
+                <span>Total Volume Generated</span>
+                <h4 id="global-total-all">$0.00</h4>
+              </div>
+              <div class="macro-total-box paid">
+                <span>All-Time Total Paid</span>
+                <h4 id="global-paid-all" style="color: var(--green);">$0.00</h4>
+              </div>
+              <div class="macro-total-box unpaid">
+                <span>All-Time Total Unpaid</span>
+                <h4 id="global-unpaid-all" style="color: var(--amber);">$0.00</h4>
+              </div>
+            </div>
+          </div>
         <div class="card">
           <div class="card-header"><h3>📅 Balance Sheet (Selected Month)</h3></div>
           <div class="health-container" style="margin-top: 0.5rem;">
@@ -242,26 +276,15 @@
             <button class="btn" style="padding: 0.5rem 1rem; font-size:0.78rem;" onclick="exportFilteredCSV()">📥 Export CSV</button>
           </div>
         </div>
-
-        <div class="card" style="background: linear-gradient(180deg, #ffffff, #fdfeff); border: 1px solid rgba(26,92,255,0.15);">
-          <div class="card-header" style="border-bottom-color: rgba(26,92,255,0.08);">
-            <h3 style="color: var(--accent);">🌍 All-Time Global Ledger Summary</h3>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <div class="macro-total-box" style="border-left-color: var(--navy)">
-              <span>Total Volume Generated</span>
-              <h4 id="global-total-all">$0.00</h4>
-            </div>
-            <div class="macro-total-box paid">
-              <span>All-Time Total Paid</span>
-              <h4 id="global-paid-all" style="color: var(--green);">$0.00</h4>
-            </div>
-            <div class="macro-total-box unpaid">
-              <span>All-Time Total Unpaid</span>
-              <h4 id="global-unpaid-all" style="color: var(--amber);">$0.00</h4>
-            </div>
-          </div>
+        
+        <div class="card">
+          <div class="card-header"><h3>💼 Share by Client (Selected Month)</h3></div>
+          <div class="chart-container" id="revenue-chart"></div>
         </div>
+
+        
+
+        
       </div>
 
       <div class="card">
