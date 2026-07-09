@@ -96,11 +96,29 @@
     .card-header h3 { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
     
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+    .grid-3 { display: grid; 
+  /* "auto-fit" ensures they move to new rows instead of shrinking to 0 width */
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+          gap: 1.5rem; 
+          margin-bottom: 1.5rem; 
+     }
     @media (max-width: 1024px) { .grid-3 { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } }
     
     .chart-container { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
-    .chart-row { display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; }
+    .chart-row { 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-size: 0.85rem; 
+        /* Forces the row to maintain visibility even when zoomed */
+        min-width: 280px; 
+        }
+      /* Add a scroll container for the chart card */
+      #revenue-chart {
+        overflow-x: auto;
+        padding-bottom: 5px;
+        min-height: 150px;
+      }
     .chart-label { width: 130px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink2); }
     .chart-bar-wrapper { flex: 1; background: var(--bg2); height: 24px; border-radius: 6px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.04); }
     .chart-bar { background: linear-gradient(90deg, var(--navy), var(--accent)); height: 100%; width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 6px; }
@@ -336,15 +354,14 @@ async function loadReportData() {
       leaderboard.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--ink3)">No records found for this month timeline.</td></tr>';
       return;
     }
-
-    const maxVal = Math.max(...data.clientBreakdown.map(c => parseFloat(c.total || 0)), 1);
+    const amounts = data.clientBreakdown.map(c => parseFloat(c.total || 0));
+    const maxVal = Math.max(...amounts, 1); // NEW: Ensures we never divide by zero
     chartContainer.innerHTML = '';
     leaderboard.innerHTML = '';
 
     data.clientBreakdown.forEach(c => {
       const totalAmt = parseFloat(c.total || 0);
-      const pct = (totalAmt / maxVal) * 100;
-
+      const pct = (totalAmt / maxVal) * 100; // NEW: Now guaranteed to be a valid number
       chartContainer.innerHTML += `
         <div class="chart-row">
           <div class="chart-label" title="${c.client_name}">${c.client_name}</div>
@@ -361,7 +378,7 @@ async function loadReportData() {
           <td style="color:#10b981; font-weight: 500;">$${parseFloat(c.paid || 0).toFixed(2)}</td>
         </tr>`;
     });
-  } catch(e) { console.error("Error updating system interface fields:", e); }
+  } catch(e) { console.error("Dashboard Render Error:", e); }
 }
 
 async function exportFilteredCSV() {
