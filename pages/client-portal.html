@@ -311,12 +311,13 @@ async function loadPortal() {
     
     // Wrap the entire logic in a try block
     try {
-        const statsPromise = apiFetch('/client/stats').catch(e => { console.error('Stats failed', e); return null; });
-        const logsPromise = apiFetch('/client/timelogs?limit=200').catch(e => { console.error('Logs failed', e); return []; });
-        const bookingsPromise = apiFetch('/client/bookings').catch(e => { console.error('Bookings failed', e); return []; });
-        
-        const [stats, logs, bookings] = await Promise.all([statsPromise, logsPromise, bookingsPromise]);
-        
+        // Fetch data in parallel
+        const [stats, logs, bookings] = await Promise.all([
+            apiFetch('/client/stats'),
+            apiFetch('/client/timelogs'),
+            apiFetch('/client/bookings')
+        ]);
+                
         if (!stats) {
             badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load. Please refresh.</span>`;
             return;
@@ -380,12 +381,13 @@ async function loadPortal() {
             }).join('');
         }
     } catch(e) { 
-        console.error("Portal load error:", e); 
-        badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load.</span>`;
+        console.error("Portal load error:", e);
+        if (badgeContainer) {
+            badgeContainer.innerHTML = `<span style="color:#ef4444;">⚠️ Failed to load dashboard data.</span>`;
     }
 }
 
-  
+}
 
 function calculateAndRenderMetrics(filteredLogs) {
   let totalPaidAdjusted = 0;
