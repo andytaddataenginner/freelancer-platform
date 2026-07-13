@@ -43,23 +43,20 @@ router.get('/stats', requireClient, async (req, res, next) => {
 });
 
 // GET /api/client/timelogs - Fixes your 404 error
+// GET /api/client/timelogs
 router.get('/timelogs', requireClient, async (req, res, next) => {
-  try {
-    const logs = await pool.query(
-        'SELECT * FROM time_logs WHERE client_id = $1 ORDER BY date DESC', [req.user.id]
-    );
-    res.json(logs.rows);
-  } catch (e) { next(e); }
+    try {
+        const result = await pool.query('SELECT * FROM time_logs WHERE client_id = $1 ORDER BY date DESC', [req.user.id]);
+        res.json(result.rows);
+    } catch (e) { next(e); }
 });
 
-// GET /api/client/bookings - Fixes your 404 error
+// GET /api/client/bookings
 router.get('/bookings', requireClient, async (req, res, next) => {
-  try {
-    const bookings = await pool.query(
-        'SELECT * FROM bookings WHERE client_id = $1 ORDER BY date ASC', [req.user.id]
-    );
-    res.json(bookings.rows);
-  } catch (e) { next(e); }
+    try {
+        const result = await pool.query('SELECT * FROM bookings WHERE client_id = $1 ORDER BY date ASC', [req.user.id]);
+        res.json(result.rows);
+    } catch (e) { next(e); }
 });
 
 // POST /api/client/payments/record
