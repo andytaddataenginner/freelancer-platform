@@ -116,7 +116,7 @@
 .global-kpi-row {
 
     display:grid;
-    grid-template-columns:repeat(6,1fr);
+    grid-template-columns:repeat(5,1fr);
     gap:1rem;
 
 }
@@ -358,7 +358,7 @@
       <h2>Reports & Analytics</h2>
       <input type="month" id="report-month" onchange="loadReportData()"/>
     </div>
-  <div class="grid-3">
+
     <div class="content">
     <!-- GLOBAL SUMMARY KPI HEADER -->
 
@@ -415,7 +415,8 @@
     </div>
 
 </div>
-    
+    <!-- MAIN DASHBOARD GRID -->
+<div class="grid-3">
         <div class="card">
           <div class="card-header"><h3>📅 Balance Sheet (Selected Month)</h3></div>
           <div class="health-container" style="margin-top: 0.5rem;">
@@ -445,7 +446,7 @@
         
 
         
-      </div>
+      </div> <!-- END GRID-3 -->
 
       <div class="card">
         <div class="card-header"><h3>📊 Performance Leaderboard Matrix (Selected Month)</h3></div>
