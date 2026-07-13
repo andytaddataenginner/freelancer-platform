@@ -287,6 +287,54 @@
               <div class="macro-total-box" style="border-left-color: var(--navy)">
                 <span>Total Volume Generated</span>
                 <h4 id="global-total-all">$0.00</h4>
+                                  <div style="
+                  margin-top:18px;
+                  padding-top:14px;
+                  border-top:1px solid var(--bg2);
+                  display:grid;
+                  grid-template-columns:1fr 1fr;
+                  gap:12px;
+                  ">
+                  
+                  <div>
+                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
+                          Active Months
+                      </span>
+                      <div id="active-months"
+                           style="font-weight:700;font-size:1.05rem;">
+                          0
+                      </div>
+                  </div>
+                  
+                  <div>
+                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
+                          Total Hours
+                      </span>
+                      <div id="total-hours"
+                           style="font-weight:700;font-size:1.05rem;">
+                          0 hrs
+                      </div>
+                  </div>
+                  
+                  <div>
+                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
+                          Clients
+                      </span>
+                      <div id="total-clients"
+                           style="font-weight:700;font-size:1.05rem;">
+                          0
+                      </div>
+                  </div>
+                  
+                  <div>
+                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
+                          Period
+                      </span>
+                      <div id="date-range"
+                           style="font-weight:700;font-size:.9rem;">
+                          —
+                      </div>
+                  </div>
               </div>
               <div class="macro-total-box paid">
                 <span>All-Time Total Paid</span>
@@ -385,6 +433,35 @@ async function loadReportData() {
     
     const allLogsRes = await fetch(`${API}/timelogs`, { headers: auth.headers() });
     const allLogs = await allLogsRes.json();
+    const uniqueMonths = new Set();
+    const uniqueClients = new Set();
+    
+    let totalHours = 0;
+    
+    let firstDate = null;
+    let lastDate = null;
+    
+    allLogs.forEach(log => {
+    
+        if(log.date){
+    
+            uniqueMonths.add(log.date.substring(0,7));
+    
+            const d = new Date(log.date);
+    
+            if(!firstDate || d < firstDate)
+                firstDate = d;
+    
+            if(!lastDate || d > lastDate)
+                lastDate = d;
+        }
+    
+        if(log.client_name)
+            uniqueClients.add(log.client_name);
+    
+        totalHours += Number(log.hours || 0);
+    
+    });
     
     let monthPaid = 0;
     let monthUnpaid = 0;
@@ -413,7 +490,28 @@ async function loadReportData() {
     document.getElementById('global-total-all').textContent = `$${(macroPaid + macroUnpaid).toFixed(2)}`;
     document.getElementById('global-paid-all').textContent = `$${macroPaid.toFixed(2)}`;
     document.getElementById('global-unpaid-all').textContent = `$${macroUnpaid.toFixed(2)}`;
+    document.getElementById("active-months").textContent =
+uniqueMonths.size;
 
+document.getElementById("total-hours").textContent =
+totalHours.toFixed(2) + " hrs";
+
+document.getElementById("total-clients").textContent =
+uniqueClients.size;
+
+if(firstDate && lastDate){
+
+    const opts = {
+        month:'short',
+        year:'numeric'
+    };
+
+    document.getElementById("date-range").textContent =
+        firstDate.toLocaleDateString('en-US',opts)
+        + " → " +
+        lastDate.toLocaleDateString('en-US',opts);
+
+}
     document.getElementById('health-paid-val').textContent = `$${monthPaid.toFixed(2)}`;
     document.getElementById('health-unpaid-val').textContent = `$${monthUnpaid.toFixed(2)}`;
     
