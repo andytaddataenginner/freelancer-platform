@@ -89,6 +89,87 @@
     }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .content { padding: 1.5rem; flex: 1; }
+    /* ── GLOBAL SUMMARY TOP KPI BAR ── */
+
+.global-summary {
+    background:white;
+    border-radius:var(--radius);
+    padding:1rem 1.25rem;
+    margin-bottom:1.5rem;
+    box-shadow:var(--shadow);
+    border:1px solid rgba(26,92,255,0.12);
+}
+
+.global-summary-header {
+    display:flex;
+    align-items:center;
+    margin-bottom:0.8rem;
+}
+
+.global-summary-header h3 {
+    font-size:1rem;
+    font-weight:600;
+    color:var(--accent);
+}
+
+
+.global-kpi-row {
+
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:1rem;
+
+}
+
+
+.global-kpi {
+
+    border-left:4px solid var(--accent);
+    padding-left:0.8rem;
+
+}
+
+
+.global-kpi span {
+
+    display:block;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    color:var(--ink3);
+    letter-spacing:.05em;
+    font-weight:500;
+
+}
+
+
+.global-kpi h4 {
+
+    margin-top:.2rem;
+    font-size:1.25rem;
+    font-weight:700;
+    color:var(--navy);
+
+}
+
+
+/* Responsive */
+
+@media(max-width:1200px){
+
+    .global-kpi-row{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+}
+
+
+@media(max-width:768px){
+
+    .global-kpi-row{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
 
     /* ── CARDS & METRICS ── */
     .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.04); margin-bottom: 1.5rem; position: relative; }
@@ -277,75 +358,64 @@
       <h2>Reports & Analytics</h2>
       <input type="month" id="report-month" onchange="loadReportData()"/>
     </div>
-
+  <div class="grid-3">
     <div class="content">
-      <div class="grid-3">
-       <div class="card" style="background: linear-gradient(180deg, #ffffff, #fdfeff); border: 1px solid rgba(26,92,255,0.15);">
-            <div class="card-header" style="border-bottom-color: rgba(26,92,255,0.08);">
-              <h3 style="color: var(--accent);">🌍 All-Time Global Ledger Summary</h3>
-            </div>
+    <!-- GLOBAL SUMMARY KPI HEADER -->
 
-           <div>
+<div class="global-summary">
 
-  <!-- KPI SUMMARY ROW -->
-  <div style="
-      display:grid;
-      grid-template-columns: repeat(2,1fr);
-      gap:0.8rem;
-      margin-bottom:1rem;
-  ">
-
-    <div class="macro-total-box" style="border-left-color:var(--navy)">
-      <span>Total Volume</span>
-      <h4 id="global-total-all">$0.00</h4>
+    <div class="global-summary-header">
+        <h3>🌍 All-Time Global Ledger Summary</h3>
     </div>
 
 
-    <div class="macro-total-box">
-      <span>Unique Clients</span>
-      <h4 id="global-client-count">0</h4>
+    <div class="global-kpi-row">
+
+
+        <div class="global-kpi">
+            <span>Total Volume</span>
+            <h4 id="global-total-all">$0.00</h4>
+        </div>
+
+
+        <div class="global-kpi">
+            <span>Unique Clients</span>
+            <h4 id="global-client-count">0</h4>
+        </div>
+
+
+        <div class="global-kpi">
+            <span>Total Hours</span>
+            <h4 id="global-hours-total">0 hrs</h4>
+        </div>
+
+
+        <div class="global-kpi">
+            <span>Active Months</span>
+            <h4 id="global-month-count">0</h4>
+        </div>
+
+
+        <div class="global-kpi">
+            <span>Coverage Period</span>
+            <h4 id="global-period">-</h4>
+        </div>
+
+
+        <div class="global-kpi">
+            <span>Paid / Unpaid</span>
+            <h4>
+              <span style="color:var(--green)" id="global-paid-all">$0</span>
+              /
+              <span style="color:var(--amber)" id="global-unpaid-all">$0</span>
+            </h4>
+        </div>
+
+
     </div>
-
-
-    <div class="macro-total-box">
-      <span>Total Hours</span>
-      <h4 id="global-hours-total">0 hrs</h4>
-    </div>
-
-
-    <div class="macro-total-box">
-      <span>Active Months</span>
-      <h4 id="global-month-count">0</h4>
-    </div>
-
-  </div>
-
-
-  <div class="macro-total-box">
-    <span>Coverage Period</span>
-    <h4 id="global-period">-</h4>
-  </div>
-
-
-  <div class="macro-total-box paid">
-    <span>All-Time Total Paid</span>
-    <h4 id="global-paid-all" style="color:var(--green)">
-      $0.00
-    </h4>
-  </div>
-
-
-  <div class="macro-total-box unpaid">
-    <span>All-Time Total Unpaid</span>
-    <h4 id="global-unpaid-all" style="color:var(--amber)">
-      $0.00
-    </h4>
-  </div>
-
 
 </div>
-            
-          </div>
+    
         <div class="card">
           <div class="card-header"><h3>📅 Balance Sheet (Selected Month)</h3></div>
           <div class="health-container" style="margin-top: 0.5rem;">
