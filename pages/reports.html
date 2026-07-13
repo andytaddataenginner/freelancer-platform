@@ -110,7 +110,7 @@
           gap: 1.5rem;
           width: 100%;
           margin-bottom: 1.5rem;
-          align-items: stretch;
+          align-items: start;
       }
       
       
@@ -213,6 +213,7 @@
 
     /* Stats Box Layout */
     .macro-total-box { border-left: 4px solid var(--accent); padding-left: 1rem; margin: 0.5rem 0; }
+    .macro-total-box h4 {font-size:1.35rem;}
     .macro-total-box.paid { border-left-color: var(--green); }
     .macro-total-box.unpaid { border-left-color: var(--amber); }
     .macro-total-box span { font-size: 0.78rem; text-transform: uppercase; color: var(--ink3); letter-spacing: 0.05em; font-weight: 500; }
@@ -284,50 +285,65 @@
               <h3 style="color: var(--accent);">🌍 All-Time Global Ledger Summary</h3>
             </div>
 
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+           <div>
 
-          <div class="macro-total-box" style="border-left-color: var(--navy)">
-            <span>Total Volume Generated</span>
-            <h4 id="global-total-all">$0.00</h4>
-          </div>
-        
-        
-          <div class="macro-total-box">
-            <span>Total Unique Clients</span>
-            <h4 id="global-client-count">0</h4>
-          </div>
-        
-        
-          <div class="macro-total-box">
-            <span>Total Hours Delivered</span>
-            <h4 id="global-hours-total">0.00 hrs</h4>
-          </div>
-        
-        
-          <div class="macro-total-box">
-            <span>Total Active Months</span>
-            <h4 id="global-month-count">0 Months</h4>
-          </div>
-        
-        
-          <div class="macro-total-box">
-            <span>Coverage Period</span>
-            <h4 id="global-period">-</h4>
-          </div>
-        
-        
-          <div class="macro-total-box paid">
-            <span>All-Time Total Paid</span>
-            <h4 id="global-paid-all" style="color: var(--green);">$0.00</h4>
-          </div>
-        
-        
-          <div class="macro-total-box unpaid">
-            <span>All-Time Total Unpaid</span>
-            <h4 id="global-unpaid-all" style="color: var(--amber);">$0.00</h4>
-          </div>
-        
-        </div>
+  <!-- KPI SUMMARY ROW -->
+  <div style="
+      display:grid;
+      grid-template-columns: repeat(2,1fr);
+      gap:0.8rem;
+      margin-bottom:1rem;
+  ">
+
+    <div class="macro-total-box" style="border-left-color:var(--navy)">
+      <span>Total Volume</span>
+      <h4 id="global-total-all">$0.00</h4>
+    </div>
+
+
+    <div class="macro-total-box">
+      <span>Unique Clients</span>
+      <h4 id="global-client-count">0</h4>
+    </div>
+
+
+    <div class="macro-total-box">
+      <span>Total Hours</span>
+      <h4 id="global-hours-total">0 hrs</h4>
+    </div>
+
+
+    <div class="macro-total-box">
+      <span>Active Months</span>
+      <h4 id="global-month-count">0</h4>
+    </div>
+
+  </div>
+
+
+  <div class="macro-total-box">
+    <span>Coverage Period</span>
+    <h4 id="global-period">-</h4>
+  </div>
+
+
+  <div class="macro-total-box paid">
+    <span>All-Time Total Paid</span>
+    <h4 id="global-paid-all" style="color:var(--green)">
+      $0.00
+    </h4>
+  </div>
+
+
+  <div class="macro-total-box unpaid">
+    <span>All-Time Total Unpaid</span>
+    <h4 id="global-unpaid-all" style="color:var(--amber)">
+      $0.00
+    </h4>
+  </div>
+
+
+</div>
             
           </div>
         <div class="card">
