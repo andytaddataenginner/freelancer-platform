@@ -126,13 +126,45 @@
 
 .global-kpi {
 
-    border-left:4px solid var(--accent);
     padding-left:0.8rem;
     min-height:55px;
     display:flex;
     flex-direction:column;
     justify-content:center;
+    border-left:4px solid var(--accent);
 
+}
+
+
+/* Different KPI Colors */
+
+.global-kpi:nth-child(1){
+    border-left-color:#1a5cff;
+}
+
+
+.global-kpi:nth-child(2){
+    border-left-color:#10b981;
+}
+
+
+.global-kpi:nth-child(3){
+    border-left-color:#8b5cf6;
+}
+
+
+.global-kpi:nth-child(4){
+    border-left-color:#f59e0b;
+}
+
+
+.global-kpi:nth-child(5){
+    border-left-color:#06b6d4;
+}
+
+
+.global-kpi:nth-child(6){
+    border-left-color:#ef4444;
 }
 
 
@@ -153,10 +185,33 @@
     margin-top:.25rem;
     font-size:1.25rem;
     font-weight:700;
-    color:var(--navy);
-    line-height:1.2;
+    color:var(--ink);
 
 }
+.global-kpi:nth-child(1) h4{
+color:#1a5cff;
+}
+
+
+.global-kpi:nth-child(2) h4{
+color:#10b981;
+}
+
+
+.global-kpi:nth-child(3) h4{
+color:#8b5cf6;
+}
+
+
+.global-kpi:nth-child(4) h4{
+color:#f59e0b;
+}
+
+
+.global-kpi:nth-child(5) h4{
+color:#06b6d4;
+}
+    
 .distribution-item {
 
     margin-bottom:12px;
@@ -195,13 +250,13 @@
     );
 
 }
-
 .payment-status {
 
 display:flex;
 align-items:center;
 justify-content:center;
-gap:15px;
+gap:18px;
+font-weight:700;
 
 }
 
@@ -212,23 +267,39 @@ gap:15px;
 display:flex;
 flex-direction:column;
 align-items:center;
-font-size:.95rem;
+font-weight:700;
 
 }
 
 
 .paid-status span:first-child {
 
+font-size:1.1rem;
 color:var(--green);
-font-size:.85rem;
 
 }
 
 
 .unpaid-status span:first-child {
 
+font-size:1.1rem;
 color:var(--amber);
-font-size:.85rem;
+
+}
+
+
+.paid-status span:last-child {
+
+color:var(--green);
+font-size:1rem;
+
+}
+
+
+.unpaid-status span:last-child {
+
+color:var(--amber);
+font-size:1rem;
 
 }
 
@@ -330,12 +401,21 @@ font-size:.85rem;
      }
 
 
-   .chart-row {
-    display:grid;
-    grid-template-columns:minmax(120px,180px) 1fr 90px;
-    align-items:center;
-    gap:12px;
-    width:100%;
+    .chart-row {
+
+display:grid;
+
+grid-template-columns:
+90px
+minmax(80px,1fr)
+75px;
+
+align-items:center;
+
+gap:8px;
+
+width:100%;
+
 }
     #revenue-chart {
     overflow:hidden;
@@ -361,23 +441,35 @@ flex:1;
 }
 
 .chart-bar-wrapper {
-    width:100%;
-    height:28px;
-    background:#eef1f8;
-    border-radius:8px;
-    overflow:hidden;
+
+height:22px;
+
+background:#e8edf7;
+
+border-radius:8px;
+
+overflow:hidden;
+
+width:100%;
+
 }
 
 
-.chart-bar {
+    .chart-bar {
+    
     height:100%;
+    
+    min-width:8px;
+    
     background:linear-gradient(
-        90deg,
-        var(--navy),
-        var(--accent)
+    90deg,
+    #0d2353,
+    #1a5cff
     );
+    
     border-radius:8px;
-}
+    
+    }
 
 
 .chart-val {
@@ -838,8 +930,18 @@ style="width:${distributionPct}%">
           <td><strong>${c.client_name}</strong></td>
           <td><span style="text-transform:capitalize; font-size: 0.8rem; background: var(--bg2); padding: 3px 8px; border-radius: 4px;">${c.rate_type}</span></td>
           <td>${parseFloat(c.hours).toFixed(2)} hrs</td>
-          <td><strong>$${totalAmt.toFixed(2)}</strong></td>
-          <td style="color:#10b981; font-weight: 500;">$${parseFloat(c.paid || 0).toFixed(2)}</td>
+          <td style="
+color:#ef4444;
+font-weight:700;">
+$${totalAmt.toFixed(2)}
+</td>
+
+
+<td style="
+color:#10b981;
+font-weight:700;">
+$${parseFloat(c.paid || 0).toFixed(2)}
+</td>
         </tr>`;
     });
   } catch(e) { console.error("Dashboard Render Error:", e); }
