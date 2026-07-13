@@ -118,7 +118,8 @@
 
     display:grid;
     grid-template-columns:repeat(6,1fr);
-    gap:1rem;
+    gap:1.2rem;
+    align-items:center;
 
 }
 
@@ -127,6 +128,10 @@
 
     border-left:4px solid var(--accent);
     padding-left:0.8rem;
+    min-height:55px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
 
 }
 
@@ -145,15 +150,16 @@
 
 .global-kpi h4 {
 
-    margin-top:.2rem;
+    margin-top:.25rem;
     font-size:1.25rem;
     font-weight:700;
     color:var(--navy);
+    line-height:1.2;
 
 }
 .distribution-item {
 
-    margin-bottom:15px;
+    margin-bottom:12px;
 
 }
 
@@ -171,7 +177,7 @@
 
 .distribution-track {
 
-    height:18px;
+    height:14px;
     background:#eef1f8;
     border-radius:10px;
     overflow:hidden;
@@ -187,6 +193,42 @@
         var(--gold2),
         var(--accent)
     );
+
+}
+
+.payment-status {
+
+display:flex;
+align-items:center;
+justify-content:center;
+gap:15px;
+
+}
+
+
+.paid-status,
+.unpaid-status {
+
+display:flex;
+flex-direction:column;
+align-items:center;
+font-size:.95rem;
+
+}
+
+
+.paid-status span:first-child {
+
+color:var(--green);
+font-size:.85rem;
+
+}
+
+
+.unpaid-status span:first-child {
+
+color:var(--amber);
+font-size:.85rem;
 
 }
 
@@ -235,9 +277,16 @@
       
       
       .grid-3 .card {
-          margin-bottom: 0;
-          min-width: 0;
-      }
+
+    margin-bottom:0;
+    min-width:0;
+
+    height:430px;
+
+    display:flex;
+    flex-direction:column;
+
+}
       
       
       /* Client Chart card */
@@ -303,7 +352,13 @@
     font-size:0.85rem;
 }
 
+#revenue-chart,
+#client-chart {
 
+overflow-y:auto;
+flex:1;
+
+}
 
 .chart-bar-wrapper {
     width:100%;
@@ -423,12 +478,6 @@
 
 
         <div class="global-kpi">
-            <span>Unique Clients</span>
-            <h4 id="global-client-count">0</h4>
-        </div>
-
-
-        <div class="global-kpi">
             <span>Total Hours</span>
             <h4 id="global-hours-total">0 hrs</h4>
         </div>
@@ -438,41 +487,41 @@
             <span>Active Months</span>
             <h4 id="global-month-count">0</h4>
         </div>
+        <div class="global-kpi">
+    <span>Payment Status</span>
+
+    <h4 class="payment-status">
+
+<div class="paid-status">
+
+<span>✓</span>
+<span id="global-paid-all">$0</span>
+
+</div>
 
 
+<div class="unpaid-status">
+
+<span>⚠</span>
+<span id="global-unpaid-all">$0</span>
+
+</div>
+
+</h4>
+
+</div>
+       
         <div class="global-kpi">
             <span>Coverage Period</span>
             <h4 id="global-period">-</h4>
         </div>
+      <div class="global-kpi">
+            <span>Unique Clients</span>
+            <h4 id="global-client-count">0</h4>
+        </div>
 
 
-        <div class="global-kpi">
-    <span>Payment Status</span>
-
-    <h4 style="font-size:0.95rem;">
-
-        <span style="
-            color:var(--green);
-            display:inline-block;
-            margin-right:10px;">
-            
-            ✓ <span id="global-paid-all">$0</span>
-
-        </span>
-
-
-        <span style="
-            color:var(--amber);
-            display:inline-block;">
-            
-            ⚠ <span id="global-unpaid-all">$0</span>
-
-        </span>
-
-    </h4>
-
-</div>
-
+      
 
     </div>
 
@@ -740,7 +789,10 @@ if(minDate && maxDate){
 
     data.clientBreakdown.forEach(c => {
       const totalAmt = parseFloat(c.total || 0);
-      const pct = (totalAmt / maxVal) * 100;
+      const pct = Math.max(
+        (totalAmt / maxVal) * 100,
+        8
+        );
       chartContainer.innerHTML += `
         <div class="chart-row">
           <div class="chart-label" title="${c.client_name}">${c.client_name}</div>
