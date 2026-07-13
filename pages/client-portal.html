@@ -322,7 +322,6 @@ async function loadPortal() {
     currentHourlyRate = parseFloat(stats.hourlyRate || 0);
     currentCreditBalance = parseFloat(stats.creditBalance || 0); // ✅ Grab exact true database balance here
 
-    const badgeContainer = document.getElementById('engagement-badge-container');
     if (isFixed) {
       badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
     } else {
