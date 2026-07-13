@@ -306,82 +306,86 @@ let allLogs = [];
 let currentTab = 'all';
 let currentHourlyRate = 20; 
 let currentCreditBalance = 0; // Global reference placeholder to stop tab-switch overrides
-
 async function loadPortal() {
-  const badgeContainer = document.getElementById('engagement-badge-container');
-  const statsPromise = apiFetch('/client/stats').catch(e => { console.error('Stats failed', e); return null; });
-  const logsPromise = apiFetch('/client/timelogs?limit=200').catch(e => { console.error('Logs failed', e); return []; });
-  const bookingsPromise = apiFetch('/client/bookings').catch(e => { console.error('Bookings failed', e); return []; });
-  const [stats, logs, bookings] = await Promise.all([statsPromise, logsPromise, bookingsPromise]);
-    // Check if critical data (stats) exists before continuing
-    if (!stats) {
-      badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load. Please refresh.</span>`;
-      return;
+    const badgeContainer = document.getElementById('engagement-badge-container');
+    
+    // Wrap the entire logic in a try block
+    try {
+        const statsPromise = apiFetch('/client/stats').catch(e => { console.error('Stats failed', e); return null; });
+        const logsPromise = apiFetch('/client/timelogs?limit=200').catch(e => { console.error('Logs failed', e); return []; });
+        const bookingsPromise = apiFetch('/client/bookings').catch(e => { console.error('Bookings failed', e); return []; });
+        
+        const [stats, logs, bookings] = await Promise.all([statsPromise, logsPromise, bookingsPromise]);
+        
+        if (!stats) {
+            badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load. Please refresh.</span>`;
+            return;
+        }
+        
+        const isFixed = stats.rateType === 'fixed';
+        currentHourlyRate = parseFloat(stats.hourlyRate || 0);
+        currentCreditBalance = parseFloat(stats.creditBalance || 0);
+
+        if (isFixed) {
+            badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
+        } else {
+            badgeContainer.innerHTML = `<span style="background:rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #4ade80; display: inline-flex; align-items: center; gap: 0.5rem;"><span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate.toFixed(2)}/hr)</span>`;
+        }
+
+        const todayStr = new Date().toISOString().slice(0,10);
+        const futureBookings = bookings.filter(b => {
+            const bDate = b.date ? b.date.slice(0,10) : '';
+            return bDate >= todayStr && b.status !== 'cancelled';
+        });
+        document.getElementById('s-bookings').textContent = futureBookings.length;
+
+        if (isFixed) {
+            document.getElementById('fixed-notice').style.display = 'block';
+            document.getElementById('fixed-section').style.display = 'block';
+            document.getElementById('hourly-section').style.display = 'none';
+            document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
+            document.getElementById('s-paid').textContent  = '$' + parseFloat(stats.totalPaid ||0).toFixed(2);
+            document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid ||0).toFixed(2);
+            document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
+            document.getElementById('s-hours').textContent  = '—';
+
+            const isPaid = stats.fixedStatus === 'paid';
+            document.getElementById('fixed-status-display').innerHTML = isPaid
+                ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div></div>`
+                : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div></div>`;
+        } else {
+            document.getElementById('fixed-notice').style.display = 'none';
+            document.getElementById('fixed-section').style.display = 'none';
+            document.getElementById('hourly-section').style.display = 'block';
+            allLogs = logs;
+            calculateAndRenderMetrics(allLogs);
+        }
+
+        const upcoming = document.getElementById('upcoming-sessions');
+        if (!futureBookings.length) {
+            upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions.</p>';
+        } else {
+            upcoming.innerHTML = futureBookings.map(b => {
+                let formattedDate = b.date;
+                try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
+                return `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--paper2)">
+                  <div>
+                    <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
+                    <div style="color:var(--ink2);font-size:0.82rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
+                    ${b.message?`<div style="color:var(--ink3);font-size:0.8rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
+                  </div>
+                  <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='pending'?'badge-amber':'badge-gray'}">${b.status}</span>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) { 
+        console.error("Portal load error:", e); 
+        badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load.</span>`;
     }
-    const isFixed = stats.rateType === 'fixed';
-    currentHourlyRate = parseFloat(stats.hourlyRate || 0);
-    currentCreditBalance = parseFloat(stats.creditBalance || 0); // ✅ Grab exact true database balance here
-
-    if (isFixed) {
-      badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
-    } else {
-      badgeContainer.innerHTML = `<span style="background:rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #4ade80; display: inline-flex; align-items: center; gap: 0.5rem;"><span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate.toFixed(2)}/hr)</span>`;
-    }
-
-    const todayStr = new Date().toISOString().slice(0,10);
-    const futureBookings = bookings.filter(b => {
-      const bDate = b.date ? b.date.slice(0,10) : '';
-      return bDate >= todayStr && b.status !== 'cancelled';
-    });
-    document.getElementById('s-bookings').textContent = futureBookings.length;
-
-    if (isFixed) {
-      document.getElementById('fixed-notice').style.display = 'block';
-      document.getElementById('fixed-section').style.display = 'block';
-      document.getElementById('hourly-section').style.display = 'none';
-      document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
-
-      document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid   ||0).toFixed(2);
-      document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid ||0).toFixed(2);
-      document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
-      document.getElementById('s-hours').textContent  = '—';
-
-      const isPaid = stats.fixedStatus === 'paid';
-      document.getElementById('fixed-status-display').innerHTML = isPaid
-        ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div></div>`
-        : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div></div>`;
-    } else {
-      document.getElementById('fixed-notice').style.display = 'none';
-      document.getElementById('fixed-section').style.display = 'none';
-      document.getElementById('hourly-section').style.display = 'block';
-      
-      allLogs = logs;
-      calculateAndRenderMetrics(allLogs);
-    }
-
-    const upcoming = document.getElementById('upcoming-sessions');
-    if (!futureBookings.length) {
-      upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions.</p>';
-    } else {
-      upcoming.innerHTML = futureBookings.map(b => {
-        let formattedDate = b.date;
-        try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
-        return `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--paper2)">
-          <div>
-            <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
-            <div style="color:var(--ink2);font-size:0.82rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
-            ${b.message?`<div style="color:var(--ink3);font-size:0.8rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
-          </div>
-          <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='pending'?'badge-amber':'badge-gray'}">${b.status}</span>
-        </div>`;
-      }).join('');
-    }
-  } catch(e) { 
-  console.error("Portal load error:", e); 
-  badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load.</span>`;
-  }
 }
+
+  
 
 function calculateAndRenderMetrics(filteredLogs) {
   let totalPaidAdjusted = 0;
