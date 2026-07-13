@@ -27,4 +27,11 @@ function requireClient(req, res, next) {
   });
 }
 
-module.exports = { requireAuth, requireFreelancer, requireClient };
+function requireAdmin(req, res, next) {
+  requireAuth(req, res, () => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    next();
+  });
+}
+
+module.exports = { requireAuth, requireFreelancer, requireClient, requireAdmin };
