@@ -10,9 +10,9 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     let params = [req.user.id];
     let i = 2;
     if (client_id)      { where.push(`t.client_id = $${i++}`);       params.push(client_id); }
-    if (from)           { where.push(`t.date >= $${i++}::date`);      params.push(from); }
-    if (to)             { where.push(`t.date <= $${i++}::date`);      params.push(to); }
-    if (payment_status) { where.push(`t.payment_status = $${i++}`);   params.push(payment_status); }
+    if (from)           { where.push(`t.date >= $${i++}::date`);     params.push(from); }
+    if (to)             { where.push(`t.date <= $${i++}::date`);     params.push(to); }
+    if (payment_status) { where.push(`t.payment_status = $${i++}`);  params.push(payment_status); }
     
     const { rows } = await pool.query(`
       SELECT t.*, u.name AS client_name, u.company AS client_company
@@ -27,14 +27,12 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 });
 
 // POST /api/timelogs
-// Creates a log entry and automatically checks if the client has credit available to cover it instantly
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { client_id, date, hours, task_description, source = 'manual' } = req.body;
     if (!client_id || !date || !hours || !task_description)
       return res.status(400).json({ error: 'client_id, date, hours, task_description required' });
 
-    // Auto-calculate amount from client billing rate
     const clientInfo = await pool.query(
       'SELECT c.rate_type, c.hourly_rate, c.fixed_price, COALESCE(c.credit_balance, 0)::float AS credit_balance FROM clients c WHERE c.user_id = $1',
       [client_id]
@@ -51,7 +49,6 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     let paymentStatus = 'unpaid';
     let currentCredit = c.credit_balance || 0;
 
-    // Auto-consume credit balance if there's a surplus available
     if (currentCredit >= amount && amount > 0) {
       paymentStatus = 'paid';
       currentCredit -= amount;
@@ -62,7 +59,6 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
     `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2), paymentStatus]);
 
-    // Commit updated balance back to database
     await pool.query(
       'UPDATE clients SET credit_balance = $1 WHERE user_id = $2',
       [currentCredit, client_id]
@@ -101,7 +97,6 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
 });
 
 // PUT /api/timelogs/:id
-// Recalculates value shifts and handles dynamic credit accounting adjustments smoothly
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
@@ -130,4 +125,11 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
       UPDATE time_logs
       SET hours=$1, task_description=$2, date=$3, amount=COALESCE($4::numeric, amount)
       WHERE id=$5 AND freelancer_id=$6 RETURNING *
-    `,
+    `, [hours, task_description, date, finalAmount, req.params.id, req.user.id]);
+
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
+  } catch (e) { next(e); }
+});
+
+module.exports = router;
