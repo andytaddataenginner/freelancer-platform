@@ -309,11 +309,16 @@ let currentCreditBalance = 0; // Global reference placeholder to stop tab-switch
 
 async function loadPortal() {
   try {
-    const [stats, logs, bookings] = await Promise.all([
-      apiFetch('/client/stats'),
-      apiFetch('/client/timelogs?limit=200'),
-      apiFetch('/client/bookings')
+     const [stats, logs, bookings] = await Promise.all([
+      apiFetch('/client/stats').catch(e => { console.error('Stats load failed', e); return null; }),
+      apiFetch('/client/timelogs?limit=200').catch(e => { console.error('Logs load failed', e); return []; }),
+      apiFetch('/client/bookings').catch(e => { console.error('Bookings load failed', e); return []; })
     ]);
+    // Check if critical data (stats) exists before continuing
+    if (!stats) {
+      document.getElementById('engagement-badge-container').innerHTML = "Error loading portal data.";
+      return;
+    }
     const isFixed = stats.rateType === 'fixed';
     currentHourlyRate = parseFloat(stats.hourlyRate || 0);
     currentCreditBalance = parseFloat(stats.creditBalance || 0); // ✅ Grab exact true database balance here
