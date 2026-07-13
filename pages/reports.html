@@ -283,68 +283,52 @@
             <div class="card-header" style="border-bottom-color: rgba(26,92,255,0.08);">
               <h3 style="color: var(--accent);">🌍 All-Time Global Ledger Summary</h3>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div class="macro-total-box" style="border-left-color: var(--navy)">
-                <span>Total Volume Generated</span>
-                <h4 id="global-total-all">$0.00</h4>
-                                  <div style="
-                  margin-top:18px;
-                  padding-top:14px;
-                  border-top:1px solid var(--bg2);
-                  display:grid;
-                  grid-template-columns:1fr 1fr;
-                  gap:12px;
-                  ">
-                  
-                  <div>
-                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
-                          Active Months
-                      </span>
-                      <div id="active-months"
-                           style="font-weight:700;font-size:1.05rem;">
-                          0
-                      </div>
-                  </div>
-                  
-                  <div>
-                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
-                          Total Hours
-                      </span>
-                      <div id="total-hours"
-                           style="font-weight:700;font-size:1.05rem;">
-                          0 hrs
-                      </div>
-                  </div>
-                  
-                  <div>
-                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
-                          Clients
-                      </span>
-                      <div id="total-clients"
-                           style="font-weight:700;font-size:1.05rem;">
-                          0
-                      </div>
-                  </div>
-                  
-                  <div>
-                      <span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;">
-                          Period
-                      </span>
-                      <div id="date-range"
-                           style="font-weight:700;font-size:.9rem;">
-                          —
-                      </div>
-                  </div>
-              </div>
-              <div class="macro-total-box paid">
-                <span>All-Time Total Paid</span>
-                <h4 id="global-paid-all" style="color: var(--green);">$0.00</h4>
-              </div>
-              <div class="macro-total-box unpaid">
-                <span>All-Time Total Unpaid</span>
-                <h4 id="global-unpaid-all" style="color: var(--amber);">$0.00</h4>
-              </div>
-            </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+
+          <div class="macro-total-box" style="border-left-color: var(--navy)">
+            <span>Total Volume Generated</span>
+            <h4 id="global-total-all">$0.00</h4>
+          </div>
+        
+        
+          <div class="macro-total-box">
+            <span>Total Unique Clients</span>
+            <h4 id="global-client-count">0</h4>
+          </div>
+        
+        
+          <div class="macro-total-box">
+            <span>Total Hours Delivered</span>
+            <h4 id="global-hours-total">0.00 hrs</h4>
+          </div>
+        
+        
+          <div class="macro-total-box">
+            <span>Total Active Months</span>
+            <h4 id="global-month-count">0 Months</h4>
+          </div>
+        
+        
+          <div class="macro-total-box">
+            <span>Coverage Period</span>
+            <h4 id="global-period">-</h4>
+          </div>
+        
+        
+          <div class="macro-total-box paid">
+            <span>All-Time Total Paid</span>
+            <h4 id="global-paid-all" style="color: var(--green);">$0.00</h4>
+          </div>
+        
+        
+          <div class="macro-total-box unpaid">
+            <span>All-Time Total Unpaid</span>
+            <h4 id="global-unpaid-all" style="color: var(--amber);">$0.00</h4>
+          </div>
+        
+        </div>
+            
           </div>
         <div class="card">
           <div class="card-header"><h3>📅 Balance Sheet (Selected Month)</h3></div>
@@ -433,42 +417,47 @@ async function loadReportData() {
     
     const allLogsRes = await fetch(`${API}/timelogs`, { headers: auth.headers() });
     const allLogs = await allLogsRes.json();
-    const uniqueMonths = new Set();
-    const uniqueClients = new Set();
-    
-    let totalHours = 0;
-    
-    let firstDate = null;
-    let lastDate = null;
-    
-    allLogs.forEach(log => {
-    
-        if(log.date){
-    
-            uniqueMonths.add(log.date.substring(0,7));
-    
-            const d = new Date(log.date);
-    
-            if(!firstDate || d < firstDate)
-                firstDate = d;
-    
-            if(!lastDate || d > lastDate)
-                lastDate = d;
-        }
-    
-        if(log.client_name)
-            uniqueClients.add(log.client_name);
-    
-        totalHours += Number(log.hours || 0);
-    
-    });
     
     let monthPaid = 0;
     let monthUnpaid = 0;
     let macroPaid = 0;
     let macroUnpaid = 0;
     
+    let totalHours = 0;
+    let uniqueClients = new Set();
+    let activeMonths = new Set();
+    
+    let minDate = null;
+    let maxDate = null;
+    
     allLogs.forEach(log => {
+
+      if(log.client_name){
+    uniqueClients.add(log.client_name);
+}
+
+
+totalHours += parseFloat(log.hours || 0);
+
+
+
+if(log.date){
+
+    const logMonth = log.date.substring(0,7);
+
+    activeMonths.add(logMonth);
+
+
+    if(!minDate || log.date < minDate){
+        minDate = log.date;
+    }
+
+
+    if(!maxDate || log.date > maxDate){
+        maxDate = log.date;
+    }
+
+}
       const amt = parseFloat(log.amount || 0);
       const isPaid = log.payment_status === 'paid';
       
@@ -488,30 +477,33 @@ async function loadReportData() {
     });
 
     document.getElementById('global-total-all').textContent = `$${(macroPaid + macroUnpaid).toFixed(2)}`;
-    document.getElementById('global-paid-all').textContent = `$${macroPaid.toFixed(2)}`;
-    document.getElementById('global-unpaid-all').textContent = `$${macroUnpaid.toFixed(2)}`;
-    document.getElementById("active-months").textContent =
-uniqueMonths.size;
 
-document.getElementById("total-hours").textContent =
-totalHours.toFixed(2) + " hrs";
-
-document.getElementById("total-clients").textContent =
+    document.getElementById('global-client-count').textContent =
 uniqueClients.size;
 
-if(firstDate && lastDate){
 
-    const opts = {
-        month:'short',
-        year:'numeric'
-    };
+document.getElementById('global-hours-total').textContent =
+`${totalHours.toFixed(2)} hrs`;
 
-    document.getElementById("date-range").textContent =
-        firstDate.toLocaleDateString('en-US',opts)
-        + " → " +
-        lastDate.toLocaleDateString('en-US',opts);
+
+document.getElementById('global-month-count').textContent =
+`${activeMonths.size} Months`;
+
+
+if(minDate && maxDate){
+
+    const startYear = new Date(minDate).getFullYear();
+    const endYear = new Date(maxDate).getFullYear();
+
+    document.getElementById('global-period').textContent =
+    startYear === endYear 
+    ? startYear 
+    : `${startYear} - ${endYear}`;
 
 }
+    document.getElementById('global-paid-all').textContent = `$${macroPaid.toFixed(2)}`;
+    document.getElementById('global-unpaid-all').textContent = `$${macroUnpaid.toFixed(2)}`;
+
     document.getElementById('health-paid-val').textContent = `$${monthPaid.toFixed(2)}`;
     document.getElementById('health-unpaid-val').textContent = `$${monthUnpaid.toFixed(2)}`;
     
