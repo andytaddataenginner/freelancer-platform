@@ -89,87 +89,6 @@
     }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .content { padding: 1.5rem; flex: 1; }
-    /* ── GLOBAL SUMMARY TOP KPI BAR ── */
-
-.global-summary {
-    background:white;
-    border-radius:var(--radius);
-    padding:1rem 1.25rem;
-    margin-bottom:1.5rem;
-    box-shadow:var(--shadow);
-    border:1px solid rgba(26,92,255,0.12);
-}
-
-.global-summary-header {
-    display:flex;
-    align-items:center;
-    margin-bottom:0.8rem;
-}
-
-.global-summary-header h3 {
-    font-size:1rem;
-    font-weight:600;
-    color:var(--accent);
-}
-
-
-.global-kpi-row {
-
-    display:grid;
-    grid-template-columns:repeat(6,1fr);
-    gap:1rem;
-
-}
-
-
-.global-kpi {
-
-    border-left:4px solid var(--accent);
-    padding-left:0.8rem;
-
-}
-
-
-.global-kpi span {
-
-    display:block;
-    font-size:0.72rem;
-    text-transform:uppercase;
-    color:var(--ink3);
-    letter-spacing:.05em;
-    font-weight:500;
-
-}
-
-
-.global-kpi h4 {
-
-     margin-top:.2rem;
-    font-size:1.1rem;
-    font-weight:700;
-    color:var(--navy);
-
-}
-
-
-/* Responsive */
-
-@media(max-width:1200px){
-
-    .global-kpi-row{
-        grid-template-columns:repeat(3,1fr);
-    }
-
-}
-
-
-@media(max-width:768px){
-
-    .global-kpi-row{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-}
 
     /* ── CARDS & METRICS ── */
     .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.04); margin-bottom: 1.5rem; position: relative; }
@@ -186,13 +105,13 @@
       
       /* REPORT DASHBOARD */
       .grid-3 {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:1.5rem;
-    width:100%;
-    margin-bottom:1.5rem;
-    align-items:start;
-}
+          display: grid;
+          grid-template-columns: 260px 300px minmax(350px,1fr);
+          gap: 1.5rem;
+          width: 100%;
+          margin-bottom: 1.5rem;
+          align-items: stretch;
+      }
       
       
       .grid-3 .card {
@@ -294,7 +213,6 @@
 
     /* Stats Box Layout */
     .macro-total-box { border-left: 4px solid var(--accent); padding-left: 1rem; margin: 0.5rem 0; }
-    .macro-total-box h4 {font-size:1.35rem;}
     .macro-total-box.paid { border-left-color: var(--green); }
     .macro-total-box.unpaid { border-left-color: var(--amber); }
     .macro-total-box span { font-size: 0.78rem; text-transform: uppercase; color: var(--ink3); letter-spacing: 0.05em; font-weight: 500; }
@@ -360,63 +278,26 @@
     </div>
 
     <div class="content">
-    <!-- GLOBAL SUMMARY KPI HEADER -->
-
-<div class="global-summary">
-
-    <div class="global-summary-header">
-        <h3>🌍 All-Time Global Ledger Summary</h3>
-    </div>
-
-
-    <div class="global-kpi-row">
-
-
-        <div class="global-kpi">
-            <span>Total Volume</span>
-            <h4 id="global-total-all">$0.00</h4>
-        </div>
-
-
-        <div class="global-kpi">
-            <span>Unique Clients</span>
-            <h4 id="global-client-count">0</h4>
-        </div>
-
-
-        <div class="global-kpi">
-            <span>Total Hours</span>
-            <h4 id="global-hours-total">0 hrs</h4>
-        </div>
-
-
-        <div class="global-kpi">
-            <span>Active Months</span>
-            <h4 id="global-month-count">0</h4>
-        </div>
-
-
-        <div class="global-kpi">
-            <span>Coverage Period</span>
-            <h4 id="global-period">-</h4>
-        </div>
-
-
-        <div class="global-kpi">
-            <span>Paid / Unpaid</span>
-            <h4>
-              <span style="color:var(--green)" id="global-paid-all">$0</span>
-              /
-              <span style="color:var(--amber)" id="global-unpaid-all">$0</span>
-            </h4>
-        </div>
-
-
-    </div>
-
-</div>
-    <!-- MAIN DASHBOARD GRID -->
-<div class="grid-3">
+      <div class="grid-3">
+       <div class="card" style="background: linear-gradient(180deg, #ffffff, #fdfeff); border: 1px solid rgba(26,92,255,0.15);">
+            <div class="card-header" style="border-bottom-color: rgba(26,92,255,0.08);">
+              <h3 style="color: var(--accent);">🌍 All-Time Global Ledger Summary</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div class="macro-total-box" style="border-left-color: var(--navy)">
+                <span>Total Volume Generated</span>
+                <h4 id="global-total-all">$0.00</h4>
+              </div>
+              <div class="macro-total-box paid">
+                <span>All-Time Total Paid</span>
+                <h4 id="global-paid-all" style="color: var(--green);">$0.00</h4>
+              </div>
+              <div class="macro-total-box unpaid">
+                <span>All-Time Total Unpaid</span>
+                <h4 id="global-unpaid-all" style="color: var(--amber);">$0.00</h4>
+              </div>
+            </div>
+          </div>
         <div class="card">
           <div class="card-header"><h3>📅 Balance Sheet (Selected Month)</h3></div>
           <div class="health-container" style="margin-top: 0.5rem;">
@@ -446,7 +327,7 @@
         
 
         
-      </div> <!-- END GRID-3 -->
+      </div>
 
       <div class="card">
         <div class="card-header"><h3>📊 Performance Leaderboard Matrix (Selected Month)</h3></div>
@@ -510,41 +391,7 @@ async function loadReportData() {
     let macroPaid = 0;
     let macroUnpaid = 0;
     
-    let totalHours = 0;
-    let uniqueClients = new Set();
-    let activeMonths = new Set();
-    
-    let minDate = null;
-    let maxDate = null;
-    
     allLogs.forEach(log => {
-
-      if(log.client_name){
-    uniqueClients.add(log.client_name);
-}
-
-
-totalHours += parseFloat(log.hours || 0);
-
-
-
-if(log.date){
-
-    const logMonth = log.date.substring(0,7);
-
-    activeMonths.add(logMonth);
-
-
-    if(!minDate || log.date < minDate){
-        minDate = log.date;
-    }
-
-
-    if(!maxDate || log.date > maxDate){
-        maxDate = log.date;
-    }
-
-}
       const amt = parseFloat(log.amount || 0);
       const isPaid = log.payment_status === 'paid';
       
@@ -564,30 +411,6 @@ if(log.date){
     });
 
     document.getElementById('global-total-all').textContent = `$${(macroPaid + macroUnpaid).toFixed(2)}`;
-
-    document.getElementById('global-client-count').textContent =
-uniqueClients.size;
-
-
-document.getElementById('global-hours-total').textContent =
-`${totalHours.toFixed(2)} hrs`;
-
-
-document.getElementById('global-month-count').textContent =
-`${activeMonths.size} Months`;
-
-
-if(minDate && maxDate){
-
-    const startYear = new Date(minDate).getFullYear();
-    const endYear = new Date(maxDate).getFullYear();
-
-    document.getElementById('global-period').textContent =
-    startYear === endYear 
-    ? startYear 
-    : `${startYear} - ${endYear}`;
-
-}
     document.getElementById('global-paid-all').textContent = `$${macroPaid.toFixed(2)}`;
     document.getElementById('global-unpaid-all').textContent = `$${macroUnpaid.toFixed(2)}`;
 
