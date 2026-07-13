@@ -151,6 +151,44 @@
     color:var(--navy);
 
 }
+.distribution-item {
+
+    margin-bottom:15px;
+
+}
+
+
+.distribution-header {
+
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:6px;
+    font-size:.85rem;
+    font-weight:600;
+
+}
+
+
+.distribution-track {
+
+    height:18px;
+    background:#eef1f8;
+    border-radius:10px;
+    overflow:hidden;
+
+}
+
+
+.distribution-fill {
+
+    height:100%;
+    background:linear-gradient(
+        90deg,
+        var(--gold2),
+        var(--accent)
+    );
+
+}
 
 
 /* Responsive */
@@ -243,11 +281,11 @@
      }
 
 
- .chart-row {
+   .chart-row {
     display:grid;
-    grid-template-columns: 120px minmax(0,1fr) 85px;
+    grid-template-columns:minmax(120px,180px) 1fr 90px;
     align-items:center;
-    gap:10px;
+    gap:12px;
     width:100%;
 }
     #revenue-chart {
@@ -256,35 +294,41 @@
     min-height:150px;
     width:100%;
  }
-    .chart-label { 
-    font-weight:500;
+    .chart-label {
+    font-weight:600;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
     color:var(--ink2);
-    }
+    font-size:0.85rem;
+}
+
 
 
 .chart-bar-wrapper {
     width:100%;
-    height:24px;
-    background:var(--bg2);
-    border-radius:6px;
+    height:28px;
+    background:#eef1f8;
+    border-radius:8px;
     overflow:hidden;
 }
-   .chart-bar {
-    background:linear-gradient(90deg,var(--navy),var(--accent));
+
+
+.chart-bar {
     height:100%;
-    border-radius:6px;
-    transition:width 0.8s ease;
+    background:linear-gradient(
+        90deg,
+        var(--navy),
+        var(--accent)
+    );
+    border-radius:8px;
 }
 
 
 .chart-val {
     text-align:right;
-    font-weight:600;
-    font-size:0.9rem;
-    white-space:nowrap;
+    font-weight:700;
+    font-size:0.85rem;
 }
 
     /* Financial Progress Bars Layout */
@@ -403,13 +447,31 @@
 
 
         <div class="global-kpi">
-            <span>Paid / Unpaid</span>
-            <h4>
-              <span style="color:var(--green)" id="global-paid-all">$0</span>
-              /
-              <span style="color:var(--amber)" id="global-unpaid-all">$0</span>
-            </h4>
-        </div>
+    <span>Payment Status</span>
+
+    <h4 style="font-size:0.95rem;">
+
+        <span style="
+            color:var(--green);
+            display:inline-block;
+            margin-right:10px;">
+            
+            ✓ <span id="global-paid-all">$0</span>
+
+        </span>
+
+
+        <span style="
+            color:var(--amber);
+            display:inline-block;">
+            
+            ⚠ <span id="global-unpaid-all">$0</span>
+
+        </span>
+
+    </h4>
+
+</div>
 
 
     </div>
@@ -496,9 +558,9 @@
             <h3>📈 Client Revenue Distribution</h3>
         </div>
 
-        <div id="client-chart">
-            <!-- future chart / visualization -->
-        </div>
+        <div id="client-chart" class="chart-container">
+
+     </div>
 
     </div>
 
@@ -662,6 +724,7 @@ if(minDate && maxDate){
     }
 
     const chartContainer = document.getElementById('revenue-chart');
+    const distributionChart = document.getElementById('client-chart');
     const leaderboard = document.getElementById('leaderboard-body');
     
     if(!data.clientBreakdown || data.clientBreakdown.length === 0) {
@@ -672,6 +735,7 @@ if(minDate && maxDate){
     const amounts = data.clientBreakdown.map(c => parseFloat(c.total || 0));
     const maxVal = Math.max(...amounts, 1);
     chartContainer.innerHTML = '';
+    distributionChart.innerHTML = '';
     leaderboard.innerHTML = '';
 
     data.clientBreakdown.forEach(c => {
@@ -683,6 +747,39 @@ if(minDate && maxDate){
           <div class="chart-bar-wrapper"><div class="chart-bar" style="width: ${pct}%"></div></div>
           <div class="chart-val">$${totalAmt.toFixed(2)}</div>
         </div>`;
+
+      const distributionPct =
+(totalAmt / (macroPaid + macroUnpaid)) * 100;
+
+
+distributionChart.innerHTML += `
+
+<div class="distribution-item">
+
+
+<div class="distribution-header">
+
+<span>${c.client_name}</span>
+
+<span>
+${distributionPct.toFixed(1)}%
+</span>
+
+</div>
+
+
+<div class="distribution-track">
+
+<div class="distribution-fill"
+style="width:${distributionPct}%">
+</div>
+
+</div>
+
+
+</div>
+
+`;
 
       leaderboard.innerHTML += `
         <tr>
