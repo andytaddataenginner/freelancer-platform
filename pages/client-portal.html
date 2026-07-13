@@ -377,7 +377,10 @@ async function loadPortal() {
         </div>`;
       }).join('');
     }
-  } catch(e) { console.error(e); }
+  } catch(e) { 
+  console.error("Portal load error:", e); 
+  badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load.</span>`;
+  }
 }
 
 function calculateAndRenderMetrics(filteredLogs) {
