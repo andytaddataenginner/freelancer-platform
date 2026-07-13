@@ -187,13 +187,13 @@
       
       /* REPORT DASHBOARD */
       .grid-3 {
-          display: grid;
-          grid-template-columns: 260px 300px minmax(350px,1fr);
-          gap: 1.5rem;
-          width: 100%;
-          margin-bottom: 1.5rem;
-          align-items: stretch;
-      }
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1.5rem;
+    width:100%;
+    margin-bottom:1.5rem;
+    align-items:start;
+}
       
       
       .grid-3 .card {
@@ -416,36 +416,94 @@
 
 </div>
       <div class="grid-3">
-        <div class="card">
-          <div class="card-header"><h3>📅 Balance Sheet (Selected Month)</h3></div>
-          <div class="health-container" style="margin-top: 0.5rem;">
-            <div class="health-metric-title" style="color: var(--green);">
-              <span>Month Paid</span>
-              <span id="health-paid-val">$0.00</span>
-            </div>
-            <div class="health-bar-bg"><div id="health-paid-bar" class="health-bar-fill" style="background: var(--green);"></div></div>
 
-            <div class="health-metric-title" style="color: var(--amber); margin-top: 0.5rem;">
-              <span>Month Unpaid</span>
-              <span id="health-unpaid-val">$0.00</span>
-            </div>
-            <div class="health-bar-bg" style="margin-bottom:0;"><div id="health-unpaid-bar" class="health-bar-fill" style="background: var(--amber);"></div></div>
-          </div>
-          <div style="margin-top:1.25rem; padding-top:0.8rem; border-top:1px solid var(--bg2); display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.8rem; color:var(--ink3);">Download Matrix:</span>
-            <button class="btn" style="padding: 0.5rem 1rem; font-size:0.78rem;" onclick="exportFilteredCSV()">📥 Export CSV</button>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header"><h3>💼 Share by Client (Selected Month)</h3></div>
-          <div class="chart-container" id="revenue-chart"></div>
-        </div>
-
-        
-
-        
+    <div class="card">
+      <div class="card-header">
+        <h3>📅 Balance Sheet (Selected Month)</h3>
       </div>
+
+      <div class="health-container" style="margin-top:0.5rem;">
+
+        <div class="health-metric-title" style="color:var(--green);">
+          <span>Month Paid</span>
+          <span id="health-paid-val">$0.00</span>
+        </div>
+
+        <div class="health-bar-bg">
+          <div id="health-paid-bar"
+               class="health-bar-fill"
+               style="background:var(--green);">
+          </div>
+        </div>
+
+
+        <div class="health-metric-title"
+             style="color:var(--amber);margin-top:.5rem;">
+          <span>Month Unpaid</span>
+          <span id="health-unpaid-val">$0.00</span>
+        </div>
+
+
+        <div class="health-bar-bg">
+          <div id="health-unpaid-bar"
+               class="health-bar-fill"
+               style="background:var(--amber);">
+          </div>
+        </div>
+
+      </div>
+
+
+      <div style="
+          margin-top:1.25rem;
+          padding-top:.8rem;
+          border-top:1px solid var(--bg2);
+          display:flex;
+          justify-content:space-between;
+          align-items:center;">
+
+          <span style="font-size:.8rem;color:var(--ink3);">
+            Download Matrix:
+          </span>
+
+          <button class="btn"
+                  style="padding:.5rem 1rem;font-size:.78rem;"
+                  onclick="exportFilteredCSV()">
+              📥 Export CSV
+          </button>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>💼 Share by Client (Selected Month)</h3>
+        </div>
+
+        <div class="chart-container" id="revenue-chart"></div>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <div class="card-header">
+            <h3>📈 Client Revenue Distribution</h3>
+        </div>
+
+        <div id="client-chart">
+            <!-- future chart / visualization -->
+        </div>
+
+    </div>
+
+
+</div>
 
       <div class="card">
         <div class="card-header"><h3>📊 Performance Leaderboard Matrix (Selected Month)</h3></div>
