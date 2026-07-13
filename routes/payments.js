@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db'); // Your database connection configuration
+const pool = require('../db/pool');// Your database connection configuration
 // Replace with your actual authentication middleware if named differently
 const { requireAdmin } = require('../middleware/auth'); 
 
