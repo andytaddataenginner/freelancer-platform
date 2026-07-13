@@ -10,10 +10,9 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     let params = [req.user.id];
     let i = 2;
     if (client_id)      { where.push(`t.client_id = $${i++}`);       params.push(client_id); }
-    if (from)           { where.push(`t.date >= $${i++}::date`);     params.push(from); }
-    if (to)             { where.push(`t.date <= $${i++}::date`);     params.push(to); }
-    if (payment_status) { where.push(`t.payment_status = $${i++}`);  params.push(payment_status); }
-    
+    if (from)           { where.push(`t.date >= $${i++}::date`);      params.push(from); }
+    if (to)             { where.push(`t.date <= $${i++}::date`);      params.push(to); }
+    if (payment_status) { where.push(`t.payment_status = $${i++}`);   params.push(payment_status); }
     const { rows } = await pool.query(`
       SELECT t.*, u.name AS client_name, u.company AS client_company
       FROM time_logs t
@@ -33,8 +32,9 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     if (!client_id || !date || !hours || !task_description)
       return res.status(400).json({ error: 'client_id, date, hours, task_description required' });
 
+    // Auto-calculate amount from client billing rate
     const clientInfo = await pool.query(
-      'SELECT c.rate_type, c.hourly_rate, c.fixed_price, COALESCE(c.credit_balance, 0)::float AS credit_balance FROM clients c WHERE c.user_id = $1',
+      'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id = $1',
       [client_id]
     );
     const c = clientInfo.rows[0] || {};
@@ -46,24 +46,10 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       amount = parseFloat(c.fixed_price);
     }
 
-    let paymentStatus = 'unpaid';
-    let currentCredit = c.credit_balance || 0;
-
-    if (currentCredit >= amount && amount > 0) {
-      paymentStatus = 'paid';
-      currentCredit -= amount;
-    }
-
     const { rows } = await pool.query(`
       INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, rate_type, amount, payment_status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
-    `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2), paymentStatus]);
-
-    await pool.query(
-      'UPDATE clients SET credit_balance = $1 WHERE user_id = $2',
-      [currentCredit, client_id]
-    );
-
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'unpaid') RETURNING *
+    `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2)]);
     res.status(201).json(rows[0]);
   } catch (e) { next(e); }
 });
@@ -96,28 +82,25 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/timelogs/:id
+// PUT /api/timelogs/:id — now also updates amount
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
 
-    const oldLog = await pool.query('SELECT client_id, amount FROM time_logs WHERE id=$1', [req.params.id]);
-    if (!oldLog.rows.length) return res.status(404).json({ error: 'Not found' });
-    
-    const client_id = oldLog.rows[0].client_id;
-    const oldAmount = parseFloat(oldLog.rows[0].amount || 0);
-
     let finalAmount = amount;
+
+    // If amount not provided, recalculate from client rate
     if (finalAmount === undefined || finalAmount === null) {
-      const clientInfo = await pool.query(
-        'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id=$1',
-        [client_id]
-      );
-      const c = clientInfo.rows[0] || {};
-      if (c.rate_type === 'hourly' && c.hourly_rate) {
-        finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
-      } else {
-        finalAmount = oldAmount;
+      const logRow = await pool.query('SELECT client_id FROM time_logs WHERE id=$1', [req.params.id]);
+      if (logRow.rows.length) {
+        const clientInfo = await pool.query(
+          'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id=$1',
+          [logRow.rows[0].client_id]
+        );
+        const c = clientInfo.rows[0] || {};
+        if (c.rate_type === 'hourly' && c.hourly_rate) {
+          finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
+        }
       }
     }
 
@@ -125,10 +108,18 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
       UPDATE time_logs
       SET hours=$1, task_description=$2, date=$3, amount=COALESCE($4::numeric, amount)
       WHERE id=$5 AND freelancer_id=$6 RETURNING *
-    `, [hours, task_description, date, finalAmount, req.params.id, req.user.id]);
+    `, [hours, task_description, date, finalAmount || null, req.params.id, req.user.id]);
 
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
+  } catch (e) { next(e); }
+});
+
+// DELETE /api/timelogs/:id
+router.delete('/:id', requireFreelancer, async (req, res, next) => {
+  try {
+    await pool.query('DELETE FROM time_logs WHERE id=$1 AND freelancer_id=$2', [req.params.id, req.user.id]);
+    res.json({ message: 'Deleted' });
   } catch (e) { next(e); }
 });
 
