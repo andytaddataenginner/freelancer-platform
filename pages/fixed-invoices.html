@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Invoice Hub — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -624,10 +625,7 @@ generatingPDF=true;
 <div style="display:flex;align-items:center;gap:15px">
 
 
-<img 
-class="invoice-logo"
-src="../QFA_Logo.png"
-/>
+<img class="invoice-logo" src="data:image/png;base64,YOUR_BASE64_STRING_HERE" />
 
 
 <div>
@@ -992,11 +990,14 @@ try {
 
 await document.fonts.ready;
 
-await html2pdf()
-.set(options)
-.from(container)
-.save();
+const element = document.getElementById('pdf-container');
+  // Trigger a dummy height check to ensure the DOM is ready
+  element.style.display = 'block'; 
 
+  await html2pdf()
+    .set(options)
+    .from(element)
+    .save();
 }
 
 catch(error){
