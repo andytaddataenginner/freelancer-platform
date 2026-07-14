@@ -1,3 +1,11 @@
+the code below doesn't formatting well:
+
+and it doesn't geenrate invoice in mobile app only in desktop.
+
+it gives blank page and the way the page display doesn't look fancy:
+
+can you adjust and give me the full code please:
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -332,8 +340,9 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
   const freelancerName = currentUser ? currentUser.name : "Freelancer";
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:9999; background:white;';
-  document.body.appendChild(iframe);
+  iframe.style.position = 'fixed'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none';
+  document.body.appendChild(iframe);
+
   const doc = iframe.contentWindow.document;
 
   const invoiceHTML = `
@@ -431,12 +440,6 @@ function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end
     iframe.contentWindow.print();
     document.body.removeChild(iframe);
   }, 600);
-  // Added logic to wait for load before printing - critical for mobile
-  iframe.contentWindow.onload = () => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(() => document.body.removeChild(iframe), 1000);
-  };
 }
 </script>
 </body>
