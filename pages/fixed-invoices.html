@@ -111,6 +111,210 @@
     .badge-paid { color: var(--green); background: var(--green-bg); }
     .badge-outstanding { color: #b45309; background: var(--amber-bg); }
 
+  .invoice-card{
+
+background:white;
+
+width:210mm;
+
+min-height:297mm;
+
+padding:40px;
+
+margin:auto;
+
+font-family:Outfit,sans-serif;
+
+color:#1f2937;
+
+}
+
+.invoice-banner{
+
+background:linear-gradient(135deg,#0d2353,#1a5cff);
+
+color:white;
+
+padding:30px;
+
+border-radius:18px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:30px;
+
+}
+
+.invoice-title{
+
+font-size:34px;
+
+font-weight:700;
+
+}
+
+.invoice-sub{
+
+opacity:.9;
+
+margin-top:8px;
+
+}
+
+.summary-grid{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:18px;
+
+margin:30px 0;
+
+}
+
+.summary-box{
+
+background:#f8fafc;
+
+border-radius:14px;
+
+padding:20px;
+
+border:1px solid #e5e7eb;
+
+}
+
+.summary-box h4{
+
+font-size:13px;
+
+text-transform:uppercase;
+
+color:#6b7280;
+
+margin-bottom:10px;
+
+}
+
+.summary-box p{
+
+font-size:24px;
+
+font-weight:700;
+
+color:#0d2353;
+
+}
+
+.invoice-table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-top:30px;
+
+}
+
+.invoice-table th{
+
+background:#0d2353;
+
+color:white;
+
+padding:14px;
+
+}
+
+.invoice-table td{
+
+padding:14px;
+
+border-bottom:1px solid #eee;
+
+}
+
+.total-card{
+
+margin-left:auto;
+
+margin-top:35px;
+
+width:320px;
+
+background:#0d2353;
+
+color:white;
+
+padding:22px;
+
+border-radius:16px;
+
+}
+
+.total-card h2{
+
+font-size:30px;
+
+margin-top:8px;
+
+}
+
+.payment-box{
+
+margin-top:40px;
+
+padding:20px;
+
+border-radius:14px;
+
+background:#f8fafc;
+
+border-left:5px solid #1a5cff;
+
+}
+
+.footer-note{
+
+margin-top:60px;
+
+text-align:center;
+
+font-size:13px;
+
+color:#6b7280;
+
+}
+
+@media(max-width:768px){
+
+.summary-grid{
+
+grid-template-columns:1fr;
+
+}
+
+.invoice-card{
+
+width:100%;
+
+padding:20px;
+
+}
+
+.total-card{
+
+width:100%;
+
+}
+
+}
+    
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 240px; }
       .main { margin-left: 0; padding-top: 56px; }
@@ -318,121 +522,276 @@ function applyTimeWindowFilters() {
                             : '<span class="badge badge-paid">Fully Settled</span>'}
         </td>
         <td>
-          <button class="btn btn-outline" onclick="generateTimeWindowPDF('${dummyInvId}', '${client}', ${data.unpaidHours}, ${data.totalUnpaid}, '${startVal}', '${endVal}')">
-            📄 Generate Invoice
-          </button>
+         <button
+            class="btn"
+            onclick="downloadInvoice(
+            '${dummyInvId}',
+            '${client}',
+            ${data.unpaidHours},
+            ${data.totalUnpaid},
+            '${startVal}',
+            '${endVal}'
+            )">
+            ⬇ Download PDF
+            </button>
         </td>
       </tr>`;
   }).join('');
 }
 
-function generateTimeWindowPDF(invId, clientName, hours, totalAmount, start, end) {
-  // Pull current user info from auth helper
-  const currentUser = auth.user();
-  const freelancerName = currentUser ? currentUser.name : "Freelancer";
 
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none';
-  document.body.appendChild(iframe);
+ //Begin here 
 
-  const doc = iframe.contentWindow.document;
+   async function downloadInvoice(
+    invId,
+    clientName,
+    hours,
+    totalAmount,
+    start,
+    end
+){
 
-  const invoiceHTML = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-      <style>
-        body { font-family: 'Outfit', sans-serif; color: #0d2353; padding: 45px; line-height: 1.6; background: #fff; }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0d2353; padding-bottom: 25px; align-items: center; }
-        .logo-section { display: flex; align-items: center; gap: 14px; }
-        .logo-img { width: 55px; height: 55px; border-radius: 10px; object-fit: contain; }
-        .logo-section h2 { font-size: 26px; margin: 0; font-weight: 700; color: #0d2353; letter-spacing: -0.5px; }
-        .logo-section span { font-size: 11px; color: #1a5cff; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; display: block; margin-top: 2px; }
-        .inv-details { text-align: right; font-size: 13px; color: #3a4a6a; line-height: 1.5; }
-        .inv-details h1 { font-size: 28px; color: #0d2353; margin: 0 0 5px 0; font-weight: 700; text-transform: uppercase; }
-        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 35px; font-size: 14px; }
-        .meta-box { background: #f8fafc; padding: 22px; border-radius: 12px; border: 1px solid #eef1f8; }
-        .meta-box h3 { font-size: 11px; text-transform: uppercase; color: #7a8aaa; margin-bottom: 10px; margin-top: 0; letter-spacing: 0.8px; font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; margin-top: 40px; font-size: 14px; }
-        th { background: #0d2353; text-align: left; padding: 14px 16px; font-size: 11px; text-transform: uppercase; color: #fff; font-weight: 600; letter-spacing: 0.8px; }
-        td { padding: 16px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; }
-        .totals { display: flex; flex-direction: column; align-items: flex-end; margin-top: 40px; font-size: 14px; padding-right: 16px; }
-        .grand-total { font-size: 22px; font-weight: 700; color: #1a5cff; border-top: 2px solid #eef1f8; padding-top: 12px; margin-top: 8px; width: 280px; text-align: right; }
-        .footer { margin-top: 100px; text-align: center; font-size: 11px; color: #7a8aaa; border-top: 1px solid #eef1f8; padding-top: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="logo-section">
-          <img src="../QFA_Logo.png" class="logo-img" alt="QFA" onerror="this.style.display='none'"/>
-          <div>
-            <h2>Quick Freelancing Agency</h2>
-            <span>Premium Performance Ecosystem</span>
-          </div>
-        </div>
-        <div class="inv-details">
-          <h1>INVOICE</h1>
-          <strong>Invoice Ref:</strong> ${invId}<br/>
-          <strong>Timeline Range:</strong> ${start} to ${end}<br/>
-          <strong>Issued Date:</strong> ${new Date().toLocaleDateString()}
-        </div>
-      </div>
+const freelancer=auth.user()?.name || "Freelancer";
 
-      <div class="meta-grid">
-        <div class="meta-box">
-          <h3>Issued By:</h3>
-          <strong style="color: #0d2353; font-size: 15px;">Quick Freelancing Agency (QFA)</strong><br/>
-          <span style="display:inline-block; margin-top: 6px;">📧 Email: ndy.andupa@gmail.com</span><br/>
-          📞 Phone: +251911859866
-        </div>
-        <div class="meta-box">
-          <h3>Prepared For:</h3>
-          <strong style="color: #0d2353; font-size: 15px;">${clientName}</strong><br/>
-          <span style="display:inline-block; margin-top: 6px;">Freelancer: ${freelancerName}</span>
-        </div>
-      </div>
+const div=document.createElement("div");
 
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 55%;">Description of Services</th>
-            <th style="width: 20%; text-align: center;">Volume Metrics</th>
-            <th style="width: 25%; text-align: right;">Outstanding Balance Due</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="font-weight: 500; color: #0d2353;">Professional Freelance & Technical Consulting Services</td>
-            <td style="text-align: center;">${hours > 0 ? `${hours.toFixed(2)} Hours` : 'Fixed Term Block'}</td>
-            <td style="color: #1a5cff; font-weight: 700; text-align: right;">$${totalAmount.toFixed(2)}</td>
-          </tr>
-        </tbody>
-      </table>
+div.className="invoice-card";
 
-      <div class="totals">
-        <div style="color: #7a8aaa; font-weight: 500;">Subtotal Outstanding: &nbsp;&nbsp;$${totalAmount.toFixed(2)}</div>
-        <div class="grand-total">Total Amount Due: &nbsp;&nbsp;$${totalAmount.toFixed(2)}</div>
-      </div>
+div.innerHTML=`
 
-      <div class="footer">
-        Thank you for your business. For immediate electronic clearance inquiries, please reference your coordinates above.<br/>
-        <strong>QFA Automated Billing System Architecture — 2026</strong>
-      </div>
-    </body>
-    </html>
-  `;
+<div class="invoice-banner">
 
-  doc.open();
-  doc.write(invoiceHTML);
-  doc.close();
+<div>
 
-  iframe.contentWindow.focus();
-  setTimeout(() => {
-    iframe.contentWindow.print();
-    document.body.removeChild(iframe);
-  }, 600);
+<div class="invoice-title">
+
+Quick Freelancing Agency
+
+</div>
+
+<div class="invoice-sub">
+
+Professional Consulting Invoice
+
+</div>
+
+</div>
+
+<div style="text-align:right">
+
+<div style="font-size:28px;font-weight:700">
+
+INVOICE
+
+</div>
+
+<div>${invId}</div>
+
+<div>${new Date().toLocaleDateString()}</div>
+
+</div>
+
+</div>
+
+<div style="display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap">
+
+<div>
+
+<h3>Issued By</h3>
+
+<p>
+
+<strong>Quick Freelancing Agency</strong><br>
+
+Email: ndy.andupa@gmail.com<br>
+
+Phone: +251911859866
+
+</p>
+
+</div>
+
+<div>
+
+<h3>Bill To</h3>
+
+<p>
+
+<strong>${clientName}</strong><br>
+
+Prepared By: ${freelancer}
+
+</p>
+
+</div>
+
+</div>
+
+<div class="summary-grid">
+
+<div class="summary-box">
+
+<h4>Hours</h4>
+
+<p>${hours.toFixed(2)}</p>
+
+</div>
+
+<div class="summary-box">
+
+<h4>Period</h4>
+
+<p style="font-size:16px">
+
+${start}<br>${end}
+
+</p>
+
+</div>
+
+<div class="summary-box">
+
+<h4>Status</h4>
+
+<p style="color:#ef4444">
+
+Outstanding
+
+</p>
+
+</div>
+
+</div>
+
+<table class="invoice-table">
+
+<thead>
+
+<tr>
+
+<th>Description</th>
+
+<th>Hours</th>
+
+<th>Amount</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>
+
+Professional Freelance Consulting Services
+
+</td>
+
+<td>
+
+${hours.toFixed(2)}
+
+</td>
+
+<td>
+
+$${totalAmount.toFixed(2)}
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<div class="total-card">
+
+<div>Total Amount Due</div>
+
+<h2>
+
+$${totalAmount.toFixed(2)}
+
+</h2>
+
+</div>
+
+<div class="payment-box">
+
+<h3>
+
+Payment Information
+
+</h3>
+
+<p>
+
+Payment is due upon receipt of this invoice.
+
+Please reference
+
+<strong>${invId}</strong>
+
+when making payment.
+
+</p>
+
+</div>
+
+<div class="footer-note">
+
+Thank you for choosing
+
+<strong>Quick Freelancing Agency</strong>
+
+</div>
+
+`;
+
+document.body.appendChild(div);
+
+const options={
+
+margin:0,
+
+filename:`${invId}.pdf`,
+
+image:{type:'jpeg',quality:1},
+
+html2canvas:{
+
+scale:2,
+
+useCORS:true,
+
+scrollY:0
+
+},
+
+jsPDF:{
+
+unit:'mm',
+
+format:'a4',
+
+orientation:'portrait'
+
 }
+
+};
+
+await html2pdf().set(options).from(div).save();
+
+document.body.removeChild(div);
+
+}
+
+  ///end here 
+
+  
 </script>
 </body>
 </html>
