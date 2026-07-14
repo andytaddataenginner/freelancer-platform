@@ -292,7 +292,7 @@ color:#6b7280;
 }
 #pdf-container {
 
-position:fixed;
+position:absolute;
 
 left:0;
 
@@ -301,8 +301,6 @@ top:0;
 width:210mm;
 
 background:white;
-
-z-index:-1;
 
 visibility:hidden;
 
@@ -668,13 +666,6 @@ ${new Date().toLocaleDateString()}
 Quick Freelancing Agency
 </div>
 
-<div class="invoice-sub">
-Professional Consulting Invoice
-</div>
-
-</div>
-
-</div>
 
 
 <div class="invoice-sub">
@@ -682,10 +673,6 @@ Professional Consulting Invoice
 </div>
 
 
-</div>
-
-
-</div>
 
 <div style="text-align:right">
 
@@ -965,7 +952,7 @@ await Promise.all(
         });
     })
 );
-
+await new Promise(resolve => setTimeout(resolve, 500));
 
 const options = {
 
@@ -1017,11 +1004,12 @@ jsPDF:{
 
 try {
 
+await document.fonts.ready;
+
 await html2pdf()
 .set(options)
 .from(container)
 .save();
-
 
 }
 
