@@ -291,19 +291,12 @@ color:#6b7280;
 
 }
 #pdf-container {
-
 position:absolute;
-
-left:0;
-
+left:-9999px;
 top:0;
-
 width:210mm;
-
 background:white;
-
 visibility:hidden;
-
 }
 .invoice-logo {
 
@@ -598,9 +591,10 @@ if(generatingPDF){
 generatingPDF=true;
 
     if(typeof html2pdf === "undefined"){
-        alert("PDF engine is not loaded. Please refresh the page.");
-        return;
-    }
+    generatingPDF=false;
+    alert("PDF engine is not loaded. Please refresh the page.");
+    return;
+}
 
 
     const freelancer = auth.user()?.name || "Freelancer";
@@ -660,35 +654,8 @@ ${new Date().toLocaleDateString()}
 
 
 
-<div>
-
-<div class="invoice-title">
-Quick Freelancing Agency
-</div>
 
 
-
-<div class="invoice-sub">
-Professional Consulting Invoice
-</div>
-
-
-
-<div style="text-align:right">
-
-<div style="font-size:28px;font-weight:700">
-INVOICE
-</div>
-
-<div>${invId}</div>
-
-<div>
-${new Date().toLocaleDateString()}
-</div>
-
-</div>
-
-</div>
 
 
 
@@ -799,7 +766,7 @@ Status
 
 <p style="color:#ef4444">
 
-Outstanding
+${totalAmount > 0 ? "Outstanding" : "Fully Settled"}
 
 </p>
 
