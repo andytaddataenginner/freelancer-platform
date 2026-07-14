@@ -115,9 +115,9 @@
 
 background:white;
 
-width:210mm;
+width:794px;
 
-min-height:297mm;
+min-height:1123px;
 
 padding:40px;
 
@@ -298,14 +298,22 @@ color:#6b7280;
      blank white PDF every time.
      position:absolute + a large negative left keeps it fully opaque
      (real pixels for the renderer) while staying invisible to the
-     user. NOTE: position:fixed was tried here first, but html2canvas
-     has known reliability issues capturing fixed-position elements
-     (they can end up outside its internal render frame and come out
-     blank) — position:absolute is the well-tested, reliable pattern. */
+     user. position:fixed was tried first, but html2canvas is known
+     to be unreliable capturing fixed-position elements.
+     ROOT CAUSE OF THE STILL-BLANK PDF: this container never had its
+     own explicit height — it relied on the child .invoice-card's
+     min-height (in mm) to push it open. That's fine for normal
+     browser layout, but html2canvas re-implements CSS layout itself
+     rather than using the real engine, and it was mis-measuring this
+     container's height as 0px (confirmed via its own debug log:
+     "Canvas renderer initialized (794x0 ...)"). A 0-height canvas is
+     necessarily blank, no matter what's inside it. Giving the
+     container its own explicit px height removes any ambiguity. */
   position: absolute;
   top: 0;
   left: -9999px;
-  width: 210mm;
+  width: 794px;
+  min-height: 1123px;
   opacity: 1;
   /* Important: ensure it doesn't block clicks on the page */
   pointer-events: none;
@@ -370,7 +378,7 @@ cursor:pointer;
 <div class="layout">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-     <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
       <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
     </div>
     <nav class="sidebar-nav">
@@ -615,7 +623,7 @@ generatingPDF=true;
 <img 
 class="invoice-logo"
 src="../QFA_Logo.png"
-/>  
+/>
 
 
 <div>
