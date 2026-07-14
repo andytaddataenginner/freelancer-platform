@@ -292,12 +292,34 @@ color:#6b7280;
 }
 #pdf-container {
 
-position: fixed;
-left: -99999px;
-top: 0;
-width: 210mm;
-background: white;
-z-index: -9999;
+position: absolute;
+
+left:0;
+
+top:0;
+
+width:210mm;
+
+background:white;
+
+opacity:0;
+
+pointer-events:none;
+
+z-index:-1;
+
+}
+.download-btn{
+
+font-weight:500;
+
+font-size:0.78rem;
+
+padding:0.5rem 0.9rem;
+
+border-radius:10px;
+
+letter-spacing:.2px;
 
 }
 
@@ -421,6 +443,7 @@ width:100%;
     </div>
   </div>
 </div>
+<div id="pdf-container"></div>
 
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
@@ -445,7 +468,7 @@ function toggleSidebar() {
 }
 
 let rawLogsData = [];
-
+let generatingPDF=false;
 document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('start-date').value = "2026-01-01";
@@ -534,17 +557,17 @@ function applyTimeWindowFilters() {
         </td>
         <td>
          <button
-            class="btn"
-            onclick="downloadInvoice(
-            '${dummyInvId}',
-            '${client}',
-            ${data.unpaidHours},
-            ${data.totalUnpaid},
-            '${startVal}',
-            '${endVal}'
-            )">
-            ⬇ Download PDF
-            </button>
+      class="btn download-btn"
+      onclick="downloadInvoice(
+      '${dummyInvId}',
+      '${client}',
+      ${data.unpaidHours},
+      ${data.totalUnpaid},
+      '${startVal}',
+      '${endVal}'
+      )">
+      ⬇ Download PDF
+      </button>
         </td>
       </tr>`;
   }).join('');
@@ -561,6 +584,12 @@ function applyTimeWindowFilters() {
     start,
     end
 ){
+
+if(generatingPDF){
+    return;
+}
+
+generatingPDF=true;
 
     if(typeof html2pdf === "undefined"){
         alert("PDF engine is not loaded. Please refresh the page.");
@@ -908,7 +937,7 @@ jsPDF:{
 
 try {
 
-
+await document.fonts.ready;
 await html2pdf()
 
 .set(options)
@@ -939,9 +968,9 @@ alert(
 
 finally{
 
-
 container.innerHTML="";
 
+generatingPDF=false;
 
 }
 
@@ -953,6 +982,5 @@ container.innerHTML="";
 
   
 </script>
-<div id="pdf-container"></div>
 </body>
 </html>
