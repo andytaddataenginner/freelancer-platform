@@ -291,12 +291,13 @@ color:#6b7280;
 
 }
 #pdf-container {
-position:absolute;
-left:-9999px;
-top:0;
-width:210mm;
-background:white;
-visibility:hidden;
+  position: fixed; /* Keeps it fixed in the viewport */
+  left: -9999px;    /* Moves it off-screen */
+  top: 0;
+  width: 210mm;
+  background: white;
+  opacity: 0;      /* Replace visibility: hidden */
+  pointer-events: none; /* Prevents interaction while hidden */
 }
 .invoice-logo {
 
@@ -602,7 +603,6 @@ generatingPDF=true;
 
     const container = document.getElementById("pdf-container");
 
-    container.style.visibility = "visible";
     container.innerHTML = `
 
 <div class="invoice-card">
@@ -1002,7 +1002,6 @@ finally {
 
         container.innerHTML = "";
 
-        container.style.visibility = "hidden";
 
         generatingPDF = false;
 
