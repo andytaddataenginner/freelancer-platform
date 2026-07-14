@@ -291,14 +291,20 @@ color:#6b7280;
 
 }
 #pdf-container {
-  position: absolute;
+  position: fixed;
   top: 0;
-  left: 0;
+  left: -9999px;
   width: 210mm;
-  /* Use z-index to put it behind everything */
-  z-index: -999; 
-  /* Use opacity to make it invisible to the user */
-  opacity: 0; 
+  /* FIX: previously this used z-index:-999 + opacity:0 to hide the
+     element. html2canvas paints elements based on their real computed
+     style, so opacity:0 rendered as fully transparent pixels — which,
+     combined with the forced white backgroundColor below, produced a
+     blank white PDF every time. Moving it off-screen with position:fixed
+     + a large negative left keeps it fully opaque (visible to the
+     renderer) while staying invisible to the user, and fixed
+     positioning also avoids adding a giant scroll area to the page. */
+  z-index: -1;
+  opacity: 1;
   /* Important: ensure it doesn't block clicks on the page */
   pointer-events: none;
   /* Ensure it has a background so it isn't transparent in the PDF */
@@ -951,8 +957,16 @@ allowTaint:false,
 
 backgroundColor:"#ffffff",
 
-logging: true, // Set to true to see if it's actually finding the container
-windowWidth: document.documentElement.offsetWidth, // Force window context
+logging: false,
+// FIX: previously this was `document.documentElement.offsetWidth`,
+// which on a phone is the phone's screen width (e.g. ~375px). That
+// forced html2canvas to render the invoice inside the @media
+// (max-width:768px) breakpoint every single time it ran on mobile,
+// giving an inconsistent layout compared to desktop. Locking this to
+// a fixed A4-at-96dpi size means the invoice always renders the same
+// full desktop layout, regardless of the device triggering it.
+windowWidth: 794,
+windowHeight: 1123,
 imageTimeout:0
 
 },
