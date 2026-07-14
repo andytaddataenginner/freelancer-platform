@@ -292,9 +292,9 @@ color:#6b7280;
 }
 #pdf-container {
 
-position: absolute;
+position:absolute;
 
-left:0;
+left:-10000px;
 
 top:0;
 
@@ -302,24 +302,29 @@ width:210mm;
 
 background:white;
 
-opacity:0;
+visibility:hidden;
 
-pointer-events:none;
+}
+.invoice-logo {
 
-z-index:-1;
+width:70px;
+height:70px;
+object-fit:contain;
+background:white;
+border-radius:12px;
+padding:6px;
 
 }
 .download-btn{
 
+background:#0d2353;
+color:white;
 font-weight:500;
-
 font-size:0.78rem;
-
 padding:0.5rem 0.9rem;
-
 border-radius:10px;
-
-letter-spacing:.2px;
+border:none;
+cursor:pointer;
 
 }
 
@@ -557,7 +562,8 @@ function applyTimeWindowFilters() {
         </td>
         <td>
          <button
-      class="btn download-btn"
+      class="download-btn"
+      
       onclick="downloadInvoice(
       '${dummyInvId}',
       '${client}',
@@ -602,12 +608,36 @@ generatingPDF=true;
 
     const container = document.getElementById("pdf-container");
 
-
+    container.style.visibility = "visible";
     container.innerHTML = `
 
 <div class="invoice-card">
 
 <div class="invoice-banner">
+
+<div style="display:flex;align-items:center;gap:15px">
+
+
+<img 
+class="invoice-logo"
+src="https://freelancer-platform-9jut.onrender.com/QFA_Logo.png"
+/>
+
+
+<div>
+
+<div style="display:flex;align-items:center;gap:15px;">
+
+<img 
+src="../QFA_Logo.png"
+style="
+width:70px;
+height:70px;
+object-fit:contain;
+background:white;
+border-radius:10px;
+padding:5px;
+">
 
 <div>
 
@@ -621,6 +651,18 @@ Professional Consulting Invoice
 
 </div>
 
+</div>
+
+
+<div class="invoice-sub">
+Professional Consulting Invoice
+</div>
+
+
+</div>
+
+
+</div>
 
 <div style="text-align:right">
 
@@ -905,18 +947,19 @@ image: {
 
 html2canvas:{
 
+scale:2,
 
-    scale:2,
+useCORS:true,
 
+allowTaint:false,
 
-    useCORS:true,
+backgroundColor:"#ffffff",
 
+logging:false,
 
-    backgroundColor:"#ffffff"
-
+imageTimeout:0
 
 },
-
 
 jsPDF:{
 
@@ -939,13 +982,15 @@ try {
 
 await document.fonts.ready;
 await html2pdf()
-
 .set(options)
-
 .from(container)
+.toPdf()
+.get('pdf')
+.then(function(pdf){
 
-.save();
+    pdf.save(`${invId}.pdf`);
 
+});
 
 
 }
@@ -966,11 +1011,17 @@ alert(
 
 }
 
-finally{
+finally {
 
-container.innerHTML="";
+    setTimeout(() => {
 
-generatingPDF=false;
+        container.innerHTML = "";
+
+        container.style.visibility = "hidden";
+
+        generatingPDF = false;
+
+    }, 1000);
 
 }
 
