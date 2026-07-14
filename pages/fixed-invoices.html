@@ -292,15 +292,17 @@ color:#6b7280;
 }
 #pdf-container {
 
-position:absolute;
+position:fixed;
 
-left:-10000px;
+left:0;
 
 top:0;
 
 width:210mm;
 
 background:white;
+
+z-index:-1;
 
 visibility:hidden;
 
@@ -615,29 +617,50 @@ generatingPDF=true;
 
 <div class="invoice-banner">
 
+
 <div style="display:flex;align-items:center;gap:15px">
 
 
 <img 
 class="invoice-logo"
-src="https://freelancer-platform-9jut.onrender.com/QFA_Logo.png"
+src="../QFA_Logo.png"
 />
 
 
 <div>
 
-<div style="display:flex;align-items:center;gap:15px;">
+<div class="invoice-title">
+Quick Freelancing Agency
+</div>
 
-<img 
-src="../QFA_Logo.png"
-style="
-width:70px;
-height:70px;
-object-fit:contain;
-background:white;
-border-radius:10px;
-padding:5px;
-">
+<div class="invoice-sub">
+Professional Consulting Invoice
+</div>
+
+</div>
+
+
+</div>
+
+
+<div style="text-align:right">
+
+<div style="font-size:28px;font-weight:700">
+INVOICE
+</div>
+
+<div>${invId}</div>
+
+<div>
+${new Date().toLocaleDateString()}
+</div>
+
+</div>
+
+
+</div>
+
+
 
 <div>
 
@@ -928,6 +951,20 @@ Quick Freelancing Agency
 
 `;
 
+const images = container.querySelectorAll("img");
+
+await Promise.all(
+    [...images].map(img => {
+        if(img.complete){
+            return Promise.resolve();
+        }
+
+        return new Promise(resolve=>{
+            img.onload = resolve;
+            img.onerror = resolve;
+        });
+    })
+);
 
 
 const options = {
@@ -980,17 +1017,10 @@ jsPDF:{
 
 try {
 
-await document.fonts.ready;
 await html2pdf()
 .set(options)
 .from(container)
-.toPdf()
-.get('pdf')
-.then(function(pdf){
-
-    pdf.save(`${invId}.pdf`);
-
-});
+.save();
 
 
 }
