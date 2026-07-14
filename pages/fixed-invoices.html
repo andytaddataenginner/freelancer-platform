@@ -291,35 +291,53 @@ color:#6b7280;
 
 }
 #pdf-container {
-  /* FIX: previously this used z-index:-999 + opacity:0 to hide the
-     element. html2canvas paints elements based on their real computed
-     style, so opacity:0 rendered as fully transparent pixels — which,
-     combined with the forced white backgroundColor below, produced a
-     blank white PDF every time.
-     position:absolute + a large negative left keeps it fully opaque
-     (real pixels for the renderer) while staying invisible to the
-     user. position:fixed was tried first, but html2canvas is known
-     to be unreliable capturing fixed-position elements.
-     ROOT CAUSE OF THE STILL-BLANK PDF: this container never had its
-     own explicit height — it relied on the child .invoice-card's
-     min-height (in mm) to push it open. That's fine for normal
-     browser layout, but html2canvas re-implements CSS layout itself
-     rather than using the real engine, and it was mis-measuring this
-     container's height as 0px (confirmed via its own debug log:
-     "Canvas renderer initialized (794x0 ...)"). A 0-height canvas is
-     necessarily blank, no matter what's inside it. Giving the
-     container its own explicit px height removes any ambiguity. */
-  position: absolute;
-  top: 0;
-  left: -9999px;
+  /* HISTORY OF FIXES ON THIS ELEMENT:
+     1) opacity:0 to hide it -> html2canvas paints opacity:0 as fully
+        transparent pixels -> flattened to solid white -> blank PDF.
+     2) position:absolute; left:-9999px to hide it off-screen instead
+        -> this looked like the standard trick, but html2canvas has a
+        documented bug where elements positioned outside its render
+        window get clipped/mis-measured (see html2canvas GitHub
+        issue #1740). Confirmed via its own debug log reporting our
+        container as "794x0 at 243.15,0" — a bogus, non-zero X offset
+        that doesn't even match our -9999px, and a 0px height. No CSS
+        unit or explicit-height tweak can fix this; the off-screen
+        technique itself is what's broken.
+     FIX: stop hiding it geometrically at all. It stays display:none
+     (out of the page entirely, so it never takes up space) until the
+     moment we're actively generating a PDF, when JS adds the
+     .rendering class — at that point it's in completely normal,
+     in-document layout (html2canvas handles that reliably), and is
+     visually hidden from the user behind the opaque full-screen
+     #pdf-generating-overlay shown on top of it instead. */
+  display: none;
   width: 794px;
   min-height: 1123px;
-  opacity: 1;
-  /* Important: ensure it doesn't block clicks on the page */
-  pointer-events: none;
-  /* Ensure it has a background so it isn't transparent in the PDF */
   background-color: #ffffff;
 }
+#pdf-container.rendering { display: block; }
+#pdf-generating-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(13, 35, 83, 0.97);
+  color: white;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  font-family: var(--sans);
+}
+#pdf-generating-overlay.active { display: flex; }
+#pdf-generating-overlay .spinner {
+  width: 40px; height: 40px;
+  border: 4px solid rgba(255,255,255,0.25);
+  border-top-color: var(--gold2);
+  border-radius: 50%;
+  animation: pdf-spin 0.8s linear infinite;
+}
+@keyframes pdf-spin { to { transform: rotate(360deg); } }
 .invoice-logo {
 
 width:70px;
@@ -448,6 +466,10 @@ cursor:pointer;
       </div>
     </div>
   </div>
+</div>
+<div id="pdf-generating-overlay">
+  <div class="spinner"></div>
+  <div>Generating your invoice…</div>
 </div>
 <div id="pdf-container"></div>
 
@@ -607,8 +629,10 @@ generatingPDF=true;
 
     const freelancer = auth.user()?.name || "Freelancer";
 
+    document.getElementById("pdf-generating-overlay").classList.add("active");
 
     const container = document.getElementById("pdf-container");
+    container.classList.add("rendering");
 
     container.innerHTML = `
 
@@ -1015,7 +1039,9 @@ finally {
     setTimeout(() => {
 
         container.innerHTML = "";
+        container.classList.remove("rendering");
 
+        document.getElementById("pdf-generating-overlay").classList.remove("active");
 
         generatingPDF = false;
 
