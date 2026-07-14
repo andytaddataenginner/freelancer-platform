@@ -21,15 +21,22 @@
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
     /* ── LAYOUT ── */
-    .layout { display: flex; min-height: 100vh; }
-
+    .layout { 
+      display: flex; 
+      min-height: 100vh;
+      position: relative; /* Ensure the layout container is the reference point */
+    }
     /* ── SIDEBAR ── */
-    .sidebar {
-      width: 220px; background: var(--navy); position: fixed;
-      top: 0; left: 0; height: 100vh; display: flex;
-      flex-direction: column; z-index: 50;
-      transition: transform 0.3s ease;
-    }
+    /* Ensure the sidebar stays put */
+.sidebar {
+  width: 220px; 
+  background: var(--navy); 
+  height: 100vh; 
+  display: flex;
+  flex-direction: column; 
+  z-index: 50;
+  flex-shrink: 0; /* Prevents the sidebar from squishing */
+}
     .sidebar-brand {
       padding: 1.1rem 1.2rem;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -81,7 +88,15 @@
     .sidebar.mobile-open { transform: translateX(0) !important; }
 
     /* ── MAIN CONTENT ── */
-    .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+.main { 
+  flex: 1; 
+  min-height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
+  /* Remove margin-left: 220px; if you are using display: flex on .layout */
+  width: calc(100% - 220px); 
+}
+    
     .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .content { padding: 1.5rem; flex: 1; }
