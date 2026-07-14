@@ -291,13 +291,18 @@ color:#6b7280;
 
 }
 #pdf-container {
-  position: fixed; /* Keeps it fixed in the viewport */
-  left: -9999px;    /* Moves it off-screen */
+  position: absolute;
   top: 0;
+  left: 0;
   width: 210mm;
-  background: white;
-  opacity: 0;      /* Replace visibility: hidden */
-  pointer-events: none; /* Prevents interaction while hidden */
+  /* Use z-index to put it behind everything */
+  z-index: -999; 
+  /* Use opacity to make it invisible to the user */
+  opacity: 0; 
+  /* Important: ensure it doesn't block clicks on the page */
+  pointer-events: none;
+  /* Ensure it has a background so it isn't transparent in the PDF */
+  background-color: #ffffff;
 }
 .invoice-logo {
 
@@ -904,7 +909,7 @@ Quick Freelancing Agency
 </div>
 
 `;
-
+await new Promise(resolve => setTimeout(resolve, 100));
 const images = container.querySelectorAll("img");
 
 await Promise.all(
@@ -946,8 +951,8 @@ allowTaint:false,
 
 backgroundColor:"#ffffff",
 
-logging:false,
-
+logging: true, // Set to true to see if it's actually finding the container
+windowWidth: document.documentElement.offsetWidth, // Force window context
 imageTimeout:0
 
 },
