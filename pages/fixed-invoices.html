@@ -290,6 +290,16 @@ font-size:13px;
 color:#6b7280;
 
 }
+#pdf-container {
+
+position: fixed;
+left: -99999px;
+top: 0;
+width: 210mm;
+background: white;
+z-index: -9999;
+
+}
 
 @media(max-width:768px){
 
@@ -324,6 +334,7 @@ width:100%;
       .filter-row { grid-template-columns: 1fr; max-width: 100%; }
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -551,49 +562,62 @@ function applyTimeWindowFilters() {
     end
 ){
 
-const freelancer=auth.user()?.name || "Freelancer";
+    if(typeof html2pdf === "undefined"){
+        alert("PDF engine is not loaded. Please refresh the page.");
+        return;
+    }
 
-const div=document.createElement("div");
 
-div.className="invoice-card";
+    const freelancer = auth.user()?.name || "Freelancer";
 
-div.innerHTML=`
+
+    const container = document.getElementById("pdf-container");
+
+
+    container.innerHTML = `
+
+<div class="invoice-card">
 
 <div class="invoice-banner">
 
 <div>
 
 <div class="invoice-title">
-
 Quick Freelancing Agency
-
 </div>
 
 <div class="invoice-sub">
-
 Professional Consulting Invoice
-
 </div>
 
 </div>
+
 
 <div style="text-align:right">
 
 <div style="font-size:28px;font-weight:700">
-
 INVOICE
-
 </div>
 
 <div>${invId}</div>
 
-<div>${new Date().toLocaleDateString()}</div>
-
+<div>
+${new Date().toLocaleDateString()}
 </div>
 
 </div>
 
-<div style="display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap">
+</div>
+
+
+
+<div style="
+display:flex;
+justify-content:space-between;
+gap:40px;
+flex-wrap:wrap;
+">
+
 
 <div>
 
@@ -601,57 +625,96 @@ INVOICE
 
 <p>
 
-<strong>Quick Freelancing Agency</strong><br>
+<strong>
+Quick Freelancing Agency
+</strong>
 
-Email: ndy.andupa@gmail.com<br>
+<br>
 
-Phone: +251911859866
+Email:
+ndy.andupa@gmail.com
+
+<br>
+
+Phone:
++251911859866
 
 </p>
 
 </div>
+
+
 
 <div>
 
 <h3>Bill To</h3>
 
+
 <p>
 
-<strong>${clientName}</strong><br>
+<strong>
+${clientName}
+</strong>
 
-Prepared By: ${freelancer}
+<br>
+
+Prepared By:
+${freelancer}
 
 </p>
 
-</div>
 
 </div>
+
+
+</div>
+
+
+
 
 <div class="summary-grid">
 
+
 <div class="summary-box">
 
-<h4>Hours</h4>
+<h4>
+Hours
+</h4>
 
-<p>${hours.toFixed(2)}</p>
+<p>
+${hours.toFixed(2)}
+</p>
 
 </div>
 
+
+
 <div class="summary-box">
 
-<h4>Period</h4>
+<h4>
+Period
+</h4>
 
 <p style="font-size:16px">
 
-${start}<br>${end}
+${start}
+
+<br>
+
+${end}
 
 </p>
 
 </div>
 
+
+
 <div class="summary-box">
 
-<h4>Status</h4>
+<h4>
+Status
+</h4>
+
 
 <p style="color:#ef4444">
 
@@ -659,35 +722,53 @@ Outstanding
 
 </p>
 
-</div>
 
 </div>
+
+
+</div>
+
+
+
+
 
 <table class="invoice-table">
+
 
 <thead>
 
 <tr>
 
-<th>Description</th>
+<th>
+Description
+</th>
 
-<th>Hours</th>
 
-<th>Amount</th>
+<th>
+Hours
+</th>
+
+
+<th>
+Amount
+</th>
 
 </tr>
 
 </thead>
 
+
+
 <tbody>
+
 
 <tr>
 
+
 <td>
-
 Professional Freelance Consulting Services
-
 </td>
+
 
 <td>
 
@@ -695,21 +776,33 @@ ${hours.toFixed(2)}
 
 </td>
 
+
 <td>
 
 $${totalAmount.toFixed(2)}
 
 </td>
 
+
 </tr>
+
 
 </tbody>
 
+
 </table>
+
+
+
+
 
 <div class="total-card">
 
-<div>Total Amount Due</div>
+
+<div>
+Total Amount Due
+</div>
+
 
 <h2>
 
@@ -717,75 +810,142 @@ $${totalAmount.toFixed(2)}
 
 </h2>
 
+
 </div>
+
+
+
 
 <div class="payment-box">
 
+
 <h3>
-
 Payment Information
-
 </h3>
+
 
 <p>
 
-Payment is due upon receipt of this invoice.
+Payment is due upon receipt.
 
-Please reference
+<br>
 
+Reference:
 <strong>${invId}</strong>
-
-when making payment.
 
 </p>
 
+
 </div>
+
+
 
 <div class="footer-note">
 
+
 Thank you for choosing
 
-<strong>Quick Freelancing Agency</strong>
+<strong>
+Quick Freelancing Agency
+</strong>
+
+
+</div>
+
 
 </div>
 
 `;
 
-document.body.appendChild(div);
 
-const options={
 
-margin:0,
+const options = {
 
-filename:`${invId}.pdf`,
 
-image:{type:'jpeg',quality:1},
+margin: 0,
+
+
+filename: `${invId}.pdf`,
+
+
+image: {
+    type:"jpeg",
+    quality:1
+},
+
 
 html2canvas:{
 
-scale:2,
 
-useCORS:true,
+    scale:2,
 
-scrollY:0
+
+    useCORS:true,
+
+
+    backgroundColor:"#ffffff"
+
 
 },
 
+
 jsPDF:{
 
-unit:'mm',
 
-format:'a4',
+    unit:"mm",
 
-orientation:'portrait'
+    format:"a4",
+
+    orientation:"portrait"
+
 
 }
 
+
 };
 
-await html2pdf().set(options).from(div).save();
 
-document.body.removeChild(div);
+
+try {
+
+
+await html2pdf()
+
+.set(options)
+
+.from(container)
+
+.save();
+
+
+
+}
+
+catch(error){
+
+
+console.error(
+"PDF generation error:",
+error
+);
+
+
+alert(
+"Invoice PDF generation failed."
+);
+
+
+}
+
+finally{
+
+
+container.innerHTML="";
+
+
+}
+
+
 
 }
 
@@ -793,5 +953,6 @@ document.body.removeChild(div);
 
   
 </script>
+<div id="pdf-container"></div>
 </body>
 </html>
