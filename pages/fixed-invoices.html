@@ -870,17 +870,6 @@ await Promise.all(
 );
 await new Promise(resolve => setTimeout(resolve, 500));
 
-// Size the PDF page to exactly match the invoice's real rendered
-// height instead of forcing a fixed A4 page. This is what guarantees
-// a single page every time — a standard A4 height doesn't line up
-// perfectly with jsPDF's internal mm conversion, which is what was
-// spilling a sliver of content onto a near-blank second page.
-const cardEl = container.querySelector(".invoice-card");
-const contentHeightPx = cardEl.scrollHeight;
-const pxToMm = 25.4 / 96; // standard CSS px -> mm at 96dpi
-const pageWidthMm = 794 * pxToMm;   // matches the fixed 794px card width
-const pageHeightMm = contentHeightPx * pxToMm;
-
 const options = {
 
 
@@ -906,30 +895,21 @@ allowTaint:false,
 
 backgroundColor:"#ffffff",
 
-logging: true, // keep true for now — if the PDF is still blank, open
+logging: true, // keep true for now — if the PDF still looks wrong, open
                 // devtools, click "Download PDF", and check the console
                 // for html2canvas's own diagnostic output
-// FIX: previously this was `document.documentElement.offsetWidth`,
-// which on a phone is the phone's screen width (e.g. ~375px). A fixed,
-// generously wide render window avoids any remaining @media breakpoint
-// from ever being able to apply during capture, on any device.
-windowWidth: 1200,
-windowHeight: 1600,
 imageTimeout:0
 
 },
 
 jsPDF:{
 
-
     unit:"mm",
 
-    format:[pageWidthMm, pageHeightMm], // custom single-page size
-                                         // matching the actual content
-                                         // — no more forced "a4"
+    format:"a4", // placeholder — replaced below with the invoice's
+                  // real dimensions once it's actually been rendered
 
     orientation:"portrait"
-
 
 }
 
@@ -942,10 +922,26 @@ try {
 
 await document.fonts.ready;
 
-await html2pdf()
-.set(options)
-.from(container)
-.save();
+// FIX for the right-edge cut-off: previously the PDF page size was
+// pre-calculated from container.scrollHeight using a manual px->mm
+// conversion (794px -> 210mm etc). That conversion didn't line up
+// with how html2canvas's "scale" option actually affects the
+// captured canvas's pixel dimensions, so the image ended up wider
+// than the page and got clipped on the right. The reliable fix is to
+// size the page from the ACTUAL rendered canvas's own width/height
+// ratio, computed after capture — that guarantees a perfect match
+// since it's the exact same pixels being placed on the page.
+const worker = html2pdf().set(options).from(container);
+
+await worker.toCanvas().then(canvas => {
+    const pdfWidthMm = 210; // matches the fixed 794px card design (210mm @ 96dpi)
+    const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
+    return worker.set({
+        jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" }
+    });
+});
+
+await worker.toPdf().save();
 
 }
 
