@@ -18,7 +18,7 @@
       --serif: 'Playfair Display', serif;
       --radius: 16px; --shadow: 0 4px 30px rgba(13,35,83,0.06);
     }
-    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); overflow-x: hidden; }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
     /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; min-height: 100dvh; }
@@ -581,7 +581,7 @@ cursor:pointer;
 
       <div class="card">
         <div class="card-header"><h3>💼 System Invoice Records Matrix</h3></div>
-        <div style="overflow-x: auto;">
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
           <table>
             <thead>
               <tr>
@@ -931,17 +931,21 @@ await document.fonts.ready;
 // size the page from the ACTUAL rendered canvas's own width/height
 // ratio, computed after capture — that guarantees a perfect match
 // since it's the exact same pixels being placed on the page.
-const worker = html2pdf().set(options).from(container);
+const worker = html2pdf().set(options).from(container).toCanvas();
 
-await worker.toCanvas().then(canvas => {
-    const pdfWidthMm = 210; // matches the fixed 794px card design (210mm @ 96dpi)
-    const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
-    return worker.set({
-        jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" }
-    });
-});
+// FIX for "Invoice PDF generation failed": worker.toCanvas().then(canvas
+// => ...) does NOT hand you the actual canvas — that's just the worker
+// itself, passed along for chaining. html2pdf.js's documented way to
+// retrieve the real canvas is worker.get('canvas'), which is what
+// actually caused canvas.width/height to be undefined and throw.
+const canvas = await worker.get("canvas");
+const pdfWidthMm = 210; // matches the fixed 794px card design (210mm @ 96dpi)
+const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
 
-await worker.toPdf().save();
+await worker
+    .set({ jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" } })
+    .toPdf()
+    .save();
 
 }
 
