@@ -21,12 +21,12 @@
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); overflow-x: hidden; }
 
     /* ── LAYOUT ── */
-    .layout { display: flex; min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; min-height: 100dvh; }
 
     /* ── SIDEBAR ── */
     .sidebar {
       width: 220px; background: var(--navy); position: fixed;
-      top: 0; left: 0; height: 100vh; display: flex;
+      top: 0; left: 0; height: 100vh; height: 100dvh; display: flex;
       flex-direction: column; z-index: 50;
       transition: transform 0.3s ease;
     }
@@ -81,7 +81,7 @@
     .sidebar.mobile-open { transform: translateX(0) !important; }
 
     /* ── MAIN CONTENT ── */
-    .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .main { margin-left: 220px; flex: 1; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
     .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
     .content { padding: 1.5rem; flex: 1; }
@@ -117,11 +117,7 @@ background:white;
 
 width:794px;
 
-min-height:1123px;
-
-padding:40px;
-
-margin:auto;
+padding:56px 60px;
 
 font-family:Outfit,sans-serif;
 
@@ -129,81 +125,45 @@ color:#1f2937;
 
 }
 
-.invoice-banner{
+.invoice-top-strip{
 
-background:linear-gradient(135deg,#0d2353,#1a5cff);
+height:5px;
 
-color:white;
+border-radius:3px;
 
-padding:30px;
+background:linear-gradient(90deg,#0d2353,#1a5cff);
 
-border-radius:18px;
+margin-bottom:36px;
+
+}
+
+.invoice-head{
 
 display:flex;
 
 justify-content:space-between;
 
+align-items:flex-start;
+
+margin-bottom:38px;
+
+}
+
+.invoice-brand{
+
+display:flex;
+
 align-items:center;
 
-margin-bottom:30px;
+gap:14px;
 
 }
 
-.invoice-title{
+.invoice-brand-name{
 
-font-size:34px;
+font-family:'Playfair Display',serif;
 
-font-weight:700;
-
-}
-
-.invoice-sub{
-
-opacity:.9;
-
-margin-top:8px;
-
-}
-
-.summary-grid{
-
-display:grid;
-
-grid-template-columns:repeat(3,1fr);
-
-gap:18px;
-
-margin:30px 0;
-
-}
-
-.summary-box{
-
-background:#f8fafc;
-
-border-radius:14px;
-
-padding:20px;
-
-border:1px solid #e5e7eb;
-
-}
-
-.summary-box h4{
-
-font-size:13px;
-
-text-transform:uppercase;
-
-color:#6b7280;
-
-margin-bottom:10px;
-
-}
-
-.summary-box p{
-
-font-size:24px;
+font-size:20px;
 
 font-weight:700;
 
@@ -211,83 +171,254 @@ color:#0d2353;
 
 }
 
+.invoice-brand-tag{
+
+font-size:12px;
+
+color:#6b7280;
+
+margin-top:3px;
+
+letter-spacing:.02em;
+
+}
+
+.invoice-meta{
+
+text-align:right;
+
+}
+
+.invoice-meta-label{
+
+font-size:11px;
+
+letter-spacing:.14em;
+
+text-transform:uppercase;
+
+color:#9ca3af;
+
+font-weight:600;
+
+}
+
+.invoice-meta-number{
+
+font-size:19px;
+
+font-weight:600;
+
+color:#0d2353;
+
+margin-top:3px;
+
+}
+
+.invoice-meta-date{
+
+font-size:12px;
+
+color:#6b7280;
+
+margin-top:5px;
+
+}
+
+.invoice-parties{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-bottom:36px;
+
+}
+
+.invoice-parties td{
+
+vertical-align:top;
+
+width:33.33%;
+
+padding:0 20px 0 0;
+
+}
+
+.party-label{
+
+font-size:10.5px;
+
+letter-spacing:.12em;
+
+text-transform:uppercase;
+
+color:#9ca3af;
+
+font-weight:600;
+
+margin-bottom:7px;
+
+}
+
+.party-label.spaced{
+
+margin-top:14px;
+
+}
+
+.party-name{
+
+font-size:14px;
+
+font-weight:600;
+
+color:#111827;
+
+margin-bottom:4px;
+
+}
+
+.party-detail{
+
+font-size:12.5px;
+
+color:#4b5563;
+
+line-height:1.65;
+
+}
+
+.status-pill{
+
+display:inline-block;
+
+padding:3px 11px;
+
+border-radius:100px;
+
+font-size:12px;
+
+font-weight:600;
+
+}
+
+.status-pill.outstanding{ color:#b45309; background:#fffbeb; }
+.status-pill.settled{ color:#0f9d6c; background:#dcfce7; }
+
 .invoice-table{
 
 width:100%;
 
 border-collapse:collapse;
 
-margin-top:30px;
+margin-bottom:32px;
 
 }
 
-.invoice-table th{
+.invoice-table thead th{
 
-background:#0d2353;
+text-align:left;
 
-color:white;
+font-size:11px;
 
-padding:14px;
+text-transform:uppercase;
 
-}
+letter-spacing:.08em;
 
-.invoice-table td{
+color:#6b7280;
 
-padding:14px;
+font-weight:600;
 
-border-bottom:1px solid #eee;
+padding:0 14px 12px 14px;
 
-}
-
-.total-card{
-
-margin-left:auto;
-
-margin-top:35px;
-
-width:320px;
-
-background:#0d2353;
-
-color:white;
-
-padding:22px;
-
-border-radius:16px;
+border-bottom:2px solid #0d2353;
 
 }
 
-.total-card h2{
+.invoice-table thead th:last-child,
+.invoice-table tbody td:last-child,
+.invoice-table tfoot td:last-child{
 
-font-size:30px;
+text-align:right;
 
-margin-top:8px;
+}
+
+.invoice-table tbody td{
+
+padding:16px 14px;
+
+font-size:13px;
+
+color:#374151;
+
+border-bottom:1px solid #e5e7eb;
+
+}
+
+.invoice-table tfoot td{
+
+padding:16px 14px 4px 14px;
+
+font-size:15px;
+
+font-weight:700;
+
+color:#0d2353;
+
+border-top:2px solid #0d2353;
+
+}
+
+.invoice-table tfoot td:first-child{
+
+font-size:12px;
+
+font-weight:600;
+
+color:#6b7280;
+
+text-transform:uppercase;
+
+letter-spacing:.06em;
 
 }
 
 .payment-box{
 
-margin-top:40px;
+padding:16px 18px;
 
-padding:20px;
-
-border-radius:14px;
+border-radius:8px;
 
 background:#f8fafc;
 
-border-left:5px solid #1a5cff;
+border-left:3px solid #1a5cff;
+
+font-size:12.5px;
+
+color:#4b5563;
+
+margin-bottom:34px;
+
+}
+
+.payment-box strong{
+
+color:#0d2353;
 
 }
 
 .footer-note{
 
-margin-top:60px;
-
 text-align:center;
 
-font-size:13px;
+font-size:11.5px;
 
-color:#6b7280;
+color:#9ca3af;
+
+padding-top:22px;
+
+border-top:1px solid #f0f0f0;
 
 }
 #pdf-container {
@@ -309,10 +440,15 @@ color:#6b7280;
      .rendering class — at that point it's in completely normal,
      in-document layout (html2canvas handles that reliably), and is
      visually hidden from the user behind the opaque full-screen
-     #pdf-generating-overlay shown on top of it instead. */
+     #pdf-generating-overlay shown on top of it instead. Also removed
+     the forced min-height:1123px from here — the PDF page is now
+     sized dynamically to the invoice's real rendered height (see the
+     downloadInvoice() JS), so forcing a fixed A4-height box was both
+     unnecessary and the actual cause of the blank second page (its
+     297mm didn't perfectly match jsPDF's internal page math, so a
+     sliver spilled onto a near-empty extra page). */
   display: none;
   width: 794px;
-  min-height: 1123px;
   background-color: #ffffff;
 }
 #pdf-container.rendering { display: block; }
@@ -340,11 +476,11 @@ color:#6b7280;
 @keyframes pdf-spin { to { transform: rotate(360deg); } }
 .invoice-logo {
 
-width:70px;
-height:70px;
+width:52px;
+height:52px;
 object-fit:contain;
 background:white;
-border-radius:12px;
+border-radius:10px;
 padding:6px;
 
 }
@@ -638,299 +774,81 @@ generatingPDF=true;
 
 <div class="invoice-card">
 
-<div class="invoice-banner">
+<div class="invoice-top-strip"></div>
 
+<div class="invoice-head">
 
-<div style="display:flex;align-items:center;gap:15px">
-
-
-<img 
-class="invoice-logo"
-src="../QFA_Logo.png"
-/>
-
-
+<div class="invoice-brand">
+<img class="invoice-logo" src="../QFA_Logo.png"/>
 <div>
-
-<div class="invoice-title">
-Quick Freelancing Agency
+<div class="invoice-brand-name">Quick Freelancing Agency</div>
+<div class="invoice-brand-tag">Professional Consulting Invoice</div>
+</div>
 </div>
 
-<div class="invoice-sub">
-Professional Consulting Invoice
-</div>
-
-</div>
-
-
-</div>
-
-
-<div style="text-align:right">
-
-<div style="font-size:28px;font-weight:700">
-INVOICE
-</div>
-
-<div>${invId}</div>
-
-<div>
-${new Date().toLocaleDateString()}
+<div class="invoice-meta">
+<div class="invoice-meta-label">Invoice</div>
+<div class="invoice-meta-number">${invId}</div>
+<div class="invoice-meta-date">${new Date().toLocaleDateString()}</div>
 </div>
 
 </div>
 
-
-</div>
-
-
-
-
-
-
-
-
-<div style="
-display:flex;
-justify-content:space-between;
-gap:40px;
-flex-wrap:wrap;
-">
-
-
-<div>
-
-<h3>Issued By</h3>
-
-<p>
-
-<strong>
-Quick Freelancing Agency
-</strong>
-
-<br>
-
-Email:
-ndy.andupa@gmail.com
-
-<br>
-
-Phone:
-+251911859866
-
-</p>
-
-</div>
-
-
-
-<div>
-
-<h3>Bill To</h3>
-
-
-<p>
-
-<strong>
-${clientName}
-</strong>
-
-<br>
-
-Prepared By:
-${freelancer}
-
-</p>
-
-
-</div>
-
-
-</div>
-
-
-
-
-<div class="summary-grid">
-
-
-<div class="summary-box">
-
-<h4>
-Hours
-</h4>
-
-<p>
-${hours.toFixed(2)}
-</p>
-
-</div>
-
-
-
-<div class="summary-box">
-
-<h4>
-Period
-</h4>
-
-<p style="font-size:16px">
-
-${start}
-
-<br>
-
-${end}
-
-</p>
-
-</div>
-
-
-
-<div class="summary-box">
-
-<h4>
-Status
-</h4>
-
-
-<p style="color:#ef4444">
-
-${totalAmount > 0 ? "Outstanding" : "Fully Settled"}
-
-</p>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<table class="invoice-table">
-
-
-<thead>
-
+<table class="invoice-parties">
 <tr>
 
-<th>
-Description
-</th>
+<td>
+<div class="party-label">Issued By</div>
+<div class="party-name">Quick Freelancing Agency</div>
+<div class="party-detail">ndy.andupa@gmail.com<br>+251 911 859 866</div>
+</td>
 
+<td>
+<div class="party-label">Bill To</div>
+<div class="party-name">${clientName}</div>
+<div class="party-detail">Prepared by ${freelancer}</div>
+</td>
 
-<th>
-Hours
-</th>
-
-
-<th>
-Amount
-</th>
+<td>
+<div class="party-label">Billing Period</div>
+<div class="party-detail">${start} &mdash; ${end}</div>
+<div class="party-label spaced">Status</div>
+<div class="party-detail"><span class="status-pill ${totalAmount > 0 ? 'outstanding' : 'settled'}">${totalAmount > 0 ? 'Outstanding' : 'Fully Settled'}</span></div>
+</td>
 
 </tr>
-
-</thead>
-
-
-
-<tbody>
-
-
-<tr>
-
-
-<td>
-Professional Freelance Consulting Services
-</td>
-
-
-<td>
-
-${hours.toFixed(2)}
-
-</td>
-
-
-<td>
-
-$${totalAmount.toFixed(2)}
-
-</td>
-
-
-</tr>
-
-
-</tbody>
-
-
 </table>
 
-
-
-
-
-<div class="total-card">
-
-
-<div>
-Total Amount Due
-</div>
-
-
-<h2>
-
-$${totalAmount.toFixed(2)}
-
-</h2>
-
-
-</div>
-
-
-
+<table class="invoice-table">
+<thead>
+<tr>
+<th>Description</th>
+<th>Hours</th>
+<th>Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Professional Freelance Consulting Services</td>
+<td>${hours.toFixed(2)}</td>
+<td>$${totalAmount.toFixed(2)}</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td colspan="2">Total Amount Due</td>
+<td>$${totalAmount.toFixed(2)}</td>
+</tr>
+</tfoot>
+</table>
 
 <div class="payment-box">
-
-
-<h3>
-Payment Information
-</h3>
-
-
-<p>
-
-Payment is due upon receipt.
-
-<br>
-
-Reference:
-<strong>${invId}</strong>
-
-</p>
-
-
+Payment is due upon receipt. Reference: <strong>${invId}</strong>
 </div>
-
-
 
 <div class="footer-note">
-
-
-Thank you for choosing
-
-<strong>
-Quick Freelancing Agency
-</strong>
-
-
+Thank you for choosing <strong>Quick Freelancing Agency</strong>
 </div>
-
 
 </div>
 
@@ -951,6 +869,17 @@ await Promise.all(
     })
 );
 await new Promise(resolve => setTimeout(resolve, 500));
+
+// Size the PDF page to exactly match the invoice's real rendered
+// height instead of forcing a fixed A4 page. This is what guarantees
+// a single page every time — a standard A4 height doesn't line up
+// perfectly with jsPDF's internal mm conversion, which is what was
+// spilling a sliver of content onto a near-blank second page.
+const cardEl = container.querySelector(".invoice-card");
+const contentHeightPx = cardEl.scrollHeight;
+const pxToMm = 25.4 / 96; // standard CSS px -> mm at 96dpi
+const pageWidthMm = 794 * pxToMm;   // matches the fixed 794px card width
+const pageHeightMm = contentHeightPx * pxToMm;
 
 const options = {
 
@@ -995,7 +924,9 @@ jsPDF:{
 
     unit:"mm",
 
-    format:"a4",
+    format:[pageWidthMm, pageHeightMm], // custom single-page size
+                                         // matching the actual content
+                                         // — no more forced "a4"
 
     orientation:"portrait"
 
