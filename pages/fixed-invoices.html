@@ -762,6 +762,17 @@ generatingPDF=true;
     return;
 }
 
+    // FIX for "generates but never downloads" on mobile: everything
+    // below this point is async (image loads, font loads, canvas
+    // rendering), so by the time the PDF is actually ready, mobile
+    // Safari/Chrome no longer treat it as part of the original tap and
+    // silently block a new download/tab. Opening a blank tab RIGHT NOW,
+    // synchronously, preserves that trust — we just redirect this
+    // already-open tab to the finished PDF once it exists. Desktop is
+    // unaffected by this restriction, so it keeps using the normal
+    // save-dialog flow further down.
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const pdfWindow = isMobile ? window.open("", "_blank") : null;
 
     const freelancer = auth.user()?.name || "Freelancer";
 
@@ -942,10 +953,32 @@ const canvas = await worker.get("canvas");
 const pdfWidthMm = 210; // matches the fixed 794px card design (210mm @ 96dpi)
 const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
 
-await worker
-    .set({ jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" } })
-    .toPdf()
-    .save();
+const pdfWorker = worker.set({
+    jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" }
+}).toPdf();
+
+if (isMobile) {
+    // Redirect the tab we opened synchronously at the very start of
+    // this function, back when we still had the browser's trust.
+    const pdfBlob = await pdfWorker.outputPdf("blob");
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    if (pdfWindow) {
+        pdfWindow.location.href = blobUrl;
+    } else {
+        // The popup got blocked anyway (rare) — fall back to a normal
+        // download link. On iOS this will most likely just open the
+        // PDF (that's standard iOS/Safari behavior for PDFs, not a
+        // bug), from where it can be saved via the share icon.
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${invId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+} else {
+    await pdfWorker.save();
+}
 
 }
 
@@ -957,6 +990,9 @@ console.error(
 error
 );
 
+if (pdfWindow) {
+    pdfWindow.close();
+}
 
 alert(
 "Invoice PDF generation failed."
