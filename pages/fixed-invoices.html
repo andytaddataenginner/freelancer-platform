@@ -434,24 +434,68 @@ border-top:1px solid #f0f0f0;
         that doesn't even match our -9999px, and a 0px height. No CSS
         unit or explicit-height tweak can fix this; the off-screen
         technique itself is what's broken.
+     3) display:none + toggling .rendering to display:block right
+        before capture -> fixed the blank/clipped canvas, but
+        introduced a NEW bug: html2canvas reads the target element's
+        position from the LIVE page via getBoundingClientRect() and
+        does not compensate for the page's current scroll offset by
+        default. If the user had scrolled the invoice table before
+        clicking Download, that scroll offset showed up as blank
+        space painted at the top of the captured canvas, pushing the
+        real content down and off the bottom of the page. On mobile
+        (narrow real viewport), the same "capture reads the live
+        window" behavior meant html2canvas clipped the 794px-wide
+        card to the ~375-430px visible window width instead of the
+        card's actual width, cutting the invoice in half.
      FIX: stop hiding it geometrically at all. It stays display:none
      (out of the page entirely, so it never takes up space) until the
      moment we're actively generating a PDF, when JS adds the
      .rendering class — at that point it's in completely normal,
      in-document layout (html2canvas handles that reliably), and is
      visually hidden from the user behind the opaque full-screen
-     #pdf-generating-overlay shown on top of it instead. Also removed
-     the forced min-height:1123px from here — the PDF page is now
-     sized dynamically to the invoice's real rendered height (see the
-     downloadInvoice() JS), so forcing a fixed A4-height box was both
-     unnecessary and the actual cause of the blank second page (its
-     297mm didn't perfectly match jsPDF's internal page math, so a
-     sliver spilled onto a near-empty extra page). */
+     #pdf-generating-overlay shown on top of it instead. We also
+     explicitly pin html2canvas's capture window (scrollX/scrollY: 0,
+     windowWidth/windowHeight matching the container) in the
+     downloadInvoice() JS instead of letting it infer these from the
+     live, possibly-scrolled, possibly-narrow browser window — see
+     the comments in downloadInvoice() for the scroll/viewport fix.
+     Also removed the forced min-height:1123px from here — the PDF
+     page is now sized dynamically to the invoice's real rendered
+     height (see the downloadInvoice() JS), so forcing a fixed
+     A4-height box was both unnecessary and the actual cause of the
+     blank second page (its 297mm didn't perfectly match jsPDF's
+     internal page math, so a sliver spilled onto a near-empty extra
+     page). */
   display: none;
   width: 794px;
   background-color: #ffffff;
 }
 #pdf-container.rendering { display: block; }
+
+/* FIX for the recurring x-offset / blank-mobile-capture bug: html2canvas
+   measures the target element's position via getBoundingClientRect()
+   against the LIVE document, then renders a cloned copy of that same
+   document to actually screenshot. As long as the clone is the same
+   width as the real window, those two numbers agree. But once we widen
+   the clone's window (windowWidth option, needed so mobile's ~390px
+   viewport doesn't clip the 794px-wide invoice card), the sidebar +
+   topbar around #pdf-container reflow differently at that new width
+   than they did in the real, narrow window the position was measured
+   in — so the coordinates no longer match. On desktop this showed up
+   as content shifted ~243px left and clipped; on mobile the mismatch
+   was large enough that the crop landed entirely off the rendered
+   content, i.e. a blank page.
+   The fix: while a PDF is being generated, hide every other top-level
+   piece of the app (sidebar/topbar via .layout, the mobile header, the
+   sidebar overlay) so #pdf-container is the ONLY thing left in the
+   document. With nothing else present, it is always exactly at (0,0)
+   in both the real window and the widened clone — no reflow-vs-
+   measurement mismatch possible, regardless of window width or device. */
+body.pdf-generating .layout,
+body.pdf-generating .mobile-header,
+body.pdf-generating .sidebar-overlay {
+  display: none !important;
+}
 #pdf-generating-overlay {
   display: none;
   position: fixed;
@@ -778,6 +822,26 @@ generatingPDF=true;
 
     document.getElementById("pdf-generating-overlay").classList.add("active");
 
+    // FIX for the x-offset-cut-on-desktop / blank-page-on-mobile bug:
+    // html2canvas measures #pdf-container's position via
+    // getBoundingClientRect() against the LIVE page (sidebar, topbar,
+    // mobile header and all), then separately renders a cloned copy of
+    // that page to actually take the screenshot. Those two only agree
+    // if the clone is rendered at the exact same window width as the
+    // real one. We need the clone to be widened to at least 794px
+    // (windowWidth option below) so mobile's narrow viewport doesn't
+    // clip the invoice card — but widening it reflows the sidebar +
+    // topbar around the container differently than they were in the
+    // real, narrow window, so the measured position no longer matches
+    // the clone. That mismatch is exactly what produced the ~243px
+    // left-cut on desktop and the fully blank capture on mobile.
+    // Fix: make the container the ONLY thing left in the document
+    // while it's being captured. With the rest of the app hidden, the
+    // container is always at (0,0) — in the real window AND in any
+    // clone, at any width — so there is nothing left to disagree about.
+    window.scrollTo(0, 0);
+    document.body.classList.add("pdf-generating");
+
     const container = document.getElementById("pdf-container");
     container.classList.add("rendering");
 
@@ -881,6 +945,13 @@ await Promise.all(
 );
 await new Promise(resolve => setTimeout(resolve, 500));
 
+// Measure the container's real rendered height now, after content
+// and images have settled, so html2canvas can be told exactly what
+// "window" to capture instead of inferring it from the live browser
+// window (which is what caused the mobile clipping).
+const renderedWidth = container.scrollWidth || 794;
+const renderedHeight = container.scrollHeight || 1123;
+
 const options = {
 
 
@@ -909,7 +980,28 @@ backgroundColor:"#ffffff",
 logging: true, // keep true for now — if the PDF still looks wrong, open
                 // devtools, click "Download PDF", and check the console
                 // for html2canvas's own diagnostic output
-imageTimeout:0
+imageTimeout:0,
+
+// FIX (see the body.classList.add("pdf-generating") comment above
+// for the full explanation): the rest of the app UI is hidden during
+// capture, so the container is guaranteed to sit at (0,0) — in the
+// real page AND in the widened clone html2canvas renders internally.
+// x/y/width/height below make that explicit rather than relying on
+// html2canvas to (re)detect it via getBoundingClientRect, so there is
+// no path left for the position-vs-clone mismatch that caused the
+// desktop left-cut and the blank mobile page. windowWidth/windowHeight
+// still widen the internal render so mobile's narrow real viewport
+// doesn't clip the 794px-wide card, and scrollX/scrollY keep the
+// origin pinned even if something outside our control causes a
+// residual page scroll.
+x: 0,
+y: 0,
+width: renderedWidth,
+height: renderedHeight,
+scrollX: 0,
+scrollY: 0,
+windowWidth: renderedWidth,
+windowHeight: renderedHeight
 
 },
 
@@ -1007,6 +1099,7 @@ finally {
 
         container.innerHTML = "";
         container.classList.remove("rendering");
+        document.body.classList.remove("pdf-generating");
 
         document.getElementById("pdf-generating-overlay").classList.remove("active");
 
