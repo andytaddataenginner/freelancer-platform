@@ -5,559 +5,546 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Invoice Hub — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
-      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --white: #fff; --bg: #f8fafc; --bg2: #eef1f8;
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
       --green: #10b981; --green-bg: #dcfce7;
       --amber: #f59e0b; --amber-bg: #fffbeb;
+      --red: #ef4444; --red-bg: #fee2e2;
       --sans: 'Outfit', system-ui, sans-serif;
       --serif: 'Playfair Display', serif;
       --radius: 16px; --shadow: 0 4px 30px rgba(13,35,83,0.06);
+      --shadow-md: 0 8px 40px rgba(13,35,83,0.1);
+      --shadow-lg: 0 12px 50px rgba(13,35,83,0.12);
     }
-    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+    html, body { 
+      font-family: var(--sans); 
+      background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+      color: var(--ink); 
+      min-height: 100vh;
+    }
 
     /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; min-height: 100dvh; }
 
     /* ── SIDEBAR ── */
     .sidebar {
-      width: 220px; background: var(--navy); position: fixed;
-      top: 0; left: 0; height: 100vh; height: 100dvh; display: flex;
-      flex-direction: column; z-index: 50;
-      transition: transform 0.3s ease;
+      width: 240px; background: linear-gradient(180deg, var(--navy) 0%, #0a1d3f 100%);
+      position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; display: flex;
+      flex-direction: column; z-index: 50; transition: transform 0.3s ease;
+      box-shadow: 4px 0 20px rgba(13,35,83,0.15);
     }
     .sidebar-brand {
-      padding: 1.1rem 1.2rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; align-items: center; gap: 0.6rem;
+      padding: 1.4rem 1.4rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; gap: 0.8rem;
     }
-    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .brand-logo { 
+      width: 40px; height: 40px; background: linear-gradient(135deg, #f5c842 0%, #ffd700 100%);
+      border-radius: 10px; overflow: hidden; padding: 4px; flex-shrink: 0; 
+      box-shadow: 0 4px 12px rgba(245, 200, 66, 0.3);
+    }
     .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
-    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
-
-    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
-    .sidebar-nav a {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
-      color: rgba(255,255,255,0.55); text-decoration: none;
-      transition: all 0.2s; border-right: 3px solid transparent;
+    .brand-text strong { 
+      display: block; color: white; font-size: 0.85rem; font-weight: 700; 
+      letter-spacing: -0.02em;
     }
-    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
-    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+    .brand-text span { 
+      font-size: 0.65rem; color: var(--gold2); text-transform: uppercase; 
+      letter-spacing: 0.1em; font-weight: 600;
+    }
+
+    .sidebar-nav { flex: 1; padding: 1.2rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.8rem 1.3rem; font-size: 0.88rem; font-weight: 500;
+      color: rgba(255,255,255,0.65); text-decoration: none;
+      transition: all 0.25s ease; border-right: 3px solid transparent;
+      margin: 0.2rem 0;
+    }
+    .sidebar-nav a:hover { 
+      color: white; background: rgba(255,255,255,0.08); 
+      transform: translateX(2px);
+    }
+    .sidebar-nav a.active { 
+      color: white; background: rgba(26,92,255,0.25);
+      border-right-color: var(--gold2);
+      font-weight: 600;
+    }
 
     .sidebar-user {
-      padding: 1rem 1.2rem;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      font-size: 0.8rem;
+      padding: 1.2rem 1.4rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.82rem;
     }
-    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
-    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
-    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.3rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+    .sidebar-user a { 
+      display: block; margin-top: 0.6rem; font-size: 0.78rem; 
+      color: var(--gold2); text-decoration: none; transition: opacity 0.2s;
+      font-weight: 600;
+    }
+    .sidebar-user a:hover { opacity: 0.8; }
 
     /* ── MOBILE NAV ── */
     .mobile-header {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
-      background: var(--navy); padding: 0.8rem 1rem;
-      align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+      background: linear-gradient(180deg, var(--navy) 0%, #0a1d3f 100%);
+      padding: 0.95rem 1.2rem; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 15px rgba(13,35,83,0.2);
     }
-    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
-    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
-    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .mobile-logo { display: flex; align-items: center; gap: 0.7rem; }
+    .mobile-logo img { 
+      height: 36px; background: linear-gradient(135deg, #f5c842 0%, #ffd700 100%);
+      border-radius: 8px; padding: 3px; 
+    }
+    .mobile-logo span { color: white; font-size: 0.9rem; font-weight: 700; }
     .hamburger-btn {
       background: rgba(255,255,255,0.1); border: none; color: white;
-      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      width: 40px; height: 40px; border-radius: 10px; font-size: 1.2rem;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
     }
+    .hamburger-btn:active { background: rgba(255,255,255,0.15); }
     .sidebar-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+      z-index: 45; backdrop-filter: blur(2px);
     }
     .sidebar-overlay.open { display: block; }
     .sidebar.mobile-open { transform: translateX(0) !important; }
 
     /* ── MAIN CONTENT ── */
-    .main { margin-left: 220px; flex: 1; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
-    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
-    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
-    .content { padding: 1.5rem; flex: 1; }
+    .main { margin-left: 240px; flex: 1; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+    .topbar { 
+      background: rgba(255, 255, 255, 0.95); 
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(13,35,83,0.06); 
+      padding: 1.3rem 2rem; display: flex; align-items: center; justify-content: space-between; 
+      position: sticky; top: 0; z-index: 40;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .topbar h2 { 
+      font-family: var(--serif); font-size: 1.6rem; 
+      background: linear-gradient(135deg, var(--navy) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+    }
+    .content { padding: 2rem; flex: 1; max-width: 1400px; width: 100%; margin: 0 auto; }
 
-    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.04); margin-bottom: 1.5rem; }
-    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
-    .card-header h3 { font-size: 1rem; font-weight: 600; }
+    .card { 
+      background: white; border-radius: calc(var(--radius) + 4px); 
+      padding: 2rem; box-shadow: var(--shadow); 
+      border: 1px solid rgba(13,35,83,0.04); margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+    .card:hover { box-shadow: var(--shadow-md); }
+    .card-header { 
+      padding-bottom: 1.4rem; border-bottom: 2px solid var(--bg2); 
+      display: flex; align-items: center; justify-content: space-between; 
+      margin-bottom: 1.8rem;
+    }
+    .card-header h3 { 
+      font-size: 1.1rem; font-weight: 700; 
+      display: flex; align-items: center; gap: 0.6rem;
+    }
     
-    .filter-row { display: grid; grid-template-columns: repeat(3, minmax(200px, 300px)) 160px; gap: 1.25rem; align-items: flex-end; background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--bg2); max-width: 1100px; }
-    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
-    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
-    .filter-row select, .filter-row input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; outline: none; background: white; transition: border-color 0.2s; width: 100%; }
-    .filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
+    .filter-row { 
+      display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)) 140px; 
+      gap: 1.5rem; align-items: flex-end; 
+      background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+      padding: 1.6rem; border-radius: 14px; border: 1.5px solid rgba(26,92,255,0.1);
+      max-width: 100%;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .filter-group label { 
+      font-size: 0.75rem; font-weight: 700; color: var(--ink2); 
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .filter-row select, .filter-row input { 
+      padding: 0.75rem 1rem; border: 1.5px solid rgba(13,35,83,0.12); 
+      border-radius: 10px; font-family: var(--sans); font-size: 0.9rem; 
+      outline: none; background: white; transition: all 0.2s;
+      width: 100%; font-weight: 500;
+    }
+    .filter-row select:focus, .filter-row input:focus { 
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,92,255,0.1);
+    }
+    .filter-row select { appearance: none; cursor: pointer; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 600; letter-spacing: 0.05em; }
-    td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { 
+      text-align: left; padding: 1rem 1.2rem; color: var(--ink2); 
+      font-size: 0.75rem; text-transform: uppercase; 
+      border-bottom: 2px solid var(--bg2); font-weight: 700; 
+      letter-spacing: 0.06em; background: linear-gradient(90deg, rgba(13,35,83,0.02) 0%, transparent 100%);
+    }
+    td { 
+      padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(13,35,83,0.05); 
+      color: var(--ink2); font-weight: 500;
+    }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f8fafc; }
+    tbody tr {
+      transition: all 0.2s ease;
+    }
+    tbody tr:hover { 
+      background: rgba(26,92,255,0.04);
+      transform: translateY(-1px);
+    }
 
-    .btn { background: var(--navy); color: white; padding: 0.6rem 1.2rem; font-size: 0.82rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; transition: background 0.2s; }
-    .btn:hover { background: var(--accent); }
-    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--navy); }
-    .btn-outline:hover { border-color: var(--navy); background: rgba(13,35,83,0.02); }
+    .btn { 
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: white; padding: 0.65rem 1.3rem; font-size: 0.82rem; 
+      border-radius: 10px; border: none; cursor: pointer; font-weight: 700; 
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; 
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .btn:hover { 
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 20px rgba(26,92,255,0.3);
+      transform: translateY(-2px);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn-outline { 
+      background: transparent; border: 1.5px solid rgba(13,35,83,0.15); 
+      color: var(--navy); box-shadow: none;
+    }
+    .btn-outline:hover { 
+      border-color: var(--accent); 
+      background: rgba(26,92,255,0.05);
+      box-shadow: 0 4px 12px rgba(26,92,255,0.15);
+    }
     
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
-    .badge-paid { color: var(--green); background: var(--green-bg); }
-    .badge-outstanding { color: #b45309; background: var(--amber-bg); }
-
-  .invoice-card{
-
-background:white;
-
-width:794px;
-
-padding:56px 60px;
-
-font-family:Outfit,sans-serif;
-
-color:#1f2937;
-
-}
-
-.invoice-top-strip{
-
-height:5px;
-
-border-radius:3px;
-
-background:linear-gradient(90deg,#0d2353,#1a5cff);
-
-margin-bottom:36px;
-
-}
-
-.invoice-head{
-
-display:flex;
-
-justify-content:space-between;
-
-align-items:flex-start;
-
-margin-bottom:38px;
-
-}
-
-.invoice-brand{
-
-display:flex;
-
-align-items:center;
-
-gap:14px;
-
-}
-
-.invoice-brand-name{
-
-font-family:'Playfair Display',serif;
-
-font-size:20px;
-
-font-weight:700;
-
-color:#0d2353;
-
-}
-
-.invoice-brand-tag{
-
-font-size:12px;
-
-color:#6b7280;
-
-margin-top:3px;
-
-letter-spacing:.02em;
-
-}
-
-.invoice-meta{
-
-text-align:right;
-
-}
-
-.invoice-meta-label{
-
-font-size:11px;
-
-letter-spacing:.14em;
-
-text-transform:uppercase;
-
-color:#9ca3af;
-
-font-weight:600;
-
-}
-
-.invoice-meta-number{
-
-font-size:19px;
-
-font-weight:600;
-
-color:#0d2353;
-
-margin-top:3px;
-
-}
-
-.invoice-meta-date{
-
-font-size:12px;
-
-color:#6b7280;
-
-margin-top:5px;
-
-}
-
-.invoice-parties{
-
-width:100%;
-
-border-collapse:collapse;
-
-margin-bottom:36px;
-
-}
-
-.invoice-parties td{
-
-vertical-align:top;
-
-width:33.33%;
-
-padding:0 20px 0 0;
-
-}
-
-.party-label{
-
-font-size:10.5px;
-
-letter-spacing:.12em;
-
-text-transform:uppercase;
-
-color:#9ca3af;
-
-font-weight:600;
-
-margin-bottom:7px;
-
-}
-
-.party-label.spaced{
-
-margin-top:14px;
-
-}
-
-.party-name{
-
-font-size:14px;
-
-font-weight:600;
-
-color:#111827;
-
-margin-bottom:4px;
-
-}
-
-.party-detail{
-
-font-size:12.5px;
-
-color:#4b5563;
-
-line-height:1.65;
-
-}
-
-.status-pill{
-
-display:inline-block;
-
-padding:3px 11px;
-
-border-radius:100px;
-
-font-size:12px;
-
-font-weight:600;
-
-}
-
-.status-pill.outstanding{ color:#b45309; background:#fffbeb; }
-.status-pill.settled{ color:#0f9d6c; background:#dcfce7; }
-
-.invoice-table{
-
-width:100%;
-
-border-collapse:collapse;
-
-margin-bottom:32px;
-
-}
-
-.invoice-table thead th{
-
-text-align:left;
-
-font-size:11px;
-
-text-transform:uppercase;
-
-letter-spacing:.08em;
-
-color:#6b7280;
-
-font-weight:600;
-
-padding:0 14px 12px 14px;
-
-border-bottom:2px solid #0d2353;
-
-}
-
-.invoice-table thead th:last-child,
-.invoice-table tbody td:last-child,
-.invoice-table tfoot td:last-child{
-
-text-align:right;
-
-}
-
-.invoice-table tbody td{
-
-padding:16px 14px;
-
-font-size:13px;
-
-color:#374151;
-
-border-bottom:1px solid #e5e7eb;
-
-}
-
-.invoice-table tfoot td{
-
-padding:16px 14px 4px 14px;
-
-font-size:15px;
-
-font-weight:700;
-
-color:#0d2353;
-
-border-top:2px solid #0d2353;
-
-}
-
-.invoice-table tfoot td:first-child{
-
-font-size:12px;
-
-font-weight:600;
-
-color:#6b7280;
-
-text-transform:uppercase;
-
-letter-spacing:.06em;
-
-}
-
-.payment-box{
-
-padding:16px 18px;
-
-border-radius:8px;
-
-background:#f8fafc;
-
-border-left:3px solid #1a5cff;
-
-font-size:12.5px;
-
-color:#4b5563;
-
-margin-bottom:34px;
-
-}
-
-.payment-box strong{
-
-color:#0d2353;
-
-}
-
-.footer-note{
-
-text-align:center;
-
-font-size:11.5px;
-
-color:#9ca3af;
-
-padding-top:22px;
-
-border-top:1px solid #f0f0f0;
-
-}
-#pdf-container {
-  /* HISTORY OF FIXES ON THIS ELEMENT:
-     1) opacity:0 to hide it -> html2canvas paints opacity:0 as fully
-        transparent pixels -> flattened to solid white -> blank PDF.
-     2) position:absolute; left:-9999px to hide it off-screen instead
-        -> this looked like the standard trick, but html2canvas has a
-        documented bug where elements positioned outside its render
-        window get clipped/mis-measured (see html2canvas GitHub
-        issue #1740). Confirmed via its own debug log reporting our
-        container as "794x0 at 243.15,0" — a bogus, non-zero X offset
-        that doesn't even match our -9999px, and a 0px height. No CSS
-        unit or explicit-height tweak can fix this; the off-screen
-        technique itself is what's broken.
-     3) display:none + toggling .rendering to display:block right
-        before capture -> fixed the blank/clipped canvas, but
-        introduced a NEW bug: html2canvas reads the target element's
-        position from the LIVE page via getBoundingClientRect() and
-        does not compensate for the page's current scroll offset by
-        default. If the user had scrolled the invoice table before
-        clicking Download, that scroll offset showed up as blank
-        space painted at the top of the captured canvas, pushing the
-        real content down and off the bottom of the page. On mobile
-        (narrow real viewport), the same "capture reads the live
-        window" behavior meant html2canvas clipped the 794px-wide
-        card to the ~375-430px visible window width instead of the
-        card's actual width, cutting the invoice in half.
-     FIX: stop hiding it geometrically at all. It stays display:none
-     (out of the page entirely, so it never takes up space) until the
-     moment we're actively generating a PDF, when JS adds the
-     .rendering class — at that point it's in completely normal,
-     in-document layout (html2canvas handles that reliably), and is
-     visually hidden from the user behind the opaque full-screen
-     #pdf-generating-overlay shown on top of it instead. We also
-     explicitly pin html2canvas's capture window (scrollX/scrollY: 0,
-     windowWidth/windowHeight matching the container) in the
-     downloadInvoice() JS instead of letting it infer these from the
-     live, possibly-scrolled, possibly-narrow browser window — see
-     the comments in downloadInvoice() for the scroll/viewport fix.
-     Also removed the forced min-height:1123px from here — the PDF
-     page is now sized dynamically to the invoice's real rendered
-     height (see the downloadInvoice() JS), so forcing a fixed
-     A4-height box was both unnecessary and the actual cause of the
-     blank second page (its 297mm didn't perfectly match jsPDF's
-     internal page math, so a sliver spilled onto a near-empty extra
-     page). */
-  display: none;
-  width: 794px;
-  background-color: #ffffff;
-}
-#pdf-container.rendering { display: block; }
-
-/* FIX for the recurring x-offset / blank-mobile-capture bug: html2canvas
-   measures the target element's position via getBoundingClientRect()
-   against the LIVE document, then renders a cloned copy of that same
-   document to actually screenshot. As long as the clone is the same
-   width as the real window, those two numbers agree. But once we widen
-   the clone's window (windowWidth option, needed so mobile's ~390px
-   viewport doesn't clip the 794px-wide invoice card), the sidebar +
-   topbar around #pdf-container reflow differently at that new width
-   than they did in the real, narrow window the position was measured
-   in — so the coordinates no longer match. On desktop this showed up
-   as content shifted ~243px left and clipped; on mobile the mismatch
-   was large enough that the crop landed entirely off the rendered
-   content, i.e. a blank page.
-   The fix: while a PDF is being generated, hide every other top-level
-   piece of the app (sidebar/topbar via .layout, the mobile header, the
-   sidebar overlay) so #pdf-container is the ONLY thing left in the
-   document. With nothing else present, it is always exactly at (0,0)
-   in both the real window and the widened clone — no reflow-vs-
-   measurement mismatch possible, regardless of window width or device. */
-body.pdf-generating .layout,
-body.pdf-generating .mobile-header,
-body.pdf-generating .sidebar-overlay {
-  display: none !important;
-}
-#pdf-generating-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 999;
-  background: rgba(13, 35, 83, 0.97);
-  color: white;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 1rem;
-  font-family: var(--sans);
-}
-#pdf-generating-overlay.active { display: flex; }
-#pdf-generating-overlay .spinner {
-  width: 40px; height: 40px;
-  border: 4px solid rgba(255,255,255,0.25);
-  border-top-color: var(--gold2);
-  border-radius: 50%;
-  animation: pdf-spin 0.8s linear infinite;
-}
-@keyframes pdf-spin { to { transform: rotate(360deg); } }
-.invoice-logo {
-
-width:52px;
-height:52px;
-object-fit:contain;
-background:white;
-border-radius:10px;
-padding:6px;
-
-}
-.download-btn{
-
-background:#0d2353;
-color:white;
-font-weight:500;
-font-size:0.78rem;
-padding:0.5rem 0.9rem;
-border-radius:10px;
-border:none;
-cursor:pointer;
-
-}
-
-/* NOTE: the .invoice-card / .summary-grid / .total-card responsive
-   overrides that used to live here were removed on purpose. This card
-   is never shown directly on the page — it only ever exists inside the
-   hidden #pdf-container — so it should always render at the fixed A4
-   desktop layout (210mm, 3-column summary grid, 320px total box)
-   regardless of what device triggered the download. Letting it respond
-   to the device's screen width was what made mobile-generated PDFs
-   inconsistent (and, combined with a forced narrow render window,
-   contributed to blank output). */
-    
+    .badge { 
+      display: inline-block; padding: 6px 12px; border-radius: 20px; 
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .badge-paid { 
+      color: #065f46; background: linear-gradient(135deg, #dcfce7 0%, #a7f3d0 100%);
+    }
+    .badge-outstanding { 
+      color: #92400e; background: linear-gradient(135deg, #fffbeb 0%, #fed7aa 100%);
+    }
+
+    .download-btn{
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.65rem 1.1rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
+    }
+    .download-btn:hover {
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 16px rgba(26,92,255,0.3);
+      transform: translateY(-2px);
+    }
+    .download-btn:active { transform: translateY(0); }
+
+    /* Enhanced empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--ink3);
+    }
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.6;
+    }
+
+    .invoice-card{
+      background:white;
+      width:794px;
+      padding:56px 60px;
+      font-family:Outfit,sans-serif;
+      color:#1f2937;
+    }
+
+    .invoice-top-strip{
+      height:5px;
+      border-radius:3px;
+      background:linear-gradient(90deg,#0d2353,#1a5cff);
+      margin-bottom:36px;
+    }
+
+    .invoice-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:38px;
+    }
+
+    .invoice-brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .invoice-brand-name{
+      font-family:'Playfair Display',serif;
+      font-size:20px;
+      font-weight:700;
+      color:#0d2353;
+    }
+
+    .invoice-brand-tag{
+      font-size:12px;
+      color:#6b7280;
+      margin-top:3px;
+      letter-spacing:.02em;
+    }
+
+    .invoice-meta{
+      text-align:right;
+    }
+
+    .invoice-meta-label{
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#9ca3af;
+      font-weight:600;
+    }
+
+    .invoice-meta-number{
+      font-size:19px;
+      font-weight:600;
+      color:#0d2353;
+      margin-top:3px;
+    }
+
+    .invoice-meta-date{
+      font-size:12px;
+      color:#6b7280;
+      margin-top:5px;
+    }
+
+    .invoice-parties{
+      width:100%;
+      border-collapse:collapse;
+      margin-bottom:36px;
+    }
+
+    .invoice-parties td{
+      vertical-align:top;
+      width:33.33%;
+      padding:0 20px 0 0;
+    }
+
+    .party-label{
+      font-size:10.5px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#9ca3af;
+      font-weight:600;
+      margin-bottom:7px;
+    }
+
+    .party-label.spaced{
+      margin-top:14px;
+    }
+
+    .party-name{
+      font-size:14px;
+      font-weight:600;
+      color:#111827;
+      margin-bottom:4px;
+    }
+
+    .party-detail{
+      font-size:12.5px;
+      color:#4b5563;
+      line-height:1.65;
+    }
+
+    .status-pill{
+      display:inline-block;
+      padding:3px 11px;
+      border-radius:100px;
+      font-size:12px;
+      font-weight:600;
+    }
+
+    .status-pill.outstanding{ color:#b45309; background:#fffbeb; }
+    .status-pill.settled{ color:#0f9d6c; background:#dcfce7; }
+
+    .invoice-table{
+      width:100%;
+      border-collapse:collapse;
+      margin-bottom:32px;
+    }
+
+    .invoice-table thead th{
+      text-align:left;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#6b7280;
+      font-weight:600;
+      padding:0 14px 12px 14px;
+      border-bottom:2px solid #0d2353;
+    }
+
+    .invoice-table thead th:last-child,
+    .invoice-table tbody td:last-child,
+    .invoice-table tfoot td:last-child{
+      text-align:right;
+    }
+
+    .invoice-table tbody td{
+      padding:16px 14px;
+      font-size:13px;
+      color:#374151;
+      border-bottom:1px solid #e5e7eb;
+    }
+
+    .invoice-table tfoot td{
+      padding:16px 14px 4px 14px;
+      font-size:15px;
+      font-weight:700;
+      color:#0d2353;
+      border-top:2px solid #0d2353;
+    }
+
+    .invoice-table tfoot td:first-child{
+      font-size:12px;
+      font-weight:600;
+      color:#6b7280;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .payment-box{
+      padding:16px 18px;
+      border-radius:8px;
+      background:#f8fafc;
+      border-left:3px solid #1a5cff;
+      font-size:12.5px;
+      color:#4b5563;
+      margin-bottom:34px;
+    }
+
+    .payment-box strong{
+      color:#0d2353;
+    }
+
+    .footer-note{
+      text-align:center;
+      font-size:11.5px;
+      color:#9ca3af;
+      padding-top:22px;
+      border-top:1px solid #f0f0f0;
+    }
+
+    #pdf-container {
+      display: none;
+      width: 794px;
+      background-color: #ffffff;
+    }
+    #pdf-container.rendering { display: block; }
+
+    body.pdf-generating .layout,
+    body.pdf-generating .mobile-header,
+    body.pdf-generating .sidebar-overlay {
+      display: none !important;
+    }
+
+    #pdf-generating-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(13, 35, 83, 0.97);
+      color: white;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      font-family: var(--sans);
+    }
+    #pdf-generating-overlay.active { display: flex; }
+    #pdf-generating-overlay .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(255,255,255,0.25);
+      border-top-color: var(--gold2);
+      border-radius: 50%;
+      animation: pdf-spin 0.8s linear infinite;
+    }
+    @keyframes pdf-spin { to { transform: rotate(360deg); } }
+
+    .invoice-logo {
+      width:52px;
+      height:52px;
+      object-fit:contain;
+      background:white;
+      border-radius:10px;
+      padding:6px;
+    }
+
+    /* Mobile Responsive */
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); width: 240px; }
-      .main { margin-left: 0; padding-top: 56px; }
+      .sidebar { transform: translateX(-100%); width: 260px; }
+      .main { margin-left: 0; padding-top: 64px; }
       .mobile-header { display: flex; }
-      .topbar { position: relative !important; top: 0 !important; }
+      .topbar { 
+        position: relative !important; top: 0 !important; 
+        padding: 1rem 1.2rem;
+      }
+      .topbar h2 { font-size: 1.3rem; }
+      .content { padding: 1.2rem; }
+      .card { padding: 1.4rem; margin-bottom: 1.2rem; }
+      .card-header { padding-bottom: 1rem; margin-bottom: 1.2rem; }
+      .filter-row { 
+        grid-template-columns: 1fr; 
+        gap: 1rem; 
+        padding: 1.2rem;
+      }
+      .filter-group label { font-size: 0.7rem; }
+      .filter-row select, .filter-row input {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.85rem;
+      }
+      table { font-size: 0.8rem; }
+      th { padding: 0.8rem 0.6rem; font-size: 0.65rem; }
+      td { padding: 0.8rem 0.6rem; }
+      .btn { padding: 0.55rem 1rem; font-size: 0.75rem; }
+      .download-btn {
+        padding: 0.55rem 0.8rem;
+        font-size: 0.7rem;
+      }
+      .badge { padding: 4px 10px; font-size: 0.7rem; }
+    }
+
+    @media (max-width: 480px) {
       .content { padding: 1rem; }
-      .filter-row { grid-template-columns: 1fr; max-width: 100%; }
+      .card { padding: 1.2rem; }
+      .card-header h3 { font-size: 0.95rem; }
+      .filter-row { padding: 1rem; gap: 0.8rem; }
+      table { font-size: 0.75rem; }
+      th { padding: 0.6rem 0.4rem; }
+      td { padding: 0.6rem 0.4rem; }
+      .download-btn { padding: 0.5rem 0.7rem; font-size: 0.65rem; }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -598,48 +585,48 @@ cursor:pointer;
 
   <div class="main">
     <div class="topbar">
-      <h2>Invoice History Engine</h2>
+      <h2>Invoice Hub</h2>
     </div>
 
     <div class="content">
       <div class="card">
-        <div class="card-header"><h3>🔍 Filter Matrix Statement Parameters</h3></div>
+        <div class="card-header"><h3>🔍 Filter Invoices</h3></div>
         <div class="filter-row">
           <div class="filter-group">
-            <label>Select Target Account</label>
+            <label>Select Client</label>
             <select id="client-select">
-              <option value="">-- All Dynamic Clients --</option>
+              <option value="">All Clients</option>
             </select>
           </div>
           <div class="filter-group">
-            <label>Start Timeline</label>
+            <label>Start Date</label>
             <input type="date" id="start-date"/>
           </div>
           <div class="filter-group">
-            <label>End Timeline</label>
+            <label>End Date</label>
             <input type="date" id="end-date"/>
           </div>
-          <button class="btn" style="height: 40px; width: 100%;" onclick="applyTimeWindowFilters()">Apply Filters</button>
+          <button class="btn" style="height: 44px; width: 100%;" onclick="applyTimeWindowFilters()">Apply Filters</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header"><h3>💼 System Invoice Records Matrix</h3></div>
-        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <div class="card-header"><h3>💼 Invoice Records</h3></div>
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px;">
           <table>
             <thead>
               <tr>
-                <th>Invoice Ref</th>
-                <th>Client Profile</th>
-                <th>Total Unpaid Hours</th>
-                <th>Outstanding Balance</th>
-                <th>Cleared (Paid)</th>
-                <th>Status Matrix</th>
-                <th>Actions</th>
+                <th>Invoice ID</th>
+                <th>Client</th>
+                <th>Hours</th>
+                <th>Outstanding</th>
+                <th>Paid</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="invoice-records-table">
-              <tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--ink3)">Applying database streams...</td></tr>
+              <tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⏳</div><div>Loading invoice data...</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -743,7 +730,7 @@ function applyTimeWindowFilters() {
   const groupsArray = Object.keys(clientGroups);
 
   if(!groupsArray.length) {
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--ink3)">No records match parameters.</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">📭</div><div>No invoices match your filters</div></td></tr>';
     return;
   }
 
@@ -756,17 +743,16 @@ function applyTimeWindowFilters() {
       <tr>
         <td><strong>${dummyInvId}</strong></td>
         <td><strong>${client}</strong></td>
-        <td>${data.unpaidHours.toFixed(2)} Hrs</td>
-        <td style="color:${hasOutstanding ? '#b45309':'inherit'}; font-weight:600;">$${data.totalUnpaid.toFixed(2)}</td>
-        <td style="color:#10b981;">$${data.totalPaid.toFixed(2)}</td>
+        <td>${data.unpaidHours.toFixed(2)}</td>
+        <td style="color:${hasOutstanding ? '#b45309':'#10b981'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
+        <td style="color:#10b981; font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
         <td>
-          ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding Balance</span>' 
-                            : '<span class="badge badge-paid">Fully Settled</span>'}
+          ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding</span>' 
+                            : '<span class="badge badge-paid">Settled</span>'}
         </td>
         <td>
          <button
       class="download-btn"
-      
       onclick="downloadInvoice(
       '${dummyInvId}',
       '${client}',
@@ -775,7 +761,7 @@ function applyTimeWindowFilters() {
       '${startVal}',
       '${endVal}'
       )">
-      ⬇ Download PDF
+      ⬇ PDF
       </button>
         </td>
       </tr>`;
@@ -806,15 +792,6 @@ generatingPDF=true;
     return;
 }
 
-    // FIX for "generates but never downloads" on mobile: everything
-    // below this point is async (image loads, font loads, canvas
-    // rendering), so by the time the PDF is actually ready, mobile
-    // Safari/Chrome no longer treat it as part of the original tap and
-    // silently block a new download/tab. Opening a blank tab RIGHT NOW,
-    // synchronously, preserves that trust — we just redirect this
-    // already-open tab to the finished PDF once it exists. Desktop is
-    // unaffected by this restriction, so it keeps using the normal
-    // save-dialog flow further down.
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const pdfWindow = isMobile ? window.open("", "_blank") : null;
 
@@ -822,23 +799,6 @@ generatingPDF=true;
 
     document.getElementById("pdf-generating-overlay").classList.add("active");
 
-    // FIX for the x-offset-cut-on-desktop / blank-page-on-mobile bug:
-    // html2canvas measures #pdf-container's position via
-    // getBoundingClientRect() against the LIVE page (sidebar, topbar,
-    // mobile header and all), then separately renders a cloned copy of
-    // that page to actually take the screenshot. Those two only agree
-    // if the clone is rendered at the exact same window width as the
-    // real one. We need the clone to be widened to at least 794px
-    // (windowWidth option below) so mobile's narrow viewport doesn't
-    // clip the invoice card — but widening it reflows the sidebar +
-    // topbar around the container differently than they were in the
-    // real, narrow window, so the measured position no longer matches
-    // the clone. That mismatch is exactly what produced the ~243px
-    // left-cut on desktop and the fully blank capture on mobile.
-    // Fix: make the container the ONLY thing left in the document
-    // while it's being captured. With the rest of the app hidden, the
-    // container is always at (0,0) — in the real window AND in any
-    // clone, at any width — so there is nothing left to disagree about.
     window.scrollTo(0, 0);
     document.body.classList.add("pdf-generating");
 
@@ -945,10 +905,6 @@ await Promise.all(
 );
 await new Promise(resolve => setTimeout(resolve, 500));
 
-// Measure the container's real rendered height now, after content
-// and images have settled, so html2canvas can be told exactly what
-// "window" to capture instead of inferring it from the live browser
-// window (which is what caused the mobile clipping).
 const renderedWidth = container.scrollWidth || 794;
 const renderedHeight = container.scrollHeight || 1123;
 
@@ -977,23 +933,9 @@ allowTaint:false,
 
 backgroundColor:"#ffffff",
 
-logging: true, // keep true for now — if the PDF still looks wrong, open
-                // devtools, click "Download PDF", and check the console
-                // for html2canvas's own diagnostic output
+logging: true,
 imageTimeout:0,
 
-// FIX (see the body.classList.add("pdf-generating") comment above
-// for the full explanation): the rest of the app UI is hidden during
-// capture, so the container is guaranteed to sit at (0,0) — in the
-// real page AND in the widened clone html2canvas renders internally.
-// x/y/width/height below make that explicit rather than relying on
-// html2canvas to (re)detect it via getBoundingClientRect, so there is
-// no path left for the position-vs-clone mismatch that caused the
-// desktop left-cut and the blank mobile page. windowWidth/windowHeight
-// still widen the internal render so mobile's narrow real viewport
-// doesn't clip the 794px-wide card, and scrollX/scrollY keep the
-// origin pinned even if something outside our control causes a
-// residual page scroll.
 x: 0,
 y: 0,
 width: renderedWidth,
@@ -1009,8 +951,7 @@ jsPDF:{
 
     unit:"mm",
 
-    format:"a4", // placeholder — replaced below with the invoice's
-                  // real dimensions once it's actually been rendered
+    format:"a4",
 
     orientation:"portrait"
 
@@ -1025,24 +966,10 @@ try {
 
 await document.fonts.ready;
 
-// FIX for the right-edge cut-off: previously the PDF page size was
-// pre-calculated from container.scrollHeight using a manual px->mm
-// conversion (794px -> 210mm etc). That conversion didn't line up
-// with how html2canvas's "scale" option actually affects the
-// captured canvas's pixel dimensions, so the image ended up wider
-// than the page and got clipped on the right. The reliable fix is to
-// size the page from the ACTUAL rendered canvas's own width/height
-// ratio, computed after capture — that guarantees a perfect match
-// since it's the exact same pixels being placed on the page.
 const worker = html2pdf().set(options).from(container).toCanvas();
 
-// FIX for "Invoice PDF generation failed": worker.toCanvas().then(canvas
-// => ...) does NOT hand you the actual canvas — that's just the worker
-// itself, passed along for chaining. html2pdf.js's documented way to
-// retrieve the real canvas is worker.get('canvas'), which is what
-// actually caused canvas.width/height to be undefined and throw.
 const canvas = await worker.get("canvas");
-const pdfWidthMm = 210; // matches the fixed 794px card design (210mm @ 96dpi)
+const pdfWidthMm = 210;
 const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
 
 const pdfWorker = worker.set({
@@ -1050,17 +977,11 @@ const pdfWorker = worker.set({
 }).toPdf();
 
 if (isMobile) {
-    // Redirect the tab we opened synchronously at the very start of
-    // this function, back when we still had the browser's trust.
     const pdfBlob = await pdfWorker.outputPdf("blob");
     const blobUrl = URL.createObjectURL(pdfBlob);
     if (pdfWindow) {
         pdfWindow.location.href = blobUrl;
     } else {
-        // The popup got blocked anyway (rare) — fall back to a normal
-        // download link. On iOS this will most likely just open the
-        // PDF (that's standard iOS/Safari behavior for PDFs, not a
-        // bug), from where it can be saved via the share icon.
         const a = document.createElement("a");
         a.href = blobUrl;
         a.download = `${invId}.pdf`;
