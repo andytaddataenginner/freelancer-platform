@@ -5,19 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reports & Analytics — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Outfit:wght=300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
+      --navy: #0d2353; --navy2: #1a3a7a; --navy-deep: #071633; --accent: #1a5cff; --gold2: #c9a44c;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
       --green: #10b981; --amber: #f59e0b;
+      --hairline: rgba(201,164,76,0.25);
       --sans: 'Outfit', system-ui, sans-serif;
       --serif: 'Playfair Display', serif;
+      --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
       --radius: 16px; --shadow: 0 4px 30px rgba(13,35,83,0.06);
     }
     html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    }
+
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--gold2);
+      outline-offset: 2px;
+    }
 
     /* ── LAYOUT ── */
     .layout { display: flex; min-height: 100vh; }
@@ -86,261 +97,146 @@
       background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
       padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
       display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.75rem;
     }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .topbar-control { display: flex; align-items: center; gap: 0.7rem; }
+    .topbar-control-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); font-weight: 600; }
     .content { padding: 1.5rem; flex: 1; }
 
-   /* ── GLOBAL SUMMARY TOP KPI BAR ── */
-
-.global-summary {
-    background:white;
-    border-radius:var(--radius);
-    padding:1rem 1.25rem;
-    margin-bottom:1.5rem;
-    box-shadow:var(--shadow);
-    border:1px solid rgba(26,92,255,0.12);
-}
-
-.global-summary-header {
-    display:flex;
-    align-items:center;
-    margin-bottom:0.8rem;
-}
-
-.global-summary-header h3 {
-    font-size:1rem;
-    font-weight:600;
-    color:var(--accent);
-}
-
-
-.global-kpi-row {
-
-    display:grid;
-    grid-template-columns:repeat(6,1fr);
-    gap:1.2rem;
-    align-items:center;
-
-}
-
-
-.global-kpi {
-
-    padding-left:0.8rem;
-    min-height:55px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    border-left:4px solid var(--accent);
-
-}
-
-
-/* Different KPI Colors */
-
-.global-kpi:nth-child(1){
-    border-left-color:#1a5cff;
-}
-
-
-.global-kpi:nth-child(2){
-    border-left-color:#10b981;
-}
-
-
-.global-kpi:nth-child(3){
-    border-left-color:#8b5cf6;
-}
-
-
-.global-kpi:nth-child(4){
-    border-left-color:#f59e0b;
-}
-
-
-.global-kpi:nth-child(5){
-    border-left-color:#06b6d4;
-}
-
-
-.global-kpi:nth-child(6){
-    border-left-color:#ef4444;
-}
-
-
-.global-kpi span {
-
-    display:block;
-    font-size:0.72rem;
-    text-transform:uppercase;
-    color:var(--ink3);
-    letter-spacing:.05em;
-    font-weight:500;
-
-}
-
-
-.global-kpi h4 {
-
-    margin-top:.25rem;
-    font-size:1.25rem;
-    font-weight:700;
-    color:var(--ink);
-
-}
-/* FIX: each KPI's number color now matches its own border-left stripe
-   color (1:1 with the .global-kpi:nth-child(n) rules above). Previously
-   #4 had a typo — "color:#06b6d4; -----#f59e0b;" — the second half
-   after the semicolon isn't valid CSS (no property:value pair), so the
-   browser dropped it, leaving #4's text cyan while its border was
-   amber. #6 had no h4 color rule at all, so it fell back to the plain
-   navy default while its border was red. Both are corrected below so
-   every KPI card is internally consistent. */
-.global-kpi:nth-child(1) h4{
-color:#1a5cff;
-}
-
-
-.global-kpi:nth-child(2) h4{
-color:#10b981;
-}
-
-
-.global-kpi:nth-child(3) h4{
-color:#8b5cf6;
-}
-
-
-.global-kpi:nth-child(4) h4{
-color:#f59e0b;
-}
-
-
-.global-kpi:nth-child(5) h4{
-color:#06b6d4;
-}
-
-
-.global-kpi:nth-child(6) h4{
-color:#ef4444;
-}
-    
-.distribution-item {
-
-    margin-bottom:12px;
-
-}
-
-
-.distribution-header {
-
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:6px;
-    font-size:.85rem;
-    font-weight:600;
-
-}
-
-
-.distribution-track {
-
-    height:14px;
-    background:#eef1f8;
-    border-radius:10px;
-    overflow:hidden;
-
-}
-
-
-.distribution-fill {
-
-    height:100%;
-    background:linear-gradient(
-        90deg,
-        var(--gold2),
-        var(--accent)
-    );
-
-}
-.payment-status {
-
-display:flex;
-align-items:center;
-justify-content:center;
-gap:18px;
-font-weight:700;
-
-}
-
-
-.paid-status,
-.unpaid-status {
-
-display:flex;
-flex-direction:column;
-align-items:center;
-font-weight:700;
-
-}
-
-
-.paid-status span:first-child {
-
-font-size:1.1rem;
-color:var(--green);
-
-}
-
-
-.unpaid-status span:first-child {
-
-font-size:1.1rem;
-color:var(--amber);
-
-}
-
-
-.paid-status span:last-child {
-
-color:var(--green);
-font-size:1rem;
-
-}
-
-
-.unpaid-status span:last-child {
-
-color:var(--amber);
-font-size:1rem;
-
-}
-
-
-/* Responsive */
-
-@media(max-width:1200px){
-
-    .global-kpi-row{
-        grid-template-columns:repeat(3,1fr);
+    /* ══════════════════════════════════════════════════════════════
+       LEDGER STATEMENT HEADER
+       Replaces the old six-box, six-color KPI grid. Color there was
+       decorative (each stat got an arbitrary rainbow border with no
+       meaning), so instead: one hero figure (Total Volume, the actual
+       headline number) gets the emphasis, four neutral facts sit in a
+       ruled 2×2 grid like an accounting worksheet, and color is spent
+       only where it means something — paid vs. outstanding.
+       ══════════════════════════════════════════════════════════════ */
+
+    .global-summary {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(155deg, var(--navy) 0%, var(--navy-deep) 100%);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 20px 50px -16px rgba(7,22,51,0.5);
+      border: 1px solid var(--hairline);
+      color: #eef1fb;
+      animation: statement-in 0.7s cubic-bezier(.16,1,.3,1) both;
+    }
+    @media (prefers-reduced-motion: reduce) { .global-summary { animation: none; } }
+    @keyframes statement-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-}
-
-
-@media(max-width:768px){
-
-    .global-kpi-row{
-        grid-template-columns:repeat(2,1fr);
+    .ledger-texture {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 13px);
+    }
+    .ledger-glow {
+      position: absolute; top: -60px; right: -60px; width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(201,164,76,0.22), transparent 70%);
+      pointer-events: none;
     }
 
-}
-    
+    .statement-head {
+      position: relative; z-index: 1;
+      display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+      margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .ledger-eyebrow {
+      font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold2); font-weight: 600; display: flex; align-items: center;
+    }
+    .ledger-eyebrow::before {
+      content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold2); margin-right: 0.55rem;
+    }
+    .ledger-asof { font-family: var(--mono); font-size: 0.72rem; color: rgba(238,241,251,0.5); }
+
+    .statement-body {
+      position: relative; z-index: 1;
+      display: flex; gap: 2.5rem; align-items: stretch; flex-wrap: wrap;
+    }
+
+    .statement-hero {
+      flex: 1 1 220px;
+      display: flex; flex-direction: column; justify-content: center;
+      padding-right: 2.5rem;
+      border-right: 1px solid var(--hairline);
+      min-width: 220px;
+    }
+    .statement-hero-label {
+      font-size: 0.78rem; color: rgba(238,241,251,0.55);
+      text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 0.35rem;
+    }
+    .statement-hero-value {
+      font-family: var(--mono); font-weight: 600; letter-spacing: -0.01em; line-height: 1;
+      font-size: clamp(2rem, 4vw, 2.65rem);
+      color: var(--gold2);
+      background: linear-gradient(120deg, #f4dea0, var(--gold2) 70%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .statement-hero-split { display: flex; gap: 1.1rem; margin-top: 0.9rem; font-size: 0.8rem; flex-wrap: wrap; }
+    .statement-hero-split .split-item { display: flex; align-items: center; gap: 0.4rem; color: rgba(238,241,251,0.75); }
+    .statement-hero-split .split-item b { font-family: var(--mono); font-weight: 600; }
+    .split-item i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .split-paid i { background: var(--green); }
+    .split-paid b { color: var(--green); }
+    .split-unpaid i { background: var(--amber); }
+    .split-unpaid b { color: var(--amber); }
+
+    .statement-stats {
+      flex: 1 1 320px;
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      border-top: 1px solid var(--hairline); border-left: 1px solid var(--hairline);
+      align-content: center;
+    }
+    .stat-cell {
+      padding: 0.95rem 1.4rem;
+      border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+      display: flex; flex-direction: column; justify-content: center; gap: 0.3rem;
+    }
+    .stat-cell span {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em;
+      color: rgba(238,241,251,0.5); font-weight: 500;
+    }
+    .stat-cell strong { font-family: var(--mono); font-size: 1.2rem; font-weight: 600; color: #f5f7fd; }
+
+    @media (max-width: 700px) {
+      .statement-hero { border-right: none; border-bottom: 1px solid var(--hairline); padding-right: 0; padding-bottom: 1.25rem; }
+    }
+
     /* ── CARDS & METRICS ── */
-    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.04); margin-bottom: 1.5rem; position: relative; }
-    .card-header { padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
-    .card-header h3 { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
-    
+    .card {
+      background: white; border-radius: 18px; padding: 1.5rem;
+      box-shadow: 0 10px 30px -14px rgba(13,35,83,0.14), 0 2px 8px -3px rgba(13,35,83,0.06);
+      border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.5rem; position: relative;
+      transition: box-shadow 0.25s ease, transform 0.25s ease;
+    }
+    .card:hover { box-shadow: 0 18px 40px -16px rgba(13,35,83,0.2); transform: translateY(-2px); }
+
+    .card-header {
+      padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); margin-bottom: 1.1rem;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; position: relative;
+    }
+    .card-header::after {
+      content: ''; position: absolute; left: 0; bottom: -1px; width: 44px; height: 2px; background: var(--gold2);
+    }
+    .card-header-text { display: flex; flex-direction: column; gap: 0.3rem; }
+    .card-header h3 { font-size: 1rem; font-weight: 700; font-family: var(--serif); color: var(--navy); display: flex; align-items: center; gap: 0.65rem; }
+    .card-header p { font-size: 0.76rem; color: var(--ink3); margin-left: calc(32px + 0.65rem); }
+    .card-icon {
+      width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(201,164,76,0.14); color: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-icon svg { width: 17px; height: 17px; }
+
      .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -473,29 +369,45 @@ width:100%;
     height:100%;
     
     min-width:8px;
-    
+
+    transform-origin: left center;
+
     background:linear-gradient(
     90deg,
     #0d2353,
-    #1a5cff
+    var(--gold2)
     );
     
     border-radius:8px;
     
     }
 
-
 .chart-val {
     text-align:right;
     font-weight:700;
     font-size:0.85rem;
+    font-family: var(--mono);
 }
 
     /* Financial Progress Bars Layout */
     .health-container { background: #f8fafc; border-radius: 12px; padding: 1.15rem; border: 1px dashed rgba(13,35,83,0.1); }
     .health-metric-title { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .health-metric-title span:last-child { font-family: var(--mono); text-transform: none; letter-spacing: 0; }
     .health-bar-bg { background: #e2e8f0; height: 12px; border-radius: 100px; overflow: hidden; margin-bottom: 1.2rem; }
     .health-bar-fill { height: 100%; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    .distribution-item { margin-bottom: 12px; }
+    .distribution-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; }
+    .distribution-header span:last-child { font-family: var(--mono); font-weight: 600; }
+    .distribution-track { height: 14px; background: #eef1f8; border-radius: 10px; overflow: hidden; }
+    .distribution-fill { height: 100%; transform-origin: left center; background: linear-gradient(90deg, var(--gold2), var(--accent)); }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .chart-bar, .distribution-fill { animation: bar-grow 0.85s cubic-bezier(.16,1,.3,1) both; }
+      #leaderboard-body tr { animation: row-in 0.45s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(var(--i, 0) * 45ms); }
+    }
+    @keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Stats Box Layout */
     .macro-total-box { border-left: 4px solid var(--accent); padding-left: 1rem; margin: 0.5rem 0; }
@@ -508,11 +420,37 @@ width:100%;
     th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 2px solid var(--bg2); font-weight: 600; }
     td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); }
     tr:last-child td { border-bottom: none; }
+    #leaderboard-body tr:nth-child(even) td { background: rgba(13,35,83,0.02); }
+    #leaderboard-body tr:hover td { background: rgba(201,164,76,0.09); }
+    #leaderboard-body td:nth-child(3), #leaderboard-body td:nth-child(4), #leaderboard-body td:nth-child(5),
+    .ledger-total-row td:nth-child(3), .ledger-total-row td:nth-child(4), .ledger-total-row td:nth-child(5) {
+      font-family: var(--mono);
+    }
+    /* Accounting convention: a double rule marks a totals row */
+    .ledger-total-row td {
+      border-top: 3px double var(--navy);
+      border-bottom: none;
+      font-weight: 700;
+      color: var(--navy);
+      background: rgba(201,164,76,0.06);
+    }
 
-    .btn { background: var(--navy); color: white; padding: 0.65rem 1.4rem; font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s, transform 0.1s; }
-    .btn:hover { background: var(--accent); }
-    input[type="month"] { padding: 0.5rem 1rem; border: 1.5px solid rgba(13,35,83,0.12); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; color: var(--navy); outline: none; transition: border-color 0.2s; }
-    input[type="month"]:focus { border-color: var(--accent); }
+    .btn {
+      background: linear-gradient(135deg, var(--navy), var(--navy-deep));
+      color: white; padding: 0.65rem 1.4rem; font-size: 0.85rem; font-weight: 600;
+      border-radius: 9px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;
+      box-shadow: 0 6px 16px -7px rgba(13,35,83,0.4);
+      transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover { background: linear-gradient(135deg, var(--accent), var(--navy)); transform: translateY(-1px); box-shadow: 0 10px 22px -9px rgba(13,35,83,0.5); }
+    .btn:active { transform: translateY(0); }
+
+    input[type="month"] {
+      padding: 0.55rem 1rem; border: 1.5px solid rgba(13,35,83,0.14); border-radius: 8px;
+      font-family: var(--sans); font-size: 0.86rem; color: var(--navy); background: white;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="month"]:focus { border-color: var(--gold2); box-shadow: 0 0 0 3px rgba(201,164,76,0.18); }
 
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); width: 240px; }
@@ -560,82 +498,61 @@ width:100%;
   <div class="main">
     <div class="topbar">
       <h2>Reports & Analytics</h2>
-      <input type="month" id="report-month" onchange="loadReportData()"/>
+      <div class="topbar-control">
+        <label for="report-month" class="topbar-control-label">Statement Period</label>
+        <input type="month" id="report-month" onchange="loadReportData()"/>
+      </div>
     </div>
 
     <div class="content">
-      <!-- GLOBAL SUMMARY KPI HEADER -->
+      <!-- LEDGER STATEMENT HEADER -->
+      <div class="global-summary">
+        <div class="ledger-texture" aria-hidden="true"></div>
+        <div class="ledger-glow" aria-hidden="true"></div>
 
-<div class="global-summary">
-
-    <div class="global-summary-header">
-        <h3>🌍 All-Time Global Ledger Summary</h3>
-    </div>
-
-
-    <div class="global-kpi-row">
-
-
-        <div class="global-kpi">
-            <span>Total Volume</span>
-            <h4 id="global-total-all">$0.00</h4>
+        <div class="statement-head">
+          <span class="ledger-eyebrow">Statement of Account · All Time</span>
+          <span class="ledger-asof" id="ledger-asof"></span>
         </div>
 
+        <div class="statement-body">
+          <div class="statement-hero">
+            <span class="statement-hero-label">Total Volume</span>
+            <h3 class="statement-hero-value" id="global-total-all">$0.00</h3>
+            <div class="statement-hero-split">
+              <span class="split-item split-paid"><i></i>Paid <b id="global-paid-all">$0</b></span>
+              <span class="split-item split-unpaid"><i></i>Due <b id="global-unpaid-all">$0</b></span>
+            </div>
+          </div>
 
-        <div class="global-kpi">
-            <span>Total Hours</span>
-            <h4 id="global-hours-total">0 hrs</h4>
+          <div class="statement-stats">
+            <div class="stat-cell">
+              <span>Total Hours</span>
+              <strong id="global-hours-total">0 hrs</strong>
+            </div>
+            <div class="stat-cell">
+              <span>Active Months</span>
+              <strong id="global-month-count">0</strong>
+            </div>
+            <div class="stat-cell">
+              <span>Coverage Period</span>
+              <strong id="global-period">-</strong>
+            </div>
+            <div class="stat-cell">
+              <span>Unique Clients</span>
+              <strong id="global-client-count">0</strong>
+            </div>
+          </div>
         </div>
+      </div>
 
-
-        <div class="global-kpi">
-            <span>Active Months</span>
-            <h4 id="global-month-count">0</h4>
-        </div>
-        <div class="global-kpi">
-    <span>Payment Status</span>
-
-    <h4 class="payment-status">
-
-<div class="paid-status">
-
-<span>✓</span>
-<span id="global-paid-all">$0</span>
-
-</div>
-
-
-<div class="unpaid-status">
-
-<span>⚠</span>
-<span id="global-unpaid-all">$0</span>
-
-</div>
-
-</h4>
-
-</div>
-       
-        <div class="global-kpi">
-            <span>Coverage Period</span>
-            <h4 id="global-period">-</h4>
-        </div>
-      <div class="global-kpi">
-            <span>Unique Clients</span>
-            <h4 id="global-client-count">0</h4>
-        </div>
-
-
-      
-
-    </div>
-
-</div>
       <div class="grid-3">
 
     <div class="card">
       <div class="card-header">
-        <h3>📅 Balance Sheet (Selected Month)</h3>
+        <div class="card-header-text">
+          <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M8.5 21h7"/><path d="M5 7 2.5 12a2.75 2.75 0 0 0 5 0L5 7Z"/><path d="M19 7l-2.5 5a2.75 2.75 0 0 0 5 0L19 7Z"/></svg></span>Balance Sheet — Selected Month</h3>
+        </div>
       </div>
 
       <div class="health-container" style="margin-top:0.5rem;">
@@ -697,7 +614,9 @@ width:100%;
     <div class="card">
 
         <div class="card-header">
-            <h3>💼 Share by Client (Selected Month)</h3>
+          <div class="card-header-text">
+            <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12V3a9 9 0 1 1-9 9h9Z"/></svg></span>Revenue by Client — Selected Month</h3>
+          </div>
         </div>
 
         <div class="chart-container" id="revenue-chart"></div>
@@ -709,7 +628,10 @@ width:100%;
     <div class="card">
 
         <div class="card-header">
-            <h3>📈 Client Revenue Distribution</h3>
+          <div class="card-header-text">
+            <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M2 19h20"/></svg></span>Client Revenue Distribution</h3>
+            <p>Selected month's client revenue, as a share of all-time total</p>
+          </div>
         </div>
 
         <div id="client-chart" class="chart-container">
@@ -722,7 +644,11 @@ width:100%;
 </div>
 
       <div class="card">
-        <div class="card-header"><h3>📊 Performance Leaderboard Matrix (Selected Month)</h3></div>
+        <div class="card-header">
+          <div class="card-header-text">
+            <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h11"/><path d="M4 18h14"/></svg></span>Performance Leaderboard — Selected Month</h3>
+          </div>
+        </div>
         <div style="overflow-x: auto;">
           <table>
             <thead>
@@ -735,6 +661,15 @@ width:100%;
               </tr>
             </thead>
             <tbody id="leaderboard-body"></tbody>
+            <tfoot id="leaderboard-tfoot" class="ledger-total-row" style="display:none;">
+              <tr>
+                <td>Total</td>
+                <td></td>
+                <td id="leaderboard-total-hours">0 hrs</td>
+                <td id="leaderboard-total-owed">$0.00</td>
+                <td id="leaderboard-total-processed">$0.00</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
@@ -764,8 +699,32 @@ function toggleSidebar() {
   document.getElementById('sidebar-overlay').classList.toggle('open');
 }
 
+// Ledger-style tally animation for the statement figures — respects
+// prefers-reduced-motion by jumping straight to the final value.
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function animateCount(el, endValue, { prefix = '', suffix = '', decimals = 0 } = {}) {
+  if (!el || !isFinite(endValue)) return;
+  if (prefersReducedMotion) {
+    el.textContent = `${prefix}${endValue.toFixed(decimals)}${suffix}`;
+    return;
+  }
+  const duration = 850;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = `${prefix}${(endValue * eased).toFixed(decimals)}${suffix}`;
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('report-month').value = new Date().toISOString().slice(0, 7);
+  const asOfEl = document.getElementById('ledger-asof');
+  if (asOfEl) {
+    asOfEl.textContent = 'As of ' + new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
   loadReportData();
 });
 
@@ -838,23 +797,16 @@ if(log.date){
       
     });
 
-    document.getElementById('global-total-all').textContent = `$${(macroPaid + macroUnpaid).toFixed(2)}`;
-    document.getElementById('global-paid-all').textContent = `$${macroPaid.toFixed(2)}`;
-    document.getElementById('global-unpaid-all').textContent = `$${macroUnpaid.toFixed(2)}`;
+    animateCount(document.getElementById('global-total-all'), macroPaid + macroUnpaid, { prefix: '$', decimals: 2 });
+    animateCount(document.getElementById('global-paid-all'), macroPaid, { prefix: '$', decimals: 2 });
+    animateCount(document.getElementById('global-unpaid-all'), macroUnpaid, { prefix: '$', decimals: 2 });
 
     document.getElementById('health-paid-val').textContent = `$${monthPaid.toFixed(2)}`;
     document.getElementById('health-unpaid-val').textContent = `$${monthUnpaid.toFixed(2)}`;
 
-    document.getElementById('global-client-count').textContent =
-uniqueClients.size;
-
-
-document.getElementById('global-hours-total').textContent =
-`${totalHours.toFixed(2)} hrs`;
-
-
-document.getElementById('global-month-count').textContent =
-`${activeMonths.size} Months`;
+    animateCount(document.getElementById('global-client-count'), uniqueClients.size, { decimals: 0 });
+    animateCount(document.getElementById('global-hours-total'), totalHours, { suffix: ' hrs', decimals: 2 });
+    animateCount(document.getElementById('global-month-count'), activeMonths.size, { suffix: activeMonths.size === 1 ? ' Month' : ' Months', decimals: 0 });
 
 
 if(minDate && maxDate){
@@ -880,10 +832,12 @@ if(minDate && maxDate){
     const chartContainer = document.getElementById('revenue-chart');
     const distributionChart = document.getElementById('client-chart');
     const leaderboard = document.getElementById('leaderboard-body');
+    const tfoot = document.getElementById('leaderboard-tfoot');
     
     if(!data.clientBreakdown || data.clientBreakdown.length === 0) {
       chartContainer.innerHTML = '<p style="color:var(--ink3); font-size:0.85rem; padding: 1rem 0;">No logs found for this timeframe.</p>';
       leaderboard.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--ink3)">No records found for this month timeline.</td></tr>';
+      tfoot.style.display = 'none';
       return;
     }
     const amounts = data.clientBreakdown.map(c => parseFloat(c.total || 0));
@@ -892,7 +846,9 @@ if(minDate && maxDate){
     distributionChart.innerHTML = '';
     leaderboard.innerHTML = '';
 
-    data.clientBreakdown.forEach(c => {
+    let leaderHoursSum = 0, leaderOwedSum = 0, leaderProcessedSum = 0;
+
+    data.clientBreakdown.forEach((c, idx) => {
       const totalAmt = parseFloat(c.total || 0);
       const pct = Math.max(
         (totalAmt / maxVal) * 100,
@@ -938,8 +894,12 @@ style="width:${distributionPct}%">
 
 `;
 
+      leaderHoursSum += parseFloat(c.hours || 0);
+      leaderOwedSum += totalAmt;
+      leaderProcessedSum += parseFloat(c.paid || 0);
+
       leaderboard.innerHTML += `
-        <tr>
+        <tr style="--i:${idx}">
           <td><strong>${c.client_name}</strong></td>
           <td><span style="text-transform:capitalize; font-size: 0.8rem; background: var(--bg2); padding: 3px 8px; border-radius: 4px;">${c.rate_type}</span></td>
           <td>${parseFloat(c.hours).toFixed(2)} hrs</td>
@@ -957,6 +917,11 @@ $${parseFloat(c.paid || 0).toFixed(2)}
 </td>
         </tr>`;
     });
+
+    document.getElementById('leaderboard-total-hours').textContent = `${leaderHoursSum.toFixed(2)} hrs`;
+    document.getElementById('leaderboard-total-owed').textContent = `$${leaderOwedSum.toFixed(2)}`;
+    document.getElementById('leaderboard-total-processed').textContent = `$${leaderProcessedSum.toFixed(2)}`;
+    tfoot.style.display = '';
   } catch(e) { console.error("Dashboard Render Error:", e); }
 }
 
