@@ -188,6 +188,14 @@
     color:var(--ink);
 
 }
+/* FIX: each KPI's number color now matches its own border-left stripe
+   color (1:1 with the .global-kpi:nth-child(n) rules above). Previously
+   #4 had a typo — "color:#06b6d4; -----#f59e0b;" — the second half
+   after the semicolon isn't valid CSS (no property:value pair), so the
+   browser dropped it, leaving #4's text cyan while its border was
+   amber. #6 had no h4 color rule at all, so it fell back to the plain
+   navy default while its border was red. Both are corrected below so
+   every KPI card is internally consistent. */
 .global-kpi:nth-child(1) h4{
 color:#1a5cff;
 }
@@ -204,12 +212,17 @@ color:#8b5cf6;
 
 
 .global-kpi:nth-child(4) h4{
-color:#06b6d4; -----#f59e0b;
+color:#f59e0b;
 }
 
 
 .global-kpi:nth-child(5) h4{
 color:#06b6d4;
+}
+
+
+.global-kpi:nth-child(6) h4{
+color:#ef4444;
 }
     
 .distribution-item {
