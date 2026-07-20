@@ -135,6 +135,18 @@
     }
     .btn-ghost:hover { border-color: var(--ink); background: var(--ink); color: white; }
 
+    .btn-gold {
+      padding: 0.9rem 2.2rem;
+      background: linear-gradient(120deg, var(--gold2), var(--gold));
+      color: var(--ink);
+      border: none; border-radius: 100px;
+      font-family: var(--sans); font-size: 0.92rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 0.5rem; letter-spacing: 0.02em;
+    }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(201,149,42,0.35); }
+
     .hero-stats { display: flex; gap: 2.5rem; }
     .stat { display: flex; flex-direction: column; }
     .stat-num { font-family: var(--serif); font-size: 2.4rem; font-weight: 700; line-height: 1; }
@@ -218,6 +230,55 @@
     .skill-bar-pct { color: var(--gold2); font-weight: 600; }
     .skill-bar-track { height: 6px; background: rgba(255,255,255,0.1); border-radius: 100px; overflow: hidden; }
     .skill-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), var(--gold2)); width: 0; transition: width 1.2s ease; }
+
+    /* ── RESUME ── */
+    .resume-section { padding: 7rem 3rem; background: var(--bg); }
+    .resume-wrap {
+      max-width: var(--max); margin: 0 auto;
+      display: grid; grid-template-columns: 1.05fr 0.95fr;
+      gap: 4.5rem; align-items: center;
+    }
+    .resume-highlights { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0 2.4rem; }
+    .resume-highlight { display: flex; align-items: flex-start; gap: 0.9rem; }
+    .resume-highlight .dot {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      background: #e8f0ff; color: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .resume-highlight strong { display: block; font-size: 0.92rem; margin-bottom: 0.15rem; }
+    .resume-highlight span { font-size: 0.84rem; color: var(--ink2); font-weight: 300; line-height: 1.5; }
+    .resume-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .resume-preview-card {
+      position: relative;
+      background: var(--white);
+      border-radius: 20px;
+      padding: 1.2rem;
+      box-shadow: 0 24px 64px rgba(10,10,15,0.16);
+      transform: rotate(1.2deg);
+      transition: transform 0.35s ease;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+    .resume-preview-card:hover { transform: rotate(0deg) translateY(-6px); }
+    .resume-preview-card img {
+      width: 100%; display: block; border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .resume-badge {
+      position: absolute; top: -14px; right: -14px;
+      background: linear-gradient(120deg, var(--gold2), var(--gold));
+      color: var(--ink); font-weight: 700; font-size: 0.72rem;
+      padding: 0.5rem 0.9rem; border-radius: 100px;
+      box-shadow: 0 8px 20px rgba(201,149,42,0.4);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .resume-page-tag {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: var(--white);
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em;
+      padding: 0.4rem 1rem; border-radius: 100px; white-space: nowrap;
+    }
 
     /* ── PORTFOLIO ── */
     .portfolio-grid {
@@ -325,6 +386,8 @@
       .hero-right { order: -1; }
       .contact-wrap { grid-template-columns: 1fr; gap: 3rem; }
       .skills-grid { grid-template-columns: 1fr 1fr; }
+      .resume-wrap { grid-template-columns: 1fr; gap: 3rem; }
+      .resume-preview-card { order: -1; }
       .nav { padding: 1rem 1.5rem; }
       .hamburger { display: block; }
       .nav-links { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--bg); flex-direction: column; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.08); gap: 0; }
@@ -332,6 +395,7 @@
       .nav-links a { padding: 0.8rem 0; }
       .section { padding: 4rem 1.5rem; }
       .skills-section { padding: 4rem 1.5rem; }
+      .resume-section { padding: 4rem 1.5rem; }
     }
     @media (max-width: 480px) {
       .form-row { grid-template-columns: 1fr; }
@@ -348,6 +412,7 @@
   <div class="nav-links" id="nav-links">
     <a href="#work">Freelance Work</a>
     <a href="#skills">Skills</a>
+    <a href="#resume">Resume</a>
     <a href="#services">Services</a>
     <a href="#contact">Contact</a>
     <a href="pages/login.html" class="btn-nav">Client Login</a>
@@ -445,6 +510,43 @@
         <div class="skill-bar-top"><span>Database Performance Tuning</span><span class="skill-bar-pct">90%</span></div>
         <div class="skill-bar-track"><div class="skill-bar-fill" data-width="90"></div></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESUME -->
+<section class="resume-section" id="resume">
+  <div class="resume-wrap">
+    <div class="resume-text">
+      <div class="label">Credentials</div>
+      <h2 style="font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);letter-spacing:-0.02em;margin-bottom:1rem">One-page resume, ready to download</h2>
+      <p style="color:var(--ink2);font-size:1rem;line-height:1.7;font-weight:300;max-width:520px">A concise, senior-level Data Engineer &amp; BI resume — condensed to a single page, no clutter, no references, just the credentials that matter.</p>
+
+      <div class="resume-highlights">
+        <div class="resume-highlight">
+          <div class="dot">📄</div>
+          <div><strong>Clean single page</strong><span>Summarized for a fast, high-signal read by recruiters and clients.</span></div>
+        </div>
+        <div class="resume-highlight">
+          <div class="dot">🛠️</div>
+          <div><strong>Senior Data Engineer &amp; BI focus</strong><span>Power BI, SQL Server, Microsoft Fabric, Azure, Databricks &amp; Snowflake.</span></div>
+        </div>
+        <div class="resume-highlight">
+          <div class="dot">🎓</div>
+          <div><strong>Top-ranked academic record</strong><span>MSc &amp; BSc in Computer Science — Rank #1, Great Distinction on both.</span></div>
+        </div>
+      </div>
+
+      <div class="resume-actions">
+        <a href="Anduamlak_Tadesse_Resume.pdf" download class="btn-gold">⬇ Download Resume (PDF)</a>
+        <a href="Anduamlak_Tadesse_Resume.pdf" target="_blank" class="btn-ghost">Preview in new tab</a>
+      </div>
+    </div>
+
+    <div class="resume-preview-card">
+      <span class="resume-badge">PDF · 1 page</span>
+      <img src="resume-preview.jpg" alt="Anduamlak Tadesse resume preview"/>
+      <div class="resume-page-tag">Anduamlak_Tadesse_Resume.pdf</div>
     </div>
   </div>
 </section>
@@ -571,6 +673,7 @@
       <div style="font-size:0.78rem;margin-top:0.3rem">CEO: Anduamlak Tadesse</div>
     </div>
     <div class="footer-links">
+      <a href="Anduamlak_Tadesse_Resume.pdf" download>Resume</a>
       <a href="https://github.com/andytaddataenginner" target="_blank">GitHub</a>
       <a href="http://www.linkedin.com/in/anduamlak-tadesse-bb8bab215" target="_blank">LinkedIn</a>
       <a href="https://wa.me/251911859866" target="_blank">WhatsApp</a>
@@ -582,42 +685,40 @@
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 
+// ── Default portfolio (shown immediately, swapped for live data if the API responds) ──
+const DEMO_PORTFOLIO = [
+  { emoji:'📊', cat:'Business Intelligence', title:'Sales Analytics Dashboard', desc:'Interactive Power BI dashboard tracking monthly revenue across 12 regions for a logistics company.' },
+  { emoji:'🗄️', cat:'Data Engineering',      title:'Enterprise Data Warehouse', desc:'Centralised SQL Server data warehouse integrating 8 source systems, cutting reporting time significantly.' },
+  { emoji:'☁️', cat:'Cloud Migration',        title:'Azure Cloud Migration',     desc:'Migrated 5TB of on-premise database infrastructure to Azure with zero downtime and full data integrity.' },
+  { emoji:'⚙️', cat:'Automation',             title:'Automated Reporting Pipeline', desc:'Power Automate + Power BI refresh pipeline that removed hours of manual weekly reporting work.' },
+  { emoji:'📈', cat:'Business Intelligence', title:'Executive KPI Scorecard',   desc:'DAX-driven scorecard giving leadership real-time visibility into company-wide performance metrics.' },
+  { emoji:'🧮', cat:'Data Engineering',       title:'Retail Data Pipeline',      desc:'Nightly SSIS ETL pipeline consolidating multi-store POS data into a single analytics-ready model.' }
+];
+
+function renderPortfolio(items) {
+  const grid = document.getElementById('portfolio-grid');
+  grid.innerHTML = items.map(item => `
+    <div class="portfolio-card">
+      <div class="card-image-placeholder">${item.emoji || '💻'}</div>
+      <div class="card-body">
+        <div class="card-tag">${item.category || item.cat || 'Project'}</div>
+        <div class="card-title">${item.title}</div>
+        <div class="card-desc">${item.description || item.desc || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
 // ── Portfolio loader ──────────────────────────────────────────
 async function loadPortfolio() {
-  const grid = document.getElementById('portfolio-grid');
+  // Show real, populated work immediately — no empty state, no waiting on the API.
+  renderPortfolio(DEMO_PORTFOLIO);
   try {
     const res  = await fetch(`${API}/portfolio`);
     const items = await res.json();
-    if (!items.length) {
-      grid.innerHTML = '<p style="color:var(--ink2);grid-column:1/-1;padding:2rem 0">No portfolio items yet. Add some from your dashboard!</p>';
-      return;
-    }
-    grid.innerHTML = items.map(item => `
-      <div class="portfolio-card">
-        <div class="card-image-placeholder">${item.emoji || '💻'}</div>
-        <div class="card-body">
-          <div class="card-tag">${item.category || 'Project'}</div>
-          <div class="card-title">${item.title}</div>
-          <div class="card-desc">${item.description || ''}</div>
-        </div>
-      </div>
-    `).join('');
+    if (items && items.length) renderPortfolio(items);
   } catch {
-    // Demo fallback
-    const demos = [
-      { emoji:'📊', cat:'Business Intelligence', title:'Sales Analytics Dashboard', desc:'Interactive Power BI dashboard tracking $2M+ in monthly revenue across 12 regions for a logistics company.' },
-      { emoji:'🗄️', cat:'Data Engineering',      title:'Enterprise Data Warehouse', desc:'Built a centralised SQL Server data warehouse integrating 8 source systems, reducing reporting time by 70%.' },
-      { emoji:'☁️', cat:'Cloud Migration',        title:'Azure Cloud Migration',     desc:'Migrated 5TB on-premise database infrastructure to Azure with zero downtime and full data integrity.' },
-    ];
-    grid.innerHTML = demos.map(d => `
-      <div class="portfolio-card">
-        <div class="card-image-placeholder">${d.emoji}</div>
-        <div class="card-body">
-          <div class="card-tag">${d.cat}</div>
-          <div class="card-title">${d.title}</div>
-          <div class="card-desc">${d.desc}</div>
-        </div>
-      </div>`).join('');
+    // Keep the default portfolio shown above.
   }
 }
 
