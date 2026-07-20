@@ -206,11 +206,11 @@
     .link-em:hover { background: var(--accent); }
 
     /* ── SECTION ── */
-    .section { padding: 7rem 3rem; }
+    .section { padding: 5rem 3rem; }
     .section-alt { background: var(--bg2); }
     .section-inner { max-width: var(--max); margin: 0 auto; }
 
-    .section-header { margin-bottom: 3.5rem; }
+    .section-header { margin-bottom: 2.4rem; max-width: 620px; }
     .label {
       font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.14em; color: var(--accent); margin-bottom: 0.6rem;
@@ -219,6 +219,10 @@
       font-family: var(--serif);
       font-size: clamp(2rem, 4vw, 3rem);
       letter-spacing: -0.02em;
+      margin-bottom: 0.6rem;
+    }
+    .section-header p {
+      color: var(--ink2); font-size: 0.96rem; line-height: 1.6; font-weight: 300;
     }
 
     /* ── SKILLS BAR ── */
@@ -245,8 +249,8 @@
       background: #e8f0ff; color: var(--accent);
       display: flex; align-items: center; justify-content: center; font-size: 1rem;
     }
-    .resume-highlight strong { display: block; font-size: 0.92rem; margin-bottom: 0.15rem; }
-    .resume-highlight span { font-size: 0.84rem; color: var(--ink2); font-weight: 300; line-height: 1.5; }
+    .resume-highlight strong { display: block; font-size: 0.92rem; margin-bottom: 0.3rem; }
+    .resume-highlight span { display: block; font-size: 0.84rem; color: var(--ink2); font-weight: 300; line-height: 1.5; }
     .resume-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
 
     .resume-preview-card {
@@ -519,21 +523,30 @@
   <div class="resume-wrap">
     <div class="resume-text">
       <div class="label">Credentials</div>
-      <h2 style="font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);letter-spacing:-0.02em;margin-bottom:1rem">One-page resume, ready to download</h2>
-      <p style="color:var(--ink2);font-size:1rem;line-height:1.7;font-weight:300;max-width:520px">A concise, senior-level Data Engineer &amp; BI resume — condensed to a single page, no clutter, no references, just the credentials that matter.</p>
+      <h2 style="font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);letter-spacing:-0.02em;margin-bottom:1rem">The experience behind the work</h2>
+      <p style="color:var(--ink2);font-size:1rem;line-height:1.7;font-weight:300;max-width:520px">Seven years split between freelance data consulting and enterprise fraud analytics at Ethio Telecom — backed by a top-ranked Computer Science record and hands-on delivery across the modern data stack.</p>
 
       <div class="resume-highlights">
         <div class="resume-highlight">
-          <div class="dot">📄</div>
-          <div><strong>Clean single page</strong><span>Summarized for a fast, high-signal read by recruiters and clients.</span></div>
+          <div class="dot">🎓</div>
+          <div>
+            <strong>Top-ranked academic record</strong>
+            <span>MSc &amp; BSc in Computer Science, ranked #1 with Great Distinction at Bahir Dar and Hawassa University.</span>
+          </div>
         </div>
         <div class="resume-highlight">
           <div class="dot">🛠️</div>
-          <div><strong>Senior Data Engineer &amp; BI focus</strong><span>Power BI, SQL Server, Microsoft Fabric, Azure, Databricks &amp; Snowflake.</span></div>
+          <div>
+            <strong>Full-stack data expertise</strong>
+            <span>Power BI, SQL Server, Microsoft Fabric, Azure, Databricks and Snowflake, applied across both consulting and enterprise environments.</span>
+          </div>
         </div>
         <div class="resume-highlight">
-          <div class="dot">🎓</div>
-          <div><strong>Top-ranked academic record</strong><span>MSc &amp; BSc in Computer Science — Rank #1, Great Distinction on both.</span></div>
+          <div class="dot">🔍</div>
+          <div>
+            <strong>Dual-domain experience</strong>
+            <span>Freelance data engineering delivery alongside fraud detection and monitoring work at Ethio Telecom.</span>
+          </div>
         </div>
       </div>
 
@@ -544,7 +557,7 @@
     </div>
 
     <div class="resume-preview-card">
-      <span class="resume-badge">PDF · 1 page</span>
+      <span class="resume-badge">PDF Resume</span>
       <img src="resume-preview.jpg" alt="Anduamlak Tadesse resume preview"/>
       <div class="resume-page-tag">Anduamlak_Tadesse_Resume.pdf</div>
     </div>
@@ -557,6 +570,7 @@
     <div class="section-header">
       <div class="label">Portfolio</div>
       <h2>Selected Work</h2>
+      <p>A sample of recent freelance and consulting deliverables across BI dashboards, data pipelines, and cloud migrations.</p>
     </div>
     <div class="portfolio-grid" id="portfolio-grid">
       <div class="portfolio-card skeleton"></div>
