@@ -206,205 +206,199 @@
     .link-em:hover { background: var(--accent); }
 
     /* ── SECTION ── */
-    .section { padding: 5rem 3rem; }
+    .section { padding: 7rem 3rem; }
     .section-alt { background: var(--bg2); }
     .section-inner { max-width: var(--max); margin: 0 auto; }
 
-    .section-header { margin-bottom: 2.4rem; max-width: 620px; }
     .label {
-      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.14em; color: var(--accent); margin-bottom: 0.6rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 1rem;
     }
-    .section-header h2 {
+
+    .section h2 {
       font-family: var(--serif);
-      font-size: clamp(2rem, 4vw, 3rem);
-      letter-spacing: -0.02em;
-      margin-bottom: 0.6rem;
-    }
-    .section-header p {
-      color: var(--ink2); font-size: 0.96rem; line-height: 1.6; font-weight: 300;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      color: var(--ink);
     }
 
-    /* ── SKILLS BAR ── */
-    .skills-section { padding: 5rem 3rem; background: var(--ink); color: var(--white); }
-    .skills-inner { max-width: var(--max); margin: 0 auto; }
-    .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem; }
-    .skill-bar-item { }
-    .skill-bar-top { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.88rem; font-weight: 500; }
-    .skill-bar-pct { color: var(--gold2); font-weight: 600; }
-    .skill-bar-track { height: 6px; background: rgba(255,255,255,0.1); border-radius: 100px; overflow: hidden; }
-    .skill-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--accent), var(--gold2)); width: 0; transition: width 1.2s ease; }
-
-    /* ── RESUME ── */
-    .resume-section { padding: 7rem 3rem; background: var(--bg); }
-    .resume-wrap {
-      max-width: var(--max); margin: 0 auto;
-      display: grid; grid-template-columns: 1.05fr 0.95fr;
-      gap: 4.5rem; align-items: center;
-    }
-    .resume-highlights { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0 2.4rem; }
-    .resume-highlight { display: flex; align-items: flex-start; gap: 0.9rem; }
-    .resume-highlight .dot {
-      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-      background: #e8f0ff; color: var(--accent);
-      display: flex; align-items: center; justify-content: center; font-size: 1rem;
-    }
-    .resume-highlight strong { display: block; font-size: 0.92rem; margin-bottom: 0.3rem; }
-    .resume-highlight span { display: block; font-size: 0.84rem; color: var(--ink2); font-weight: 300; line-height: 1.5; }
-    .resume-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
-
-    .resume-preview-card {
-      position: relative;
-      background: var(--white);
-      border-radius: 20px;
-      padding: 1.2rem;
-      box-shadow: 0 24px 64px rgba(10,10,15,0.16);
-      transform: rotate(1.2deg);
-      transition: transform 0.35s ease;
-      max-width: 340px;
-      margin: 0 auto;
-    }
-    .resume-preview-card:hover { transform: rotate(0deg) translateY(-6px); }
-    .resume-preview-card img {
-      width: 100%; display: block; border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-    .resume-badge {
-      position: absolute; top: -14px; right: -14px;
-      background: linear-gradient(120deg, var(--gold2), var(--gold));
-      color: var(--ink); font-weight: 700; font-size: 0.72rem;
-      padding: 0.5rem 0.9rem; border-radius: 100px;
-      box-shadow: 0 8px 20px rgba(201,149,42,0.4);
-      letter-spacing: 0.04em; text-transform: uppercase;
-    }
-    .resume-page-tag {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: var(--ink); color: var(--white);
-      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em;
-      padding: 0.4rem 1rem; border-radius: 100px; white-space: nowrap;
+    .section p {
+      font-size: 1.05rem;
+      color: var(--ink2);
+      max-width: 600px;
+      line-height: 1.7;
     }
 
     /* ── PORTFOLIO ── */
     .portfolio-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
     }
+
     .portfolio-card {
-      background: var(--white);
+      background: white;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.06);
-      transition: transform 0.25s, box-shadow 0.25s;
-      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+      display: flex;
+      flex-direction: column;
     }
-    .portfolio-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(0,0,0,0.12); }
-    .portfolio-card.skeleton {
-      height: 280px;
-      background: linear-gradient(90deg, var(--bg2) 25%, var(--bg) 50%, var(--bg2) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
+
+    .portfolio-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.15);
     }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-    .card-image-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg, #e8f0ff, #f0e8ff); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; }
-    .card-body { padding: 1.4rem; }
-    .card-tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 700; margin-bottom: 0.4rem; }
-    .card-title { font-family: var(--serif); font-size: 1.15rem; margin-bottom: 0.5rem; }
-    .card-desc { font-size: 0.86rem; color: var(--ink2); line-height: 1.6; }
+
+    .card-image-placeholder {
+      background: linear-gradient(135deg, rgba(26,92,255,0.1), rgba(124,58,237,0.1));
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-body { padding: 2rem; flex: 1; display: flex; flex-direction: column; }
+    .card-tag { padding: 0.4rem 0.9rem; background: #e8f0ff; color: var(--accent); border-radius: 100px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; width: fit-content; }
+    .card-title { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; color: var(--ink); margin-bottom: 0.8rem; line-height: 1.2; }
+    .card-desc { font-size: 0.9rem; color: var(--ink2); line-height: 1.7; margin-bottom: 1.5rem; flex: 1; }
 
     /* ── SERVICES ── */
-    .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
     .service-card {
-      background: var(--white);
-      border-radius: 16px; padding: 2rem;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.05);
-      transition: transform 0.25s, box-shadow 0.25s;
-      border: 1px solid rgba(0,0,0,0.04);
-      position: relative; overflow: hidden;
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      transition: all 0.3s;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,0.05);
     }
-    .service-card::after {
-      content: '';
-      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--accent), var(--gold));
-      transform: scaleX(0); transform-origin: left;
-      transition: transform 0.3s;
+
+    .service-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+      border-color: var(--accent);
     }
-    .service-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
-    .service-card:hover::after { transform: scaleX(1); }
-    .service-icon { font-size: 2.2rem; margin-bottom: 1rem; }
-    .service-card h3 { font-family: var(--serif); font-size: 1.15rem; margin-bottom: 0.7rem; }
-    .service-card p { font-size: 0.86rem; color: var(--ink2); line-height: 1.7; font-weight: 300; }
+
+    .service-icon { font-size: 3rem; margin-bottom: 1.5rem; }
+    .service-card h3 { font-family: var(--serif); font-size: 1.3rem; margin-bottom: 1rem; color: var(--ink); }
+    .service-card p { font-size: 0.9rem; color: var(--ink2); line-height: 1.7; }
+
+    /* ── SKILLS ── */
+    .skills-section { }
+    .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem; max-width: 600px; }
+    .skill-item { display: flex; flex-direction: column; }
+    .skill-name { font-weight: 600; color: var(--ink); margin-bottom: 0.6rem; font-size: 0.95rem; }
+    .skill-bar { height: 6px; background: rgba(0,0,0,0.08); border-radius: 100px; overflow: hidden; }
+    .skill-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent)); border-radius: 100px; width: 0%; transition: width 0.8s cubic-bezier(0.23, 1, 0.320, 1); }
 
     /* ── CONTACT ── */
     .contact-wrap {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start;
-      max-width: var(--max); margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
     }
-    .contact-info h2 { font-family: var(--serif); font-size: clamp(2rem,4vw,3rem); margin-bottom: 1rem; letter-spacing: -0.02em; }
-    .contact-info p { color: var(--ink2); font-size: 1rem; line-height: 1.7; margin-bottom: 2rem; font-weight: 300; }
+
+    .contact-info { }
+    .contact-info .label { display: block; }
+    .contact-info h2 { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.2; margin-bottom: 1.5rem; }
+    .contact-info p { font-size: 1rem; color: var(--ink2); line-height: 1.7; margin-bottom: 2.5rem; }
 
     .contact-method {
-      display: flex; align-items: center; gap: 1rem;
-      padding: 1.1rem 1.4rem;
-      background: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem;
+      background: var(--bg);
       border-radius: 12px;
-      margin-bottom: 0.8rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-      text-decoration: none; color: var(--ink);
+      text-decoration: none;
+      color: inherit;
       transition: all 0.2s;
       border: 1px solid rgba(0,0,0,0.05);
+      margin-bottom: 1rem;
     }
-    .contact-method:hover { transform: translateX(6px); box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
-    .contact-method-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
-    .contact-method-text strong { display: block; font-size: 0.85rem; font-weight: 600; }
-    .contact-method-text span { font-size: 0.8rem; color: var(--ink3); }
 
-    .contact-form { display: flex; flex-direction: column; gap: 1.1rem; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
-    .form-group label { font-size: 0.82rem; font-weight: 600; color: var(--ink2); letter-spacing: 0.02em; }
-    input, textarea, select {
-      width: 100%; padding: 0.85rem 1.1rem;
-      border: 1.5px solid rgba(0,0,0,0.1); border-radius: 10px;
-      background: var(--white); font-family: var(--sans); font-size: 0.92rem; color: var(--ink);
-      transition: border-color 0.2s;
+    .contact-method:hover {
+      background: white;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      transform: translateX(4px);
     }
-    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-    .form-status { font-size: 0.85rem; margin-top: 0.3rem; }
-    .form-status.success { color: #1a6640; }
-    .form-status.error { color: #b91c1c; }
+
+    .contact-method-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .contact-method-text strong { display: block; font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .contact-method-text span { font-size: 0.85rem; color: var(--ink2); }
+
+    .contact-form {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    }
+
+    .form-group { margin-bottom: 1.8rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.6rem; color: var(--ink); }
+    input, textarea, select { width: 100%; padding: 0.85rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px; font-family: var(--sans); font-size: 0.9rem; transition: all 0.2s; }
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,92,255,0.1); }
+
+    .form-status { margin-top: 1rem; padding: 1rem; border-radius: 8px; font-size: 0.9rem; display: none; }
+    .form-status.success { display: block; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .form-status.error { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
     /* ── FOOTER ── */
-    .footer { background: var(--ink); color: rgba(255,255,255,0.5); padding: 3rem; }
-    .footer-inner { max-width: var(--max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
-    .footer-brand { font-family: var(--serif); font-size: 1.1rem; color: var(--white); }
-    .footer-brand span { color: var(--accent); }
-    .footer-links { display: flex; gap: 1.5rem; }
-    .footer-links a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
-    .footer-links a:hover { color: var(--white); }
-    .footer-copy { font-size: 0.78rem; }
+    .footer { background: var(--ink); color: white; padding: 4rem 3rem 2rem; }
+    .footer-inner { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: 1fr auto 1fr; gap: 3rem; align-items: start; text-align: left; margin-bottom: 3rem; }
+    .footer-brand { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+    .footer-links { display: flex; gap: 2rem; justify-content: center; }
+    .footer-links a { color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.2s; font-size: 0.9rem; }
+    .footer-links a:hover { color: var(--gold2); }
+    .footer-copy { text-align: right; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; padding: 7rem 1.5rem 4rem; gap: 3rem; }
-      .hero-right { order: -1; }
-      .contact-wrap { grid-template-columns: 1fr; gap: 3rem; }
-      .skills-grid { grid-template-columns: 1fr 1fr; }
-      .resume-wrap { grid-template-columns: 1fr; gap: 3rem; }
-      .resume-preview-card { order: -1; }
+    @media (max-width: 768px) {
       .nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1.5rem; }
       .hamburger { display: block; }
-      .nav-links { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--bg); flex-direction: column; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.08); gap: 0; }
-      .nav-links.open { display: flex; }
-      .nav-links a { padding: 0.8rem 0; }
-      .section { padding: 4rem 1.5rem; }
-      .skills-section { padding: 4rem 1.5rem; }
-      .resume-section { padding: 4rem 1.5rem; }
-    }
-    @media (max-width: 480px) {
-      .form-row { grid-template-columns: 1fr; }
+      .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(248,247,244,0.98); padding: 2rem 1.5rem; border-top: 1px solid rgba(0,0,0,0.06); }
+      .nav-links.active { display: flex; }
+
+      .hero { grid-template-columns: 1fr; padding: 6rem 1.5rem 3rem; gap: 3rem; }
+      .hero-stats { flex-wrap: wrap; gap: 1.5rem; }
+      .portfolio-grid { grid-template-columns: 1fr; }
+      .services-grid { grid-template-columns: 1fr; }
       .skills-grid { grid-template-columns: 1fr; }
-      .hero-stats { gap: 1.5rem; flex-wrap: wrap; }
+      .contact-wrap { grid-template-columns: 1fr; gap: 2rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+      .footer-links { justify-content: center; }
+      .footer-copy { text-align: center; }
     }
   </style>
 </head>
@@ -412,170 +406,166 @@
 
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-brand" style="display:flex;align-items:center;gap:0.7rem"><img src="QFA_Logo.png" alt="QFA" style="height:46px;vertical-align:middle"/><div style="display:flex;flex-direction:column;line-height:1.2"><span style="font-size:0.95rem;font-weight:700;color:var(--navy)">Quick Freelancing Agency</span><span style="font-size:0.65rem;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;font-weight:600">Data &amp; Analytics</span></div></div>
-  <div class="nav-links" id="nav-links">
-    <a href="#work">Freelance Work</a>
-    <a href="#skills">Skills</a>
-    <a href="#resume">Resume</a>
+  <div class="nav-brand">Quick<span>FA</span></div>
+  <div class="nav-links" id="nav-menu">
+    <a href="#about">About</a>
     <a href="#services">Services</a>
+    <a href="#portfolio">Portfolio</a>
+    <a href="#skills">Skills</a>
     <a href="#contact">Contact</a>
     <a href="pages/login.html" class="btn-nav">Client Login</a>
+    <button class="btn-nav" onclick="downloadResume()">📄 Resume</button>
   </div>
-  <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')" aria-label="menu">&#9776;</button>
+  <button class="hamburger" onclick="toggleMenu()">☰</button>
 </nav>
 
 <!-- HERO -->
-<header class="hero">
+<section class="hero">
   <div class="hero-left">
-    <div class="hero-tag">Open for new projects</div>
-    <h1 class="hero-title">
-      Data, <em>Analytics</em><br/>& Digital Solutions<br/>Agency
-    </h1>
-    <p class="hero-sub">We turn data into business value through analytics, reporting, cloud technologies, automation, and enterprise-grade data solutions.</p>
+    <div class="hero-tag">✨ Now Accepting Projects</div>
+    <h1 class="hero-title">Transform Data into <em>Strategic Insights</em></h1>
+    <p class="hero-sub">Senior data engineer & analyst specializing in data pipelines, business intelligence, and enterprise analytics. Let's turn your data chaos into clarity.</p>
     <div class="hero-cta">
-      <a href="#contact" class="btn-primary">Start a project →</a>
-      <a href="#work" class="btn-ghost">See our work</a>
+      <a href="#contact" class="btn-primary">Start a Project</a>
+      <button class="btn-gold" onclick="downloadResume()">📥 Download Resume</button>
     </div>
     <div class="hero-stats">
-      <div class="stat"><span class="stat-num">50+</span><span class="stat-label">Happy clients</span></div>
-      <div class="stat"><span class="stat-num">60+</span><span class="stat-label">Projects done</span></div>
-      <div class="stat"><span class="stat-num">7+</span><span class="stat-label">Years experience</span></div>
+      <div class="stat">
+        <div class="stat-num">8+</div>
+        <div class="stat-label">Years Experience</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">50+</div>
+        <div class="stat-label">Projects Completed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">20+</div>
+        <div class="stat-label">Clients Worldwide</div>
+      </div>
     </div>
   </div>
 
-  <!-- CEO Card -->
   <div class="hero-right">
     <div class="ceo-card">
       <div class="ceo-photo-wrap">
-        <img src="anduamlak.png" alt="Anduamlak Tadesse — CEO"/>
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#1a5cff;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <circle cx="100" cy="100" r="100" fill="url(#avatarGrad)"/>
+          <circle cx="100" cy="70" r="35" fill="#ffffff" opacity="0.3"/>
+          <ellipse cx="100" cy="140" rx="45" ry="50" fill="#ffffff" opacity="0.3"/>
+        </svg>
       </div>
       <div class="ceo-name">Anduamlak Tadesse</div>
-      <div class="ceo-title">Founder & CEO</div>
-      <p class="ceo-bio">Senior Data Engineer & BI Expert with 7+ years of enterprise data and analytics experience.Passionate about turning complex data into clear business value.</p>
-
+      <div class="ceo-title">Senior Data Engineer & Analyst</div>
+      <div class="ceo-bio">Passionate about turning complex data challenges into elegant solutions. Specialized in cloud infrastructure, data modeling, and analytics automation.</div>
+      
       <div class="skills-wrap">
-        <span class="skill-tag highlight">SQL Server</span>
-        <span class="skill-tag highlight">Power BI</span>
+        <span class="skill-tag highlight">Python</span>
+        <span class="skill-tag highlight">SQL</span>
         <span class="skill-tag highlight">Azure</span>
-        <span class="skill-tag highlight">SSIS / ETL</span>
-        <span class="skill-tag">Python</span>
-        <span class="skill-tag">Data Warehouse</span>
-        <span class="skill-tag">Microsoft Fabric</span>
-        <span class="skill-tag">DAX</span>
-        <span class="skill-tag">T-SQL</span>
-        <span class="skill-tag">Cloud Migration</span>
+        <span class="skill-tag">Power BI</span>
+        <span class="skill-tag">ETL</span>
+        <span class="skill-tag">Data Warehousing</span>
       </div>
 
       <div class="ceo-links">
-        <a href="http://www.linkedin.com/in/anduamlak-tadesse-bb8bab215" target="_blank" class="ceo-link link-li">🔗 LinkedIn</a>
-        <a href="https://wa.me/251911859866" target="_blank" class="ceo-link link-wa">💬 WhatsApp</a>
-        <a href="mailto:ndy.andupa@gmail.com" class="ceo-link link-em">✉ Email</a>
+        <a href="http://www.linkedin.com/in/anduamlak-tadesse-bb8bab215" target="_blank" class="ceo-link link-li">LinkedIn</a>
+        <a href="https://github.com/andytaddataenginner" target="_blank" class="ceo-link link-em">GitHub</a>
+        <a href="https://wa.me/251911859866" target="_blank" class="ceo-link link-wa">WhatsApp</a>
       </div>
-    </div>
-  </div>
-</header>
-
-<!-- SKILLS -->
-<section class="skills-section" id="skills">
-  <div class="skills-inner">
-    <div class="label" style="color:var(--gold2)">Expertise</div>
-    <h2 style="font-family:var(--serif);font-size:clamp(2rem,4vw,2.8rem);color:var(--white);margin-bottom:0.5rem;letter-spacing:-0.02em">Core Technical Skills</h2>
-    <p style="color:rgba(255,255,255,0.5);font-size:0.95rem;font-weight:300">Seven years of hands-on expertise across the modern data stack</p>
-    <div class="skills-grid" id="skills-grid">
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>SQL Server & T-SQL</span><span class="skill-bar-pct">98%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="98"></div></div>
-      </div>
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>Power BI & Data Visualization</span><span class="skill-bar-pct">95%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="95"></div></div>
-      </div>
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>SSIS / ETL Pipelines</span><span class="skill-bar-pct">93%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="93"></div></div>
-      </div>
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>Azure Data Platform</span><span class="skill-bar-pct">88%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="88"></div></div>
-      </div>
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>Data Warehouse Design</span><span class="skill-bar-pct">92%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="92"></div></div>
-      </div>
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>Microsoft Fabric</span><span class="skill-bar-pct">85%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="85"></div></div>
-      </div>
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>Python for Data Engineering</span><span class="skill-bar-pct">82%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="82"></div></div>
-      </div>
-      <div class="skill-bar-item">
-        <div class="skill-bar-top"><span>Database Performance Tuning</span><span class="skill-bar-pct">90%</span></div>
-        <div class="skill-bar-track"><div class="skill-bar-fill" data-width="90"></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- RESUME -->
-<section class="resume-section" id="resume">
-  <div class="resume-wrap">
-    <div class="resume-text">
-      <div class="label">Credentials</div>
-      <h2 style="font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);letter-spacing:-0.02em;margin-bottom:1rem">The experience behind the work</h2>
-      <p style="color:var(--ink2);font-size:1rem;line-height:1.7;font-weight:300;max-width:520px">Helping businesses turn data into decisions for over seven years through freelance data engineering, business intelligence, and analytics solutions—built on a strong Computer Science foundation and expertise in modern cloud technologies.</p>
-
-      <div class="resume-highlights">
-        <div class="resume-highlight">
-          <div class="dot">🎓</div>
-          <div>
-            <strong>Top-ranked academic record</strong>
-            <span>MSc &amp; BSc in Computer Science, at Bahir Dar and Hawassa University.</span>
-          </div>
-        </div>
-        <div class="resume-highlight">
-          <div class="dot">🛠️</div>
-          <div>
-            <strong>Full-stack data expertise</strong>
-            <span>Power BI, SQL Server, Microsoft Fabric, Azure, Databricks and Snowflake, applied across both consulting and enterprise environments.</span>
-          </div>
-        </div>
-        <div class="resume-highlight">
-          <div class="dot">🔍</div>
-          <div>
-            <strong>Proven Delivery</strong>
-            <span>Seven years of successfully delivering freelance data engineering and analytics projects, from data integration and cloud platforms to executive dashboards and business intelligence.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="resume-actions">
-        <a href="Anduamlak_Tadesse_Resume.pdf" download class="btn-gold">⬇ Download Resume (PDF)</a>
-        <a href="Anduamlak_Tadesse_Resume.pdf" target="_blank" class="btn-ghost">Preview in new tab</a>
-      </div>
-    </div>
-
-    <div class="resume-preview-card">
-      <span class="resume-badge">PDF Resume</span>
-      <img src="resume-preview.jpg" alt="Anduamlak Tadesse resume preview"/>
-      <div class="resume-page-tag">Anduamlak_Tadesse_Resume.pdf</div>
     </div>
   </div>
 </section>
 
 <!-- PORTFOLIO -->
-<section id="work" class="section">
+<section id="portfolio" class="section section-alt">
   <div class="section-inner">
-    <div class="section-header">
-      <div class="label">Portfolio</div>
-      <h2>Selected Work</h2>
-      <p>A sample of recent freelance and consulting deliverables across BI dashboards, data pipelines, and cloud migrations.</p>
+    <div style="margin-bottom: 3rem;">
+      <span class="label">Featured Work</span>
+      <h2>Portfolio Highlights</h2>
+      <p>Showcase of impactful projects where data engineering and analytics drove measurable business results</p>
     </div>
+
     <div class="portfolio-grid" id="portfolio-grid">
-      <div class="portfolio-card skeleton"></div>
-      <div class="portfolio-card skeleton"></div>
-      <div class="portfolio-card skeleton"></div>
+      <div class="portfolio-card">
+        <div class="card-image-placeholder">📊</div>
+        <div class="card-body">
+          <div class="card-tag">Business Intelligence</div>
+          <div class="card-title">Sales Analytics Dashboard</div>
+          <div class="card-desc">Interactive Power BI dashboard tracking $2M+ in monthly revenue across 12 regions for a global logistics company.</div>
+        </div>
+      </div>
+
+      <div class="portfolio-card">
+        <div class="card-image-placeholder">🗄️</div>
+        <div class="card-body">
+          <div class="card-tag">Data Engineering</div>
+          <div class="card-title">Enterprise Data Warehouse</div>
+          <div class="card-desc">Built a centralized SQL Server data warehouse integrating 8 source systems, reducing reporting time by 70%.</div>
+        </div>
+      </div>
+
+      <div class="portfolio-card">
+        <div class="card-image-placeholder">☁️</div>
+        <div class="card-body">
+          <div class="card-tag">Cloud Migration</div>
+          <div class="card-title">Azure Cloud Migration</div>
+          <div class="card-desc">Migrated 5TB on-premise database infrastructure to Azure with zero downtime and full data integrity maintained.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 2rem;">
+      <p style="font-size: 1rem; color: var(--ink2); margin-bottom: 1.5rem;">
+        View my complete portfolio with detailed project breakdowns and live demos
+      </p>
+      <a href="https://andytaddataenginner.github.io/freelancer-platform/index.html" target="_blank" class="btn-primary">
+        → Visit Full Portfolio Website
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills" class="section">
+  <div class="section-inner">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
+      <div>
+        <span class="label">Expertise</span>
+        <h2>Technical Skills</h2>
+        <p>Comprehensive skill set across data technologies, cloud platforms, and analytics tools. Continuously learning and staying updated with industry best practices.</p>
+      </div>
+      <div class="skills-grid">
+        <div class="skill-item">
+          <div class="skill-name">Python & SQL</div>
+          <div class="skill-bar"><div class="skill-bar-fill" data-width="95"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Data Warehousing</div>
+          <div class="skill-bar"><div class="skill-bar-fill" data-width="92"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Azure & Cloud</div>
+          <div class="skill-bar"><div class="skill-bar-fill" data-width="88"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Power BI & Analytics</div>
+          <div class="skill-bar"><div class="skill-bar-fill" data-width="90"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">ETL & Pipelines</div>
+          <div class="skill-bar"><div class="skill-bar-fill" data-width="94"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Machine Learning</div>
+          <div class="skill-bar"><div class="skill-bar-fill" data-width="85"></div></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -583,8 +573,8 @@
 <!-- SERVICES -->
 <section id="services" class="section section-alt">
   <div class="section-inner">
-    <div class="section-header">
-      <div class="label">What we do</div>
+    <div style="text-align: center; margin-bottom: 4rem;">
+      <span class="label">What We Offer</span>
       <h2>Our Services</h2>
     </div>
     <div class="services-grid">
@@ -650,11 +640,11 @@
         <div class="form-row">
           <div class="form-group">
             <label>Your name</label>
-            <input type="text" name="name" placeholder="Anduamlak yitayeh" required/>
+            <input type="text" name="name" placeholder="John Doe" required/>
           </div>
           <div class="form-group">
             <label>Email address</label>
-            <input type="email" name="email" placeholder="andy@example.com" required/>
+            <input type="email" name="email" placeholder="john@example.com" required/>
           </div>
         </div>
         <div class="form-group">
@@ -683,11 +673,10 @@
 <footer class="footer">
   <div class="footer-inner">
     <div>
-      <div class="footer-brand" style="display:flex;align-items:center;gap:0.7rem"><div style="background:white;border-radius:8px;padding:4px;display:inline-flex"><img src="QFA_Logo.png" alt="QFA" style="height:32px;vertical-align:middle"/></div><div style="line-height:1.3"><div style="color:white;font-size:0.9rem;font-weight:700">Quick Freelancing Agency</div><div style="font-size:0.65rem;color:var(--gold2);text-transform:uppercase;letter-spacing:0.08em">Data &amp; Analytics</div></div></div>
+      <div class="footer-brand" style="display:flex;align-items:center;gap:0.7rem"><div style="background:white;border-radius:8px;padding:4px;display:inline-flex;color:var(--accent);font-weight:700;font-size:0.9rem;padding:2px 6px">QFA</div><div style="line-height:1.3"><div style="color:white;font-size:0.9rem;font-weight:700">Quick Freelancing Agency</div><div style="font-size:0.65rem;color:var(--gold2);text-transform:uppercase;letter-spacing:0.08em">Data &amp; Analytics</div></div></div>
       <div style="font-size:0.78rem;margin-top:0.3rem">CEO: Anduamlak Tadesse</div>
     </div>
     <div class="footer-links">
-      <a href="Anduamlak_Tadesse_Resume.pdf" download>Resume</a>
       <a href="https://github.com/andytaddataenginner" target="_blank">GitHub</a>
       <a href="http://www.linkedin.com/in/anduamlak-tadesse-bb8bab215" target="_blank">LinkedIn</a>
       <a href="https://wa.me/251911859866" target="_blank">WhatsApp</a>
@@ -699,44 +688,23 @@
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 
-// ── Default portfolio (shown immediately, swapped for live data if the API responds) ──
-const DEMO_PORTFOLIO = [
-  { emoji:'📊', cat:'Business Intelligence', title:'Sales Analytics Dashboard', desc:'Interactive Power BI dashboard tracking monthly revenue across 12 regions for a logistics company.' },
-  { emoji:'🗄️', cat:'Data Engineering',      title:'Enterprise Data Warehouse', desc:'Centralised SQL Server data warehouse integrating 8 source systems, cutting reporting time significantly.' },
-  { emoji:'☁️', cat:'Cloud Migration',        title:'Azure Cloud Migration',     desc:'Migrated 5TB of on-premise database infrastructure to Azure with zero downtime and full data integrity.' },
-  { emoji:'⚙️', cat:'Automation',             title:'Automated Reporting Pipeline', desc:'Power Automate + Power BI refresh pipeline that removed hours of manual weekly reporting work.' },
-  { emoji:'📈', cat:'Business Intelligence', title:'Executive KPI Scorecard',   desc:'DAX-driven scorecard giving leadership real-time visibility into company-wide performance metrics.' },
-  { emoji:'🧮', cat:'Data Engineering',       title:'Retail Data Pipeline',      desc:'Nightly SSIS ETL pipeline consolidating multi-store POS data into a single analytics-ready model.' }
-];
-
-function renderPortfolio(items) {
-  const grid = document.getElementById('portfolio-grid');
-  grid.innerHTML = items.map(item => `
-    <div class="portfolio-card">
-      <div class="card-image-placeholder">${item.emoji || '💻'}</div>
-      <div class="card-body">
-        <div class="card-tag">${item.category || item.cat || 'Project'}</div>
-        <div class="card-title">${item.title}</div>
-        <div class="card-desc">${item.description || item.desc || ''}</div>
-      </div>
-    </div>
-  `).join('');
+// ── Menu toggle ────────────────────────────────────────────
+function toggleMenu() {
+  const menu = document.getElementById('nav-menu');
+  menu.classList.toggle('active');
 }
 
-// ── Portfolio loader ──────────────────────────────────────────
-async function loadPortfolio() {
-  // Show real, populated work immediately — no empty state, no waiting on the API.
-  renderPortfolio(DEMO_PORTFOLIO);
-  try {
-    const res  = await fetch(`${API}/portfolio`);
-    const items = await res.json();
-    if (items && items.length) renderPortfolio(items);
-  } catch {
-    // Keep the default portfolio shown above.
-  }
+// ── Download Resume ────────────────────────────────────────
+function downloadResume() {
+  const link = document.createElement('a');
+  link.href = 'resume.pdf';
+  link.download = 'Anduamlak_Tadesse_Resume.pdf';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
-// ── Skill bars animate on scroll ─────────────────────────────
+// ── Skill bars animate on scroll ───────────────────────────
 function animateSkills() {
   const fills = document.querySelectorAll('.skill-bar-fill');
   const observer = new IntersectionObserver((entries) => {
@@ -750,7 +718,7 @@ function animateSkills() {
   fills.forEach(f => observer.observe(f));
 }
 
-// ── Contact form ──────────────────────────────────────────────
+// ── Contact form ───────────────────────────────────────────
 async function submitContact(e) {
   e.preventDefault();
   const form   = e.target;
@@ -777,7 +745,7 @@ async function submitContact(e) {
   }
 }
 
-loadPortfolio();
+// ── Init ───────────────────────────────────────────────────
 animateSkills();
 </script>
 </body>
