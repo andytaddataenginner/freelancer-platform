@@ -20,6 +20,8 @@
       --accent2: #0038cc;
       --gold: #c9952a;
       --gold2: #f5c842;
+      --purple: #7c3aed;
+      --emerald: #10b981;
       --serif: 'Playfair Display', Georgia, serif;
       --sans: 'Outfit', system-ui, sans-serif;
       --max: 1200px;
@@ -39,9 +41,10 @@
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.2rem 3rem;
-      background: rgba(248,247,244,0.9);
+      background: rgba(248,247,244,0.95);
       backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.03);
     }
     .nav-brand {
       font-family: var(--serif);
@@ -59,9 +62,9 @@
       color: var(--white) !important;
       border-radius: 100px;
       font-size: 0.84rem !important;
-      transition: background 0.2s !important;
+      transition: all 0.2s !important;
     }
-    .btn-nav:hover { background: var(--accent) !important; }
+    .btn-nav:hover { background: var(--accent) !important; transform: translateY(-2px); }
     .hamburger { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; }
 
     /* ── HERO ── */
@@ -135,17 +138,18 @@
     }
     .btn-ghost:hover { border-color: var(--ink); background: var(--ink); color: white; }
 
-    .btn-gold {
+    .btn-resume {
       padding: 0.9rem 2.2rem;
-      background: linear-gradient(120deg, var(--gold2), var(--gold));
-      color: var(--ink);
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: var(--ink) !important;
       border: none; border-radius: 100px;
-      font-family: var(--sans); font-size: 0.92rem; font-weight: 700;
+      font-size: 0.92rem; font-weight: 600;
       cursor: pointer; text-decoration: none;
       transition: all 0.2s;
-      display: inline-flex; align-items: center; gap: 0.5rem; letter-spacing: 0.02em;
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      letter-spacing: 0.02em;
     }
-    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(201,149,42,0.35); }
+    .btn-resume:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,149,42,0.3); }
 
     .hero-stats { display: flex; gap: 2.5rem; }
     .stat { display: flex; flex-direction: column; }
@@ -210,7 +214,20 @@
     .section-alt { background: var(--bg2); }
     .section-inner { max-width: var(--max); margin: 0 auto; }
 
-    .label {
+    /* ── PORTFOLIO SECTION ── */
+    .portfolio-section {
+      background: linear-gradient(135deg, #f8f7f4 0%, #f0ede6 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portfolio-header {
+      text-align: center;
+      margin-bottom: 5rem;
+    }
+
+    .portfolio-header .label {
+      display: inline-block;
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -219,7 +236,7 @@
       margin-bottom: 1rem;
     }
 
-    .section h2 {
+    .portfolio-header h2 {
       font-family: var(--serif);
       font-size: clamp(2rem, 4vw, 3.5rem);
       line-height: 1.2;
@@ -227,14 +244,14 @@
       color: var(--ink);
     }
 
-    .section p {
+    .portfolio-header p {
       font-size: 1.05rem;
       color: var(--ink2);
       max-width: 600px;
+      margin: 0 auto;
       line-height: 1.7;
     }
 
-    /* ── PORTFOLIO ── */
     .portfolio-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -257,7 +274,7 @@
       box-shadow: 0 20px 48px rgba(0,0,0,0.15);
     }
 
-    .card-image-placeholder {
+    .portfolio-card-image {
       background: linear-gradient(135deg, rgba(26,92,255,0.1), rgba(124,58,237,0.1));
       height: 200px;
       display: flex;
@@ -268,12 +285,89 @@
       overflow: hidden;
     }
 
-    .card-body { padding: 2rem; flex: 1; display: flex; flex-direction: column; }
-    .card-tag { padding: 0.4rem 0.9rem; background: #e8f0ff; color: var(--accent); border-radius: 100px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; width: fit-content; }
-    .card-title { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; color: var(--ink); margin-bottom: 0.8rem; line-height: 1.2; }
-    .card-desc { font-size: 0.9rem; color: var(--ink2); line-height: 1.7; margin-bottom: 1.5rem; flex: 1; }
+    .portfolio-card-image::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+      transform: translateX(-100%);
+      animation: shimmer 3s infinite;
+    }
 
-    /* ── SERVICES ── */
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .portfolio-card-body {
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .portfolio-card-tag {
+      display: inline-block;
+      padding: 0.4rem 0.9rem;
+      background: #e8f0ff;
+      color: var(--accent);
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+      width: fit-content;
+    }
+
+    .portfolio-card-title {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+      line-height: 1.2;
+    }
+
+    .portfolio-card-desc {
+      font-size: 0.9rem;
+      color: var(--ink2);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+      flex: 1;
+    }
+
+    .portfolio-card-stats {
+      display: flex;
+      gap: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .portfolio-stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .portfolio-stat-label {
+      font-size: 0.7rem;
+      color: var(--ink3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .portfolio-stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* ── SERVICES SECTION ── */
     .services-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -296,19 +390,62 @@
       border-color: var(--accent);
     }
 
-    .service-icon { font-size: 3rem; margin-bottom: 1.5rem; }
-    .service-card h3 { font-family: var(--serif); font-size: 1.3rem; margin-bottom: 1rem; color: var(--ink); }
-    .service-card p { font-size: 0.9rem; color: var(--ink2); line-height: 1.7; }
+    .service-icon {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+    }
 
-    /* ── SKILLS ── */
+    .service-card h3 {
+      font-family: var(--serif);
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--ink);
+    }
+
+    .service-card p {
+      font-size: 0.9rem;
+      color: var(--ink2);
+      line-height: 1.7;
+    }
+
+    /* ── SKILLS SECTION ── */
     .skills-section { }
-    .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem; max-width: 600px; }
-    .skill-item { display: flex; flex-direction: column; }
-    .skill-name { font-weight: 600; color: var(--ink); margin-bottom: 0.6rem; font-size: 0.95rem; }
-    .skill-bar { height: 6px; background: rgba(0,0,0,0.08); border-radius: 100px; overflow: hidden; }
-    .skill-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent)); border-radius: 100px; width: 0%; transition: width 0.8s cubic-bezier(0.23, 1, 0.320, 1); }
 
-    /* ── CONTACT ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.5rem;
+      max-width: 600px;
+    }
+
+    .skill-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .skill-name {
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+      font-size: 0.95rem;
+    }
+
+    .skill-bar {
+      height: 6px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .skill-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--purple));
+      border-radius: 100px;
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.23, 1, 0.320, 1);
+    }
+
+    /* ── CONTACT SECTION ── */
     .contact-wrap {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -317,22 +454,43 @@
     }
 
     .contact-info { }
-    .contact-info .label { display: block; }
-    .contact-info h2 { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.2; margin-bottom: 1.5rem; }
-    .contact-info p { font-size: 1rem; color: var(--ink2); line-height: 1.7; margin-bottom: 2.5rem; }
+
+    .contact-info .label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .contact-info h2 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    .contact-info p {
+      font-size: 1rem;
+      color: var(--ink2);
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
 
     .contact-method {
       display: flex;
       align-items: center;
       gap: 1.2rem;
       padding: 1.2rem;
+      margin-bottom: 1rem;
       background: var(--bg);
       border-radius: 12px;
       text-decoration: none;
       color: inherit;
       transition: all 0.2s;
       border: 1px solid rgba(0,0,0,0.05);
-      margin-bottom: 1rem;
     }
 
     .contact-method:hover {
@@ -352,8 +510,16 @@
       flex-shrink: 0;
     }
 
-    .contact-method-text strong { display: block; font-size: 0.95rem; margin-bottom: 0.2rem; }
-    .contact-method-text span { font-size: 0.85rem; color: var(--ink2); }
+    .contact-method-text strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .contact-method-text span {
+      font-size: 0.85rem;
+      color: var(--ink2);
+    }
 
     .contact-form {
       background: white;
@@ -362,24 +528,125 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.08);
     }
 
-    .form-group { margin-bottom: 1.8rem; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.6rem; color: var(--ink); }
-    input, textarea, select { width: 100%; padding: 0.85rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px; font-family: var(--sans); font-size: 0.9rem; transition: all 0.2s; }
-    input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,92,255,0.1); }
+    .form-group {
+      margin-bottom: 1.8rem;
+    }
 
-    .form-status { margin-top: 1rem; padding: 1rem; border-radius: 8px; font-size: 0.9rem; display: none; }
-    .form-status.success { display: block; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .form-status.error { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+      color: var(--ink);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.85rem;
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 8px;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,92,255,0.1);
+    }
+
+    .form-status {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .form-status.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .form-status.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
 
     /* ── FOOTER ── */
-    .footer { background: var(--ink); color: white; padding: 4rem 3rem 2rem; }
-    .footer-inner { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: 1fr auto 1fr; gap: 3rem; align-items: start; text-align: left; margin-bottom: 3rem; }
-    .footer-brand { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
-    .footer-links { display: flex; gap: 2rem; justify-content: center; }
-    .footer-links a { color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.2s; font-size: 0.9rem; }
-    .footer-links a:hover { color: var(--gold2); }
-    .footer-copy { text-align: right; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+    .footer {
+      background: var(--ink);
+      color: white;
+      padding: 4rem 3rem 2rem;
+    }
+
+    .footer-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 3rem;
+      align-items: start;
+      text-align: left;
+      margin-bottom: 3rem;
+    }
+
+    .footer-brand {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+    }
+
+    .footer-links a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      transition: color 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .footer-links a:hover {
+      color: var(--gold2);
+    }
+
+    .footer-copy {
+      text-align: right;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .footer::after {
+      content: '';
+      display: block;
+      max-width: var(--max);
+      margin: 2rem auto 0;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+    }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
@@ -427,7 +694,7 @@
     <p class="hero-sub">Senior data engineer & analyst specializing in data pipelines, business intelligence, and enterprise analytics. Let's turn your data chaos into clarity.</p>
     <div class="hero-cta">
       <a href="#contact" class="btn-primary">Start a Project</a>
-      <button class="btn-gold" onclick="downloadResume()">📥 Download Resume</button>
+      <button class="btn-resume" onclick="downloadResume()">📥 Download Resume</button>
     </div>
     <div class="hero-stats">
       <div class="stat">
@@ -483,9 +750,9 @@
 </section>
 
 <!-- PORTFOLIO -->
-<section id="portfolio" class="section section-alt">
+<section id="portfolio" class="section portfolio-section">
   <div class="section-inner">
-    <div style="margin-bottom: 3rem;">
+    <div class="portfolio-header">
       <span class="label">Featured Work</span>
       <h2>Portfolio Highlights</h2>
       <p>Showcase of impactful projects where data engineering and analytics drove measurable business results</p>
@@ -493,40 +760,118 @@
 
     <div class="portfolio-grid" id="portfolio-grid">
       <div class="portfolio-card">
-        <div class="card-image-placeholder">📊</div>
-        <div class="card-body">
-          <div class="card-tag">Business Intelligence</div>
-          <div class="card-title">Sales Analytics Dashboard</div>
-          <div class="card-desc">Interactive Power BI dashboard tracking $2M+ in monthly revenue across 12 regions for a global logistics company.</div>
+        <div class="portfolio-card-image">📊</div>
+        <div class="portfolio-card-body">
+          <div class="portfolio-card-tag">Business Intelligence</div>
+          <div class="portfolio-card-title">Sales Analytics Dashboard</div>
+          <div class="portfolio-card-desc">Interactive Power BI dashboard tracking $2M+ in monthly revenue across 12 regions for a global logistics company.</div>
+          <div class="portfolio-card-stats">
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Impact</span>
+              <span class="portfolio-stat-value">+45% Insight Speed</span>
+            </div>
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Tech Stack</span>
+              <span class="portfolio-stat-value">Power BI</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="portfolio-card">
-        <div class="card-image-placeholder">🗄️</div>
-        <div class="card-body">
-          <div class="card-tag">Data Engineering</div>
-          <div class="card-title">Enterprise Data Warehouse</div>
-          <div class="card-desc">Built a centralized SQL Server data warehouse integrating 8 source systems, reducing reporting time by 70%.</div>
+        <div class="portfolio-card-image">🗄️</div>
+        <div class="portfolio-card-body">
+          <div class="portfolio-card-tag">Data Engineering</div>
+          <div class="portfolio-card-title">Enterprise Data Warehouse</div>
+          <div class="portfolio-card-desc">Built a centralized SQL Server data warehouse integrating 8 source systems, reducing reporting time by 70%.</div>
+          <div class="portfolio-card-stats">
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Performance</span>
+              <span class="portfolio-stat-value">-70% Query Time</span>
+            </div>
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Tech Stack</span>
+              <span class="portfolio-stat-value">SQL Server</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="portfolio-card">
-        <div class="card-image-placeholder">☁️</div>
-        <div class="card-body">
-          <div class="card-tag">Cloud Migration</div>
-          <div class="card-title">Azure Cloud Migration</div>
-          <div class="card-desc">Migrated 5TB on-premise database infrastructure to Azure with zero downtime and full data integrity maintained.</div>
+        <div class="portfolio-card-image">☁️</div>
+        <div class="portfolio-card-body">
+          <div class="portfolio-card-tag">Cloud Migration</div>
+          <div class="portfolio-card-title">Azure Cloud Migration</div>
+          <div class="portfolio-card-desc">Migrated 5TB on-premise database infrastructure to Azure with zero downtime and full data integrity maintained.</div>
+          <div class="portfolio-card-stats">
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Uptime</span>
+              <span class="portfolio-stat-value">100% Success</span>
+            </div>
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Tech Stack</span>
+              <span class="portfolio-stat-value">Azure</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div style="text-align: center; padding: 2rem;">
-      <p style="font-size: 1rem; color: var(--ink2); margin-bottom: 1.5rem;">
-        View my complete portfolio with detailed project breakdowns and live demos
-      </p>
-      <a href="https://andytaddataenginner.github.io/freelancer-platform/index.html" target="_blank" class="btn-primary">
-        → Visit Full Portfolio Website
-      </a>
+      <div class="portfolio-card">
+        <div class="portfolio-card-image">⚙️</div>
+        <div class="portfolio-card-body">
+          <div class="portfolio-card-tag">ETL Automation</div>
+          <div class="portfolio-card-title">Real-time Data Pipeline</div>
+          <div class="portfolio-card-desc">Developed automated ETL pipeline processing 100M+ records daily, enabling real-time insights for 5 departments.</div>
+          <div class="portfolio-card-stats">
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Throughput</span>
+              <span class="portfolio-stat-value">100M Records/Day</span>
+            </div>
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Tech Stack</span>
+              <span class="portfolio-stat-value">Python, Azure</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="portfolio-card">
+        <div class="portfolio-card-image">📈</div>
+        <div class="portfolio-card-body">
+          <div class="portfolio-card-tag">Advanced Analytics</div>
+          <div class="portfolio-card-title">Predictive Analytics Model</div>
+          <div class="portfolio-card-desc">Built machine learning model predicting customer churn with 92% accuracy, saving $1.2M in annual revenue.</div>
+          <div class="portfolio-card-stats">
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Accuracy</span>
+              <span class="portfolio-stat-value">92% Precision</span>
+            </div>
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Tech Stack</span>
+              <span class="portfolio-stat-value">Python, ML</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="portfolio-card">
+        <div class="portfolio-card-image">🔄</div>
+        <div class="portfolio-card-body">
+          <div class="portfolio-card-tag">Process Optimization</div>
+          <div class="portfolio-card-title">Data Quality Framework</div>
+          <div class="portfolio-card-desc">Implemented comprehensive data quality monitoring system, reducing data errors by 95% and improving compliance.</div>
+          <div class="portfolio-card-stats">
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Improvement</span>
+              <span class="portfolio-stat-value">-95% Errors</span>
+            </div>
+            <div class="portfolio-stat-item">
+              <span class="portfolio-stat-label">Tech Stack</span>
+              <span class="portfolio-stat-label">Great Expectations</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -536,9 +881,9 @@
   <div class="section-inner">
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
       <div>
-        <span class="label">Expertise</span>
-        <h2>Technical Skills</h2>
-        <p>Comprehensive skill set across data technologies, cloud platforms, and analytics tools. Continuously learning and staying updated with industry best practices.</p>
+        <div class="label" style="display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 600; margin-bottom: 1rem;">Expertise</div>
+        <h2 style="font-family: var(--serif); font-size: 2.5rem; line-height: 1.2; margin-bottom: 2rem;">Technical Skills</h2>
+        <p style="font-size: 1rem; color: var(--ink2); line-height: 1.7; margin-bottom: 3rem;">Comprehensive skill set across data technologies, cloud platforms, and analytics tools. Continuously learning and staying updated with industry best practices.</p>
       </div>
       <div class="skills-grid">
         <div class="skill-item">
@@ -574,8 +919,8 @@
 <section id="services" class="section section-alt">
   <div class="section-inner">
     <div style="text-align: center; margin-bottom: 4rem;">
-      <span class="label">What We Offer</span>
-      <h2>Our Services</h2>
+      <div class="label" style="display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 600; margin-bottom: 1rem;">What We Offer</div>
+      <h2 style="font-family: var(--serif); font-size: 2.5rem; line-height: 1.2;">Our Services</h2>
     </div>
     <div class="services-grid">
       <div class="service-card">
@@ -704,6 +1049,31 @@ function downloadResume() {
   document.body.removeChild(link);
 }
 
+// ── Portfolio loader ───────────────────────────────────────
+async function loadPortfolio() {
+  const grid = document.getElementById('portfolio-grid');
+  try {
+    const res  = await fetch(`${API}/portfolio`);
+    const items = await res.json();
+    if (!items.length) {
+      console.log('No portfolio items from API, using defaults');
+      return;
+    }
+    grid.innerHTML = items.map(item => `
+      <div class="portfolio-card">
+        <div class="portfolio-card-image">${item.emoji || '💻'}</div>
+        <div class="portfolio-card-body">
+          <div class="portfolio-card-tag">${item.category || 'Project'}</div>
+          <div class="portfolio-card-title">${item.title}</div>
+          <div class="portfolio-card-desc">${item.description || ''}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    console.log('Using demo portfolio items');
+  }
+}
+
 // ── Skill bars animate on scroll ───────────────────────────
 function animateSkills() {
   const fills = document.querySelectorAll('.skill-bar-fill');
@@ -746,6 +1116,7 @@ async function submitContact(e) {
 }
 
 // ── Init ───────────────────────────────────────────────────
+loadPortfolio();
 animateSkills();
 </script>
 </body>
