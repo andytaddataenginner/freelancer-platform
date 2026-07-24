@@ -135,14 +135,16 @@
       </div>
     </div>
 
-    <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
-      <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <!-- Compact Notice Box for Fixed-Rate Clients -->
+    <div id="fixed-notice" style="display:none; margin-bottom:1.5rem;">
+      <div style="background: linear-gradient(135deg, #0d2353, #1a3a7a); border-radius: 12px; padding: 1.2rem 1.5rem; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-left: 4px solid #f5c842;">
         <div>
-          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#f5c842;font-weight:700;margin-bottom:0.4rem">Fixed Price Project</div>
-          <div style="font-size:2rem;font-weight:700;font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
-          <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:0.2rem">Total project fee</div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:#f5c842; font-weight:700; margin-bottom:0.1rem;">Fixed Price Contract</div>
+          <div style="font-size:1.3rem; font-weight:700; font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
         </div>
-        <!-- Paid Status indicator completely hidden per requirements -->
+        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); text-align: right;">
+          Milestone structured agreement.<br/>Billed according to agreed schedule.
+        </div>
       </div>
     </div>
 
@@ -202,19 +204,10 @@
     </div>
 
     <div id="fixed-section" style="display:none">
-      <div class="card">
-        <div class="card-header"><h3>📋 Project Details</h3></div>
-        <div style="padding:2rem;text-align:center;color:var(--ink2)">
-          <div style="font-size:3rem;margin-bottom:1rem">📦</div>
-          <div style="font-weight:600;margin-bottom:0.5rem">Fixed Price Project</div>
-          <div style="font-size:0.9rem;color:var(--ink3)">Your project is billed at a fixed rate.<br/>No hourly logs are tracked for this engagement.</div>
-        </div>
-      </div>
-      
-      <!-- Dedicated Monthly/Yearly Outstanding Breakdown for Fixed-Rate Clients -->
-      <div class="card" style="margin-top: 1.5rem;">
+      <!-- Dedicated Monthly/Yearly Breakdown for Fixed-Rate Clients -->
+      <div class="card" style="margin-top: 0.5rem;">
         <div class="card-header" style="background: var(--paper2);">
-          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Outstanding Payments Breakdown (By Month & Year)</h3>
+          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Milestone & Contract Billing Breakdown (By Month & Year)</h3>
         </div>
         <div id="fixed-periodic-breakdown-container" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
           <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting schedule analysis...</p>
@@ -359,8 +352,8 @@ async function loadPortal() {
             document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
             document.getElementById('s-hours').textContent  = '—';
 
-            // Render breakdown for fixed rate based on created/updated date or default to current month if unavailable
-            renderFixedPeriodicBreakdown(stats);
+            // Render detailed month & year breakdown for fixed rate using stats history or logs
+            renderFixedPeriodicBreakdown(stats, logs);
         } else {
             document.getElementById('fixed-notice').style.display = 'none';
             document.getElementById('fixed-section').style.display = 'none';
@@ -395,50 +388,80 @@ async function loadPortal() {
     }
 }
 
-function renderFixedPeriodicBreakdown(stats) {
+function renderFixedPeriodicBreakdown(stats, logs) {
     const container = document.getElementById('fixed-periodic-breakdown-container');
-    const unpaidAmt = parseFloat(stats.totalUnpaid || 0);
-    const paidAmt = parseFloat(stats.totalPaid || 0);
-    const totalAmt = parseFloat(stats.fixedPrice || 0);
     
-    // Group by current month/year or fallback to project date
-    let periodKey = "Current Billing Period";
-    if (stats.updatedAt || stats.createdAt) {
-        try {
-            const d = new Date(stats.updatedAt || stats.createdAt);
-            if (!isNaN(d.getTime())) {
-                periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
-            }
-        } catch(err) {}
+    // If backend provides logs or milestones for fixed clients, group them accurately by Month & Year
+    const periodicData = {};
+
+    if (logs && logs.length > 0) {
+        logs.forEach(l => {
+            const amt = parseFloat(l.amount || 0);
+            try {
+                const d = new Date(l.date || l.createdAt);
+                if (!isNaN(d.getTime())) {
+                    const periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+                    if (!periodicData[periodKey]) {
+                        periodicData[periodKey] = { amount: 0, paid: 0, unpaid: 0, count: 0 };
+                    }
+                    periodicData[periodKey].amount += amt;
+                    periodicData[periodKey].count += 1;
+                    if (l.payment_status === 'paid') {
+                        periodicData[periodKey].paid += amt;
+                    } else {
+                        periodicData[periodKey].unpaid += amt;
+                    }
+                }
+            } catch(err) {}
+        });
     }
 
-    if (totalAmt <= 0 && unpaidAmt <= 0) {
-        container.innerHTML = `<p style="color: var(--ink3); font-size: 0.85rem; padding: 0.5rem;">No outstanding payment requirements found.</p>`;
-        return;
+    // Fallback if no log elements exist: group by project creation or current date month/year
+    if (Object.keys(periodicData).length === 0) {
+        let periodKey = "Current Billing Period";
+        if (stats.updatedAt || stats.createdAt) {
+            try {
+                const d = new Date(stats.updatedAt || stats.createdAt);
+                if (!isNaN(d.getTime())) {
+                    periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+                }
+            } catch(err) {}
+        }
+        
+        periodicData[periodKey] = {
+            amount: parseFloat(stats.fixedPrice || 0),
+            paid: parseFloat(stats.totalPaid || 0),
+            unpaid: parseFloat(stats.totalUnpaid || 0),
+            count: 1
+        };
     }
 
-    container.innerHTML = `
-        <div style="background: var(--paper1); border: 1px solid var(--paper3); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-          <div style="font-weight: 600; font-size: 0.9rem; color: var(--ink); border-bottom: 1px solid var(--paper2); padding-bottom: 0.4rem; margin-bottom: 0.6rem; display:flex; justify-content:space-between; align-items:center;">
-            <span>📅 ${periodKey}</span>
-            <span style="font-size:0.8rem; background:rgba(245,158,11,0.1); padding:0.1rem 0.4rem; border-radius:4px; color:#92400e">Fixed Contract</span>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem;">
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--ink3)">Total Contract Fee:</span>
-              <strong style="color: var(--ink)">$${totalAmt.toFixed(2)}</strong>
+    const periods = Object.keys(periodicData);
+    container.innerHTML = periods.map(period => {
+        const data = periodicData[period];
+        return `
+            <div style="background: var(--paper1); border: 1px solid var(--paper3); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+              <div style="font-weight: 600; font-size: 0.9rem; color: var(--ink); border-bottom: 1px solid var(--paper2); padding-bottom: 0.4rem; margin-bottom: 0.6rem; display:flex; justify-content:space-between; align-items:center;">
+                <span>📅 ${period}</span>
+                <span style="font-size:0.8rem; background:rgba(245,200,66,0.15); padding:0.1rem 0.4rem; border-radius:4px; color:#b45309">Fixed Milestone</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--ink3)">Total Milestone Value:</span>
+                  <strong style="color: var(--ink)">$${data.amount.toFixed(2)}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #166534">Settled Paid:</span>
+                  <span style="color: #166534; font-weight: 600;">$${data.paid.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #92400e">Outstanding Balance:</span>
+                  <span style="color: #92400e; font-weight: 600;">$${data.unpaid.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: #166534">Settled Paid:</span>
-              <span style="color: #166534; font-weight: 600;">$${paidAmt.toFixed(2)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: #92400e">Outstanding Balance:</span>
-              <span style="color: #92400e; font-weight: 600;">$${unpaidAmt.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
-    `;
+        `;
+    }).join('');
 }
 
 function calculateAndRenderMetrics(filteredLogs) {
