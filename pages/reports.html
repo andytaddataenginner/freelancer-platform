@@ -120,7 +120,6 @@
   </div>
 
   <script>
-    // Configuration & Utility Helpers
     const API = '/api';
     const auth = {
       headers: () => ({
@@ -153,27 +152,47 @@
       requestAnimationFrame(update);
     }
 
-    // Main Data Loading and Aggregation Function
     async function loadReportData() {
       const monthInput = document.getElementById('report-month');
       const month = monthInput.value || new Date().toISOString().substring(0, 7);
 
       try {
-        // Fetch time logs, fixed payments, and client directory in parallel
-        const [allLogsRes, fixedPaymentsRes, clientsRes] = await Promise.all([
-          fetch(`${API}/timelogs`, { headers: auth.headers() }),
-          fetch(`${API}/fixed-payments`, { headers: auth.headers() }).catch(() => ({ json: () => [] })),
-          fetch(`${API}/clients`, { headers: auth.headers() }).catch(() => ({ json: () => [] }))
+        const headers = auth.headers();
+        
+        // 1. Fetch timelogs and clients list
+        const [allLogsRes, clientsRes] = await Promise.all([
+          fetch(`${API}/timelogs`, { headers }),
+          fetch(`${API}/clients`, { headers }).catch(() => ({ json: () => [] }))
         ]);
         
         const allLogs = await allLogsRes.json().catch(() => []);
-        const fixedPayments = await fixedPaymentsRes.json().catch(() => []);
-        const clients = await clientsRes.json().catch(() => []);
+        const rawClients = await clientsRes.json().catch(() => []);
+        const clients = Array.isArray(rawClients) ? rawClients : (rawClients.data || rawClients.clients || []);
 
         const clientTypeMap = {};
+        const clientIdToName = {};
         clients.forEach(c => {
-          clientTypeMap[c.name || c.client_name] = c.rate_type || 'hourly';
+          const cId = c.user_id || c.id;
+          const cName = c.name || c.client_name || 'Unknown Client';
+          clientTypeMap[cName] = c.rate_type || 'hourly';
+          if (cId) clientIdToName[cId] = cName;
         });
+
+        // 2. Fetch fixed monthly payments using bulk-generate for the selected month to ensure complete records
+        let fixedPayments = [];
+        try {
+          const fixedRes = await fetch(`${API}/fixed-payments/bulk-generate`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ month })
+          });
+          const fixedData = await fixedRes.json();
+          if (Array.isArray(fixedData)) {
+            fixedPayments = fixedData;
+          }
+        } catch (err) {
+          console.warn("Could not fetch via bulk-generate, trying client specific loops or fallback", err);
+        }
         
         let monthPaid = 0;
         let monthUnpaid = 0;
@@ -202,16 +221,18 @@
           return breakdownMap[name];
         }
         
-        // 1. Process Time Logs (Hourly clients)
+        // 3. Process Time Logs
         allLogs.forEach(log => {
           const amt = parseFloat(log.amount || 0);
-          const isPaid = log.payment_status === 'paid';
-          const clientName = log.client_name || 'Unknown Client';
+          const status = (log.payment_status || '').toLowerCase();
+          const isPaid = status === 'paid';
+          const clientName = log.client_name || clientIdToName[log.client_id] || 'Unknown Client';
           
           if (isPaid) macroPaid += amt;
           else macroUnpaid += amt;
 
-          if (log.date && log.date.startsWith(month)) {
+          const logDate = log.date || '';
+          if (logDate && logDate.startsWith(month)) {
             if (isPaid) monthPaid += amt;
             else monthUnpaid += amt;
           }
@@ -224,24 +245,25 @@
           clientEntry.total += amt;
           if (isPaid) clientEntry.paid += amt;
 
-          if (log.date) {
-            const logMonth = log.date.substring(0, 7);
+          if (logDate) {
+            const logMonth = logDate.substring(0, 7);
             activeMonths.add(logMonth);
-            if (!minDate || log.date < minDate) minDate = log.date;
-            if (!maxDate || log.date > maxDate) maxDate = log.date;
+            if (!minDate || logDate < minDate) minDate = logDate;
+            if (!maxDate || logDate > maxDate) maxDate = logDate;
           }
         });
 
-        // 2. Process Fixed Monthly Payments (Fixed-rate clients)
+        // 4. Process Fixed Monthly Payments
         fixedPayments.forEach(fp => {
-          const amt = parseFloat(fp.amount || fp.fixed_price || 0);
-          const isPaid = fp.payment_status === 'paid';
-          const clientName = fp.client_name || 'Unknown Client';
+          const amt = parseFloat(fp.amount || 0);
+          const status = (fp.status || fp.payment_status || '').toLowerCase();
+          const isPaid = status === 'paid';
+          const clientName = fp.client_name || clientIdToName[fp.client_id] || 'Unknown Client';
           
           if (isPaid) macroPaid += amt;
           else macroUnpaid += amt;
 
-          const fpMonth = (fp.month || fp.date || '').substring(0, 7);
+          const fpMonth = (fp.month || '').substring(0, 7);
           if (fpMonth === month) {
             if (isPaid) monthPaid += amt;
             else monthUnpaid += amt;
@@ -254,7 +276,7 @@
           clientEntry.total += amt;
           if (isPaid) clientEntry.paid += amt;
           
-          const fpDate = fp.date || (fp.month ? fp.month + '-01' : null);
+          const fpDate = fp.month ? fp.month + '-01' : null;
           if (fpDate) {
             if (!minDate || fpDate < minDate) minDate = fpDate;
             if (!maxDate || fpDate > maxDate) maxDate = fpDate;
@@ -263,7 +285,7 @@
 
         const clientBreakdown = Object.values(breakdownMap);
 
-        // 3. Update Global Counters
+        // 5. Update Global Counters
         animateCount(document.getElementById('global-total-all'), macroPaid + macroUnpaid, { prefix: '$', decimals: 2 });
         animateCount(document.getElementById('global-paid-all'), macroPaid, { prefix: '$', decimals: 2 });
         animateCount(document.getElementById('global-unpaid-all'), macroUnpaid, { prefix: '$', decimals: 2 });
@@ -281,7 +303,7 @@
           document.getElementById('health-unpaid-bar').style.width = '0%';
         }
 
-        // 4. Render Charts and Leaderboard
+        // 6. Render Charts and Leaderboard
         const chartContainer = document.getElementById('revenue-chart');
         const distributionChart = document.getElementById('client-chart');
         const leaderboard = document.getElementById('leaderboard-body');
