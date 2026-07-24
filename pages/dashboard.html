@@ -4,610 +4,563 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — QFA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
-      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
-      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
-      --green: #166534; --green-bg: #dcfce7;
-      --amber: #92400e; --amber-bg: #fef3c7;
-      --red: #b91c1c; --red-bg: #fee2e2;
-      --sans: 'Outfit', system-ui, sans-serif;
-      --serif: 'Playfair Display', serif;
-      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{overflow-y:scroll}
+    :root{
+      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
+      --white:#fff;--bg:#f4f6fb;--bg2:#eef1f8;
+      --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
+      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;
+      --red:#b91c1c;--rbg:#fee2e2;
+      --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
+      --r:14px;--sh:0 2px 20px rgba(13,35,83,.08);
     }
-    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink)}
+    .mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy);z-index:200;align-items:center;justify-content:space-between;padding:0 1rem;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+    .mob-brand{display:flex;align-items:center;gap:.5rem}
+    .mob-brand img{height:28px;background:#fff;border-radius:6px;padding:2px}
+    .mob-brand span{color:#fff;font-size:.82rem;font-weight:700}
+    .mob-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149}
+    .overlay.on{display:block}
+    .sidebar{width:240px;background:var(--navy);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150}
+    .sb-brand{padding:1.1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.7rem}
+    .sb-logo{width:36px;height:36px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0}
+    .sb-logo img{width:100%;height:100%;object-fit:contain}
+    .sb-text strong{display:block;color:#fff;font-size:.8rem;font-weight:700}
+    .sb-text span{font-size:.62rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em}
+    .sb-nav{flex:1;padding:.8rem 0;overflow-y:auto}
+    .sb-nav a{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;font-size:.85rem;font-weight:500;color:rgba(255,255,255,.55);text-decoration:none;transition:all .2s;border-right:3px solid transparent}
+    .sb-nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
+    .sb-nav a.active{color:#fff;background:rgba(26,92,255,.2);border-right-color:var(--gold2)}
+    .sb-user{padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.08)}
+    .sb-user strong{display:block;color:#fff;font-size:.88rem}
+    .sb-user span{font-size:.72rem;color:rgba(255,255,255,.4)}
+    .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none}
+    .main{margin-left:240px;min-height:100vh;overflow-x:hidden}
+    
+    /* Desktop sticky styles */
+    .topbar{background:#fff;border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
+    .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em}
+    .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.1rem}
+    .topbar-right{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+    .mpick{display:flex;align-items:center;gap:.5rem}
+    .mpick label{font-size:.78rem;font-weight:700;color:var(--ink2)}
+    .mpick input{padding:.4rem .8rem;border:1.5px solid rgba(13,35,83,.1);border-radius:8px;font-family:var(--sans);font-size:.82rem;color:var(--navy);background:var(--bg)}
+    .content{padding:1.5rem}
+    
+     .stats-row{
+      display:grid;
+      grid-template-columns:repeat(6, 1fr);
+      gap:0.8rem;
+      margin-bottom:1.5rem;
+  }    
+    .sc{background:#fff;border-radius:var(--r);padding:1rem 1.4rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);position:relative;overflow:hidden;transition:transform .2s}
+    .sc:hover{transform:translateY(-2px)}
+    .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .sc.green::before{background:linear-gradient(90deg,#22c55e,#86efac)}
+    .sc.amber::before{background:linear-gradient(90deg,#f59e0b,#fcd34d)}
+    .sc.blue::before{background:linear-gradient(90deg,var(--accent),#60a5fa)}
+    .sc.navy::before{background:linear-gradient(90deg,var(--navy),var(--navy2))}
+    .sc.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+    .sc-icon{position:absolute;top:1rem;right:1rem;font-size:1.4rem;opacity:.12}
+    .sc-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:.5rem}
+    .sc-num{font-family:var(--serif);font-size:1.4rem;font-weight:700;line-height:1;display:block}
+    .sc-sub{font-size:.62rem;color:var(--ink3);margin-top:.3rem}
+    .card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);margin-bottom:1.2rem}
+    .ch{padding:1rem 1.4rem;border-bottom:1px solid var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+    .ch h3{font-size:.9rem;font-weight:700}
+    .cb{padding:1.4rem}
+    .two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:1.2rem;align-items:start}
+    .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem}
+    .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+    input,textarea,select{width:100%;padding:.7rem .9rem;border:1.5px solid rgba(13,35,83,.1);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--navy);transition:border-color .2s}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,92,255,.08)}
+    .hint{font-size:.7rem;color:var(--ink3);margin-top:.2rem}
+    .fs{font-size:.8rem;margin-top:.3rem}
+    .fs.ok{color:var(--green)}.fs.er{color:var(--red)}
+    .btn{padding:.55rem 1.2rem;border-radius:8px;font-family:var(--sans);font-size:.82rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+    .btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--accent)}
+    .btn-g{background:var(--gbg);color:var(--green)}.btn-g:hover{background:var(--green);color:#fff}
+    .btn-r{background:var(--rbg);color:var(--red)}.btn-r:hover{background:var(--red);color:#fff}
+    .btn-o{background:transparent;border:1.5px solid rgba(13,35,83,.15);color:var(--ink2)}.btn-o:hover{border-color:var(--navy);color:var(--navy)}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff}
+    .btn-sm{padding:.38rem .8rem;font-size:.75rem}
+    
+    /* ── TIMER ── */
+    .timer-disp{font-family:var(--serif);font-size:3rem;text-align:center;padding:.8rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.04em;transition:color .3s}
+    .timer-disp.running{color:var(--green)}
+    .timer-disp.paused{color:var(--amber)}
+    .timer-disp.idle{color:var(--navy)}
+    .timer-status{text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;height:1rem}
+    .timer-btns{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap}
+    
+    /* ── TABLE ── */
+    .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
+    th{padding:.6rem .9rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.8rem .9rem;border-bottom:1px solid var(--bg2);color:var(--ink2);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--bg)}
+    .badge{display:inline-block;padding:.18rem .65rem;border-radius:100px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+    .bg-g{background:var(--gbg);color:var(--green)}
+    .bg-a{background:var(--abg);color:var(--amber)}
+    .bg-b{background:#dbeafe;color:#1e40af}
+    .modal-ov{position:fixed;inset:0;background:rgba(13,35,83,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:1rem;backdrop-filter:blur(4px)}
+    .modal-ov.on{display:flex}
+    .modal{background:#fff;border-radius:18px;padding:1.8rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(13,35,83,.2);animation:mIn .25s ease}
+    @keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
+    .mh h3{font-family:var(--serif);font-size:1.2rem}
+    .mc{background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;color:var(--ink3);display:flex;align-items:center;justify-content:center}
+    .mc:hover{background:var(--rbg);color:var(--red)}
 
-    /* Layout */
-    .layout { display: flex; min-height: 100vh; }
-
-    /* Sidebar */
-    .sidebar {
-      width: 220px; background: var(--navy); position: fixed;
-      top: 0; left: 0; height: 100vh; display: flex;
-      flex-direction: column; z-index: 50;
-      transition: transform 0.3s ease;
+    @media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
+    
+    /* ── SYSTEM RESPONSIVE UPGRADE ENGINE (MOBILE FIXED) ── */
+    @media(max-width:768px){
+      .mob-bar{display:flex}
+      .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:150}
+      .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
+      
+      .main{
+        margin-left:0;
+        padding-top:52px !important; /* Pushes layout cleanly underneath fixed bar */
+      }
+      
+      /* MODIFIED: Fixes text header shifting errors on mobile displays */
+      .topbar{
+        position: relative !important;
+        top: 0 !important;
+        padding: 1rem !important;
+        border-bottom: 1px solid rgba(13,35,83,.08);
+      }
+      
+      .stats-row{grid-template-columns:1fr 1fr !important;gap:.8rem}
+      .two-col{grid-template-columns:1fr}
+      .content{padding:1rem}
+      .sc-num{font-size:1.4rem}
+      .topbar-right{width:100%}
     }
-    .sidebar-brand {
-      padding: 1.1rem 1.2rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; align-items: center; gap: 0.6rem;
-    }
-    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
-    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
-    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
-
-    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
-    .sidebar-nav a {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
-      color: rgba(255,255,255,0.55); text-decoration: none;
-      transition: all 0.2s; border-right: 3px solid transparent;
-    }
-    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
-    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
-
-    .sidebar-user {
-      padding: 1rem 1.2rem;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      font-size: 0.8rem;
-    }
-    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
-    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
-    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
-
-    /* Mobile Header */
-    .mobile-header {
-      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
-      background: var(--navy); padding: 0.8rem 1rem;
-      align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
-    }
-    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
-    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
-    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
-    .hamburger-btn {
-      background: rgba(255,255,255,0.1); border: none; color: white;
-      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-    .sidebar-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
-    }
-    .sidebar-overlay.open { display: block; }
-    .sidebar.mobile-open { transform: translateX(0) !important; }
-
-    /* Main Area */
-    .main { margin-left: 220px; flex: 1; }
-
-    .topbar {
-      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
-      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
-    }
-    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
-    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
-
-    .month-filter-wrap { display: flex; align-items: center; gap: 0.5rem; }
-    .month-filter-wrap label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--ink3); }
-    .month-filter-wrap select {
-      padding: 0.5rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1);
-      border-radius: 8px; background: var(--bg); font-family: var(--sans);
-      font-size: 0.85rem; color: var(--navy);
-    }
-
-    .content { padding: 1.5rem; }
-
-    /* Stats Grid */
-    .stats-row {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 1rem; margin-bottom: 1.5rem;
-    }
-    .stat-card {
-      background: white; border-radius: var(--radius); padding: 1.2rem 1.4rem;
-      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
-    }
-    .stat-num { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; display: block; }
-    .stat-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); margin-top: 0.2rem; }
-
-    /* Grid layout for Dashboard modules */
-    .dashboard-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    @media(max-width: 900px) {
-      .dashboard-grid { grid-template-columns: 1fr; }
-    }
-
-    .card {
-      background: white; border-radius: var(--radius);
-      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
-      margin-bottom: 1.5rem; overflow: hidden;
-    }
-    .card-header {
-      padding: 1.1rem 1.3rem; border-bottom: 1px solid var(--bg2);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .card-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--navy); }
-    .card-body { padding: 1.3rem; }
-
-    /* Live Timer Component */
-    .timer-display {
-      font-family: var(--serif); font-size: 3rem; font-weight: 700;
-      text-align: center; color: var(--navy); margin: 0.5rem 0 1rem 0;
-    }
-    .timer-controls { display: flex; gap: 0.6rem; justify-content: center; margin-bottom: 1rem; }
-    .btn { padding: 0.55rem 1.1rem; border-radius: 8px; font-family: var(--sans); font-size: 0.82rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
-    .btn-green  { background: var(--green-bg); color: var(--green); }
-    .btn-green:hover { background: var(--green); color: white; }
-    .btn-red    { background: var(--red-bg); color: var(--red); }
-    .btn-red:hover { background: var(--red); color: white; }
-    .btn-navy   { background: var(--navy); color: white; }
-    .btn-navy:hover { background: var(--accent); }
-    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
-    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
-
-    /* Forms */
-    .fg { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
-    .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); }
-    select, input, textarea {
-      padding: 0.65rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1);
-      border-radius: 8px; background: var(--bg); font-family: var(--sans);
-      font-size: 0.85rem; color: var(--navy); width: 100%;
-    }
-    select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-
-    /* Tables */
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 500px; }
-    th { padding: 0.7rem 1rem; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; }
-    td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-
-    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; }
-    .badge-green { background: var(--green-bg); color: var(--green); }
-    .badge-amber { background: var(--amber-bg); color: var(--amber); }
-
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); width: 240px; }
-      .main { margin-left: 0; padding-top: 56px; }
-      .mobile-header { display: flex; }
-      .topbar { top: 56px; }
-      .stats-row { grid-template-columns: 1fr 1fr; }
-    }
+    @media(max-width:420px){.stats-row{grid-template-columns:1fr 1fr !important;gap:.6rem}.sc-num{font-size:1.2rem}.content{padding:.8rem}}
   </style>
 </head>
 <body>
 
-<div class="mobile-header" id="mobile-header">
-  <div class="mobile-logo">
+<div class="mob-bar" id="mob-bar">
+  <div class="mob-brand">
     <img src="../QFA_Logo.png" alt="QFA"/>
-    <span>QFA</span>
+    <span>Quick Freelancing Agency</span>
   </div>
-  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
 </div>
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
 
-<div class="layout">
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
-      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency · Dashboard</span></div>
+  </div>
+  <nav class="sb-nav">
+    <a href="dashboard.html" class="active">📊 Overview</a>
+    <a href="time-logs.html">⏱ Time Logs</a>
+    <a href="clients.html">👥 Clients</a>
+    <a href="schedule.html">📅 Schedule</a>
+    <a href="reports.html">📈 Reports</a> <!-- Add this link -->
+    <a href="fixed-invoices.html">📄 Invoices</a> <!-- Add this link -->
+    <a href="portfolio-admin.html">🖼 Portfolio</a>
+    <a href="../index.html" target="_blank">🌐 Public Site</a>
+  </nav>
+  <div class="sb-user">
+    <strong id="uname">Loading…</strong>
+    <span>Freelancer · QFA</span>
+    <a href="#" onclick="logout()">Sign out →</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2 id="ptitle">Overview</h2>
+      <p id="greeting">Good morning</p>
     </div>
-    <nav class="sidebar-nav">
-      <a href="dashboard.html" class="active">📊 Overview</a>
-      <a href="time-logs.html">⏱ Time Logs</a>
-      <a href="clients.html">👥 Clients</a>
-      <a href="schedule.html">📅 Schedule</a>
-      <a href="reports.html">📈 Reports</a>
-      <a href="fixed-invoices.html">📄 Invoices</a>
-      <a href="portfolio-admin.html">🖼 Portfolio</a>
-      <a href="../index.html" target="_blank">🌐 Public Site</a>
-    </nav>
-    <div class="sidebar-user">
-      <strong id="user-name">Loading…</strong>
-      <span>Freelancer · QFA</span>
-      <a href="#" onclick="logout()">Sign out →</a>
+    <div class="topbar-right">
+      <div class="mpick">
+        <label>Month</label>
+        <input type="month" id="mpicker" onchange="load()"/>
+      </div>
+      <button class="btn btn-gold btn-sm" onclick="show('modal-client')">+ Add Client</button>
     </div>
-  </aside>
+  </div>
 
-  <div class="main">
-    <div class="topbar">
-      <div>
-        <h2>Dashboard Overview</h2>
-        <p>Monitor your earnings, active clients, and session tracking.</p>
-      </div>
-      <div class="month-filter-wrap">
-        <label>Billing Month:</label>
-        <select id="dashboard-month-select" onchange="loadDashboardData()">
-          <!-- Dynamically populated or loaded -->
-        </select>
-      </div>
+  <div class="content">
+    <div class="stats-row">
+      <div class="sc green"><div class="sc-icon">✅</div><div class="sc-label">Paid this month</div><span class="sc-num" id="s-paid">$0</span><div class="sc-sub">Received</div></div>
+      <div class="sc amber"><div class="sc-icon">⏳</div><div class="sc-label">Unpaid this month</div><span class="sc-num" id="s-unpaid">$0</span><div class="sc-sub">Outstanding</div></div>
+      <div class="sc blue"><div class="sc-icon">💰</div><div class="sc-label">Total expected</div><span class="sc-num" id="s-exp">$0</span><div class="sc-sub">Hourly + Fixed</div></div>
+      <div class="sc navy"><div class="sc-icon">👥</div><div class="sc-label">Clients this month</div><span class="sc-num" id="s-clients">0</span><div class="sc-sub">Active</div></div>
+      <div class="sc gold"><div class="sc-icon">⏱</div><div class="sc-label">Hours this month</div><span class="sc-num" id="s-hours">0h</span><div class="sc-sub">Logged</div></div>
+      <div class="sc navy"><div class="sc-icon">📅</div><div class="sc-label">Upcoming</div><span class="sc-num" id="s-book">0</span><div class="sc-sub">Bookings</div></div>
     </div>
 
-    <div class="content">
-
-      <!-- Summary Stat Cards -->
-      <div class="stats-row" id="stats-row">
-        <div class="stat-card" style="border-left:4px solid #22c55e">
-          <span class="stat-num" id="stat-earnings" style="color:var(--green)">$0.00</span>
-          <div class="stat-label">Total Earnings</div>
-        </div>
-        <div class="stat-card" style="border-left:4px solid #f59e0b">
-          <span class="stat-num" id="stat-unpaid" style="color:var(--amber)">$0.00</span>
-          <div class="stat-label">Unpaid Balance</div>
-        </div>
-        <div class="stat-card" style="border-left:4px solid #1a5cff">
-          <span class="stat-num" id="stat-hours">0h 0m</span>
-          <div class="stat-label">Hours Logged</div>
-        </div>
-        <div class="stat-card" style="border-left:4px solid #8b5cf6">
-          <span class="stat-num" id="stat-clients">0</span>
-          <div class="stat-label">Active Clients</div>
-        </div>
+    <div class="card">
+      <div class="ch">
+        <h3>💰 Payment Breakdown — <span id="bmonth"></span></h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all logs →</a>
       </div>
-
-      <!-- Grid for Live Timer and Quick Log Form -->
-      <div class="dashboard-grid">
-        
-        <!-- Live Timer Module -->
-        <div class="card" style="margin-bottom:0">
-          <div class="card-header">
-            <h3>⏱ Live Session Timer</h3>
-          </div>
-          <div class="card-body">
-            <div class="fg">
-              <label>Select Client for Session</label>
-              <select id="timer-client-id">
-                <option value="">Choose client...</option>
-              </select>
-            </div>
-            <div class="fg">
-              <label>Task Objective</label>
-              <input type="text" id="timer-task-desc" placeholder="What are you working on?" />
-            </div>
-            <div class="timer-display" id="timer-display">00:00:00</div>
-            <div class="timer-controls">
-              <button class="btn btn-green" id="btn-start-timer" onclick="startTimer()">▶ Start</button>
-              <button class="btn btn-red" id="btn-stop-timer" onclick="stopTimer()" disabled>⏹ Stop & Log</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Manual Log Entry Module -->
-        <div class="card" style="margin-bottom:0">
-          <div class="card-header">
-            <h3>✍️ Quick Manual Log</h3>
-          </div>
-          <div class="card-body">
-            <form id="manual-log-form" onsubmit="handleManualLog(event)">
-              <div class="fg">
-                <label>Client</label>
-                <select id="manual-client-id" required>
-                  <option value="">Choose client...</option>
-                </select>
-              </div>
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
-                <div class="fg">
-                  <label>Date</label>
-                  <input type="date" id="manual-date" required />
-                </div>
-                <div class="fg">
-                  <label>Hours Spent</label>
-                  <input type="number" step="any" min="0.01" id="manual-hours" placeholder="1.5" required />
-                </div>
-              </div>
-              <div class="fg">
-                <label>Task Description</label>
-                <textarea id="manual-task" rows="2" placeholder="Details of work completed..." required></textarea>
-              </div>
-              <button type="submit" class="btn btn-navy" style="width:100%; justify-content:center; padding:0.7rem;">Submit Time Log</button>
-            </form>
-          </div>
-        </div>
-
+      <div class="tw">
+        <table>
+          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
       </div>
+    </div>
 
-      <!-- Recent Logs Table -->
+    <div class="two-col">
       <div class="card">
-        <div class="card-header">
-          <h3>Recent Time Logs</h3>
-          <a href="time-logs.html" class="btn btn-outline" style="font-size:0.75rem; padding:0.35rem 0.7rem;">View All →</a>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Date</th>
-                <th>Hours</th>
-                <th>Amount</th>
-                <th>Payment Status</th>
-                <th>Task</th>
-              </tr>
-            </thead>
-            <tbody id="recent-logs-tbody">
-              <tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--ink3);">Loading recent entries...</td></tr>
-            </tbody>
-          </table>
+        <div class="ch"><h3>⏱ Live Timer</h3></div>
+        <div class="cb">
+          <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
+          <div class="fg"><label>Task</label><input type="text" id="tt" placeholder="What are you working on?"/></div>
+          <div class="timer-status" id="t-status" style="color:var(--ink3)">Ready</div>
+          <div class="timer-disp idle" id="tdisp">00:00:00</div>
+          <div class="timer-btns">
+            <button class="btn btn-g" id="t-start" onclick="timerStart()">▶ Start</button>
+            <button class="btn" id="t-pause" onclick="timerPause()" style="display:none;background:var(--abg);color:var(--amber)">⏸ Pause</button>
+            <button class="btn btn-g" id="t-resume" onclick="timerResume()" style="display:none">▶ Resume</button>
+            <button class="btn btn-r" id="t-stop" onclick="timerStop()" style="display:none">■ Stop & Save</button>
+            <button class="btn btn-o btn-sm" onclick="timerReset()">↺ Reset</button>
+          </div>
         </div>
       </div>
 
+      <div class="card">
+        <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
+        <div class="cb">
+          <form onsubmit="submitLog(event)">
+            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+              <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
+              <div class="fg">
+                <label>Hours (any value)</label>
+                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
+                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
+              </div>
+            </div>
+            <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
+            <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
+            <div id="ls" class="fs"></div>
+          </form>
+        </div>
+      </div>
     </div>
+
+    <div class="card">
+      <div class="ch">
+        <h3>Recent Logs</h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Client</th><th>Date</th><th>Hours</th><th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th></tr></thead>
+          <tbody id="rtable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn btn-p" onclick="show('modal-client')">+ Add New Client</button>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-client">
+  <div class="modal">
+    <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
+    <form onsubmit="addClient(event)">
+      <div class="fg"><label>Full name</label><input type="text" name="name" required/></div>
+      <div class="fg"><label>Email</label><input type="email" name="email" required/></div>
+      <div class="fg"><label>Company (optional)</label><input type="text" name="company"/></div>
+      <div class="fg"><label>Temporary password</label><input type="text" name="password" required/></div>
+      <div style="border-top:1px solid var(--bg2);padding-top:1rem;margin-top:.5rem">
+        <div class="fg"><label>Rate type</label>
+          <select name="rate_type" id="art" onchange="toggleRate()">
+            <option value="hourly">Hourly rate</option>
+            <option value="fixed">Fixed price</option>
+          </select>
+        </div>
+        <div class="fg" id="ahr"><label>Hourly rate ($)</label><input type="number" name="hourly_rate" min="1" step="0.5" placeholder="e.g. 25"/></div>
+        <div class="fg" id="afp" style="display:none"><label>Fixed price ($)</label><input type="number" name="fixed_price" min="1" step="1" placeholder="e.g. 500"/></div>
+      </div>
+      <button type="submit" class="btn btn-p" style="width:100%">Create client</button>
+      <div id="cs" class="fs"></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-edit">
+  <div class="modal">
+    <div class="mh"><h3>Edit Log Entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
+    <div id="einfo" style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="eid"/>
+    <input type="hidden" id="ehr"/>
+    <div class="fg"><label>Date</label><input type="date" id="edate" required/></div>
+    <div class="fg">
+      <label>Hours</label>
+      <input type="number" id="ehours" min="0.01" max="24" step="any" required oninput="previewAmt()"/>
+      <div class="hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</div>
+    </div>
+    <div id="aprev" style="background:#e8f0ff;border-radius:8px;padding:.6rem 1rem;margin-bottom:.8rem;font-size:.84rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="fg"><label>Task description</label><textarea id="etask" rows="3" required></textarea></div>
+    <button class="btn btn-p" style="width:100%;padding:.8rem" onclick="saveEdit()">Save changes</button>
+    <div id="es" class="fs"></div>
   </div>
 </div>
 
 <script>
-const API = 'https://freelancer-platform-9jut.onrender.com/api';
-const auth = {
-  token: () => localStorage.getItem('token'),
-  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
-  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
-  isLoggedIn: () => !!localStorage.getItem('token'),
-  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+const API='https://freelancer-platform-9jut.onrender.com/api';
+const SH=8;
+const auth={
+  token:()=>localStorage.getItem('token'),
+  user:()=>{try{return JSON.parse(localStorage.getItem('user'))}catch{return null}},
+  save:(t,u)=>{localStorage.setItem('token',t);localStorage.setItem('user',JSON.stringify(u));localStorage.setItem('login_time',Date.now());},
+  clear:()=>['token','user','login_time'].forEach(k=>localStorage.removeItem(k)),
+  ok:()=>{
+    if(!localStorage.getItem('token'))return false;
+    if((Date.now()-parseInt(localStorage.getItem('login_time')||0))/3600000>SH){auth.clear();return false;}
+    return true;
+  },
+  hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')})
 };
+async function api(path,opts={}){
+  const r=await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
+  if(r.status===401){auth.clear();go('login.html');return;}
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Failed');}
+  return r.json();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!auth.ok()){go('login.html');return;}
+  const u=auth.user();
+  if(u&&u.role!=='freelancer'){go('client-portal.html');return;}
+  document.getElementById('uname').textContent=u?u.name:'';
+  const h=new Date().getHours();
+  document.getElementById('greeting').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon 🌤':'Good evening 🌙';
+  document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
+  document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+  load();
+});
 
-async function apiFetch(path, options = {}) {
-  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
-  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
-  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
-  return res.json();
+function go(p){window.location.href=p;}
+function logout(){auth.clear();go('login.html');}
+function show(id){document.getElementById(id).classList.add('on');}
+function hide(id){document.getElementById(id).classList.remove('on');}
+function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
+function sbClose(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
+document.querySelectorAll('.sb-nav a').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();}));
+function toggleRate(){const t=document.getElementById('art').value;document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';document.getElementById('afp').style.display=t==='fixed'?'flex':'none';}
+function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
+
+async function toggleFixed(recordId, newStatus){
+  try{
+    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
+    load();
+  }catch(e){alert('Failed: '+e.message);}
 }
 
-(function() {
-  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
-  document.getElementById('user-name').textContent = auth.user()?.name || '';
-})();
+async function load(){
+  const mo=document.getElementById('mpicker').value;
+  const ml=new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
+  document.getElementById('bmonth').textContent=ml;
+  document.getElementById('ptitle').textContent='Overview — '+ml;
+  try{
+    const [st,cl,lg]=await Promise.all([api('/stats/freelancer?month='+mo),api('/clients'),api('/timelogs?limit=8')]);
+    document.getElementById('s-paid').textContent='$'+parseFloat(st.totalEarned||0).toFixed(2);
+    document.getElementById('s-unpaid').textContent='$'+parseFloat(st.totalUnpaid||0).toFixed(2);
+    document.getElementById('s-exp').textContent='$'+parseFloat(st.totalExpected||0).toFixed(2);
+    document.getElementById('s-clients').textContent=st.clientsThisMonth||0;
+    document.getElementById('s-hours').textContent=fmtH(parseFloat(st.hoursThisMonth||0));
+    document.getElementById('s-book').textContent=st.upcomingBookings||0;
 
-function logout() { auth.clear(); window.location.href = 'login.html'; }
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('mobile-open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
-}
-
-let allClients = [];
-let timerSeconds = 0;
-let timerInterval = null;
-let timerRunning = false;
-
-async function initDashboard() {
-  document.getElementById('manual-date').value = new Date().toISOString().split('T')[0];
-  populateMonthDropdown();
-  await loadClients();
-  await loadDashboardData();
-}
-
-function populateMonthDropdown() {
-  const select = document.getElementById('dashboard-month-select');
-  const now = new Date();
-  select.innerHTML = '';
-  
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = d.toLocaleString('default', { month: 'long', year: 'numeric' });
-    const opt = document.createElement('option');
-    opt.value = val;
-    opt.textContent = label;
-    select.appendChild(opt);
-  }
-}
-
-async function loadClients() {
-  try {
-    allClients = await apiFetch('/clients');
-    const optionsHtml = '<option value="">Choose client...</option>' + allClients.map(c => 
-      `<option value="${c.id}">${c.name}${c.company ? ' (' + c.company + ')' : ''} [${c.rate_type || 'hourly'}]</option>`
-    ).join('');
-    
-    document.getElementById('timer-client-id').innerHTML = optionsHtml;
-    document.getElementById('manual-client-id').innerHTML = optionsHtml;
-  } catch (e) {
-    console.error('Failed to load clients:', e);
-  }
-}
-
-async function loadDashboardData() {
-  const selectedMonth = document.getElementById('dashboard-month-select').value;
-  
-  try {
-    // Fetch time logs and clients to calculate stats accurately including fixed-rate clients
-    const logs = await apiFetch('/timelogs?limit=500');
-    
-    // Filter logs by selected month if needed, or calculate total metrics
-    let totalEarnings = 0;
-    let unpaidBalance = 0;
-    let totalHours = 0;
-    
-    // Track unique active clients using a Set to aggregate both hourly and fixed-rate active accounts
-    const activeClientIds = new Set();
-
-    logs.forEach(l => {
-      const amt = parseFloat(l.amount || 0);
-      const hrs = parseFloat(l.hours || 0);
-      
-      // If month filter matches or if we aggregate all records
-      if (!selectedMonth || (l.date && l.date.startsWith(selectedMonth))) {
-        totalEarnings += amt;
-        if (l.payment_status !== 'paid') {
-          unpaidBalance += amt;
+    const bt=document.getElementById('btable');
+    if(!st.clientBreakdown||!st.clientBreakdown.length){
+      bt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
+    }else{
+      bt.innerHTML=st.clientBreakdown.map(c=>{
+        const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
+        const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
+        const rt=c.rate_type==='fixed'?'<span class="badge bg-b">Fixed</span>':'<span class="badge" style="background:#e8f0ff;color:var(--accent)">Hourly</span>';
+        let actionCell = '';
+        if(c.rate_type==='fixed' && c.fixed_record_id){
+          const isPaidFixed = c.fixed_record_status==='paid';
+          actionCell = isPaidFixed
+            ? `<button class="btn btn-o btn-sm" onclick="toggleFixed(${c.fixed_record_id},'unpaid')">Mark unpaid</button>`
+            : `<button class="btn btn-g btn-sm" onclick="toggleFixed(${c.fixed_record_id},'paid')">Mark paid ✓</button>`;
         }
-        totalHours += hrs;
-        if (l.client_id) {
-          activeClientIds.add(l.client_id);
-        }
-      }
-    });
-
-    // Also include any fixed-rate clients who might have active billing records or active status in the selected month
-    if (allClients && allClients.length > 0) {
-      for (const client of allClients) {
-        if (client.rate_type === 'fixed') {
-          try {
-            const fixedRecords = await apiFetch(`/fixed-payments/${client.id}`);
-            fixedRecords.forEach(rec => {
-              if (!selectedMonth || rec.month === selectedMonth) {
-                activeClientIds.add(client.id);
-                const fixedAmt = parseFloat(rec.amount || 0);
-                totalEarnings += fixedAmt;
-                if (rec.status !== 'paid') {
-                  unpaidBalance += fixedAmt;
-                }
-              }
-            });
-          } catch(err) {
-            console.error(`Error loading fixed records for client ${client.id}:`, err);
-          }
-        }
-      }
-    }
-
-    // Render Stat Cards
-    document.getElementById('stat-earnings').textContent = '$' + totalEarnings.toFixed(2);
-    document.getElementById('stat-unpaid').textContent = '$' + unpaidBalance.toFixed(2);
-    
-    const hrs = Math.floor(totalHours);
-    const mins = Math.round((totalHours - hrs) * 60);
-    document.getElementById('stat-hours').textContent = `${hrs}h ${mins}m`;
-    
-    // Active Clients Count reflecting unique active participants across hourly and fixed rate models
-    document.getElementById('stat-clients').textContent = activeClientIds.size;
-
-    // Render Recent Logs Table
-    const recentTbody = document.getElementById('recent-logs-tbody');
-    const recentLogs = logs.slice(0, 5);
-    
-    if (recentLogs.length === 0) {
-      recentTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--ink3);">No recent time logs found.</td></tr>`;
-    } else {
-      recentTbody.innerHTML = recentLogs.map(l => {
-        const isPaid = l.payment_status === 'paid';
-        const amt = parseFloat(l.amount || 0);
-        return `
-          <tr>
-            <td><strong>${l.client_name || 'Client'}</strong></td>
-            <td>${new Date(l.date).toLocaleDateString()}</td>
-            <td>${l.hours}h</td>
-            <td>${amt > 0 ? '$' + amt.toFixed(2) : '—'}</td>
-            <td><span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">${isPaid ? 'Paid' : 'Unpaid'}</span></td>
-            <td>${l.task_description}</td>
-          </tr>
-        `;
+        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>$${parseFloat(c.total).toFixed(2)}</strong></td><td style="color:var(--green)">$${parseFloat(c.paid).toFixed(2)}</td><td style="color:var(--amber)">$${parseFloat(c.unpaid).toFixed(2)}</td><td>${badge}</td><td>${actionCell}</td></tr>`;
       }).join('');
     }
 
-  } catch (e) {
-    console.error('Error loading dashboard metrics:', e);
+    const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
+    document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
+    document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
+
+    const rt=document.getElementById('rtable');
+    if(!lg.length){
+      rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
+    }else{
+      rt.innerHTML=lg.map(l=>{
+        const ip=l.payment_status==='paid';
+        const badge=ip?'<span class="badge bg-g">✓ Paid</span>':'<span class="badge bg-a">Unpaid</span>';
+        const pb=ip?`<button class="btn btn-o btn-sm" onclick="pay(${l.id},'unpaid')">Undo</button>`:`<button class="btn btn-g btn-sm" onclick="pay(${l.id},'paid')">Mark paid</button>`;
+        const cl2=cl.find(c=>c.id===l.client_id)||{};
+        return`<tr><td><strong>${l.client_name}</strong></td><td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td><td>${fmtH(parseFloat(l.hours))}</td><td>${parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—'}</td><td>${badge}</td><td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td><td style="display:flex;gap:.3rem;flex-wrap:wrap">${pb}<button class="btn btn-o btn-sm" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${cl2.hourly_rate||0})">✏️</button></td></tr>`;
+      }).join('');
+    }
+  }catch(e){console.error(e);}
+}
+
+async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
+
+function openEdit(id,date,hours,task,hr){
+  document.getElementById('eid').value=id;
+  document.getElementById('ehr').value=hr;
+  document.getElementById('edate').value=date.slice(0,10);
+  document.getElementById('ehours').value=hours;
+  document.getElementById('etask').value=task;
+  document.getElementById('es').textContent='';
+  document.getElementById('einfo').textContent=hr>0?`Hourly rate: $${hr}/hr`:'No rate set';
+  previewAmt();
+  show('modal-edit');
+}
+function previewAmt(){
+  const h=parseFloat(document.getElementById('ehours').value||0);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const p=document.getElementById('aprev');
+  if(h>0&&hr>0){p.textContent='💰 New amount: $'+(h*hr).toFixed(2)+' ('+fmtH(h)+' × $'+hr+'/hr)';p.style.display='block';}
+  else p.style.display='none';
+}
+async function saveEdit(){
+  const s=document.getElementById('es');
+  const id=document.getElementById('eid').value;
+  const hours=parseFloat(document.getElementById('ehours').value);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const amount=hr>0?(hours*hr).toFixed(2):undefined;
+  try{
+    await api('/timelogs/'+id,{method:'PUT',body:JSON.stringify({hours,task_description:document.getElementById('etask').value,date:document.getElementById('edate').value,amount})});
+    s.className='fs ok';s.textContent='✓ Updated!';
+    setTimeout(()=>{hide('modal-edit');load();},700);
+  }catch(e){s.className='fs er';s.textContent=e.message;}
+}
+
+let tiv=null, tSecs=0, tState='idle';
+
+function tDisp(){
+  const h=Math.floor(tSecs/3600).toString().padStart(2,'0');
+  const m=Math.floor((tSecs%3600)/60).toString().padStart(2,'0');
+  const s=(tSecs%60).toString().padStart(2,'0');
+  document.getElementById('tdisp').textContent=`${h}:${m}:${s}`;
+}
+
+function tSetUI(state){
+  tState=state;
+  const el=id=>document.getElementById(id);
+  const disp=el('tdisp'), status=el('t-status');
+  ['t-start','t-pause','t-resume','t-stop'].forEach(id=>el(id).style.display='none');
+  if(state==='idle'){
+    el('t-start').style.display='inline-flex';
+    disp.className='timer-disp idle';
+    status.textContent='Ready'; status.style.color='var(--ink3)';
+  } else if(state==='running'){
+    el('t-pause').style.display='inline-flex';
+    el('t-stop').style.display='inline-flex';
+    disp.className='timer-disp running';
+    status.textContent='● Running'; status.style.color='var(--green)';
+  } else if(state==='paused'){
+    el('t-resume').style.display='inline-flex';
+    el('t-stop').style.display='inline-flex';
+    disp.className='timer-disp paused';
+    status.textContent='⏸ Paused — time preserved'; status.style.color='var(--amber)';
   }
 }
 
-// Live Timer Functions
-function startTimer() {
-  const clientId = document.getElementById('timer-client-id').value;
-  if (!clientId) {
-    alert('Please select a client before starting the session timer.');
+function timerStart(){
+  if(tState!=='idle') return;
+  tiv=setInterval(()=>{tSecs++;tDisp();},1000);
+  tSetUI('running');
+}
+
+function timerPause(){
+  if(tState!=='running') return;
+  clearInterval(tiv); tiv=null;
+  tSetUI('paused');
+}
+
+function timerResume(){
+  if(tState!=='paused') return;
+  tiv=setInterval(()=>{tSecs++;tDisp();},1000);
+  tSetUI('running');
+}
+
+async function timerStop(){
+  if(tState==='idle') return;
+  clearInterval(tiv); tiv=null;
+
+  const hours=Math.round(tSecs/3600*100)/100;
+  const cid=document.getElementById('tc').value;
+  const task=document.getElementById('tt').value;
+
+  if(!cid){
+    alert('Please select a client before saving.');
+    if(tState==='running'){ tiv=setInterval(()=>{tSecs++;tDisp();},1000); }
     return;
   }
-  
-  if (!timerRunning) {
-    timerRunning = true;
-    document.getElementById('btn-start-timer').disabled = true;
-    document.getElementById('btn-stop-timer').disabled = false;
-    document.getElementById('timer-client-id').disabled = true;
-    
-    timerInterval = setInterval(() => {
-      timerSeconds++;
-      updateTimerDisplay();
-    }, 1000);
+  if(hours<0.01){ alert('Timer too short to log.'); timerReset(); return; }
+
+  if(!confirm(`Save ${fmtH(hours)} to logs?`)){
+    tSetUI('paused'); return;
+  }
+
+  try{
+    await api('/timelogs',{method:'POST',body:JSON.stringify({
+      client_id:cid, hours,
+      task_description:task||'Timed session',
+      date:new Date().toISOString().slice(0,10),
+      source:'timer'
+    })});
+    alert('✓ Logged '+fmtH(hours)+' successfully!');
+    timerReset(); load();
+  }catch(e){
+    alert('Failed to save: '+e.message);
+    tSetUI('paused');
   }
 }
 
-function updateTimerDisplay() {
-  const hrs = String(Math.floor(timerSeconds / 3600)).padStart(2, '0');
-  const mins = String(Math.floor((timerSeconds % 3600) / 60)).padStart(2, '0');
-  const secs = String(timerSeconds % 60).padStart(2, '0');
-  document.getElementById('timer-display').textContent = `${hrs}:${mins}:${secs}`;
+function timerReset(){
+  clearInterval(tiv); tiv=null; tSecs=0;
+  tDisp(); tSetUI('idle');
+  document.getElementById('tt').value='';
 }
 
-async function stopTimer() {
-  if (!timerRunning) return;
-  
-  clearInterval(timerInterval);
-  timerRunning = false;
-  
-  const clientId = document.getElementById('timer-client-id').value;
-  const taskDesc = document.getElementById('timer-task-desc').value || 'Live tracked session';
-  const hours = parseFloat((timerSeconds / 3600).toFixed(2));
-  
-  if (hours <= 0) {
-    alert('Session duration was too short to log.');
-    resetTimerUI();
-    return;
-  }
-  
-  try {
-    await apiFetch('/timelogs', {
-      method: 'POST',
-      body: JSON.stringify({
-        client_id: parseInt(clientId),
-        hours: hours > 0 ? hours : 0.01,
-        date: new Date().toISOString().split('T')[0],
-        task_description: taskDesc
-      })
-    });
-    
-    alert('Session successfully recorded to time logs!');
-    resetTimerUI();
-    loadDashboardData();
-  } catch (e) {
-    alert('Failed to save timer log: ' + e.message);
-    document.getElementById('btn-start-timer').disabled = false;
-    document.getElementById('btn-stop-timer').disabled = true;
-  }
+async function submitLog(e){
+  e.preventDefault();
+  const st=document.getElementById('ls');
+  try{
+    await api('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
+    st.className='fs ok';st.textContent='✓ Log saved!';
+    e.target.reset();document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+    load();setTimeout(()=>st.textContent='',3000);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
 }
 
-function resetTimerUI() {
-  timerSeconds = 0;
-  updateTimerDisplay();
-  document.getElementById('btn-start-timer').disabled = false;
-  document.getElementById('btn-stop-timer').disabled = true;
-  document.getElementById('timer-client-id').disabled = false;
-  document.getElementById('timer-task-desc').value = '';
+async function addClient(e){
+  e.preventDefault();
+  const st=document.getElementById('cs');
+  try{
+    await api('/clients',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
+    st.className='fs ok';st.textContent='✓ Client created!';
+    e.target.reset();setTimeout(()=>{hide('modal-client');st.textContent='';},1200);load();
+  }catch(e){st.className='fs er';st.textContent=e.message;}
 }
-
-// Manual Log Submission
-async function handleManualLog(event) {
-  event.preventDefault();
-  const clientId = document.getElementById('manual-client-id').value;
-  const date = document.getElementById('manual-date').value;
-  const hours = parseFloat(document.getElementById('manual-hours').value);
-  const task = document.getElementById('manual-task').value;
-  
-  try {
-    await apiFetch('/timelogs', {
-      method: 'POST',
-      body: JSON.stringify({
-        client_id: parseInt(clientId),
-        date,
-        hours,
-        task_description: task
-      })
-    });
-    
-    alert('Time log added successfully!');
-    document.getElementById('manual-log-form').reset();
-    document.getElementById('manual-date').value = new Date().toISOString().split('T')[0];
-    loadDashboardData();
-  } catch (e) {
-    alert('Error recording time log: ' + e.message);
-  }
-}
-
-initDashboard();
 </script>
 </body>
 </html>
