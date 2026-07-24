@@ -82,7 +82,7 @@
 <body>
   <div class="container">
     <h1>Reports & Analytics</h1>
-    <div class="subtitle">Comprehensive evaluation of hourly billings, monthly retainers, and client performance</div>
+    <div class="subtitle">Comprehensive statement of account and analytics across hourly and fixed clients</div>
 
     <div class="control-row">
       <div>
@@ -95,12 +95,12 @@
 
     <div class="metrics-grid">
       <div class="metric-card">
-        <h3>Total Revenue (Selected Month)</h3>
+        <h3>Revenue (Selected Month)</h3>
         <div class="big-val" id="health-paid-val" style="color: var(--success);">$0.00</div>
         <div class="sub-val">Unpaid for month: <span id="health-unpaid-val" style="color: #f97316;">$0.00</span></div>
       </div>
       <div class="metric-card">
-        <h3>Cumulative Lifetime Revenue</h3>
+        <h3>Cumulative All-Time Revenue</h3>
         <div class="big-val" id="global-total-all">$0.00</div>
         <div class="sub-val">Paid: <span id="global-paid-all" style="color: var(--success);">$0.00</span> | Unpaid: <span id="global-unpaid-all" style="color: #f97316;">$0.00</span></div>
       </div>
@@ -112,7 +112,7 @@
     </div>
 
     <div class="breakdown-section">
-      <h2>Share by Client (Revenue Distribution)</h2>
+      <h2>Share by Client (All-Time & Period Revenue Distribution)</h2>
       <div id="client-breakdown-container">
         <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading breakdown metrics...</div>
       </div>
@@ -134,33 +134,25 @@
     });
 
     async function loadReportData() {
-      const month = document.getElementById('report-month').value;
+      const monthStr = document.getElementById('report-month').value;
       try {
-        const [statsRes, allLogsRes, clientsRes] = await Promise.all([
-          fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() }),
+        const [statsRes, allLogsRes, clientsRes, fixedRes] = await Promise.all([
+          fetch(`${API}/stats/freelancer?month=${monthStr}`, { headers: auth.headers() }),
           fetch(`${API}/timelogs`, { headers: auth.headers() }),
-          fetch(`${API}/clients`, { headers: auth.headers() })
+          fetch(`${API}/clients`, { headers: auth.headers() }),
+          fetch(`${API}/fixed-payments`, { headers: auth.headers() }).catch(() => ({ json: () => [] }))
         ]);
         
         const data = await statsRes.json();
         const allLogs = await allLogsRes.json();
         const clients = await clientsRes.json();
         
-        // Merge fixed-rate clients into the breakdown metrics seamlessly
-        if (!data.clientBreakdown) data.clientBreakdown = [];
-        clients.forEach(client => {
-          if (client.rate_type === 'fixed') {
-            const existingEntry = data.clientBreakdown.find(b => b.client_name === client.name);
-            if (!existingEntry) {
-              data.clientBreakdown.push({
-                client_name: client.name,
-                rate_type: 'fixed',
-                hours: 0,
-                total: parseFloat(client.fixed_rate || 0)
-              });
-            }
-          }
-        });
+        let fixedPayments = [];
+        try {
+          fixedPayments = await fixedRes.json();
+        } catch {
+          fixedPayments = [];
+        }
 
         let monthPaid = 0;
         let monthUnpaid = 0;
@@ -169,25 +161,73 @@
         let totalHours = 0;
         let uniqueClients = new Set();
         let activeMonths = new Set();
-        
+        let clientTotalsMap = {};
+
+        // 1. Initialize clients in map
+        clients.forEach(c => {
+          uniqueClients.add(c.name);
+          clientTotalsMap[c.name] = { total: 0, rate_type: c.rate_type || 'hourly' };
+        });
+
+        // 2. Process all-time fixed payments from fixed_monthly_payments
+        fixedPayments.forEach(fp => {
+          const clientObj = clients.find(c => c.id === fp.client_id || c.name === fp.client_name);
+          const cName = clientObj ? clientObj.name : fp.client_name;
+          if (!cName) return;
+
+          const amt = parseFloat(fp.amount || 0);
+          const isPaid = fp.status === 'paid';
+
+          // All-time accumulation
+          if (isPaid) macroPaid += amt; else macroUnpaid += amt;
+
+          // Selected month check (fp.month format "YYYY-MM")
+          if (fp.month && fp.month === monthStr) {
+            if (isPaid) monthPaid += amt; else monthUnpaid += amt;
+          }
+
+          if (clientTotalsMap[cName]) {
+            clientTotalsMap[cName].total += amt;
+          } else {
+            clientTotalsMap[cName] = { total: amt, rate_type: 'fixed' };
+          }
+        });
+
+        // Fallback for fixed clients without a specific row entry yet
+        clients.forEach(c => {
+          if (c.rate_type === 'fixed') {
+            const hasRow = fixedPayments.some(fp => (fp.client_id === c.id || fp.client_name === c.name));
+            if (!hasRow) {
+              const baseAmt = parseFloat(c.fixed_rate || 0);
+              macroUnpaid += baseAmt;
+              clientTotalsMap[c.name].total += baseAmt;
+            }
+          }
+        });
+
+        // 3. Process hourly logs for all-time stats
         allLogs.forEach(log => {
           const amt = parseFloat(log.amount || 0);
           const isPaid = log.payment_status === 'paid';
           
           if (isPaid) macroPaid += amt; else macroUnpaid += amt;
 
-          if (log.date && log.date.startsWith(month)) {
+          if (log.date && log.date.startsWith(monthStr)) {
             if (isPaid) monthPaid += amt; else monthUnpaid += amt;
           }
-          if (log.client_name) uniqueClients.add(log.client_name);
+          if (log.client_name) {
+            uniqueClients.add(log.client_name);
+            if (!clientTotalsMap[log.client_name]) {
+              clientTotalsMap[log.client_name] = { total: 0, rate_type: 'hourly' };
+            }
+            clientTotalsMap[log.client_name].total += amt;
+          }
           totalHours += parseFloat(log.hours || 0);
 
           if (log.date) {
             activeMonths.add(log.date.substring(0, 7));
           }
         });
-
-        clients.forEach(c => uniqueClients.add(c.name));
 
         document.getElementById('global-total-all').textContent = '$' + (macroPaid + macroUnpaid).toFixed(2);
         document.getElementById('global-paid-all').textContent = '$' + macroPaid.toFixed(2);
@@ -202,16 +242,21 @@
 
         // Render Client Breakdown Bar Charts
         const breakdownContainer = document.getElementById('client-breakdown-container');
-        if (!data.clientBreakdown || data.clientBreakdown.length === 0) {
-          breakdownContainer.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">No client distribution data found for this window.</div>';
+        const breakdownArray = Object.keys(clientTotalsMap).map(name => ({
+          client_name: name,
+          total: clientTotalsMap[name].total,
+          rate_type: clientTotalsMap[name].rate_type
+        })).filter(item => item.total > 0);
+
+        if (breakdownArray.length === 0) {
+          breakdownContainer.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">No distribution records found.</div>';
           return;
         }
 
-        const maxVal = Math.max(...data.clientBreakdown.map(item => parseFloat(item.total || 0)), 1);
+        const maxVal = Math.max(...breakdownArray.map(item => item.total), 1);
 
-        breakdownContainer.innerHTML = data.clientBreakdown.map(item => {
-          const total = parseFloat(item.total || 0);
-          const percentage = Math.min(Math.round((total / maxVal) * 100), 100);
+        breakdownContainer.innerHTML = breakdownArray.map(item => {
+          const percentage = Math.min(Math.round((item.total / maxVal) * 100), 100);
           const isFixed = item.rate_type === 'fixed';
           
           return `
@@ -220,14 +265,14 @@
               <div class="client-bar-track">
                 <div class="client-bar-fill" style="width: ${percentage}%;"></div>
               </div>
-              <div class="client-amount-label">$${total.toFixed(2)}</div>
+              <div class="client-amount-label">$${item.total.toFixed(2)}</div>
             </div>
           `;
         }).join('');
 
       } catch (err) {
         console.error("Failed to load reports analytics:", err);
-        document.getElementById('client-breakdown-container').innerHTML = '<div style="color: #ef4444; text-align: center; padding: 20px;">Error loading report data from backend server.</div>';
+        document.getElementById('client-breakdown-container').innerHTML = '<div style="color: #ef4444; text-align: center; padding: 20px;">Error loading statement and report analytics.</div>';
       }
     }
   </script>
