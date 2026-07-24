@@ -142,7 +142,7 @@
           <div style="font-size:2rem;font-weight:700;font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
           <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:0.2rem">Total project fee</div>
         </div>
-        <div id="fixed-status-display" style="text-align:right"></div>
+        <!-- Paid Status indicator completely hidden per requirements -->
       </div>
     </div>
 
@@ -193,7 +193,7 @@
 
       <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header" style="background: var(--paper2);">
-          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Year & Month Payment Breakdown</h3>
+          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Outstanding Payments Breakdown (By Month & Year)</h3>
         </div>
         <div id="periodic-breakdown-container" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
           <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting entry analysis...</p>
@@ -208,6 +208,16 @@
           <div style="font-size:3rem;margin-bottom:1rem">📦</div>
           <div style="font-weight:600;margin-bottom:0.5rem">Fixed Price Project</div>
           <div style="font-size:0.9rem;color:var(--ink3)">Your project is billed at a fixed rate.<br/>No hourly logs are tracked for this engagement.</div>
+        </div>
+      </div>
+      
+      <!-- Dedicated Monthly/Yearly Outstanding Breakdown for Fixed-Rate Clients -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header" style="background: var(--paper2);">
+          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Outstanding Payments Breakdown (By Month & Year)</h3>
+        </div>
+        <div id="fixed-periodic-breakdown-container" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
+          <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting schedule analysis...</p>
         </div>
       </div>
     </div>
@@ -305,13 +315,12 @@ function logout() { auth.clear(); window.location.href = '../index.html'; }
 let allLogs = [];
 let currentTab = 'all';
 let currentHourlyRate = 20; 
-let currentCreditBalance = 0; // Global reference placeholder to stop tab-switch overrides
+let currentCreditBalance = 0;
+
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
     
-    // Wrap the entire logic in a try block
     try {
-        // Fetch data in parallel
         const [stats, logs, bookings] = await Promise.all([
             apiFetch('/client/stats'),
             apiFetch('/client/timelogs'),
@@ -350,10 +359,8 @@ async function loadPortal() {
             document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
             document.getElementById('s-hours').textContent  = '—';
 
-            const isPaid = stats.fixedStatus === 'paid';
-            document.getElementById('fixed-status-display').innerHTML = isPaid
-                ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div></div>`
-                : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem"><div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div><div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div></div>`;
+            // Render breakdown for fixed rate based on created/updated date or default to current month if unavailable
+            renderFixedPeriodicBreakdown(stats);
         } else {
             document.getElementById('fixed-notice').style.display = 'none';
             document.getElementById('fixed-section').style.display = 'none';
@@ -384,9 +391,54 @@ async function loadPortal() {
         console.error("Portal load error:", e);
         if (badgeContainer) {
             badgeContainer.innerHTML = `<span style="color:#ef4444;">⚠️ Failed to load dashboard data.</span>`;
+        }
     }
 }
 
+function renderFixedPeriodicBreakdown(stats) {
+    const container = document.getElementById('fixed-periodic-breakdown-container');
+    const unpaidAmt = parseFloat(stats.totalUnpaid || 0);
+    const paidAmt = parseFloat(stats.totalPaid || 0);
+    const totalAmt = parseFloat(stats.fixedPrice || 0);
+    
+    // Group by current month/year or fallback to project date
+    let periodKey = "Current Billing Period";
+    if (stats.updatedAt || stats.createdAt) {
+        try {
+            const d = new Date(stats.updatedAt || stats.createdAt);
+            if (!isNaN(d.getTime())) {
+                periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+            }
+        } catch(err) {}
+    }
+
+    if (totalAmt <= 0 && unpaidAmt <= 0) {
+        container.innerHTML = `<p style="color: var(--ink3); font-size: 0.85rem; padding: 0.5rem;">No outstanding payment requirements found.</p>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="background: var(--paper1); border: 1px solid var(--paper3); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--ink); border-bottom: 1px solid var(--paper2); padding-bottom: 0.4rem; margin-bottom: 0.6rem; display:flex; justify-content:space-between; align-items:center;">
+            <span>📅 ${periodKey}</span>
+            <span style="font-size:0.8rem; background:rgba(245,158,11,0.1); padding:0.1rem 0.4rem; border-radius:4px; color:#92400e">Fixed Contract</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--ink3)">Total Contract Fee:</span>
+              <strong style="color: var(--ink)">$${totalAmt.toFixed(2)}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #166534">Settled Paid:</span>
+              <span style="color: #166534; font-weight: 600;">$${paidAmt.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #92400e">Outstanding Balance:</span>
+              <span style="color: #92400e; font-weight: 600;">$${unpaidAmt.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+    `;
 }
 
 function calculateAndRenderMetrics(filteredLogs) {
@@ -430,15 +482,12 @@ function calculateAndRenderMetrics(filteredLogs) {
     } catch(err) { console.error("Period breakdown parsing error", err); }
   });
 
-  // Calculate outstanding balance logically using active context values
   let balanceDiff = totalPaidAdjusted - totalBilledAdjusted;
   let outstandingBalance = balanceDiff < 0 ? Math.abs(balanceDiff) : 0;
 
   document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
   document.getElementById('s-unpaid').textContent = '$' + outstandingBalance.toFixed(2);
   document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
-  
-  // ✅ FIXED: Read directly from the global verified database balance parameter instead of running local code math updates
   document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
 
   const breakdownContainer = document.getElementById('periodic-breakdown-container');
