@@ -9,9 +9,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
-    html {
-      overflow-y: scroll;
-    }
+    html { overflow-y: scroll; }
 
     :root {
       --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
@@ -28,7 +26,6 @@
     
     body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
-    /* ── MOBILE TOP BAR ── */
     .mob-bar {
       display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px;
       background: var(--navy); z-index: 200;
@@ -40,11 +37,9 @@
     .mob-brand span { color: #fff; font-size: 0.82rem; font-weight: 700; }
     .mob-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     
-    /* ── BLUR OVERLAY ── */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 149; backdrop-filter: blur(2px); }
     .overlay.on { display: block; }
 
-    /* ── SIDEBAR ── */
     .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
     .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
     .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
@@ -62,32 +57,24 @@
     .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
-    /* ── MAIN ── */
     .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; }
     .topbar { background: #fff; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1.2rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; }
     .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
     .content { padding: 1.5rem; }
 
-    /* ── CARDS ── */
     .card {
       background: white; border-radius: var(--radius); padding: 1.5rem;
       box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
-      margin-bottom: 1.5rem;
-      transition: all 0.3s ease;
+      margin-bottom: 1.5rem; transition: all 0.3s ease;
     }
-    .card:hover { box-shadow: 0 4px 30px rgba(13,35,83,0.1); }
-
     .card-header { 
       display: flex; align-items: center; justify-content: space-between; 
       flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;
       padding-bottom: 1rem; border-bottom: 1px solid var(--bg2);
     }
-    .card-header h3 { 
-      font-family: var(--serif); font-size: 1.1rem; font-weight: 700;
-    }
+    .card-header h3 { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; }
 
-    /* ── FILTER ROW ── */
     .filter-row { 
       display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
       background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
@@ -105,7 +92,6 @@
       box-shadow: 0 0 0 3px rgba(26,92,255,0.1);
     }
 
-    /* ── STATS CARDS ── */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
     .stat-card {
       background: white; border-radius: var(--radius); padding: 1.5rem;
@@ -115,7 +101,6 @@
     .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
     .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
 
-    /* ── BADGES ── */
     .badge { 
       display: inline-block; padding: 0.3rem 0.75rem; border-radius: 20px; 
       font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
@@ -124,21 +109,18 @@
     .badge-paid { background: var(--green-bg); color: var(--green); }
     .badge-outstanding { background: var(--amber-bg); color: var(--amber); }
 
-    /* ── BUTTONS ── */
     .btn { 
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
       color: white; padding: 0.65rem 1.3rem; font-size: 0.82rem; 
       border-radius: 8px; border: none; cursor: pointer; font-weight: 700; 
       display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; 
-      transition: all 0.25s ease;
-      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
+      transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(13,35,83,0.2);
     }
     .btn:hover { 
       background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
       box-shadow: 0 6px 20px rgba(26,92,255,0.3);
       transform: translateY(-2px);
     }
-    .btn:active { transform: translateY(0); }
 
     .download-btn {
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
@@ -154,9 +136,7 @@
       box-shadow: 0 6px 16px rgba(26,92,255,0.3);
       transform: translateY(-2px);
     }
-    .download-btn:active { transform: translateY(0); }
 
-    /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 700; letter-spacing: 0.05em; }
     td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
@@ -167,7 +147,6 @@
     .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
     .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
 
-    /* ── PDF CONTAINER ── */
     .invoice-card {
       background: white; width: 794px; padding: 56px 60px;
       font-family: Outfit, sans-serif; color: #1f2937;
@@ -415,7 +394,6 @@ async function applyTimeWindowFilters() {
   const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
   const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
 
-  // Filter hourly logs
   let records = rawLogsData.filter(l => {
     if (!l.date) return false;
     const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
@@ -427,7 +405,6 @@ async function applyTimeWindowFilters() {
 
   const clientGroups = {};
 
-  // Process hourly logs
   records.forEach(r => {
     if(!clientGroups[r.client_name]) {
       clientGroups[r.client_name] = { type: 'hourly', unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
@@ -443,12 +420,11 @@ async function applyTimeWindowFilters() {
     }
   });
 
-  // Include Fixed-Rate clients based on month scope matching
   const activeClients = selectedClient ? clientsData.filter(c => c.name === selectedClient) : clientsData;
   for (const client of activeClients) {
     if (client.rate_type === 'fixed') {
       try {
-        const fixedRes = await fetch(`${API}/fixed-monthly-payments?client_id=${client.id}`, { headers: auth.headers() });
+        const fixedRes = await fetch(`${API}/fixed-payments?client_id=${client.id}`, { headers: auth.headers() });
         const fixedPayments = await fixedRes.json();
         
         if(!clientGroups[client.name]) {
