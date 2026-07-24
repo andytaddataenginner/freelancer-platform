@@ -3,159 +3,412 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Invoices — Quick Freelancing Agency</title>
+  <title>Invoice Hub — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html {
+      overflow-y: scroll;
+    }
+
     :root {
-      --navy: #0d2353; --navy2: #1a3a7a; --navy-deep: #071633; --accent: #1a5cff; --gold2: #c9a44c;
+      --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
-      --green: #10b981; --amber: #f59e0b;
-      --sans: 'Outfit', system-ui, sans-serif;
+      --green: #166534; --green-bg: #dcfce7;
+      --amber: #92400e; --amber-bg: #fef3c7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --gray: #4b5563; --gray-bg: #f3f4f6;
       --serif: 'Playfair Display', serif;
-      --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-      --radius: 16px;
+      --sans: 'Outfit', sans-serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
     }
-    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
-    .layout { display: flex; min-height: 100vh; }
+    
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
-    .sidebar {
-      width: 220px; background: var(--navy); position: fixed;
-      top: 0; left: 0; height: 100vh; display: flex;
-      flex-direction: column; z-index: 50;
+    /* ── MOBILE TOP BAR ── */
+    .mob-bar {
+      display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px;
+      background: var(--navy); z-index: 200;
+      align-items: center; justify-content: space-between;
+      padding: 0 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
     }
-    .sidebar-brand {
-      padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; align-items: center; gap: 0.6rem;
-    }
-    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
-    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
-    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+    .mob-brand { display: flex; align-items: center; gap: 0.5rem; }
+    .mob-brand img { height: 28px; background: #fff; border-radius: 6px; padding: 2px; }
+    .mob-brand span { color: #fff; font-size: 0.82rem; font-weight: 700; }
+    .mob-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    
+    /* ── BLUR OVERLAY ── */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 149; backdrop-filter: blur(2px); }
+    .overlay.on { display: block; }
 
-    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
-    .sidebar-nav a {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
-      color: rgba(255,255,255,0.55); text-decoration: none;
-      transition: all 0.2s; border-right: 3px solid transparent;
-    }
-    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
-    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+    /* ── SIDEBAR ── */
+    .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
+    .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
+    .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .sb-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .sb-text strong { display: block; color: #fff; font-size: 0.8rem; font-weight: 700; }
+    .sb-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+    
+    .sb-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sb-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; transition: all 0.2s; border-right: 3px solid transparent; }
+    .sb-nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    .sb-nav a.active { color: #fff; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+    
+    .sb-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sb-user strong { display: block; color: #fff; font-size: 0.88rem; }
+    .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
+    .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
-    .sidebar-user {
-      padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem;
-    }
-    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
-    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
-    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+    /* ── MAIN ── */
+    .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; }
+    .topbar { background: #fff; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1.2rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; }
+    .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+    .content { padding: 1.5rem; }
 
-    .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
-
-    .topbar {
-      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
-      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
-
-    .content { padding: 1.5rem; flex: 1; }
-
+    /* ── CARDS ── */
     .card {
-      background: white; border-radius: 18px; padding: 1.5rem;
-      box-shadow: 0 10px 30px -14px rgba(13,35,83,0.14);
-      border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.5rem;
+      background: white; border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
     }
-    .card-header {
-      padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); margin-bottom: 1.1rem;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .card-header h3 { font-size: 1rem; font-weight: 700; font-family: var(--serif); color: var(--navy); }
+    .card:hover { box-shadow: 0 4px 30px rgba(13,35,83,0.1); }
 
+    .card-header { 
+      display: flex; align-items: center; justify-content: space-between; 
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--bg2);
+    }
+    .card-header h3 { 
+      font-family: var(--serif); font-size: 1.1rem; font-weight: 700;
+    }
+
+    /* ── FILTER ROW ── */
+    .filter-row { 
+      display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+      background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+      padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(13,35,83,0.08);
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-row select, .filter-row input { 
+      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); 
+      border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; 
+      outline: none; background: white; transition: border-color 0.2s;
+    }
+    .filter-row select:focus, .filter-row input:focus { 
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,92,255,0.1);
+    }
+
+    /* ── STATS CARDS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+    .stat-card {
+      background: white; border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
+    .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── BADGES ── */
+    .badge { 
+      display: inline-block; padding: 0.3rem 0.75rem; border-radius: 20px; 
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .badge-paid { background: var(--green-bg); color: var(--green); }
+    .badge-outstanding { background: var(--amber-bg); color: var(--amber); }
+
+    /* ── BUTTONS ── */
+    .btn { 
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: white; padding: 0.65rem 1.3rem; font-size: 0.82rem; 
+      border-radius: 8px; border: none; cursor: pointer; font-weight: 700; 
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; 
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
+    }
+    .btn:hover { 
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 20px rgba(26,92,255,0.3);
+      transform: translateY(-2px);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .download-btn {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .download-btn:hover {
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 16px rgba(26,92,255,0.3);
+      transform: translateY(-2px);
+    }
+    .download-btn:active { transform: translateY(0); }
+
+    .whatsapp-btn {
+      background: #25D366;
+      color: white;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .whatsapp-btn:hover {
+      background: #1ebe57;
+      box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+      transform: translateY(-2px);
+    }
+    .whatsapp-btn:active { transform: translateY(0); }
+
+    /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 2px solid var(--bg2); font-weight: 600; }
-    td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); }
-    tbody tr:nth-child(even) td { background: rgba(13,35,83,0.02); }
+    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 700; letter-spacing: 0.05em; }
+    td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr { transition: all 0.2s ease; }
+    tbody tr:hover { background: rgba(26,92,255,0.04); }
 
-    .badge {
-      display: inline-block; padding: 0.25rem 0.6rem; font-size: 0.7rem; font-weight: 700;
-      border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+    .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
+
+    /* ── PDF CONTAINER ── */
+    .invoice-card{
+      background:white;
+      width:794px;
+      padding:56px 60px;
+      font-family:Outfit,sans-serif;
+      color:#1f2937;
     }
-    .badge.outstanding { background: rgba(245,158,11,0.15); color: #d97706; }
-    .badge.paid { background: rgba(16,185,129,0.15); color: #059669; }
+    .invoice-top-strip{ height:5px; border-radius:3px; background:linear-gradient(90deg,#0d2353,#1a5cff); margin-bottom:36px; }
+    .invoice-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:38px; }
+    .invoice-brand{ display:flex; align-items:center; gap:14px; }
+    .invoice-brand-name{ font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:#0d2353; }
+    .invoice-brand-tag{ font-size:12px; color:#6b7280; margin-top:3px; letter-spacing:.02em; }
+    .invoice-meta{ text-align:right; }
+    .invoice-meta-label{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#9ca3af; font-weight:600; }
+    .invoice-meta-number{ font-size:19px; font-weight:600; color:#0d2353; margin-top:3px; }
+    .invoice-meta-date{ font-size:12px; color:#6b7280; margin-top:5px; }
+    .invoice-parties{ width:100%; border-collapse:collapse; margin-bottom:36px; }
+    .invoice-parties td{ vertical-align:top; width:33.33%; padding:0 20px 0 0; }
+    .party-label{ font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:#9ca3af; font-weight:600; margin-bottom:7px; }
+    .party-label.spaced{ margin-top:14px; }
+    .party-name{ font-size:14px; font-weight:600; color:#111827; margin-bottom:4px; }
+    .party-detail{ font-size:12.5px; color:#4b5563; line-height:1.65; }
+    .status-pill{ display:inline-block; padding:3px 11px; border-radius:100px; font-size:12px; font-weight:600; }
+    .status-pill.outstanding{ color:#b45309; background:#fffbeb; }
+    .status-pill.settled{ color:#0f9d6c; background:#dcfce7; }
+    .invoice-table{ width:100%; border-collapse:collapse; margin-bottom:32px; }
+    .invoice-table thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; font-weight:600; padding:0 14px 12px 14px; border-bottom:2px solid #0d2353; }
+    .invoice-table thead th:last-child, .invoice-table tbody td:last-child, .invoice-table tfoot td:last-child{ text-align:right; }
+    .invoice-table tbody td{ padding:16px 14px; font-size:13px; color:#374151; border-bottom:1px solid #e5e7eb; }
+    .invoice-table tfoot td{ padding:16px 14px 4px 14px; font-size:15px; font-weight:700; color:#0d2353; border-top:2px solid #0d2353; }
+    .invoice-table tfoot td:first-child{ font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; }
+    .payment-box{ padding:16px 18px; border-radius:8px; background:#f8fafc; border-left:3px solid #1a5cff; font-size:12.5px; color:#4b5563; margin-bottom:34px; }
+    .payment-box strong{ color:#0d2353; }
+    .footer-note{ text-align:center; font-size:11.5px; color:#9ca3af; padding-top:22px; border-top:1px solid #f0f0f0; }
+    .invoice-logo { width:52px; height:52px; object-fit:contain; background:white; border-radius:10px; padding:6px; }
 
-    .btn {
-      background: linear-gradient(135deg, var(--navy), var(--navy-deep));
-      color: white; padding: 0.4rem 0.8rem; font-size: 0.75rem; font-weight: 600;
-      border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;
-      text-decoration: none; box-shadow: 0 4px 12px -4px rgba(13,35,83,0.3);
+    #pdf-container {
+      display: none;
+      width: 794px;
+      background-color: #ffffff;
     }
-    .btn:hover { background: linear-gradient(135deg, var(--accent), var(--navy)); }
+    #pdf-container.rendering { display: block; }
 
+    body.pdf-generating .main,
+    body.pdf-generating .mob-bar,
+    body.pdf-generating .overlay {
+      display: none !important;
+    }
+
+    #pdf-generating-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(13, 35, 83, 0.97);
+      color: white;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      font-family: var(--sans);
+    }
+    #pdf-generating-overlay.active { display: flex; }
+    #pdf-generating-overlay .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(255,255,255,0.25);
+      border-top-color: var(--gold2);
+      border-radius: 50%;
+      animation: pdf-spin 0.8s linear infinite;
+    }
+    @keyframes pdf-spin { to { transform: rotate(360deg); } }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .main { margin-left: 0; }
+      .mob-bar { display: flex; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
+      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
+      .main { margin-left: 0; padding-top: 52px; }
+      .topbar { position: static !important; padding: 1rem 1rem 0.8rem !important; }
+      .content { padding: 1rem; }
+      .filter-row { flex-direction: column; }
+      .filter-group { width: 100%; }
+      .filter-row select, .filter-row input { width: 100%; }
+      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
+      table { font-size: 0.8rem; }
+      th { padding: 0.6rem 0.5rem; font-size: 0.65rem; }
+      td { padding: 0.7rem 0.5rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr !important; }
+      .card { padding: 1.2rem; }
+      .card-header { flex-direction: column; align-items: flex-start; }
+      table { font-size: 0.75rem; }
+      th { padding: 0.5rem 0.3rem; }
+      td { padding: 0.6rem 0.3rem; }
+      .download-btn { padding: 0.4rem 0.7rem; font-size: 0.65rem; }
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
-<div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
-      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
-    </div>
-    <nav class="sidebar-nav">
-      <a href="dashboard.html">📊 Overview</a>
-      <a href="time-logs.html">⏱ Time Logs</a>
-      <a href="clients.html">👥 Clients</a>
-      <a href="schedule.html">📅 Schedule</a>
-      <a href="reports.html">📈 Reports</a>
-      <a href="fixed-invoices.html" class="active">📄 Invoices</a>
-      <a href="portfolio-admin.html">🖼 Portfolio</a>
-    </nav>
-    <div class="sidebar-user">
-      <strong id="user-name">Loading…</strong>
-      <span>Freelancer · QFA</span>
-      <a href="#" onclick="logout()">Sign out →</a>
-    </div>
-  </aside>
+<div class="mob-bar" id="mob-bar">
+  <div class="mob-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="mob-btn" onclick="sbOpen()">☰</button>
+</div>
 
-  <div class="main">
-    <div class="topbar">
-      <h2>Generated Invoices</h2>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+  </div>
+  <nav class="sb-nav">
+    <a href="dashboard.html">📊 Overview</a>
+    <a href="time-logs.html">⏱ Time Logs</a>
+    <a href="clients.html">👥 Clients</a>
+    <a href="schedule.html">📅 Schedule</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="fixed-invoices.html" class="active">📄 Invoices</a>
+    <a href="portfolio-admin.html">🖼 Portfolio</a>
+    <a href="../index.html" target="_blank">🌐 Public Site</a>
+  </nav>
+  <div class="sb-user">
+    <strong id="user-name">Loading…</strong>
+    <span>Freelancer · QFA</span>
+    <a href="#" onclick="logout()">Sign out →</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2>Invoice Hub</h2>
+      <p>View and manage your invoices.</p>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-num" id="s-pending">—</span>
+        <span class="stat-label">Outstanding</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-confirmed">—</span>
+        <span class="stat-label">Paid</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-upcoming">—</span>
+        <span class="stat-label">Total Invoices</span>
+      </div>
     </div>
 
-    <div class="content">
-      <div class="card">
-        <div class="card-header">
-          <h3>Client Invoices & Actions</h3>
+    <div class="card">
+      <div class="card-header">
+        <h3>Invoice Records</h3>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group" style="flex: 1; min-width: 200px;">
+          <label>Select Client</label>
+          <select id="client-select">
+            <option value="">All Clients</option>
+          </select>
         </div>
-        <div style="overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Invoice ID</th>
-                <th>Client</th>
-                <th>Hours</th>
-                <th>Outstanding</th>
-                <th>Paid</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="invoices-body">
-              <tr><td colspan="7" style="text-align:center; color:var(--ink3);">Loading invoices...</td></tr>
-            </tbody>
-          </table>
+        <div class="filter-group" style="flex: 1; min-width: 180px;">
+          <label>Start Date</label>
+          <input type="date" id="start-date"/>
         </div>
+        <div class="filter-group" style="flex: 1; min-width: 180px;">
+          <label>End Date</label>
+          <input type="date" id="end-date"/>
+        </div>
+        <button class="btn" style="height: 42px; min-width: 120px;" onclick="applyTimeWindowFilters()">Apply</button>
+      </div>
+
+      <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1.5rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice ID</th>
+              <th>Client</th>
+              <th>Hours</th>
+              <th>Outstanding</th>
+              <th>Paid</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="invoice-records-table">
+            <tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⏳</div><div>Loading invoices...</div></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
+
+<div id="pdf-generating-overlay">
+  <div class="spinner"></div>
+  <div>Generating your invoice…</div>
+</div>
+<div id="pdf-container"></div>
 
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
@@ -167,60 +420,318 @@ const auth = {
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
 
-if (!auth.isLoggedIn()) { window.location.href = 'login.html'; }
-document.getElementById('user-name').textContent = auth.user()?.name || '';
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
-document.addEventListener('DOMContentLoaded', loadInvoicesData);
+function sbOpen(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function sbClose(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.sb-nav a').forEach(a=>
+  a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();})
+);
 
-async function loadInvoicesData() {
+let rawLogsData = [];
+let clientPhoneMap = {};
+let generatingPDF=false;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('start-date').value = "2026-01-01";
+  document.getElementById('end-date').value = today;
+
+  await loadClientsAndPhones();
+  await fetchMasterLogs();
+});
+
+async function loadClientsAndPhones() {
   try {
-    const [invoicesRes, clientsRes] = await Promise.all([
-      fetch(`${API}/invoices`, { headers: auth.headers() }).then(res => res.ok ? res.json() : []).catch(() => []),
-      fetch(`${API}/clients`, { headers: auth.headers() }).then(res => res.ok ? res.json() : []).catch(() => [])
-    ]);
-
-    const invoicesList = Array.isArray(invoicesRes) ? invoicesRes : (invoicesRes.data || invoicesRes.invoices || []);
-    const clientsList = Array.isArray(clientsRes) ? clientsRes : (clientsRes.data || clientsRes.clients || []);
-
-    const clientPhoneMap = {};
-    clientsList.forEach(c => {
+    const res = await fetch(`${API}/clients`, { headers: auth.headers() });
+    const clients = await res.json();
+    const selector = document.getElementById('client-select');
+    
+    clients.forEach(c => {
       const name = c.name || c.client_name;
-      if (name) clientPhoneMap[name] = c.phone || '';
+      if (name) {
+        clientPhoneMap[name] = c.phone || '';
+        selector.innerHTML += `<option value="${name}">${name}</option>`;
+      }
     });
+  } catch(e) { console.error("Client phone map error:", e); }
+}
 
-    const tbody = document.getElementById('invoices-body');
-    if (!invoicesList.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--ink3);">No invoices found.</td></tr>';
-      return;
+async function fetchMasterLogs() {
+  try {
+    const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
+    rawLogsData = await res.json();
+    applyTimeWindowFilters();
+  } catch(e) { console.error("Logs pull error:", e); }
+}
+
+function applyTimeWindowFilters() {
+  const selectedClient = document.getElementById('client-select').value;
+  const startVal = document.getElementById('start-date').value;
+  const endVal = document.getElementById('end-date').value;
+
+  const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
+  const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
+
+  let records = rawLogsData.filter(l => {
+    if (!l.date) return false;
+    const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
+    
+    const matchesClient = !selectedClient || l.client_name === selectedClient;
+    const matchesStart = !startTime || logTime >= startTime;
+    const matchesEnd = !endTime || logTime <= endTime;
+    return matchesClient && matchesStart && matchesEnd;
+  });
+
+  const clientGroups = {};
+  records.forEach(r => {
+    if(!clientGroups[r.client_name]) {
+      clientGroups[r.client_name] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
     }
+    const amt = parseFloat(r.amount || 0);
+    const hrs = parseFloat(r.hours || 0);
+    
+    if(r.payment_status !== 'paid') {
+      clientGroups[r.client_name].unpaidHours += hrs;
+      clientGroups[r.client_name].totalUnpaid += amt;
+    } else {
+      clientGroups[r.client_name].totalPaid += amt;
+    }
+  });
 
-    tbody.innerHTML = '';
-    invoicesList.forEach(inv => {
-      const phone = clientPhoneMap[inv.client_name] || '';
-      const outstandingVal = parseFloat(inv.outstanding || inv.amount || 0);
-      const message = encodeURIComponent(`Hi ${inv.client_name},\n\nHere is your invoice summary (${inv.invoice_id}) for $${outstandingVal.toFixed(2)}.\n\nYou can download the full PDF from your portal. Let me know if you have questions!`);
-      const waUrl = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
+  const tableBody = document.getElementById('invoice-records-table');
+  const groupsArray = Object.keys(clientGroups);
 
-      tbody.innerHTML += `
-        <tr>
-          <td><strong>${inv.invoice_id}</strong></td>
-          <td>${inv.client_name}</td>
-          <td>${inv.hours || 0}</td>
-          <td style="font-family:var(--mono); color:#ef4444;">$${outstandingVal.toFixed(2)}</td>
-          <td style="font-family:var(--mono); color:#10b981;">$${parseFloat(inv.paid || 0).toFixed(2)}</td>
-          <td><span class="badge ${inv.status}">${inv.status}</span></td>
-          <td>
-            <div style="display: flex; gap: 0.4rem; align-items: center;">
-              <a href="${inv.pdf_url || '#'}" target="_blank" class="btn">↓ PDF</a>
-              <a href="${waUrl}" target="_blank" class="btn" style="background: #25D366; box-shadow: none;">💬 WhatsApp</a>
-            </div>
-          </td>
-        </tr>`;
-    });
-  } catch(e) {
-    console.error("Error loading invoices:", e);
-    document.getElementById('invoices-body').innerHTML = '<tr><td colspan="7" style="text-align:center; color:#ef4444;">Failed to load invoices. Check console.</td></tr>';
+  let totalOutstanding = 0;
+  let totalPaid = 0;
+  groupsArray.forEach(client => {
+    totalOutstanding += clientGroups[client].totalUnpaid;
+    totalPaid += clientGroups[client].totalPaid;
+  });
+
+  document.getElementById('s-pending').textContent = '$' + totalOutstanding.toFixed(2);
+  document.getElementById('s-confirmed').textContent = '$' + totalPaid.toFixed(2);
+  document.getElementById('s-upcoming').textContent = groupsArray.length;
+
+  if(!groupsArray.length) {
+    tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">📭</div><div>No invoices match your filters</div></td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = groupsArray.map((client, idx) => {
+    const data = clientGroups[client];
+    const dummyInvId = `INV-2026-${3000 + idx}`;
+    const hasOutstanding = data.totalUnpaid > 0;
+    
+    // Construct WhatsApp Link
+    const phone = clientPhoneMap[client] || '';
+    const message = encodeURIComponent(`Hi ${client},\n\nHere is your invoice summary (${dummyInvId}) for $${data.totalUnpaid.toFixed(2)}.\n\nPlease let me know if you have any questions!`);
+    const waUrl = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
+    
+    return `
+      <tr>
+        <td><strong>${dummyInvId}</strong></td>
+        <td><strong>${client}</strong></td>
+        <td>${data.unpaidHours.toFixed(2)}</td>
+        <td style="color:${hasOutstanding ? '#b45309':'#10b981'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
+        <td style="color:#10b981; font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
+        <td>
+          ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding</span>' 
+                            : '<span class="badge badge-paid">Paid</span>'}
+        </td>
+        <td>
+         <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+           <button class="download-btn" onclick="downloadInvoice('${dummyInvId}','${client}',${data.unpaidHours},${data.totalUnpaid},'${document.getElementById('start-date').value}','${document.getElementById('end-date').value}')">
+            ⬇ PDF
+           </button>
+           <a href="${waUrl}" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+         </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function downloadInvoice(invId, clientName, hours, totalAmount, start, end) {
+  if(generatingPDF) return;
+  generatingPDF=true;
+
+  if(typeof html2pdf === "undefined"){
+    generatingPDF=false;
+    alert("PDF engine is not loaded. Please refresh the page.");
+    return;
+  }
+
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const pdfWindow = isMobile ? window.open("", "_blank") : null;
+  const freelancer = auth.user()?.name || "Freelancer";
+
+  document.getElementById("pdf-generating-overlay").classList.add("active");
+  window.scrollTo(0, 0);
+  document.body.classList.add("pdf-generating");
+
+  const container = document.getElementById("pdf-container");
+  container.classList.add("rendering");
+
+  container.innerHTML = `
+<div class="invoice-card">
+<div class="invoice-top-strip"></div>
+<div class="invoice-head">
+<div class="invoice-brand">
+<img class="invoice-logo" src="../QFA_Logo.png"/>
+<div>
+<div class="invoice-brand-name">Quick Freelancing Agency</div>
+<div class="invoice-brand-tag">Professional Consulting Invoice</div>
+</div>
+</div>
+<div class="invoice-meta">
+<div class="invoice-meta-label">Invoice</div>
+<div class="invoice-meta-number">${invId}</div>
+<div class="invoice-meta-date">${new Date().toLocaleDateString()}</div>
+</div>
+</div>
+<table class="invoice-parties">
+<tr>
+<td>
+<div class="party-label">Issued By</div>
+<div class="party-name">Quick Freelancing Agency</div>
+<div class="party-detail">ndy.andupa@gmail.com<br>+251 911 859 866</div>
+</td>
+<td>
+<div class="party-label">Bill To</div>
+<div class="party-name">${clientName}</div>
+<div class="party-detail">Prepared by ${freelancer}</div>
+</td>
+<td>
+<div class="party-label">Billing Period</div>
+<div class="party-detail">${start} &mdash; ${end}</div>
+<div class="party-label spaced">Status</div>
+<div class="party-detail"><span class="status-pill ${totalAmount > 0 ? 'outstanding' : 'settled'}">${totalAmount > 0 ? 'Outstanding' : 'Fully Settled'}</span></div>
+</td>
+</tr>
+</table>
+<table class="invoice-table">
+<thead>
+<tr>
+<th>Description</th>
+<th>Hours</th>
+<th>Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Professional Freelance Consulting Services</td>
+<td>${hours.toFixed(2)}</td>
+<td>$${totalAmount.toFixed(2)}</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td colspan="2">Total Amount Due</td>
+<td>$${totalAmount.toFixed(2)}</td>
+</tr>
+</tfoot>
+</table>
+<div class="payment-box">
+Payment is due upon receipt. Reference: <strong>${invId}</strong>
+</div>
+<div class="footer-note">
+Thank you for choosing <strong>Quick Freelancing Agency</strong>
+</div>
+</div>
+`;
+
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const images = container.querySelectorAll("img");
+
+  await Promise.all(
+    [...images].map(img => {
+      if(img.complete) return Promise.resolve();
+      return new Promise(resolve=>{
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    })
+  );
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const renderedWidth = container.scrollWidth || 794;
+  const renderedHeight = container.scrollHeight || 1123;
+
+  const options = {
+    margin: 0,
+    filename: `${invId}.pdf`,
+    image: { type:"jpeg", quality:1 },
+    html2canvas:{
+      scale:2,
+      useCORS:true,
+      allowTaint:false,
+      backgroundColor:"#ffffff",
+      logging: false,
+      imageTimeout:0,
+      x: 0,
+      y: 0,
+      width: renderedWidth,
+      height: renderedHeight,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: renderedWidth,
+      windowHeight: renderedHeight
+    },
+    jsPDF:{ unit:"mm", format:"a4", orientation:"portrait" }
+  };
+
+  try {
+    await document.fonts.ready;
+    const worker = html2pdf().set(options).from(container).toCanvas();
+    const canvas = await worker.get("canvas");
+    const pdfWidthMm = 210;
+    const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
+
+    const pdfWorker = worker.set({
+      jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" }
+    }).toPdf();
+
+    if (isMobile) {
+      const pdfBlob = await pdfWorker.outputPdf("blob");
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      if (pdfWindow) {
+        pdfWindow.location.href = blobUrl;
+      } else {
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${invId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+    } else {
+      await pdfWorker.save();
+    }
+  } catch(error){
+    console.error("PDF generation error:", error);
+    if (pdfWindow) pdfWindow.close();
+    alert("Invoice PDF generation failed.");
+  } finally {
+    setTimeout(() => {
+      container.innerHTML = "";
+      container.classList.remove("rendering");
+      document.body.classList.remove("pdf-generating");
+      document.getElementById("pdf-generating-overlay").classList.remove("active");
+      generatingPDF = false;
+    }, 1000);
   }
 }
 </script>
