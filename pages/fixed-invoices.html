@@ -8,7 +8,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { overflow-y: scroll; }
+    
+    html {
+      overflow-y: scroll;
+    }
+
     :root {
       --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
@@ -21,90 +25,254 @@
       --sans: 'Outfit', sans-serif;
       --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
     }
+    
     body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
-    .mob-bar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px; background: var(--navy); z-index: 200; align-items: center; justify-content: space-between; padding: 0 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+
+    /* ── MOBILE TOP BAR ── */
+    .mob-bar {
+      display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px;
+      background: var(--navy); z-index: 200;
+      align-items: center; justify-content: space-between;
+      padding: 0 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
     .mob-brand { display: flex; align-items: center; gap: 0.5rem; }
     .mob-brand img { height: 28px; background: #fff; border-radius: 6px; padding: 2px; }
     .mob-brand span { color: #fff; font-size: 0.82rem; font-weight: 700; }
     .mob-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    
+    /* ── BLUR OVERLAY ── */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 149; backdrop-filter: blur(2px); }
     .overlay.on { display: block; }
+
+    /* ── SIDEBAR ── */
     .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
     .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
     .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .sb-logo img { width: 100%; height: 100%; object-fit: contain; }
     .sb-text strong { display: block; color: #fff; font-size: 0.8rem; font-weight: 700; }
     .sb-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+    
     .sb-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
     .sb-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; transition: all 0.2s; border-right: 3px solid transparent; }
     .sb-nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
     .sb-nav a.active { color: #fff; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+    
     .sb-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); }
     .sb-user strong { display: block; color: #fff; font-size: 0.88rem; }
     .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MAIN ── */
     .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; }
     .topbar { background: #fff; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1.2rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; }
     .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
     .content { padding: 1.5rem; }
-    .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); margin-bottom: 1.5rem; transition: all 0.3s ease; }
-    .card-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--bg2); }
-    .card-header h3 { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; }
-    .filter-row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(13,35,83,0.08); }
+
+    /* ── CARDS ── */
+    .card {
+      background: white; border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    .card:hover { box-shadow: 0 4px 30px rgba(13,35,83,0.1); }
+
+    .card-header { 
+      display: flex; align-items: center; justify-content: space-between; 
+      flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--bg2);
+    }
+    .card-header h3 { 
+      font-family: var(--serif); font-size: 1.1rem; font-weight: 700;
+    }
+
+    /* ── FILTER ROW ── */
+    .filter-row { 
+      display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+      background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+      padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(13,35,83,0.08);
+    }
     .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
     .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
-    .filter-row select, .filter-row input { padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; outline: none; background: white; transition: border-color 0.2s; }
+    .filter-row select, .filter-row input { 
+      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); 
+      border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; 
+      outline: none; background: white; transition: border-color 0.2s;
+    }
+    .filter-row select:focus, .filter-row input:focus { 
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,92,255,0.1);
+    }
+
+    /* ── STATS CARDS ── */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
-    .stat-card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); display: flex; flex-direction: column; gap: 0.5rem; }
+    .stat-card {
+      background: white; border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
     .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
     .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
-    .badge { display: inline-block; padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    /* ── BADGES ── */
+    .badge { 
+      display: inline-block; padding: 0.3rem 0.75rem; border-radius: 20px; 
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
     .badge-paid { background: var(--green-bg); color: var(--green); }
     .badge-outstanding { background: var(--amber-bg); color: var(--amber); }
-    .btn { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); color: white; padding: 0.65rem 1.3rem; font-size: 0.82rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(13,35,83,0.2); }
-    .download-btn { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); color: white; font-weight: 700; font-size: 0.75rem; padding: 0.5rem 0.9rem; border-radius: 8px; border: none; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(13,35,83,0.2); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── BUTTONS ── */
+    .btn { 
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: white; padding: 0.65rem 1.3rem; font-size: 0.82rem; 
+      border-radius: 8px; border: none; cursor: pointer; font-weight: 700; 
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; 
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
+    }
+    .btn:hover { 
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 20px rgba(26,92,255,0.3);
+      transform: translateY(-2px);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .download-btn{
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .download-btn:hover {
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 16px rgba(26,92,255,0.3);
+      transform: translateY(-2px);
+    }
+    .download-btn:active { transform: translateY(0); }
+
+    /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 700; letter-spacing: 0.05em; }
     td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr { transition: all 0.2s ease; }
     tbody tr:hover { background: rgba(26,92,255,0.04); }
+
     .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
-    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
-    .invoice-card { background: white; width: 794px; padding: 56px 60px; font-family: Outfit, sans-serif; color: #1f2937; }
-    .invoice-top-strip { height: 5px; border-radius: 3px; background: linear-gradient(90deg,#0d2353,#1a5cff); margin-bottom: 36px; }
-    .invoice-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 38px; }
-    .invoice-brand { display: flex; align-items: center; gap: 14px; }
-    .invoice-brand-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #0d2353; }
-    .invoice-brand-tag { font-size: 12px; color: #6b7280; margin-top: 3px; }
-    .invoice-meta { text-align: right; }
-    .invoice-meta-label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9ca3af; font-weight: 600; }
-    .invoice-meta-number { font-size: 19px; font-weight: 600; color: #0d2353; margin-top: 3px; }
-    .invoice-meta-date { font-size: 12px; color: #6b7280; margin-top: 5px; }
-    .invoice-parties { width: 100%; border-collapse: collapse; margin-bottom: 36px; }
-    .invoice-parties td { vertical-align: top; width: 33.33%; padding: 0 20px 0 0; }
-    .party-label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #9ca3af; font-weight: 600; margin-bottom: 7px; }
-    .party-label.spaced { margin-top: 14px; }
-    .party-name { font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 4px; }
-    .party-detail { font-size: 12.5px; color: #4b5563; line-height: 1.65; }
-    .status-pill { display: inline-block; padding: 3px 11px; border-radius: 100px; font-size: 12px; font-weight: 600; }
-    .status-pill.outstanding { color: #b45309; background: #fffbeb; }
-    .status-pill.settled { color: #0f9d6c; background: #dcfce7; }
-    .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
-    .invoice-table thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; font-weight: 600; padding: 0 14px 12px 14px; border-bottom: 2px solid #0d2353; }
-    .invoice-table thead th:last-child, .invoice-table tbody td:last-child, .invoice-table tfoot td:last-child { text-align: right; }
-    .invoice-table tbody td { padding: 16px 14px; font-size: 13px; color: #374151; border-bottom: 1px solid #e5e7eb; }
-    .invoice-table tfoot td { padding: 16px 14px 4px 14px; font-size: 15px; font-weight: 700; color: #0d2353; border-top: 2px solid #0d2353; }
-    .invoice-table tfoot td:first-child { font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
-    .payment-box { padding: 16px 18px; border-radius: 8px; background: #f8fafc; border-left: 3px solid #1a5cff; font-size: 12.5px; color: #4b5563; margin-bottom: 34px; }
-    .footer-note { text-align: center; font-size: 11.5px; color: #9ca3af; padding-top: 22px; border-top: 1px solid #f0f0f0; }
-    .invoice-logo { width: 52px; height: 52px; object-fit: contain; background: white; border-radius: 10px; padding: 6px; }
-    #pdf-container { display: none; width: 794px; background-color: #ffffff; }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 1.0rem; opacity: 0.6; }
+
+    /* ── PDF CONTAINER ── */
+    .invoice-card{
+      background:white;
+      width:794px;
+      padding:56px 60px;
+      font-family:Outfit,sans-serif;
+      color:#1f2937;
+    }
+    .invoice-top-strip{ height:5px; border-radius:3px; background:linear-gradient(90deg,#0d2353,#1a5cff); margin-bottom:36px; }
+    .invoice-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:38px; }
+    .invoice-brand{ display:flex; align-items:center; gap:14px; }
+    .invoice-brand-name{ font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:#0d2353; }
+    .invoice-brand-tag{ font-size:12px; color:#6b7280; margin-top:3px; letter-spacing:.02em; }
+    .invoice-meta{ text-align:right; }
+    .invoice-meta-label{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#9ca3af; font-weight:600; }
+    .invoice-meta-number{ font-size:19px; font-weight:600; color:#0d2353; margin-top:3px; }
+    .invoice-meta-date{ font-size:12px; color:#6b7280; margin-top:5px; }
+    .invoice-parties{ width:100%; border-collapse:collapse; margin-bottom:36px; }
+    .invoice-parties td{ vertical-align:top; width:33.33%; padding:0 20px 0 0; }
+    .party-label{ font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:#9ca3af; font-weight:600; margin-bottom:7px; }
+    .party-label.spaced{ margin-top:14px; }
+    .party-name{ font-size:14px; font-weight:600; color:#111827; margin-bottom:4px; }
+    .party-detail{ font-size:12.5px; color:#4b5563; line-height:1.65; }
+    .status-pill{ display:inline-block; padding:3px 11px; border-radius:100px; font-size:12px; font-weight:600; }
+    .status-pill.outstanding{ color:#b45309; background:#fffbeb; }
+    .status-pill.settled{ color:#0f9d6c; background:#dcfce7; }
+    .invoice-table{ width:100%; border-collapse:collapse; margin-bottom:32px; }
+    .invoice-table thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; font-weight:600; padding:0 14px 12px 14px; border-bottom:2px solid #0d2353; }
+    .invoice-table thead th:last-child, .invoice-table tbody td:last-child, .invoice-table tfoot td:last-child{ text-align:right; }
+    .invoice-table tbody td{ padding:16px 14px; font-size:13px; color:#374151; border-bottom:1px solid #e5e7eb; }
+    .invoice-table tfoot td{ padding:16px 14px 4px 14px; font-size:15px; font-weight:700; color:#0d2353; border-top:2px solid #0d2353; }
+    .invoice-table tfoot td:first-child{ font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; }
+    .payment-box{ padding:16px 18px; border-radius:8px; background:#f8fafc; border-left:3px solid #1a5cff; font-size:12.5px; color:#4b5563; margin-bottom:34px; }
+    .payment-box strong{ color:#0d2353; }
+    .footer-note{ text-align:center; font-size:11.5px; color:#9ca3af; padding-top:22px; border-top:1px solid #f0f0f0; }
+    .invoice-logo { width:52px; height:52px; object-fit:contain; background:white; border-radius:10px; padding:6px; }
+
+    #pdf-container {
+      display: none;
+      width: 794px;
+      background-color: #ffffff;
+    }
     #pdf-container.rendering { display: block; }
-    body.pdf-generating .main, body.pdf-generating .mob-bar, body.pdf-generating .overlay { display: none !important; }
-    #pdf-generating-overlay { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(13, 35, 83, 0.97); color: white; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; font-family: var(--sans); }
+
+    body.pdf-generating .main,
+    body.pdf-generating .mob-bar,
+    body.pdf-generating .overlay {
+      display: none !important;
+    }
+
+    #pdf-generating-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(13, 35, 83, 0.97);
+      color: white;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      font-family: var(--sans);
+    }
     #pdf-generating-overlay.active { display: flex; }
-    #pdf-generating-overlay .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.25); border-top-color: var(--gold2); border-radius: 50%; animation: pdf-spin 0.8s linear infinite; }
+    #pdf-generating-overlay .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(255,255,255,0.25);
+      border-top-color: var(--gold2);
+      border-radius: 50%;
+      animation: pdf-spin 0.8s linear infinite;
+    }
     @keyframes pdf-spin { to { transform: rotate(360deg); } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .mob-bar { display: flex; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
+      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
+      .main { margin-left: 0; padding-top: 52px; }
+      .topbar { position: static !important; padding: 1rem 1rem 0.8rem !important; }
+      .content { padding: 1rem; }
+      .filter-row { flex-direction: column; }
+      .filter-group { width: 100%; }
+      .filter-row select, .filter-row input { width: 100%; }
+      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
+      table { font-size: 0.8rem; }
+      th { padding: 0.6rem 0.5rem; font-size: 0.65rem; }
+      td { padding: 0.7rem 0.5rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr !important; }
+      .card { padding: 1.2rem; }
+      .card-header { flex-direction: column; align-items: flex-start; }
+      table { font-size: 0.75rem; }
+      th { padding: 0.5rem 0.3rem; }
+      td { padding: 0.6rem 0.3rem; }
+      .download-btn { padding: 0.4rem 0.7rem; font-size: 0.65rem; }
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -146,7 +314,7 @@
   <div class="topbar">
     <div>
       <h2>Invoice Hub</h2>
-      <p>View and manage your hourly and fixed-rate client invoices.</p>
+      <p>View and manage your invoices.</p>
     </div>
   </div>
 
@@ -189,13 +357,13 @@
         <button class="btn" style="height: 42px; min-width: 120px;" onclick="applyTimeWindowFilters()">Apply</button>
       </div>
 
-      <div style="overflow-x: auto; margin-top: 1.5rem;">
+      <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1.5rem;">
         <table>
           <thead>
             <tr>
               <th>Invoice ID</th>
               <th>Client</th>
-              <th>Type / Hours</th>
+              <th>Hours</th>
               <th>Outstanding</th>
               <th>Paid</th>
               <th>Status</th>
@@ -249,16 +417,14 @@ document.querySelectorAll('.sb-nav a').forEach(a=>
 );
 
 let rawLogsData = [];
-let rawFixedData = [];
-let generatingPDF = false;
-
+let generatingPDF=false;
 document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('start-date').value = "2026-01-01";
   document.getElementById('end-date').value = today;
 
   await populateClientSelector();
-  await fetchMasterData();
+  await fetchMasterLogs();
 });
 
 async function populateClientSelector() {
@@ -272,16 +438,12 @@ async function populateClientSelector() {
   } catch(e) { console.error("Client selector error:", e); }
 }
 
-async function fetchMasterData() {
+async function fetchMasterLogs() {
   try {
-    const [logsRes, fixedRes] = await Promise.all([
-      fetch(`${API}/timelogs`, { headers: auth.headers() }),
-      fetch(`${API}/fixed-payments`, { headers: auth.headers() })
-    ]);
-    rawLogsData = await logsRes.json();
-    rawFixedData = await fixedRes.json();
+    const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
+    rawLogsData = await res.json();
     applyTimeWindowFilters();
-  } catch(e) { console.error("Data pull error:", e); }
+  } catch(e) { console.error("Logs pull error:", e); }
 }
 
 function applyTimeWindowFilters() {
@@ -292,63 +454,30 @@ function applyTimeWindowFilters() {
   const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
   const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
 
-  const clientGroups = {};
-
-  rawLogsData.forEach(l => {
-    if (!l.date) return;
+  let records = rawLogsData.filter(l => {
+    if (!l.date) return false;
     const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
-    if (selectedClient && l.client_name !== selectedClient) return;
-    if (startTime && logTime < startTime) return;
-    if (endTime && logTime > endTime) return;
-
-    if (!clientGroups[l.client_name]) {
-      clientGroups[l.client_name] = { totalHours: 0, totalUnpaid: 0, totalPaid: 0, items: [] };
-    }
-    const amt = parseFloat(l.amount || 0);
-    const hrs = parseFloat(l.hours || 0);
-    clientGroups[l.client_name].totalHours += hrs;
     
-    const isPaid = l.payment_status === 'paid';
-    if (!isPaid) {
-      clientGroups[l.client_name].totalUnpaid += amt;
-    } else {
-      clientGroups[l.client_name].totalPaid += amt;
-    }
-    clientGroups[l.client_name].items.push({ 
-      type: 'hourly', 
-      desc: l.task_description || 'Hourly Consulting Work', 
-      amount: amt, 
-      status: l.payment_status,
-      hours: hrs 
-    });
+    const matchesClient = !selectedClient || l.client_name === selectedClient;
+    const matchesStart = !startTime || logTime >= startTime;
+    const matchesEnd = !endTime || logTime <= endTime;
+    return matchesClient && matchesStart && matchesEnd;
   });
 
-  rawFixedData.forEach(f => {
-    const fMonthStr = f.month || "";
-    if (!fMonthStr) return;
-    const fTime = new Date(fMonthStr + "-01T12:00:00").getTime();
-    if (selectedClient && f.client_name !== selectedClient) return;
-    if (startTime && fTime < startTime) return;
-    if (endTime && fTime > endTime) return;
-
-    if (!clientGroups[f.client_name]) {
-      clientGroups[f.client_name] = { totalHours: 0, totalUnpaid: 0, totalPaid: 0, items: [] };
+  const clientGroups = {};
+  records.forEach(r => {
+    if(!clientGroups[r.client_name]) {
+      clientGroups[r.client_name] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
     }
-    const amt = parseFloat(f.amount || 0);
-    const isPaid = f.status === 'paid' || f.payment_status === 'paid';
+    const amt = parseFloat(r.amount || 0);
+    const hrs = parseFloat(r.hours || 0);
     
-    if (!isPaid) {
-      clientGroups[f.client_name].totalUnpaid += amt;
+    if(r.payment_status !== 'paid') {
+      clientGroups[r.client_name].unpaidHours += hrs;
+      clientGroups[r.client_name].totalUnpaid += amt;
     } else {
-      clientGroups[f.client_name].totalPaid += amt;
+      clientGroups[r.client_name].totalPaid += amt;
     }
-    clientGroups[f.client_name].items.push({ 
-      type: 'fixed', 
-      desc: f.note || `Monthly Retainer (${fMonthStr})`, 
-      amount: amt, 
-      status: isPaid ? 'paid' : 'unpaid',
-      hours: 0 
-    });
   });
 
   const tableBody = document.getElementById('invoice-records-table');
@@ -374,15 +503,12 @@ function applyTimeWindowFilters() {
     const data = clientGroups[client];
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
-    const displayHoursOrType = data.totalHours > 0 ? `${data.totalHours.toFixed(2)} hrs` : 'Fixed Retainer';
     
-    const encodedItems = encodeURIComponent(JSON.stringify(data.items));
-
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
         <td><strong>${client}</strong></td>
-        <td>${displayHoursOrType}</td>
+        <td>${data.unpaidHours.toFixed(2)}</td>
         <td style="color:${hasOutstanding ? '#b45309':'#10b981'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
         <td style="color:#10b981; font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
         <td>
@@ -390,7 +516,7 @@ function applyTimeWindowFilters() {
                             : '<span class="badge badge-paid">Paid</span>'}
         </td>
         <td>
-         <button class="download-btn" onclick="downloadInvoice('${dummyInvId}','${client}','${encodedItems}',${data.totalUnpaid},'${document.getElementById('start-date').value}','${document.getElementById('end-date').value}')">
+         <button class="download-btn" onclick="downloadInvoice('${dummyInvId}','${client}',${data.unpaidHours},${data.totalUnpaid},'${document.getElementById('start-date').value}','${document.getElementById('end-date').value}')">
           ⬇ PDF
          </button>
         </td>
@@ -398,17 +524,16 @@ function applyTimeWindowFilters() {
   }).join('');
 }
 
-async function downloadInvoice(invId, clientName, encodedItems, totalAmount, start, end) {
+async function downloadInvoice(invId, clientName, hours, totalAmount, start, end) {
   if(generatingPDF) return;
-  generatingPDF = true;
+  generatingPDF=true;
 
   if(typeof html2pdf === "undefined"){
-    generatingPDF = false;
+    generatingPDF=false;
     alert("PDF engine is not loaded. Please refresh the page.");
     return;
   }
 
-  const items = JSON.parse(decodeURIComponent(encodedItems));
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const pdfWindow = isMobile ? window.open("", "_blank") : null;
   const freelancer = auth.user()?.name || "Freelancer";
@@ -419,14 +544,6 @@ async function downloadInvoice(invId, clientName, encodedItems, totalAmount, sta
 
   const container = document.getElementById("pdf-container");
   container.classList.add("rendering");
-
-  const rowsHtml = items.map(i => `
-    <tr>
-      <td>${i.desc}</td>
-      <td>${i.type === 'fixed' ? 'Fixed Retainer' : `${i.hours || 0} hrs (Hourly)`}</td>
-      <td>$${i.amount.toFixed(2)}</td>
-    </tr>
-  `).join('');
 
   container.innerHTML = `
 <div class="invoice-card">
@@ -469,12 +586,16 @@ async function downloadInvoice(invId, clientName, encodedItems, totalAmount, sta
 <thead>
 <tr>
 <th>Description</th>
-<th>Type / Details</th>
+<th>Hours</th>
 <th>Amount</th>
 </tr>
 </thead>
 <tbody>
-${rowsHtml}
+<tr>
+<td>Professional Freelance Consulting Services</td>
+<td>${hours.toFixed(2)}</td>
+<td>$${totalAmount.toFixed(2)}</td>
+</tr>
 </tbody>
 <tfoot>
 <tr>
@@ -492,35 +613,85 @@ Thank you for choosing <strong>Quick Freelancing Agency</strong>
 </div>
 `;
 
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const images = container.querySelectorAll("img");
+
+  await Promise.all(
+    [...images].map(img => {
+      if(img.complete) return Promise.resolve();
+      return new Promise(resolve=>{
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    })
+  );
   await new Promise(resolve => setTimeout(resolve, 500));
+
+  const renderedWidth = container.scrollWidth || 794;
+  const renderedHeight = container.scrollHeight || 1123;
+
   const options = {
     margin: 0,
     filename: `${invId}.pdf`,
     image: { type:"jpeg", quality:1 },
-    html2canvas:{ scale:2, useCORS:true, backgroundColor:"#ffffff" },
+    html2canvas:{
+      scale:2,
+      useCORS:true,
+      allowTaint:false,
+      backgroundColor:"#ffffff",
+      logging: false,
+      imageTimeout:0,
+      x: 0,
+      y: 0,
+      width: renderedWidth,
+      height: renderedHeight,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: renderedWidth,
+      windowHeight: renderedHeight
+    },
     jsPDF:{ unit:"mm", format:"a4", orientation:"portrait" }
   };
 
   try {
     await document.fonts.ready;
-    const worker = html2pdf().set(options).from(container).toPdf();
+    const worker = html2pdf().set(options).from(container).toCanvas();
+    const canvas = await worker.get("canvas");
+    const pdfWidthMm = 210;
+    const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
+
+    const pdfWorker = worker.set({
+      jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" }
+    }).toPdf();
+
     if (isMobile) {
-      const pdfBlob = await worker.outputPdf("blob");
+      const pdfBlob = await pdfWorker.outputPdf("blob");
       const blobUrl = URL.createObjectURL(pdfBlob);
-      if (pdfWindow) pdfWindow.location.href = blobUrl;
+      if (pdfWindow) {
+        pdfWindow.location.href = blobUrl;
+      } else {
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${invId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
     } else {
-      await worker.save();
+      await pdfWorker.save();
     }
   } catch(error){
-    console.error("PDF error:", error);
+    console.error("PDF generation error:", error);
     if (pdfWindow) pdfWindow.close();
     alert("Invoice PDF generation failed.");
   } finally {
-    container.innerHTML = "";
-    container.classList.remove("rendering");
-    document.body.classList.remove("pdf-generating");
-    document.getElementById("pdf-generating-overlay").classList.remove("active");
-    generatingPDF = false;
+    setTimeout(() => {
+      container.innerHTML = "";
+      container.classList.remove("rendering");
+      document.body.classList.remove("pdf-generating");
+      document.getElementById("pdf-generating-overlay").classList.remove("active");
+      generatingPDF = false;
+    }, 1000);
   }
 }
 </script>
