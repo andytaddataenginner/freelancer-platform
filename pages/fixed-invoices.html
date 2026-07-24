@@ -276,7 +276,7 @@ async function fetchMasterData() {
   try {
     const [logsRes, fixedRes] = await Promise.all([
       fetch(`${API}/timelogs`, { headers: auth.headers() }),
-      fetch(`${API}/fixed-monthly-payments`, { headers: auth.headers() })
+      fetch(`${API}/fixed-payments`, { headers: auth.headers() })
     ]);
     rawLogsData = await logsRes.json();
     rawFixedData = await fixedRes.json();
@@ -294,7 +294,6 @@ function applyTimeWindowFilters() {
 
   const clientGroups = {};
 
-  // 1. Filter and group hourly logs
   rawLogsData.forEach(l => {
     if (!l.date) return;
     const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
@@ -308,18 +307,26 @@ function applyTimeWindowFilters() {
     const amt = parseFloat(l.amount || 0);
     const hrs = parseFloat(l.hours || 0);
     clientGroups[l.client_name].totalHours += hrs;
-    if (l.payment_status !== 'paid') {
+    
+    const isPaid = l.payment_status === 'paid';
+    if (!isPaid) {
       clientGroups[l.client_name].totalUnpaid += amt;
     } else {
       clientGroups[l.client_name].totalPaid += amt;
     }
-    clientGroups[l.client_name].items.push({ type: 'hourly', desc: l.task_description, amount: amt, status: l.payment_status });
+    clientGroups[l.client_name].items.push({ 
+      type: 'hourly', 
+      desc: l.task_description || 'Hourly Consulting Work', 
+      amount: amt, 
+      status: l.payment_status,
+      hours: hrs 
+    });
   });
 
-  // 2. Filter and group fixed monthly payments
   rawFixedData.forEach(f => {
-    if (!f.month) return;
-    const fTime = new Date(f.month + "-01T12:00:00").getTime();
+    const fMonthStr = f.month || "";
+    if (!fMonthStr) return;
+    const fTime = new Date(fMonthStr + "-01T12:00:00").getTime();
     if (selectedClient && f.client_name !== selectedClient) return;
     if (startTime && fTime < startTime) return;
     if (endTime && fTime > endTime) return;
@@ -328,12 +335,20 @@ function applyTimeWindowFilters() {
       clientGroups[f.client_name] = { totalHours: 0, totalUnpaid: 0, totalPaid: 0, items: [] };
     }
     const amt = parseFloat(f.amount || 0);
-    if (f.status !== 'paid') {
+    const isPaid = f.status === 'paid' || f.payment_status === 'paid';
+    
+    if (!isPaid) {
       clientGroups[f.client_name].totalUnpaid += amt;
     } else {
       clientGroups[f.client_name].totalPaid += amt;
     }
-    clientGroups[f.client_name].items.push({ type: 'fixed', desc: f.note || `Monthly Retainer (${f.month})`, amount: amt, status: f.status });
+    clientGroups[f.client_name].items.push({ 
+      type: 'fixed', 
+      desc: f.note || `Monthly Retainer (${fMonthStr})`, 
+      amount: amt, 
+      status: isPaid ? 'paid' : 'unpaid',
+      hours: 0 
+    });
   });
 
   const tableBody = document.getElementById('invoice-records-table');
@@ -361,7 +376,6 @@ function applyTimeWindowFilters() {
     const hasOutstanding = data.totalUnpaid > 0;
     const displayHoursOrType = data.totalHours > 0 ? `${data.totalHours.toFixed(2)} hrs` : 'Fixed Retainer';
     
-    // Pass items JSON string safely for rendering inside PDF
     const encodedItems = encodeURIComponent(JSON.stringify(data.items));
 
     return `
@@ -408,8 +422,8 @@ async function downloadInvoice(invId, clientName, encodedItems, totalAmount, sta
 
   const rowsHtml = items.map(i => `
     <tr>
-      <td>${i.desc} (${i.type === 'fixed' ? 'Fixed Retainer' : 'Hourly Service'})</td>
-      <td>${i.type === 'fixed' ? '1 (Fixed)' : 'Hours Logged'}</td>
+      <td>${i.desc}</td>
+      <td>${i.type === 'fixed' ? 'Fixed Retainer' : `${i.hours || 0} hrs (Hourly)`}</td>
       <td>$${i.amount.toFixed(2)}</td>
     </tr>
   `).join('');
@@ -455,7 +469,7 @@ async function downloadInvoice(invId, clientName, encodedItems, totalAmount, sta
 <thead>
 <tr>
 <th>Description</th>
-<th>Type</th>
+<th>Type / Details</th>
 <th>Amount</th>
 </tr>
 </thead>
