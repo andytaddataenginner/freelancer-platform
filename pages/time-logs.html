@@ -453,6 +453,10 @@ async function fetchAndPopulateClients() {
   } catch(e) { console.error('Error fetching clients:', e); }
 }
 
+
+
+
+  
 // ==========================================
 // FIXED RATE MONTHLY PAYMENT HANDLERS
 // ==========================================
@@ -775,22 +779,70 @@ async function loadFixedClientStatusForTimeLogs() {
     }
 }
 
-// 2. Render the card inside time-logs.html showing the status for the active month filter
+// 1. Unified change handler for time-logs.html (handles both Hourly and Fixed clients)
+async function handleTimeLogsClientOrPeriodChange() {
+    const clientSelect = document.getElementById('clientSelect');
+    const monthSelect = document.getElementById('monthFilter');
+    const yearSelect = document.getElementById('yearFilter');
+
+    if (!clientSelect || !clientSelect.value) return;
+
+    const clientId = clientSelect.value;
+    const selectedYear = yearSelect ? yearSelect.value : new Date().getFullYear();
+    const selectedMonthNum = monthSelect ? String(monthSelect.value).padStart(2, '0') : String(new Date().getMonth() + 1).padStart(2, '0');
+    
+    // Format required for fixed payments: 'YYYY-MM'
+    const targetMonthString = `${selectedYear}-${selectedMonthNum}`;
+
+    // Find the client details to check their rate type
+    const currentClient = window.allClients ? window.allClients.find(c => c.id == clientId) : null;
+    
+    const hourlyLogsContainer = document.getElementById('hourlyLogsContainer'); // Your standard hourly table/logs container
+    const fixedContainer = document.getElementById('fixedClientNoticeContainer'); // Your fixed payment notice card container
+
+    if (currentClient && currentClient.rate_type === 'fixed') {
+        // --- FIXED CLIENT FLOW ---
+        if (hourlyLogsContainer) hourlyLogsContainer.style.display = 'none';
+        if (fixedContainer) fixedContainer.style.display = 'block';
+
+        try {
+            // Fetch or auto-generate the monthly fixed payment record[cite: 1]
+            const response = await fetch('/api/fixed-payments/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client_id: clientId, month: targetMonthString })
+            });
+            
+            if (!response.ok) throw new Error('Failed to load fixed payment record');
+            
+            const paymentRecord = await response.json();
+            renderTimeLogsFixedCard(paymentRecord, targetMonthString);
+        } catch (err) {
+            console.error('Error loading fixed payment for time logs:', err);
+        }
+    } else {
+        // --- HOURLY CLIENT FLOW (Standard Time Logs) ---
+        if (hourlyLogsContainer) hourlyLogsContainer.style.display = 'block';
+        if (fixedContainer) fixedContainer.style.display = 'none';
+
+        // Call your existing hourly logs loading function here
+        if (typeof loadHourlyTimeLogs === 'function') {
+            loadHourlyTimeLogs(clientId, selectedYear, selectedMonthNum);
+        }
+    }
+}
+
+// 2. Render the fixed payment card inside time-logs.html for the selected month
 function renderTimeLogsFixedCard(record, targetMonthString) {
     const container = document.getElementById('fixedClientNoticeContainer');
     if (!container) return;
-
-    if (!record) {
-        container.innerHTML = `<p class="text-muted">No billing record found for ${targetMonthString}</p>`;
-        return;
-    }
 
     const isPaid = record.status === 'paid';
 
     container.innerHTML = `
         <div class="card p-4 border shadow-sm bg-white">
             <h5>Fixed Price Project Billing</h5>
-            <p class="mb-1 text-primary">Selected Period: <strong>${targetMonthString}</strong></p>
+            <p class="mb-1 text-primary">Selected Billing Period: <strong>${targetMonthString}</strong></p>
             <p class="mb-3">Amount Due: <strong>$${record.amount}</strong></p>
             <div class="d-flex align-items-center justify-content-between">
                 <div>
@@ -800,13 +852,36 @@ function renderTimeLogsFixedCard(record, targetMonthString) {
                     ${record.paid_at ? `<small class="text-muted d-block mt-1">Paid on: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
                 </div>
                 <button class="btn btn-sm ${isPaid ? 'btn-outline-secondary' : 'btn-outline-success'}"
-                    onclick="toggleTimeLogsPaymentStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}')">
+                    onclick="toggleTimeLogsFixedStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${targetMonthString}')">
                     Mark as ${isPaid ? 'Unpaid' : 'Paid'} (${targetMonthString})
                 </button>
             </div>
         </div>
     `;
 }
+
+// 3. Patch the status for the specific month's record ID[cite: 1]
+async function toggleTimeLogsFixedStatus(recordId, newStatus, targetMonthString) {
+    try {
+        const response = await fetch(`/api/fixed-payments/${recordId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update status');
+
+        const updatedRecord = await response.json();
+        renderTimeLogsFixedCard(updatedRecord, targetMonthString);
+    } catch (err) {
+        alert('Error updating payment status: ' + err.message);
+    }
+}
+
+// 4. Bind event listeners
+document.getElementById('clientSelect')?.addEventListener('change', handleTimeLogsClientOrPeriodChange);
+document.getElementById('monthFilter')?.addEventListener('change', handleTimeLogsClientOrPeriodChange);
+document.getElementById('yearFilter')?.addEventListener('change', handleTimeLogsClientOrPeriodChange);
 
 // 3. Patch the status using the unique monthly record ID[cite: 1]
 async function toggleTimeLogsPaymentStatus(recordId, newStatus) {
