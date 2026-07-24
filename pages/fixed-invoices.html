@@ -140,7 +140,7 @@
     }
     .btn:active { transform: translateY(0); }
 
-    .download-btn {
+    .download-btn{
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
       color: white;
       font-weight: 700;
@@ -163,31 +163,6 @@
       transform: translateY(-2px);
     }
     .download-btn:active { transform: translateY(0); }
-
-    .whatsapp-btn {
-      background: #25D366;
-      color: white;
-      font-weight: 700;
-      font-size: 0.75rem;
-      padding: 0.5rem 0.9rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      text-decoration: none;
-      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .whatsapp-btn:hover {
-      background: #1ebe57;
-      box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
-      transform: translateY(-2px);
-    }
-    .whatsapp-btn:active { transform: translateY(0); }
 
     /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
@@ -442,32 +417,25 @@ document.querySelectorAll('.sb-nav a').forEach(a=>
 );
 
 let rawLogsData = [];
-let clientPhoneMap = {};
 let generatingPDF=false;
-
 document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('start-date').value = "2026-01-01";
   document.getElementById('end-date').value = today;
 
-  await loadClientsAndPhones();
+  await populateClientSelector();
   await fetchMasterLogs();
 });
 
-async function loadClientsAndPhones() {
+async function populateClientSelector() {
   try {
     const res = await fetch(`${API}/clients`, { headers: auth.headers() });
     const clients = await res.json();
     const selector = document.getElementById('client-select');
-    
     clients.forEach(c => {
-      const name = c.name || c.client_name;
-      if (name) {
-        clientPhoneMap[name] = c.phone || '';
-        selector.innerHTML += `<option value="${name}">${name}</option>`;
-      }
+      selector.innerHTML += `<option value="${c.name}">${c.name}</option>`;
     });
-  } catch(e) { console.error("Client phone map error:", e); }
+  } catch(e) { console.error("Client selector error:", e); }
 }
 
 async function fetchMasterLogs() {
@@ -536,11 +504,6 @@ function applyTimeWindowFilters() {
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
     
-    // Construct WhatsApp Link
-    const phone = clientPhoneMap[client] || '';
-    const message = encodeURIComponent(`Hi ${client},\n\nHere is your invoice summary (${dummyInvId}) for $${data.totalUnpaid.toFixed(2)}.\n\nPlease let me know if you have any questions!`);
-    const waUrl = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
-    
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
@@ -553,12 +516,9 @@ function applyTimeWindowFilters() {
                             : '<span class="badge badge-paid">Paid</span>'}
         </td>
         <td>
-         <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-           <button class="download-btn" onclick="downloadInvoice('${dummyInvId}','${client}',${data.unpaidHours},${data.totalUnpaid},'${document.getElementById('start-date').value}','${document.getElementById('end-date').value}')">
-            ⬇ PDF
-           </button>
-           <a href="${waUrl}" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
-         </div>
+         <button class="download-btn" onclick="downloadInvoice('${dummyInvId}','${client}',${data.unpaidHours},${data.totalUnpaid},'${document.getElementById('start-date').value}','${document.getElementById('end-date').value}')">
+          ⬇ PDF
+         </button>
         </td>
       </tr>`;
   }).join('');
