@@ -306,18 +306,29 @@
         </div>
       </div>
 
-      <div class="fixed-notice" id="fixed-notice" style="display:none">
-        <div>
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold2);font-weight:700;margin-bottom:0.3rem">Fixed Price Client</div>
-          <h3 id="fixed-client-name">Client</h3>
-          <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-top:0.2rem">Billed at a fixed project rate — no hourly logs tracked</div>
+      <!-- Inside pages/time-logs.html -->
+
+<!-- Dedicated Container for Fixed-Rate Monthly Billing Records -->
+<div id="fixedRateMonthlyContainer" style="display: none;">
+    <div class="card shadow-sm border p-4 bg-white">
+        <h4 class="mb-3">Fixed-Rate Billing Periods</h4>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Billing Month</th>
+                        <th>Amount Due</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="fixedMonthlyTableBody">
+                    <!-- Populated dynamically -->
+                </tbody>
+            </table>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:2rem;font-weight:700;font-family:var(--serif)" id="fixed-client-price">$0</div>
-          <div id="fixed-client-status" style="margin-top:0.4rem"></div>
-          <div id="fixed-client-btn" style="margin-top:0.6rem"></div>
-        </div>
-      </div>
+    </div>
+</div>
 
       <div class="stats-row" id="stats-row">
         <div class="stat-card" style="border-left:4px solid #22c55e">
@@ -453,63 +464,109 @@ async function fetchAndPopulateClients() {
   } catch(e) { console.error('Error fetching clients:', e); }
 }
 
-
-
-
-  
-// ==========================================
-// FIXED RATE MONTHLY PAYMENT HANDLERS
-// ==========================================
-
-// 1. Call this when a client is selected or the month/year filter changes
-async function handleClientOrPeriodChange() {
-    const clientSelect = document.getElementById('clientSelect'); // Your client dropdown ID
-    const monthSelect = document.getElementById('monthFilter');     // Your month dropdown ID
-    const yearSelect = document.getElementById('yearFilter');       // Your year dropdown ID
-
+// Triggered when the user changes the selected client in time-logs.html
+async function handleTimeLogsClientSelection() {
+    const clientSelect = document.getElementById('clientSelect');
     if (!clientSelect || !clientSelect.value) return;
 
     const clientId = clientSelect.value;
-    const selectedYear = yearSelect ? yearSelect.value : new Date().getFullYear();
-    const selectedMonthNum = monthSelect ? monthSelect.value : String(new Date().getMonth() + 1).padStart(2, '0');
-    
-    // Formats to match your backend expected 'YYYY-MM' format
-    const formattedMonth = `${selectedYear}-${String(selectedMonthNum).padStart(2, '0')}`;
-
-    // Check if the current client is a fixed-rate client from your existing clients array/data
     const currentClient = window.allClients ? window.allClients.find(c => c.id == clientId) : null;
     
     const hourlyContainer = document.getElementById('hourlyLogsContainer');
-    const fixedContainer = document.getElementById('fixedClientNoticeContainer');
+    const fixedContainer = document.getElementById('fixedRateMonthlyContainer');
 
-    if (currentClient && currentClient.rate_type === 'fixed') {
+    const isFixed = currentClient ? currentClient.rate_type === 'fixed' : 
+                    clientSelect.options[clientSelect.selectedIndex]?.dataset?.rateType === 'fixed';
+
+    if (isFixed) {
+        // Hide standard hourly logs/date ranges
         if (hourlyContainer) hourlyContainer.style.display = 'none';
         if (fixedContainer) fixedContainer.style.display = 'block';
 
-        await loadAndRenderFixedPaymentCard(clientId, formattedMonth);
+        // Load all monthly records for this fixed client
+        await loadFixedClientMonthlyRecords(clientId);
     } else {
+        // Show standard hourly view
         if (hourlyContainer) hourlyContainer.style.display = 'block';
         if (fixedContainer) fixedContainer.style.display = 'none';
     }
 }
 
-// 2. Fetch or auto-generate the specific month record via your backend API
-async function loadAndRenderFixedPaymentCard(clientId, formattedMonth) {
+// Fetch all monthly payment records for the fixed client
+async function loadFixedClientMonthlyRecords(clientId) {
+    const tbody = document.getElementById('fixedMonthlyTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Loading monthly billing periods...</td></tr>`;
+
     try {
-        const response = await fetch('/api/fixed-payments/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ client_id: clientId, month: formattedMonth })
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch/generate monthly payment record');
-        
-        const paymentRecord = await response.json();
-        renderFixedCardUI(paymentRecord, formattedMonth);
+        const response = await fetch(`/api/fixed-payments/${clientId}`);
+        if (!response.ok) throw new Error('Failed to fetch monthly payment records');
+
+        const records = await response.json();
+        renderFixedMonthlyTable(records, clientId);
     } catch (err) {
-        console.error('Error loading fixed payment record:', err);
+        console.error('Error loading fixed monthly records:', err);
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error loading data: ${err.message}</td></tr>`;
     }
 }
+
+// Render the rows into the fixed billing table
+function renderFixedMonthlyTable(records, clientId) {
+    const tbody = document.getElementById('fixedMonthlyTableBody');
+    if (!tbody) return;
+
+    if (!records || records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No monthly billing records found.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = records.map(record => {
+        const isPaid = record.status === 'paid';
+        return `
+            <tr>
+                <td><strong>${record.month}</strong></td>
+                <td>$${record.amount}</td>
+                <td>
+                    <span class="badge ${isPaid ? 'bg-success' : 'bg-warning text-dark'}">
+                        ${isPaid ? '✅ Paid' : '⏳ Pending'}
+                    </span>
+                    ${record.paid_at ? `<br><small class="text-muted">Paid: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
+                </td>
+                <td>
+                    <button class="btn btn-sm ${isPaid ? 'btn-outline-secondary' : 'btn-outline-success'}"
+                        onclick="toggleFixedMonthlyRecordStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${clientId}')">
+                        Mark as ${isPaid ? 'Unpaid' : 'Paid'}
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Patch status for a specific month record ID and refresh the table
+async function toggleFixedMonthlyRecordStatus(recordId, newStatus, clientId) {
+    try {
+        const response = await fetch(`/api/fixed-payments/${recordId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update status');
+
+        // Reload the table instantly to reflect changes
+        await loadFixedClientMonthlyRecords(clientId);
+    } catch (err) {
+        alert('Error updating payment status: ' + err.message);
+    }
+}
+
+// Bind to client change event
+document.getElementById('clientSelect')?.addEventListener('change', handleTimeLogsClientSelection);
+
+
+  
 
 // 3. Render the Notice Card UI with the specific monthly status & toggle button
 function renderFixedCardUI(record, formattedMonth) {
