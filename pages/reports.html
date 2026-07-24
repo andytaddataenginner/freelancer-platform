@@ -78,7 +78,6 @@
     .card-header-text { display: flex; flex-direction: column; gap: 0.3rem; }
     .card-header h3 { font-size: 1rem; font-weight: 700; font-family: var(--serif); color: var(--navy); display: flex; align-items: center; gap: 0.65rem; }
     .card-header p { font-size: 0.76rem; color: var(--ink3); margin-left: calc(32px + 0.65rem); }
-    .card-icon { width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0; background: rgba(201,164,76,0.14); color: var(--navy); display: flex; align-items: center; justify-content: center; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; width: 100%; margin-bottom: 1.5rem; align-items: start; }
     .grid-3 .card { margin-bottom: 0; min-width: 0; height: 430px; display: flex; flex-direction: column; }
     .chart-container { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem; width: 100%; overflow-y: auto; flex: 1; }
@@ -273,8 +272,34 @@
     </div>
   </div>
 </div>
-<!-- Inside your reports.html file -->
+
 <script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('report-month').value = new Date().toISOString().slice(0, 7);
+  document.getElementById('ledger-asof').textContent = 'As of ' + new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  loadReportData();
+});
+
 async function loadReportData() {
   const selectedMonth = document.getElementById('report-month').value;
   try {
@@ -291,7 +316,6 @@ async function loadReportData() {
     const activeMonths = new Set();
     let minDate = null, maxDate = null;
 
-    // 1. Process Hourly Time Logs
     allLogs.forEach(l => {
       const amt = parseFloat(l.amount || 0);
       if (l.payment_status === 'paid') macroPaid += amt; else macroUnpaid += amt;
@@ -304,7 +328,6 @@ async function loadReportData() {
       }
     });
 
-    // 2. Process Fixed Monthly Payments
     allFixed.forEach(f => {
       const amt = parseFloat(f.amount || 0);
       const isPaid = f.status === 'paid' || f.payment_status === 'paid';
@@ -333,7 +356,6 @@ async function loadReportData() {
       document.getElementById('global-period').textContent = sY === eY ? sY : `${sY} - ${eY}`;
     }
 
-    // Selected Month Breakdowns
     let monthPaid = 0, monthUnpaid = 0;
     const clientBreakdownMap = {};
 
@@ -441,6 +463,43 @@ async function loadReportData() {
     tfoot.style.display = '';
 
   } catch(e) { console.error("Report Load Error:", e); }
+}
+
+async function exportFilteredCSV() {
+  const monthFilter = document.getElementById('report-month').value;
+  try {
+    const [logsRes, fixedRes] = await Promise.all([
+      fetch(`${API}/timelogs`, { headers: auth.headers() }),
+      fetch(`${API}/fixed-payments`, { headers: auth.headers() })
+    ]);
+    const logs = await logsRes.json();
+    const fixed = await fixedRes.json();
+
+    const filteredLogs = logs.filter(l => l.date && l.date.startsWith(monthFilter));
+    const filteredFixed = fixed.filter(f => f.month && f.month.startsWith(monthFilter));
+
+    if(!filteredLogs.length && !filteredFixed.length) {
+      alert(`No logs or fixed payments found for: ${monthFilter}`);
+      return;
+    }
+
+    const csvRows = ['Record_Type,Client,Date_Or_Month,Hours_Or_Type,Amount,Payment_Status,Description'];
+    filteredLogs.forEach(l => {
+      csvRows.push(`Hourly,"${l.client_name.replace(/"/g, '""')}",${l.date.slice(0,10)},${l.hours},${l.amount || 0},${l.payment_status},"${(l.task_description || '').replace(/"/g, '""')}"`);
+    });
+    filteredFixed.forEach(f => {
+      csvRows.push(`Fixed,"${f.client_name.replace(/"/g, '""')}",${f.month},Fixed Retainer,${f.amount},${f.status || f.payment_status},"${(f.note || '').replace(/"/g, '""')}"`);
+    });
+
+    const csvBlob = new Blob([csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const blobUrl = URL.createObjectURL(csvBlob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.href = blobUrl;
+    downloadAnchor.setAttribute('download', `QFA_FinancialMatrix_${monthFilter}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.removeChild(downloadAnchor);
+  } catch(e) { alert("CSV Export Error: " + e.message); }
 }
 </script>
 </body>
