@@ -99,9 +99,24 @@
       .right-panel { padding:2.5rem 1.5rem; justify-content:flex-start; padding-top:3rem; }
       .mobile-header { display:flex; }
     }
+   [data-theme="dark"] {
+  --ink: #f0f0f5;
+  --ink2: #b0b0c0;
+  --white: #16161e;
+  --bg: #0b0b10;
+  --bg2: #12121a;
+  --accent: #3b75ff;
+  --accent2: #5c8cff;
+}
   </style>
+  <script>
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
 </head>
+
 <body>
+<button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">🌙</button>
 <div class="page">
 
   <div class="left-panel">
@@ -245,6 +260,22 @@ async function doLogin() {
     setTimeout(() => { box.style.animation = 'shake .4s ease'; }, 10);
   }
 }
+
+
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  function updateToggleIcon(theme) {
+    themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  updateToggleIcon(localStorage.getItem('theme') || 'light');
+
+  themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateToggleIcon(newTheme);
+  });
+
 </script>
 </body>
 </html>
