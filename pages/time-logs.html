@@ -453,6 +453,111 @@ async function fetchAndPopulateClients() {
   } catch(e) { console.error('Error fetching clients:', e); }
 }
 
+// ==========================================
+// FIXED RATE MONTHLY PAYMENT HANDLERS
+// ==========================================
+
+// 1. Call this when a client is selected or the month/year filter changes
+async function handleClientOrPeriodChange() {
+    const clientSelect = document.getElementById('clientSelect'); // Your client dropdown ID
+    const monthSelect = document.getElementById('monthFilter');     // Your month dropdown ID
+    const yearSelect = document.getElementById('yearFilter');       // Your year dropdown ID
+
+    if (!clientSelect || !clientSelect.value) return;
+
+    const clientId = clientSelect.value;
+    const selectedYear = yearSelect ? yearSelect.value : new Date().getFullYear();
+    const selectedMonthNum = monthSelect ? monthSelect.value : String(new Date().getMonth() + 1).padStart(2, '0');
+    
+    // Formats to match your backend expected 'YYYY-MM' format
+    const formattedMonth = `${selectedYear}-${String(selectedMonthNum).padStart(2, '0')}`;
+
+    // Check if the current client is a fixed-rate client from your existing clients array/data
+    const currentClient = window.allClients ? window.allClients.find(c => c.id == clientId) : null;
+    
+    const hourlyContainer = document.getElementById('hourlyLogsContainer');
+    const fixedContainer = document.getElementById('fixedClientNoticeContainer');
+
+    if (currentClient && currentClient.rate_type === 'fixed') {
+        if (hourlyContainer) hourlyContainer.style.display = 'none';
+        if (fixedContainer) fixedContainer.style.display = 'block';
+
+        await loadAndRenderFixedPaymentCard(clientId, formattedMonth);
+    } else {
+        if (hourlyContainer) hourlyContainer.style.display = 'block';
+        if (fixedContainer) fixedContainer.style.display = 'none';
+    }
+}
+
+// 2. Fetch or auto-generate the specific month record via your backend API
+async function loadAndRenderFixedPaymentCard(clientId, formattedMonth) {
+    try {
+        const response = await fetch('/api/fixed-payments/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ client_id: clientId, month: formattedMonth })
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch/generate monthly payment record');
+        
+        const paymentRecord = await response.json();
+        renderFixedCardUI(paymentRecord, formattedMonth);
+    } catch (err) {
+        console.error('Error loading fixed payment record:', err);
+    }
+}
+
+// 3. Render the Notice Card UI with the specific monthly status & toggle button
+function renderFixedCardUI(record, formattedMonth) {
+    const container = document.getElementById('fixedClientNoticeContainer');
+    if (!container) return;
+
+    const isPaid = record.status === 'paid';
+
+    container.innerHTML = `
+        <div class="card p-4 border shadow-sm bg-white">
+            <h5>Fixed Price Project Overview</h5>
+            <p class="mb-1">Billing Period: <strong>${formattedMonth}</strong></p>
+            <p class="mb-3">Project Amount: <strong>$${record.amount}</strong></p>
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="badge ${isPaid ? 'bg-success' : 'bg-warning text-dark'} fs-6">
+                        ${isPaid ? '✅ Paid' : '⏳ Pending'}
+                    </span>
+                    ${record.paid_at ? `<small class="text-muted d-block mt-1">Paid on: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
+                </div>
+                <button class="btn btn-sm ${isPaid ? 'btn-outline-secondary' : 'btn-outline-success'}"
+                    onclick="toggleMonthlyPaymentStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${formattedMonth}')">
+                    Mark as ${isPaid ? 'Unpaid' : 'Paid'}
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// 4. Send PATCH request to update only this specific row ID for the selected month[cite: 1]
+async function toggleMonthlyPaymentStatus(recordId, newStatus, formattedMonth) {
+    try {
+        const response = await fetch(`/api/fixed-payments/${recordId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update status');
+
+        const updatedRecord = await response.json();
+        renderFixedCardUI(updatedRecord, formattedMonth);
+    } catch (err) {
+        alert('Error updating status: ' + err.message);
+    }
+}
+
+// 5. Hook up event listeners so changing filters automatically refreshes the period view
+document.getElementById('clientSelect')?.addEventListener('change', handleClientOrPeriodChange);
+document.getElementById('monthFilter')?.addEventListener('change', handleClientOrPeriodChange);
+document.getElementById('yearFilter')?.addEventListener('change', handleClientOrPeriodChange);
+  
 // ── Init ─────────────────────────────────────────────────────
 async function init() {
   // Default the payment form date field to today
