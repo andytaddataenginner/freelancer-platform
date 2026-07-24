@@ -176,17 +176,13 @@ document.addEventListener('DOMContentLoaded', loadInvoicesData);
 async function loadInvoicesData() {
   try {
     const [invoicesRes, clientsRes] = await Promise.all([
-      fetch(`${API}/invoices`, { headers: auth.headers() }).catch(() => ({ json: () => [] })),
-      fetch(`${API}/clients`, { headers: auth.headers() }).catch(() => ({ json: () => [] }))
+      fetch(`${API}/invoices`, { headers: auth.headers() }).then(res => res.ok ? res.json() : []).catch(() => []),
+      fetch(`${API}/clients`, { headers: auth.headers() }).then(res => res.ok ? res.json() : []).catch(() => [])
     ]);
 
-    const rawInvoices = await invoicesRes.json();
-    const rawClients = await clientsRes.json();
-    
-    const invoicesList = Array.isArray(rawInvoices) ? rawInvoices : (rawInvoices.data || rawInvoices.invoices || []);
-    const clientsList = Array.isArray(rawClients) ? rawClients : (rawClients.data || rawClients.clients || []);
+    const invoicesList = Array.isArray(invoicesRes) ? invoicesRes : (invoicesRes.data || invoicesRes.invoices || []);
+    const clientsList = Array.isArray(clientsRes) ? clientsRes : (clientsRes.data || clientsRes.clients || []);
 
-    // Map client names to phone numbers
     const clientPhoneMap = {};
     clientsList.forEach(c => {
       const name = c.name || c.client_name;
@@ -224,7 +220,7 @@ async function loadInvoicesData() {
     });
   } catch(e) {
     console.error("Error loading invoices:", e);
-    document.getElementById('invoices-body').innerHTML = '<tr><td colspan="7" style="text-align:center; color:#ef4444;">Failed to load invoices.</td></tr>';
+    document.getElementById('invoices-body').innerHTML = '<tr><td colspan="7" style="text-align:center; color:#ef4444;">Failed to load invoices. Check console.</td></tr>';
   }
 }
 </script>
