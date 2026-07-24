@@ -4,6 +4,13 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sign In — Quick Freelancing Agency</title>
+  
+  <!-- PREVENT THEME FLASHING ON LOAD -->
+  <script>
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
@@ -13,22 +20,40 @@
       --white:#fff; --bg:#f4f6fb; --ink2:#3a4a6a; --ink3:#7a8aaa;
       --serif:'Playfair Display',Georgia,serif; --sans:'Outfit',system-ui,sans-serif;
     }
-    html,body { height:100%; font-family:var(--sans); background:var(--bg); color:var(--navy); }
+
+    /* DARK THEME OVERRIDES */
+    [data-theme="dark"] {
+      --navy: #f0f0f5;
+      --accent: #3b75ff;
+      --gold: #f5c842;
+      --gold2: #ffe066;
+      --white: #16161e;
+      --bg: #0b0b10;
+      --ink2: #b0b0c0;
+      --ink3: #8a8a9e;
+    }
+
+    html,body { height:100%; font-family:var(--sans); background:var(--bg); color:var(--navy); transition: background-color 0.3s ease, color 0.3s ease; }
     .page { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
 
     /* LEFT */
     .left-panel {
-      background:var(--navy); display:flex; flex-direction:column;
+      background: var(--navy); 
+      display:flex; flex-direction:column;
       justify-content:space-between; padding:3rem; position:relative; overflow:hidden;
+      transition: background 0.3s ease;
     }
+    [data-theme="dark"] .left-panel { background: #12121a; }
+    
     .left-panel::before { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(26,92,255,.25) 0%,transparent 70%); top:-150px; right:-150px; pointer-events:none; }
     .left-panel::after  { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle,rgba(201,149,42,.2) 0%,transparent 70%); bottom:-100px; left:-100px; pointer-events:none; }
 
-    .left-logo { display:flex; align-items:center; gap:.9rem; position:relative; z-index:1; }
+    .left-top-bar { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+    .left-logo { display:flex; align-items:center; gap:.9rem; }
     .left-logo-img { height:52px; width:52px; background:var(--white); border-radius:12px; overflow:hidden; flex-shrink:0; padding:4px; }
     .left-logo-img img { width:100%; height:100%; object-fit:contain; }
     .left-logo-text strong { display:block; color:var(--white); font-size:1rem; font-weight:700; line-height:1.2; }
-    .left-logo-text span   { font-size:.72rem; color:var(--gold2); text-transform:uppercase; letter-spacing:.1em; font-weight:500; }
+    .left-logo-text span    { font-size:.72rem; color:var(--gold2); text-transform:uppercase; letter-spacing:.1em; font-weight:500; }
 
     .left-content { position:relative; z-index:1; }
     .left-content h1 { font-family:var(--serif); font-size:2.8rem; color:var(--white); line-height:1.15; margin-bottom:1.2rem; letter-spacing:-.02em; }
@@ -42,7 +67,27 @@
     .left-footer { position:relative; z-index:1; font-size:.75rem; color:rgba(255,255,255,.25); }
 
     /* RIGHT */
-    .right-panel { display:flex; flex-direction:column; justify-content:center; align-items:center; padding:3rem 2rem; background:var(--bg); }
+    .right-panel { display:flex; flex-direction:column; justify-content:center; align-items:center; padding:3rem 2rem; background:var(--bg); position: relative; }
+    
+    .top-controls { position: absolute; top: 1.5rem; right: 1.5rem; }
+    
+    /* Theme Toggle Button Style */
+    .theme-toggle-btn {
+      background: var(--white);
+      border: 1.5px solid rgba(128,128,128,0.2);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+    .theme-toggle-btn:hover { border-color: var(--accent); transform: scale(1.05); }
+
     .login-box { width:100%; max-width:420px; animation:fadeUp .6s ease both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
 
@@ -53,11 +98,12 @@
     .mobile-header-text span   { font-size:.72rem; color:var(--ink3); text-transform:uppercase; letter-spacing:.08em; }
 
     .login-header { margin-bottom:2.2rem; }
-    .login-header h2 { font-family:var(--serif); font-size:2rem; letter-spacing:-.02em; margin-bottom:.4rem; }
+    .login-header h2 { font-family:var(--serif); font-size:2rem; letter-spacing:-.02em; margin-bottom:.4rem; color: var(--navy); }
     .login-header p  { color:var(--ink3); font-size:.9rem; font-weight:300; }
 
     .alert { padding:.85rem 1rem; border-radius:10px; font-size:.86rem; margin-bottom:1.2rem; display:flex; align-items:center; gap:.6rem; }
     .alert-error   { background:#fff0f0; color:#b91c1c; border:1px solid #fecaca; }
+    [data-theme="dark"] .alert-error { background: #3b1111; color: #ff8b8b; border-color: #5c1c1c; }
     .alert-success { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
 
     .form-group { display:flex; flex-direction:column; gap:.4rem; margin-bottom:1.1rem; }
@@ -67,8 +113,9 @@
       width:100%; padding:.9rem 1rem .9rem 3rem;
       border:1.5px solid rgba(0,0,0,.1); border-radius:12px;
       background:var(--white); font-family:var(--sans); font-size:.95rem; color:var(--navy);
-      transition:border-color .2s,box-shadow .2s;
+      transition:border-color .2s,box-shadow .2s, background-color 0.3s ease, color 0.3s ease;
     }
+    [data-theme="dark"] .input-wrap input { border-color: rgba(255,255,255,0.1); }
     .input-wrap input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(26,92,255,.08); }
     .input-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); font-size:1rem; color:var(--ink3); pointer-events:none; }
 
@@ -79,6 +126,7 @@
       display:flex; align-items:center; justify-content:center; gap:.6rem;
       margin-top:.5rem; position:relative; overflow:hidden;
     }
+    [data-theme="dark"] .btn-login { background: var(--accent); color: #fff; }
     .btn-login:hover:not(:disabled) { background:var(--accent); transform:translateY(-1px); box-shadow:0 8px 24px rgba(26,92,255,.3); }
     .btn-login:disabled { opacity:.7; cursor:not-allowed; }
     .btn-progress { position:absolute; bottom:0; left:0; height:3px; background:var(--gold2); width:0; transition:width 2s linear; }
@@ -89,34 +137,20 @@
     @keyframes spin { to{transform:rotate(360deg)} }
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
 
-    .session-note { text-align:center; margin-top:1rem; font-size:.78rem; color:var(--ink3); background:var(--bg); border-radius:8px; padding:.6rem; }
+    .session-note { text-align:center; margin-top:1rem; font-size:.78rem; color:var(--ink3); background:var(--white); border-radius:8px; padding:.6rem; border: 1px solid rgba(128,128,128,0.1); }
     .back-link { text-align:center; margin-top:1.2rem; font-size:.85rem; color:var(--ink3); }
     .back-link a { color:var(--accent); font-weight:600; text-decoration:none; }
 
     @media(max-width:768px) {
       .page { grid-template-columns:1fr; }
       .left-panel { display:none; }
-      .right-panel { padding:2.5rem 1.5rem; justify-content:flex-start; padding-top:3rem; }
+      .right-panel { padding:2.5rem 1.5rem; justify-content:flex-start; padding-top:4rem; }
       .mobile-header { display:flex; }
+      .top-controls { top: 1rem; right: 1rem; }
     }
-   [data-theme="dark"] {
-  --ink: #f0f0f5;
-  --ink2: #b0b0c0;
-  --white: #16161e;
-  --bg: #0b0b10;
-  --bg2: #12121a;
-  --accent: #3b75ff;
-  --accent2: #5c8cff;
-}
   </style>
-  <script>
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-</script>
 </head>
-
 <body>
-<button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">🌙</button>
 <div class="page">
 
   <div class="left-panel">
@@ -140,6 +174,11 @@
   </div>
 
   <div class="right-panel">
+    <!-- Top Right Theme Toggle Button -->
+    <div class="top-controls">
+      <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">🌙</button>
+    </div>
+
     <div class="mobile-header">
       <div class="mobile-header-img"><img src="../QFA_Logo.png" alt="QFA"/></div>
       <div class="mobile-header-text"><strong>Quick Freelancing Agency</strong><span>Data &amp; Analytics</span></div>
@@ -184,6 +223,25 @@
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const SESSION_HOURS = 1;
+
+// Theme Toggle Script Integration
+const themeToggleBtn = document.getElementById('theme-toggle');
+
+function updateToggleIcon(theme) {
+  themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+// Initialize icon state on load
+updateToggleIcon(localStorage.getItem('theme') || 'light');
+
+themeToggleBtn.addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  updateToggleIcon(newTheme);
+});
 
 const auth = {
   save: (t, u) => {
@@ -260,22 +318,6 @@ async function doLogin() {
     setTimeout(() => { box.style.animation = 'shake .4s ease'; }, 10);
   }
 }
-
-
-  const themeToggleBtn = document.getElementById('theme-toggle');
-  function updateToggleIcon(theme) {
-    themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-  }
-  updateToggleIcon(localStorage.getItem('theme') || 'light');
-
-  themeToggleBtn.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateToggleIcon(newTheme);
-  });
-
 </script>
 </body>
 </html>
