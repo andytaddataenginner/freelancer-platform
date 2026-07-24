@@ -298,7 +298,6 @@
     </div>
 
     <div class="content">
-      <!-- LEDGER STATEMENT HEADER -->
       <div class="global-summary">
         <div class="ledger-texture" aria-hidden="true"></div>
         <div class="ledger-glow" aria-hidden="true"></div>
@@ -476,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadReportData() {
   const selectedMonth = document.getElementById('report-month').value;
-  [yy, mm] = selectedMonth.split('-');
+  const [yy, mm] = selectedMonth.split('-');
 
   try {
     const clientsRes = await fetch(`${API}/clients`, { headers: auth.headers() });
@@ -495,8 +494,9 @@ async function loadReportData() {
     let activeMonths = new Set();
     let minDate = null;
     let maxDate = null;
+    
+    let clientBreakdownMap = {};
 
-    // Process hourly logs across all time
     allLogs.forEach(log => {
       const amt = parseFloat(log.amount || 0);
       const isPaid = log.payment_status === 'paid';
@@ -505,30 +505,36 @@ async function loadReportData() {
       if (log.date) {
         uniqueClients.add(log.client_name);
         totalHours += parseFloat(log.hours || 0);
-        const logMonth = log.date.substring(0,7);
+        const logMonth = log.date.substring(0, 7);
         activeMonths.add(logMonth);
         if(!minDate || log.date < minDate) minDate = log.date;
         if(!maxDate || log.date > maxDate) maxDate = log.date;
 
         if (logMonth === selectedMonth) {
           if (isPaid) monthPaid += amt; else monthUnpaid += amt;
+          
+          if (!clientBreakdownMap[log.client_name]) {
+            clientBreakdownMap[log.client_name] = { client_name: log.client_name, rate_type: 'hourly', hours: 0, total: 0, paid: 0, unpaid: 0 };
+          }
+          clientBreakdownMap[log.client_name].hours += parseFloat(log.hours || 0);
+          clientBreakdownMap[log.client_name].total += amt;
+          if (isPaid) clientBreakdownMap[log.client_name].paid += amt;
+          else clientBreakdownMap[log.client_name].unpaid += amt;
         }
       }
     });
-
-    // Process fixed-rate clients across all time & selected month
-    let clientBreakdownMap = {};
 
     for (const client of clients) {
       if (client.rate_type === 'fixed') {
         uniqueClients.add(client.name);
         try {
-          const fixedRes = await fetch(`${API}/fixed-monthly-payments?client_id=${client.id}`, { headers: auth.headers() });
+          const fixedRes = await fetch(`${API}/fixed-payments?client_id=${client.id}`, { headers: auth.headers() });
           const fixedPayments = await fixedRes.json();
 
           fixedPayments.forEach(fp => {
             const fpMonthStr = `${fp.year}-${String(fp.month).padStart(2, '0')}`;
             activeMonths.add(fpMonthStr);
+            
             const amt = parseFloat(fp.amount || client.fixed_rate || 0);
             const isPaid = fp.status === 'paid';
 
@@ -536,6 +542,7 @@ async function loadReportData() {
 
             if (fpMonthStr === selectedMonth) {
               if (isPaid) monthPaid += amt; else monthUnpaid += amt;
+
               if (!clientBreakdownMap[client.name]) {
                 clientBreakdownMap[client.name] = { client_name: client.name, rate_type: 'fixed', hours: 0, total: 0, paid: 0, unpaid: 0 };
               }
@@ -545,27 +552,10 @@ async function loadReportData() {
             }
           });
         } catch (err) {
-          console.error(`Fixed monthly load error for ${client.name}:`, err);
+          console.error(`Error loading fixed payments for reports (${client.name}):`, err);
         }
       }
     }
-
-    // Include hourly logs for the selected month in breakdown map
-    allLogs.forEach(log => {
-      if (log.date && log.date.startsWith(selectedMonth)) {
-        const amt = parseFloat(log.amount || 0);
-        const hrs = parseFloat(log.hours || 0);
-        const isPaid = log.payment_status === 'paid';
-
-        if (!clientBreakdownMap[log.client_name]) {
-          clientBreakdownMap[log.client_name] = { client_name: log.client_name, rate_type: 'hourly', hours: 0, total: 0, paid: 0, unpaid: 0 };
-        }
-        clientBreakdownMap[log.client_name].hours += hrs;
-        clientBreakdownMap[log.client_name].total += amt;
-        if (isPaid) clientBreakdownMap[log.client_name].paid += amt;
-        else clientBreakdownMap[log.client_name].unpaid += amt;
-      }
-    });
 
     animateCount(document.getElementById('global-total-all'), macroPaid + macroUnpaid, { prefix: '$', decimals: 2 });
     animateCount(document.getElementById('global-paid-all'), macroPaid, { prefix: '$', decimals: 2 });
