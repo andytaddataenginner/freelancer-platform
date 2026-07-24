@@ -411,7 +411,6 @@
     <div id="edit-status" class="form-status"></div>
   </div>
 </div>
-
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const auth = {
@@ -421,19 +420,21 @@ const auth = {
   isLoggedIn: () => !!localStorage.getItem('token'),
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
+
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
   if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
   if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
   return res.json();
 }
+
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   document.getElementById('user-name').textContent = auth.user()?.name || '';
 })();
+
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
-// Mobile sidebar toggle
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('mobile-open');
   document.getElementById('sidebar-overlay').classList.toggle('open');
@@ -447,7 +448,7 @@ async function fetchAndPopulateClients() {
   try {
     allClients = await apiFetch('/clients');
     const opts = allClients.map(c =>
-      `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-fixedstatus="${c.fixed_payment_status||'unpaid'}" data-credit="${c.credit_balance||0}">${c.name}${c.company?' — '+c.company:''}</option>`
+      `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-credit="${c.credit_balance||0}">${c.name}${c.company?' — '+c.company:''}</option>`
     ).join('');
     
     const filterSelect = document.getElementById('filter-client');
@@ -464,228 +465,20 @@ async function fetchAndPopulateClients() {
   } catch(e) { console.error('Error fetching clients:', e); }
 }
 
-// Triggered when the user changes the selected client in time-logs.html
-async function handleTimeLogsClientSelection() {
-    const clientSelect = document.getElementById('clientSelect');
-    if (!clientSelect || !clientSelect.value) return;
-
-    const clientId = clientSelect.value;
-    const currentClient = window.allClients ? window.allClients.find(c => c.id == clientId) : null;
-    
-    const hourlyContainer = document.getElementById('hourlyLogsContainer');
-    const fixedContainer = document.getElementById('fixedRateMonthlyContainer');
-
-    const isFixed = currentClient ? currentClient.rate_type === 'fixed' : 
-                    clientSelect.options[clientSelect.selectedIndex]?.dataset?.rateType === 'fixed';
-
-    if (isFixed) {
-        // Hide standard hourly logs/date ranges
-        if (hourlyContainer) hourlyContainer.style.display = 'none';
-        if (fixedContainer) fixedContainer.style.display = 'block';
-
-        // Load all monthly records for this fixed client
-        await loadFixedClientMonthlyRecords(clientId);
-    } else {
-        // Show standard hourly view
-        if (hourlyContainer) hourlyContainer.style.display = 'block';
-        if (fixedContainer) fixedContainer.style.display = 'none';
-    }
-}
-
-// Fetch all monthly payment records for the fixed client
-async function loadFixedClientMonthlyRecords(clientId) {
-    const tbody = document.getElementById('fixedMonthlyTableBody');
-    if (!tbody) return;
-
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Loading monthly billing periods...</td></tr>`;
-
-    try {
-        const response = await fetch(`/api/fixed-payments/${clientId}`);
-        if (!response.ok) throw new Error('Failed to fetch monthly payment records');
-
-        const records = await response.json();
-        renderFixedMonthlyTable(records, clientId);
-    } catch (err) {
-        console.error('Error loading fixed monthly records:', err);
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error loading data: ${err.message}</td></tr>`;
-    }
-}
-
-// Render the rows into the fixed billing table
-function renderFixedMonthlyTable(records, clientId) {
-    const tbody = document.getElementById('fixedMonthlyTableBody');
-    if (!tbody) return;
-
-    if (!records || records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No monthly billing records found.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = records.map(record => {
-        const isPaid = record.status === 'paid';
-        return `
-            <tr>
-                <td><strong>${record.month}</strong></td>
-                <td>$${record.amount}</td>
-                <td>
-                    <span class="badge ${isPaid ? 'bg-success' : 'bg-warning text-dark'}">
-                        ${isPaid ? '✅ Paid' : '⏳ Pending'}
-                    </span>
-                    ${record.paid_at ? `<br><small class="text-muted">Paid: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
-                </td>
-                <td>
-                    <button class="btn btn-sm ${isPaid ? 'btn-outline-secondary' : 'btn-outline-success'}"
-                        onclick="toggleFixedMonthlyRecordStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${clientId}')">
-                        Mark as ${isPaid ? 'Unpaid' : 'Paid'}
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-// Patch status for a specific month record ID and refresh the table
-async function toggleFixedMonthlyRecordStatus(recordId, newStatus, clientId) {
-    try {
-        const response = await fetch(`/api/fixed-payments/${recordId}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update status');
-
-        // Reload the table instantly to reflect changes
-        await loadFixedClientMonthlyRecords(clientId);
-    } catch (err) {
-        alert('Error updating payment status: ' + err.message);
-    }
-}
-
-// Bind to client change event
-document.getElementById('clientSelect')?.addEventListener('change', handleTimeLogsClientSelection);
-
-
-  
-
-// 3. Render the Notice Card UI with the specific monthly status & toggle button
-function renderFixedCardUI(record, formattedMonth) {
-    const container = document.getElementById('fixedClientNoticeContainer');
-    if (!container) return;
-
-    const isPaid = record.status === 'paid';
-
-    container.innerHTML = `
-        <div class="card p-4 border shadow-sm bg-white">
-            <h5>Fixed Price Project Overview</h5>
-            <!-- Explicitly displaying the month and year context -->
-            <p class="mb-1 text-primary">Billing Period: <strong>${formattedMonth}</strong></p>
-            <p class="mb-3">Project Amount: <strong>$${record.amount}</strong></p>
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="badge ${isPaid ? 'bg-success' : 'bg-warning text-dark'} fs-6">
-                        ${isPaid ? '✅ Paid' : '⏳ Pending'}
-                    </span>
-                    ${record.paid_at ? `<small class="text-muted d-block mt-1">Paid on: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
-                </div>
-                <button class="btn btn-sm ${isPaid ? 'btn-outline-secondary' : 'btn-outline-success'}"
-                    onclick="toggleMonthlyPaymentStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${formattedMonth}')">
-                    Mark as ${isPaid ? 'Unpaid' : 'Paid'} for ${formattedMonth}
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-// 4. Send PATCH request to update only this specific row ID for the selected month[cite: 1]
-async function toggleMonthlyPaymentStatus(recordId, newStatus, formattedMonth) {
-    try {
-        const response = await fetch(`/api/fixed-payments/${recordId}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update status');
-
-        const updatedRecord = await response.json();
-        renderFixedCardUI(updatedRecord, formattedMonth);
-    } catch (err) {
-        alert('Error updating status: ' + err.message);
-    }
-}
-
-// 5. Hook up event listeners so changing filters automatically refreshes the period view
-document.getElementById('clientSelect')?.addEventListener('change', handleClientOrPeriodChange);
-document.getElementById('monthFilter')?.addEventListener('change', handleClientOrPeriodChange);
-document.getElementById('yearFilter')?.addEventListener('change', handleClientOrPeriodChange);
-  
-// ── Init ─────────────────────────────────────────────────────
-async function init() {
-  // Default the payment form date field to today
-  document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
-  
-  // Configure default date range to show ONLY the last 5 days initially
-  const today = new Date();
-  const fiveDaysAgo = new Date();
-  fiveDaysAgo.setDate(today.getDate() - 5);
-  
-  document.getElementById('filter-to').value = today.toISOString().split('T')[0];
-  document.getElementById('filter-from').value = fiveDaysAgo.toISOString().split('T')[0];
-  
-  await fetchAndPopulateClients();
-  loadLogs();
-}
-
-// ── Submit Payment Remittance ──────────────────────
-async function handleRecordPayment(event) {
-  event.preventDefault();
-  const clientId = document.getElementById('payment-client').value;
-  const amount = document.getElementById('payment-amount').value;
-  const date = document.getElementById('payment-date').value;
-
-  if (!clientId || !amount || !date) {
-    alert('Please fill out all fields.');
-    return;
-  }
-
-  try {
-    const result = await apiFetch('/payments/record-admin', {
-      method: 'POST',
-      body: JSON.stringify({
-        client_id: parseInt(clientId),
-        amount: parseFloat(amount),
-        date: date,
-        notes: `Manual balance posting via Freelancer Time Logs layout UI.`
-      })
-    });
-
-    alert(`Success! ${result.message}\nRecalculated surplus retainer balance of $${result.remainingCreditSurplus.toFixed(2)} credited forward.`);
-    
-    // Clear dynamic payment inputs
-    document.getElementById('payment-amount').value = '';
-    
-    // Re-fetch client values to instantly update data-credit metrics and reload
-    await fetchAndPopulateClients();
-    loadLogs();
-  } catch (err) {
-    alert('Payment Allocation Error: ' + err.message);
-  }
-}
-
-// ── Load logs ────────────────────────────────────────────────
-async function loadLogs() {
-  const clientId      = document.getElementById('filter-client').value;
-  const payment       = document.getElementById('filter-payment').value;
-  const from          = document.getElementById('filter-from').value;
-  const to            = document.getElementById('filter-to').value;
-
-  // Check if selected client is fixed rate
-  const selectedOpt = document.getElementById('filter-client').selectedOptions[0];
+// ── Unified Filter & Client Change Handler ─────────────────
+async function handleFilterChange() {
+  const filterSelect = document.getElementById('filter-client');
+  const clientId = filterSelect.value;
+  const selectedOpt = filterSelect.selectedOptions[0];
   const isFixed = selectedOpt && selectedOpt.value !== "" && selectedOpt.dataset.rate === 'fixed';
 
-  // Live credit display setup
-  const creditDisplay = document.getElementById('client-credit-display');
+  // Containers
+  const fixedContainer = document.getElementById('fixedRateMonthlyContainer');
+  const logsCard       = document.getElementById('logs-card');
+  const statsRow       = document.getElementById('stats-row');
+  const creditDisplay  = document.getElementById('client-credit-display');
+
+  // Live credit display
   if (selectedOpt && selectedOpt.value !== "") {
     const balance = parseFloat(selectedOpt.dataset.credit || 0);
     creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
@@ -693,31 +486,98 @@ async function loadLogs() {
     creditDisplay.textContent = '';
   }
 
-  const fixedNotice = document.getElementById('fixed-notice');
-  const logsCard    = document.getElementById('logs-card');
-  const statsRow    = document.getElementById('stats-row');
-
   if (isFixed && clientId) {
-    // Show fixed notice, hide logs table
-    fixedNotice.style.display = 'flex';
-    logsCard.style.display    = 'none';
-    statsRow.style.display    = 'none';
-    document.getElementById('fixed-client-name').textContent  = selectedOpt.text.split(' — ')[0];
-    document.getElementById('fixed-client-price').textContent = '$' + parseFloat(selectedOpt.dataset.fixed||0).toFixed(2);
-    const isPaid = selectedOpt.dataset.fixedstatus === 'paid';
-    document.getElementById('fixed-client-status').innerHTML = isPaid
-      ? '<span style="background:rgba(34,197,94,0.2);color:#86efac;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.78rem;font-weight:700">✅ Paid</span>'
-      : '<span style="background:rgba(245,158,11,0.2);color:#fcd34d;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.78rem;font-weight:700">⏳ Pending</span>';
-    document.getElementById('fixed-client-btn').innerHTML = isPaid
-      ? `<button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3);font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'unpaid')">Mark unpaid</button>`
-      : `<button class="btn btn-green" style="font-size:0.78rem" onclick="toggleFixedPayment(${clientId},'paid')">Mark paid ✓</button>`;
+    // Show fixed-rate monthly billing table, hide hourly logs
+    if (fixedContainer) fixedContainer.style.display = 'block';
+    if (logsCard) logsCard.style.display = 'none';
+    if (statsRow) statsRow.style.display = 'none';
+
+    await loadFixedClientMonthlyRecords(clientId);
+  } else {
+    // Show hourly logs table, hide fixed billing table
+    if (fixedContainer) fixedContainer.style.display = 'none';
+    if (logsCard) logsCard.style.display = 'block';
+    if (statsRow) statsRow.style.display = 'grid';
+
+    loadLogs();
+  }
+}
+
+// ── Load Fixed-Rate Monthly Billing Periods ────────────────
+async function loadFixedClientMonthlyRecords(clientId) {
+  const tbody = document.getElementById('fixedMonthlyTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Loading monthly billing periods...</td></tr>`;
+
+  try {
+    const response = await fetch(`${API}/fixed-payments/${clientId}`, {
+      headers: auth.headers()
+    });
+    if (!response.ok) throw new Error('Failed to fetch monthly payment records');
+
+    const records = await response.json();
+    renderFixedMonthlyTable(records, clientId);
+  } catch (err) {
+    console.error('Error loading fixed monthly records:', err);
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger" style="color:var(--red);">Error loading data: ${err.message}</td></tr>`;
+  }
+}
+
+function renderFixedMonthlyTable(records, clientId) {
+  const tbody = document.getElementById('fixedMonthlyTableBody');
+  if (!tbody) return;
+
+  if (!records || records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No monthly billing records found.</td></tr>`;
     return;
   }
 
-  // Hourly — show normal table
-  fixedNotice.style.display = 'none';
-  logsCard.style.display    = 'block';
-  statsRow.style.display    = 'grid';
+  tbody.innerHTML = records.map(record => {
+    const isPaid = record.status === 'paid';
+    return `
+      <tr>
+        <td><strong>${record.month}</strong></td>
+        <td>$${record.amount}</td>
+        <td>
+          <span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">
+            ${isPaid ? '✓ Paid' : 'Pending'}
+          </span>
+          ${record.paid_at ? `<br><small class="text-muted">Paid: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
+        </td>
+        <td>
+          <button class="btn btn-sm ${isPaid ? 'btn-outline' : 'btn-green'}"
+              onclick="toggleFixedMonthlyRecordStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${clientId}')">
+              ${isPaid ? 'Mark Unpaid' : 'Mark Paid ✓'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function toggleFixedMonthlyRecordStatus(recordId, newStatus, clientId) {
+  try {
+    const response = await fetch(`${API}/fixed-payments/${recordId}/status`, {
+      method: 'PATCH',
+      headers: auth.headers(),
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    if (!response.ok) throw new Error('Failed to update status');
+
+    await loadFixedClientMonthlyRecords(clientId);
+  } catch (err) {
+    alert('Error updating payment status: ' + err.message);
+  }
+}
+
+// ── Load Hourly Logs ────────────────────────────────────────
+async function loadLogs() {
+  const clientId = document.getElementById('filter-client').value;
+  const payment  = document.getElementById('filter-payment').value;
+  const from     = document.getElementById('filter-from').value;
+  const to       = document.getElementById('filter-to').value;
 
   let url = '/timelogs?limit=200';
   if (clientId) url += '&client_id=' + clientId;
@@ -728,22 +588,21 @@ async function loadLogs() {
   try {
     const logs  = await apiFetch(url);
     const tbody = document.getElementById('logs-table');
-    let totalPaid=0, totalUnpaid=0, totalHours=0;
+    let totalPaid = 0, totalUnpaid = 0, totalHours = 0;
 
     if (!logs.length) {
       tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">No logs found.</td></tr>';
     } else {
       tbody.innerHTML = logs.map(l => {
-        const isPaid  = l.payment_status === 'paid';
-        const amount  = parseFloat(l.amount||0);
+        const isPaid = l.payment_status === 'paid';
+        const amount = parseFloat(l.amount || 0);
         if (isPaid) totalPaid += amount; else totalUnpaid += amount;
-        totalHours += parseFloat(l.hours||0);
+        totalHours += parseFloat(l.hours || 0);
         const badge  = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
         const payBtn = isPaid
           ? `<button class="btn btn-outline" onclick="togglePayment(${l.id},'unpaid')">Undo</button>`
           : `<button class="btn btn-green" onclick="togglePayment(${l.id},'paid')">Paid ✓</button>`;
         const checked = selectedIds.has(l.id) ? 'checked' : '';
-        // Find client data for edit
         const cl = allClients.find(c => c.id === l.client_id) || {};
         return `<tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
           <td><input type="checkbox" class="row-check" value="${l.id}" ${checked} onchange="updateSel(${l.id},this.checked)"/></td>
@@ -771,212 +630,44 @@ async function loadLogs() {
 }
 
 function fmtHours(h) {
-  const hrs=Math.floor(h), mins=Math.round((h-hrs)*60);
-  if(hrs===0) return `${mins}min`;
-  if(mins===0) return `${hrs}h`;
+  const hrs = Math.floor(h), mins = Math.round((h - hrs) * 60);
+  if (hrs === 0) return `${mins}min`;
+  if (mins === 0) return `${hrs}h`;
   return `${hrs}h ${mins}min`;
 }
 
-// 1. Triggered when the user selects a fixed client or changes the month/year filter in time-logs.html
-async function loadFixedClientStatusForTimeLogs() {
-    const clientSelect = document.getElementById('clientSelect'); // Adjust to your actual client dropdown ID
-    const monthSelect = document.getElementById('monthFilter');     // e.g., '06' or month number
-    const yearSelect = document.getElementById('yearFilter');       // e.g., '2026'
+// ── Submit Payment Remittance ──────────────────────────────
+async function handleRecordPayment(event) {
+  event.preventDefault();
+  const clientId = document.getElementById('payment-client').value;
+  const amount   = document.getElementById('payment-amount').value;
+  const date     = document.getElementById('payment-date').value;
 
-    if (!clientSelect || !clientSelect.value) return;
+  if (!clientId || !amount || !date) {
+    alert('Please fill out all fields.');
+    return;
+  }
 
-    const clientId = clientSelect.value;
-    const selectedYear = yearSelect ? yearSelect.value : new Date().getFullYear();
-    const selectedMonthNum = monthSelect ? String(monthSelect.value).padStart(2, '0') : String(new Date().getMonth() + 1).padStart(2, '0');
-    
-    // Format matching your database column 'month', e.g., '2026-06'
-    const targetMonthString = `${selectedYear}-${selectedMonthNum}`;
-
-    // Verify if this client is a fixed-rate client
-    const currentClient = window.allClients ? window.allClients.find(c => c.id == clientId) : null;
-    
-    const hourlyContainer = document.getElementById('hourlyLogsContainer');
-    const fixedContainer = document.getElementById('fixedClientNoticeContainer');
-
-    if (currentClient && currentClient.rate_type === 'fixed') {
-        if (hourlyContainer) hourlyContainer.style.display = 'none';
-        if (fixedContainer) fixedContainer.style.display = 'block';
-
-        try {
-            // Fetch all monthly payment records for this client using your existing backend route[cite: 1]
-            const response = await fetch(`/api/fixed-payments/${clientId}`);
-            if (!response.ok) throw new Error('Failed to fetch fixed monthly payments');
-            
-            const monthlyRecords = await response.json();
-
-            // Find the record matching the exact selected month/year filter
-            let currentRecord = monthlyRecords.find(r => r.month === targetMonthString);
-
-            // If no record exists yet for this month, auto-generate it via your backend[cite: 1]
-            if (!currentRecord) {
-                const genResponse = await fetch('/api/fixed-payments/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ client_id: clientId, month: targetMonthString })
-                });
-                if (genResponse.ok) {
-                    currentRecord = await genResponse.json();
-                }
-            }
-
-            // Render the card showing the exact status for this month
-            renderTimeLogsFixedCard(currentRecord, targetMonthString);
-
-        } catch (err) {
-            console.error('Error loading fixed payment status for time logs:', err);
-        }
-    } else {
-        if (hourlyContainer) hourlyContainer.style.display = 'block';
-        if (fixedContainer) fixedContainer.style.display = 'none';
-    }
-}
-
-// 1. Unified change handler for time-logs.html (handles both Hourly and Fixed clients)
-async function handleTimeLogsClientOrPeriodChange() {
-    const clientSelect = document.getElementById('clientSelect');
-    const monthSelect = document.getElementById('monthFilter');
-    const yearSelect = document.getElementById('yearFilter');
-
-    if (!clientSelect || !clientSelect.value) return;
-
-    const clientId = clientSelect.value;
-    const selectedYear = yearSelect ? yearSelect.value : new Date().getFullYear();
-    const selectedMonthNum = monthSelect ? String(monthSelect.value).padStart(2, '0') : String(new Date().getMonth() + 1).padStart(2, '0');
-    
-    // Format required for fixed payments: 'YYYY-MM'
-    const targetMonthString = `${selectedYear}-${selectedMonthNum}`;
-
-    // Find the client details to check their rate type
-    const currentClient = window.allClients ? window.allClients.find(c => c.id == clientId) : null;
-    
-    const hourlyLogsContainer = document.getElementById('hourlyLogsContainer'); // Your standard hourly table/logs container
-    const fixedContainer = document.getElementById('fixedClientNoticeContainer'); // Your fixed payment notice card container
-
-    if (currentClient && currentClient.rate_type === 'fixed') {
-        // --- FIXED CLIENT FLOW ---
-        if (hourlyLogsContainer) hourlyLogsContainer.style.display = 'none';
-        if (fixedContainer) fixedContainer.style.display = 'block';
-
-        try {
-            // Fetch or auto-generate the monthly fixed payment record[cite: 1]
-            const response = await fetch('/api/fixed-payments/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ client_id: clientId, month: targetMonthString })
-            });
-            
-            if (!response.ok) throw new Error('Failed to load fixed payment record');
-            
-            const paymentRecord = await response.json();
-            renderTimeLogsFixedCard(paymentRecord, targetMonthString);
-        } catch (err) {
-            console.error('Error loading fixed payment for time logs:', err);
-        }
-    } else {
-        // --- HOURLY CLIENT FLOW (Standard Time Logs) ---
-        if (hourlyLogsContainer) hourlyLogsContainer.style.display = 'block';
-        if (fixedContainer) fixedContainer.style.display = 'none';
-
-        // Call your existing hourly logs loading function here
-        if (typeof loadHourlyTimeLogs === 'function') {
-            loadHourlyTimeLogs(clientId, selectedYear, selectedMonthNum);
-        }
-    }
-}
-
-// 2. Render the fixed payment card inside time-logs.html for the selected month
-function renderTimeLogsFixedCard(record, targetMonthString) {
-    const container = document.getElementById('fixedClientNoticeContainer');
-    if (!container) return;
-
-    const isPaid = record.status === 'paid';
-
-    container.innerHTML = `
-        <div class="card p-4 border shadow-sm bg-white">
-            <h5>Fixed Price Project Billing</h5>
-            <p class="mb-1 text-primary">Selected Billing Period: <strong>${targetMonthString}</strong></p>
-            <p class="mb-3">Amount Due: <strong>$${record.amount}</strong></p>
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="badge ${isPaid ? 'bg-success' : 'bg-warning text-dark'} fs-6">
-                        ${isPaid ? '✅ Paid' : '⏳ Pending'}
-                    </span>
-                    ${record.paid_at ? `<small class="text-muted d-block mt-1">Paid on: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
-                </div>
-                <button class="btn btn-sm ${isPaid ? 'btn-outline-secondary' : 'btn-outline-success'}"
-                    onclick="toggleTimeLogsFixedStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${targetMonthString}')">
-                    Mark as ${isPaid ? 'Unpaid' : 'Paid'} (${targetMonthString})
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-// 3. Patch the status for the specific month's record ID[cite: 1]
-async function toggleTimeLogsFixedStatus(recordId, newStatus, targetMonthString) {
-    try {
-        const response = await fetch(`/api/fixed-payments/${recordId}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update status');
-
-        const updatedRecord = await response.json();
-        renderTimeLogsFixedCard(updatedRecord, targetMonthString);
-    } catch (err) {
-        alert('Error updating payment status: ' + err.message);
-    }
-}
-
-// 4. Bind event listeners
-document.getElementById('clientSelect')?.addEventListener('change', handleTimeLogsClientOrPeriodChange);
-document.getElementById('monthFilter')?.addEventListener('change', handleTimeLogsClientOrPeriodChange);
-document.getElementById('yearFilter')?.addEventListener('change', handleTimeLogsClientOrPeriodChange);
-
-// 3. Patch the status using the unique monthly record ID[cite: 1]
-async function toggleTimeLogsPaymentStatus(recordId, newStatus) {
-    try {
-        const response = await fetch(`/api/fixed-payments/${recordId}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update status');
-
-        // Refresh the view so it updates immediately
-        loadFixedClientStatusForTimeLogs();
-    } catch (err) {
-        alert('Error updating payment status: ' + err.message);
-    }
-}
-
-// 4. Hook up to your dropdowns in time-logs.html
-document.getElementById('clientSelect')?.addEventListener('change', loadFixedClientStatusForTimeLogs);
-document.getElementById('monthFilter')?.addEventListener('change', loadFixedClientStatusForTimeLogs);
-document.getElementById('yearFilter')?.addEventListener('change', loadFixedClientStatusForTimeLogs);
-
-  
-// ── Fixed payment toggle from time-logs page ─────────────────
-async function toggleFixedPayment(clientId, newStatus) {
   try {
-    await apiFetch('/clients/' + clientId + '/fixed-payment', {
-      method: 'PATCH', body: JSON.stringify({ fixed_payment_status: newStatus })
+    const result = await apiFetch('/payments/record-admin', {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: parseInt(clientId),
+        amount: parseFloat(amount),
+        date: date,
+        notes: `Manual balance posting via Freelancer Time Logs layout UI.`
+      })
     });
-    // Refresh the dropdown data and reload
+
+    alert(`Success! ${result.message}\nRecalculated surplus retainer balance of $${result.remainingCreditSurplus.toFixed(2)} credited forward.`);
+    document.getElementById('payment-amount').value = '';
     await fetchAndPopulateClients();
-    loadLogs();
-  } catch(e) { alert('Failed: ' + e.message); }
+    handleFilterChange();
+  } catch (err) {
+    alert('Payment Allocation Error: ' + err.message);
+  }
 }
 
-// ── Payment toggle ────────────────────────────────────────────
 async function togglePayment(id, status) {
   try {
     await apiFetch('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:status})});
@@ -984,7 +675,6 @@ async function togglePayment(id, status) {
   } catch(e){alert('Failed: '+e.message);}
 }
 
-// ── Edit log ─────────────────────────────────────────────────
 function openEdit(id, date, hours, task, clientId, rateType, hourlyRate) {
   document.getElementById('edit-id').value         = id;
   document.getElementById('edit-client-id').value  = clientId;
@@ -995,14 +685,10 @@ function openEdit(id, date, hours, task, clientId, rateType, hourlyRate) {
   document.getElementById('edit-task').value        = task;
   document.getElementById('edit-status').textContent = '';
 
-  // Show client info
   const cl = allClients.find(c => c.id === clientId);
   if (cl) {
-    const rateLabel = rateType === 'hourly'
-      ? `Hourly @ $${hourlyRate}/hr`
-      : `Fixed @ $${cl.fixed_price}`;
-    document.getElementById('edit-client-info').innerHTML =
-      `<strong>${cl.name}</strong> &nbsp;·&nbsp; ${rateLabel}`;
+    const rateLabel = rateType === 'hourly' ? `Hourly @ $${hourlyRate}/hr` : `Fixed @ $${cl.fixed_price}`;
+    document.getElementById('edit-client-info').innerHTML = `<strong>${cl.name}</strong> &nbsp;·&nbsp; ${rateLabel}`;
   }
 
   previewAmount();
@@ -1033,11 +719,8 @@ async function saveEdit() {
   const date       = document.getElementById('edit-date').value;
   const task       = document.getElementById('edit-task').value;
 
-  // Recalculate amount
   let amount = 0;
-  if (rateType === 'hourly' && hourlyRate > 0) {
-    amount = hours * hourlyRate;
-  }
+  if (rateType === 'hourly' && hourlyRate > 0) amount = hours * hourlyRate;
 
   try {
     await apiFetch('/timelogs/' + id, {
@@ -1046,7 +729,7 @@ async function saveEdit() {
     });
     status.className = 'form-status success';
     status.textContent = '✓ Updated!';
-    setTimeout(() => { closeModal(); loadLogs(); }, 700);
+    setTimeout(() => { closeModal(); handleFilterChange(); }, 700);
   } catch(err) {
     status.className = 'form-status error';
     status.textContent = err.message;
@@ -1055,39 +738,38 @@ async function saveEdit() {
 
 function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
 
-// ── Selection ─────────────────────────────────────────────────
 function updateSel(id, checked) {
-  if(checked) selectedIds.add(id); else selectedIds.delete(id);
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
   updateBulkBar();
 }
 function toggleAll(cb) {
-  document.querySelectorAll('.row-check').forEach(c => { c.checked=cb.checked; updateSel(parseInt(c.value),cb.checked); });
+  document.querySelectorAll('.row-check').forEach(c => { c.checked = cb.checked; updateSel(parseInt(c.value), cb.checked); });
 }
 function selectAllVisible() {
-  document.querySelectorAll('.row-check').forEach(c => { c.checked=true; selectedIds.add(parseInt(c.value)); });
+  document.querySelectorAll('.row-check').forEach(c => { c.checked = true; selectedIds.add(parseInt(c.value)); });
   updateBulkBar();
 }
 function clearSelection() {
   selectedIds.clear();
-  document.querySelectorAll('.row-check').forEach(c=>c.checked=false);
-  document.getElementById('check-all').checked=false;
+  document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+  document.getElementById('check-all').checked = false;
   updateBulkBar();
 }
 function updateBulkBar() {
   const bar = document.getElementById('bulk-bar');
-  if(selectedIds.size>0) {
+  if (selectedIds.size > 0) {
     bar.classList.add('open');
-    document.getElementById('bulk-count').textContent = selectedIds.size+' selected';
+    document.getElementById('bulk-count').textContent = selectedIds.size + ' selected';
   } else {
     bar.classList.remove('open');
   }
 }
 async function bulkMarkPaid() {
-  if(!selectedIds.size) return;
-  if(!confirm(`Mark ${selectedIds.size} log(s) as paid?`)) return;
+  if (!selectedIds.size) return;
+  if (!confirm(`Mark ${selectedIds.size} log(s) as paid?`)) return;
   try {
     await apiFetch('/timelogs/bulk-payment',{method:'PATCH',body:JSON.stringify({ids:[...selectedIds],payment_status:'paid'})});
-    clearSelection(); loadLogs();
+    clearSelection(); handleFilterChange();
   } catch(e){alert('Failed: '+e.message);}
 }
 
@@ -1096,10 +778,26 @@ function clearFilters() {
   document.getElementById('filter-payment').value = '';
   document.getElementById('filter-from').value    = '';
   document.getElementById('filter-to').value      = '';
-  loadLogs();
+  handleFilterChange();
+}
+
+// ── Init ─────────────────────────────────────────────────────
+async function init() {
+  document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+  
+  const today = new Date();
+  const fiveDaysAgo = new Date();
+  fiveDaysAgo.setDate(today.getDate() - 5);
+  
+  document.getElementById('filter-to').value = today.toISOString().split('T')[0];
+  document.getElementById('filter-from').value = fiveDaysAgo.toISOString().split('T')[0];
+  
+  await fetchAndPopulateClients();
+  handleFilterChange();
 }
 
 init();
 </script>
+  
 </body>
 </html>
