@@ -1,3 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Logs — QFA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --green: #166534; --green-bg: #dcfce7;
+      --amber: #92400e; --amber-bg: #fef3c7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+    }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE NAV ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
+
+    /* ── MAIN ── */
+    .main { margin-left: 220px; flex: 1; }
+
+    .topbar {
+      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
+      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
+    }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+
+    .content { padding: 1.5rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.2rem;
+    }
+    .card-header {
+      padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1rem; margin-bottom: 1.2rem;
+    }
+    .stat-card {
+      background: white; border-radius: var(--radius); padding: 1.1rem 1.3rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+    }
+    .stat-num { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; display: block; }
+    .stat-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); margin-top: 0.2rem; }
+
+    /* ── FILTERS & ADMINISTRATIVE FORMS ── */
+    .filters, .payment-form-flex { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
+    .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 130px; }
+    .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); }
+    select, input[type=date], input[type=number] {
+      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 8px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.85rem; color: var(--navy); width: 100%;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── BULK BAR ── */
+    .bulk-bar {
+      display: none; background: var(--navy); color: white;
+      padding: 0.7rem 1.2rem; border-radius: 10px; margin-bottom: 1rem;
+      align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .bulk-bar.open { display: flex; }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 700px; }
+    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; white-space: nowrap; }
+    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg); }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-blue  { background: #dbeafe; color: #1e40af; }
+
+    /* ── BUTTONS ── */
+    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-family: var(--sans); font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .btn-green  { background: var(--green-bg); color: var(--green); }
+    .btn-green:hover { background: var(--green); color: white; }
+    .btn-red    { background: var(--red-bg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
+    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+    .btn-navy   { background: var(--navy); color: white; }
+    .btn-navy:hover { background: var(--accent); }
+
+    /* ── MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); animation: modalIn 0.25s ease; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
+    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
+    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: var(--red-bg); color: var(--red); }
+    .mfg { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+    .mfg label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink2); }
+    .mfg input, .mfg textarea {
+      padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 9px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.88rem; color: var(--navy); width: 100%;
+    }
+    .mfg input:focus, .mfg textarea:focus { outline: none; border-color: var(--accent); }
+    .hint { font-size: 0.7rem; color: var(--ink3); margin-top: 0.2rem; }
+    .form-status { font-size: 0.8rem; margin-top: 0.4rem; }
+    .form-status.success { color: var(--green); }
+    .form-status.error   { color: var(--red); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 240px; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .mobile-header { display: flex; }
+      .topbar { top: 56px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .filters, .payment-form-flex { gap: 0.6rem; }
+      .fg { min-width: 100px; }
+      .content { padding: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+      .stat-num { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html" class="active">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="reports.html">📈 Reports</a>
+      <a href="fixed-invoices.html">📄 Invoices</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer · QFA</span>
+      <a href="#" onclick="logout()">Sign out →</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h2>Time Logs</h2>
+      <p>All your logged hours. Mark entries as paid when client pays you.</p>
+    </div>
+
+    <div class="content">
+
+      <div class="card" style="border-left: 4px solid #10b981;">
+        <div class="card-header" style="padding-bottom: 0.2rem; border-bottom: none;">
+          <h3 style="color: #10b981;">💰 Record Client Payment Remittance</h3>
+        </div>
+        <form id="record-payment-form" onsubmit="handleRecordPayment(event)">
+          <div class="payment-form-flex">
+            <div class="fg" style="min-width: 200px;">
+              <label>Target Client</label>
+              <select id="payment-client" required>
+                <option value="">Select client...</option>
+              </select>
+            </div>
+            <div class="fg" style="min-width: 120px;">
+              <label>Amount Remitted ($)</label>
+              <input type="number" id="payment-amount" step="0.01" min="0.01" required placeholder="100.00"/>
+            </div>
+            <div class="fg" style="min-width: 130px;">
+              <label>Payment Date</label>
+              <input type="date" id="payment-date" required/>
+            </div>
+            <button type="submit" class="btn btn-navy" style="background: #10b981; padding: 0.65rem 1.2rem; font-size: 0.85rem; height: 38px;">
+              Apply Remittance
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="filters">
+          <div class="fg">
+            <label>Client Filter <span id="client-credit-display" style="margin-left: 6px; color: #1a5cff; font-weight: 600; text-transform: none; display: none;"></span></label>
+            <select id="filter-client" onchange="handleFilterChange()">
+              <option value="">All clients</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Payment</label>
+            <select id="filter-payment" onchange="handleFilterChange()">
+              <option value="">All</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>From</label>
+            <input type="date" id="filter-from" onchange="handleFilterChange()"/>
+          </div>
+          <div class="fg">
+            <label>To</label>
+            <input type="date" id="filter-to" onchange="handleFilterChange()"/>
+          </div>
+          <button class="btn btn-outline" onclick="clearFilters()" style="padding:0.5rem 1rem;margin-top:1rem">Clear</button>
+        </div>
+      </div>
+
+      <!-- Dedicated Container for Fixed-Rate Monthly Billing Records -->
+      <div id="fixedRateMonthlyContainer" style="display: none;" class="card mb-4 p-3">
+        <div class="card-header px-0 pt-0">
+          <h3>Fixed-Rate Billing Periods</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Billing Month</th>
+                <th>Amount Due</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fixedMonthlyTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card" style="border-left:4px solid #22c55e">
+          <span class="stat-num" id="total-paid" style="color:var(--green)">$0</span>
+          <div class="stat-label">Total paid</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #f59e0b">
+          <span class="stat-num" id="total-unpaid" style="color:var(--amber)">$0</span>
+          <div class="stat-label">Total unpaid</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="total-hours">0h</span>
+          <div class="stat-label">Total hours</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="total-entries">0</span>
+          <div class="stat-label">Log entries</div>
+        </div>
+      </div>
+
+      <div class="bulk-bar" id="bulk-bar">
+        <span id="bulk-count" style="font-size:0.88rem">0 selected</span>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="bulkMarkPaid()">✓ Mark selected as Paid</button>
+          <button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="clearSelection()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card" id="logs-card">
+        <div class="card-header">
+          <h3>All Time Logs</h3>
+          <button class="btn btn-outline" onclick="selectAllVisible()" style="font-size:0.75rem">Select all</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:32px"><input type="checkbox" id="check-all" onchange="toggleAll(this)"/></th>
+                <th>Client</th><th>Date</th><th>Hours</th><th>Rate</th>
+                <th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table">
+              <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Log Entry</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="edit-client-info" style="background:var(--bg);border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="edit-id"/>
+    <input type="hidden" id="edit-client-id"/>
+    <input type="hidden" id="edit-rate-type"/>
+    <input type="hidden" id="edit-hourly-rate"/>
+    <div class="mfg">
+      <label>Date</label>
+      <input type="date" id="edit-date" required/>
+    </div>
+    <div class="mfg">
+      <label>Hours spent</label>
+      <input type="number" id="edit-hours" min="0.01" max="24" step="any" required oninput="previewAmount()"/>
+      <div class="hint">💡 20min = 0.33 · 45min = 0.75 · 1h 20min = 1.33</div>
+    </div>
+    <div id="amount-preview" style="background:#e8f0ff;border-radius:8px;padding:0.6rem 1rem;margin-bottom:0.8rem;font-size:0.85rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="mfg">
+      <label>Task description</label>
+      <textarea id="edit-task" rows="3" required></textarea>
+    </div>
+    <button class="btn btn-navy" style="width:100%;padding:0.8rem;font-size:0.9rem" onclick="saveEdit()">Save changes</button>
+    <div id="edit-status" class="form-status"></div>
+  </div>
+</div>
+
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const auth = {
@@ -49,7 +452,28 @@ async function fetchAndPopulateClients() {
     
     filterSelect.value = previousFilterVal;
     paymentSelect.value = previousPaymentVal;
+
+    if (filterSelect.value) {
+      updateClientCreditDisplay();
+    }
   } catch(e) { console.error('Error fetching clients:', e); }
+}
+
+// ── Update Available Credit Display ──────────────────────────
+function updateClientCreditDisplay() {
+  const filterSelect = document.getElementById('filter-client');
+  const creditDisplay = document.getElementById('client-credit-display');
+  if (!filterSelect || !creditDisplay) return;
+
+  const selectedOpt = filterSelect.selectedOptions[0];
+  if (selectedOpt && selectedOpt.value !== "") {
+    const balance = parseFloat(selectedOpt.dataset.credit || 0);
+    creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
+    creditDisplay.style.display = 'inline';
+  } else {
+    creditDisplay.textContent = '';
+    creditDisplay.style.display = 'none';
+  }
 }
 
 // ── Unified Filter & Client Change Handler ─────────────────
@@ -59,21 +483,11 @@ async function handleFilterChange() {
   const selectedOpt = filterSelect.selectedOptions[0];
   const isFixed = selectedOpt && selectedOpt.value !== "" && selectedOpt.dataset.rate === 'fixed';
 
-  // Containers
+  updateClientCreditDisplay();
+
   const fixedContainer = document.getElementById('fixedRateMonthlyContainer');
   const logsCard       = document.getElementById('logs-card');
   const statsRow       = document.getElementById('stats-row');
-  const creditDisplay  = document.getElementById('client-credit-display');
-
-  // Live credit display preservation
-  if (selectedOpt && selectedOpt.value !== "") {
-    const balance = parseFloat(selectedOpt.dataset.credit || 0);
-    if (creditDisplay) {
-      creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
-    }
-  } else {
-    if (creditDisplay) creditDisplay.textContent = '';
-  }
 
   if (isFixed && clientId) {
     if (fixedContainer) fixedContainer.style.display = 'block';
@@ -95,14 +509,14 @@ async function loadFixedClientMonthlyRecords(clientId) {
   const tbody = document.getElementById('fixedMonthlyTableBody');
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="text-align:center;padding:2rem;">Loading monthly billing periods...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--ink3);">Loading monthly billing periods...</td></tr>`;
 
   try {
     const records = await apiFetch(`/fixed-payments/${clientId}`);
     renderFixedMonthlyTable(records, clientId);
   } catch (err) {
     console.error('Error loading fixed monthly records:', err);
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger" style="text-align:center;padding:2rem;color:var(--red);">Error loading data: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--red);">Error loading data: ${err.message}</td></tr>`;
   }
 }
 
@@ -111,7 +525,7 @@ function renderFixedMonthlyTable(records, clientId) {
   if (!tbody) return;
 
   if (!records || records.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="text-align:center;padding:2rem;">No monthly billing records found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--ink3);">No monthly billing records found.</td></tr>`;
     return;
   }
 
@@ -125,7 +539,7 @@ function renderFixedMonthlyTable(records, clientId) {
           <span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">
             ${isPaid ? '✓ Paid' : 'Pending'}
           </span>
-          ${record.paid_at ? `<br><small class="text-muted">Paid: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
+          ${record.paid_at ? `<br><small style="color:var(--ink3)">Paid: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
         </td>
         <td>
           <button class="btn btn-sm ${isPaid ? 'btn-outline' : 'btn-green'}"
@@ -359,7 +773,7 @@ function clearFilters() {
   handleFilterChange();
 }
 
-// ── Init ────────────────────────────────---------------------
+// ── Init ─────────────────────────────────────────────────────
 async function init() {
   document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
   
@@ -376,3 +790,5 @@ async function init() {
 
 init();
 </script>
+</body>
+</html>
