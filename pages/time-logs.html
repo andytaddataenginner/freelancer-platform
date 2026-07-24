@@ -478,23 +478,23 @@ async function handleFilterChange() {
   const statsRow       = document.getElementById('stats-row');
   const creditDisplay  = document.getElementById('client-credit-display');
 
-  // Live credit display
+  // Live credit display preservation
   if (selectedOpt && selectedOpt.value !== "") {
     const balance = parseFloat(selectedOpt.dataset.credit || 0);
-    creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
+    if (creditDisplay) {
+      creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
+    }
   } else {
-    creditDisplay.textContent = '';
+    if (creditDisplay) creditDisplay.textContent = '';
   }
 
   if (isFixed && clientId) {
-    // Show fixed-rate monthly billing table, hide hourly logs
     if (fixedContainer) fixedContainer.style.display = 'block';
     if (logsCard) logsCard.style.display = 'none';
     if (statsRow) statsRow.style.display = 'none';
 
     await loadFixedClientMonthlyRecords(clientId);
   } else {
-    // Show hourly logs table, hide fixed billing table
     if (fixedContainer) fixedContainer.style.display = 'none';
     if (logsCard) logsCard.style.display = 'block';
     if (statsRow) statsRow.style.display = 'grid';
@@ -508,19 +508,14 @@ async function loadFixedClientMonthlyRecords(clientId) {
   const tbody = document.getElementById('fixedMonthlyTableBody');
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Loading monthly billing periods...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="text-align:center;padding:2rem;">Loading monthly billing periods...</td></tr>`;
 
   try {
-    const response = await fetch(`${API}/fixed-payments/${clientId}`, {
-      headers: auth.headers()
-    });
-    if (!response.ok) throw new Error('Failed to fetch monthly payment records');
-
-    const records = await response.json();
+    const records = await apiFetch(`/fixed-payments/${clientId}`);
     renderFixedMonthlyTable(records, clientId);
   } catch (err) {
     console.error('Error loading fixed monthly records:', err);
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger" style="color:var(--red);">Error loading data: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger" style="text-align:center;padding:2rem;color:var(--red);">Error loading data: ${err.message}</td></tr>`;
   }
 }
 
@@ -529,7 +524,7 @@ function renderFixedMonthlyTable(records, clientId) {
   if (!tbody) return;
 
   if (!records || records.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No monthly billing records found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="text-align:center;padding:2rem;">No monthly billing records found.</td></tr>`;
     return;
   }
 
@@ -538,7 +533,7 @@ function renderFixedMonthlyTable(records, clientId) {
     return `
       <tr>
         <td><strong>${record.month}</strong></td>
-        <td>$${record.amount}</td>
+        <td>$${parseFloat(record.amount || 0).toFixed(2)}</td>
         <td>
           <span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">
             ${isPaid ? '✓ Paid' : 'Pending'}
@@ -558,14 +553,10 @@ function renderFixedMonthlyTable(records, clientId) {
 
 async function toggleFixedMonthlyRecordStatus(recordId, newStatus, clientId) {
   try {
-    const response = await fetch(`${API}/fixed-payments/${recordId}/status`, {
+    await apiFetch(`/fixed-payments/${recordId}/status`, {
       method: 'PATCH',
-      headers: auth.headers(),
       body: JSON.stringify({ status: newStatus })
     });
-
-    if (!response.ok) throw new Error('Failed to update status');
-
     await loadFixedClientMonthlyRecords(clientId);
   } catch (err) {
     alert('Error updating payment status: ' + err.message);
@@ -781,7 +772,7 @@ function clearFilters() {
   handleFilterChange();
 }
 
-// ── Init ─────────────────────────────────────────────────────
+// ── Init ────────────────────────────────---------------------
 async function init() {
   document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
   
