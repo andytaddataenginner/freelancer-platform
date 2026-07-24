@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice Hub - Freelance Suite</title>
+  <title>Statement of Account - Freelance Suite</title>
   <!-- html2pdf library for mobile-friendly PDF exports -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -99,12 +99,11 @@
     .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
     .empty-state-icon { font-size: 2rem; margin-bottom: 10px; }
 
-    /* Hidden template container for clean PDF generations */
     #pdf-container {
       position: absolute;
       left: -9999px;
       top: 0;
-      width: 794px; /* Standard A4 pixel width */
+      width: 794px;
       background: #ffffff;
       color: #000000;
       padding: 40px;
@@ -113,8 +112,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>Invoice Hub</h1>
-    <div class="subtitle">Manage hourly retainers and fixed-rate client billing records</div>
+    <h1>Statement of Account</h1>
+    <div class="subtitle">Unified financial ledger for hourly logs and period-specific fixed retainers</div>
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -126,7 +125,7 @@
         <div class="value" id="s-confirmed" style="color: var(--success);">$0.00</div>
       </div>
       <div class="stat-card">
-        <h3>Active Billable Entities</h3>
+        <h3>Active Entities</h3>
         <div class="value" id="s-upcoming">0</div>
       </div>
     </div>
@@ -151,9 +150,9 @@
     <table>
       <thead>
         <tr>
-          <th>Invoice Ref</th>
+          <th>Statement Ref</th>
           <th>Client Name</th>
-          <th>Billable Hours</th>
+          <th>Billable Hours / Terms</th>
           <th>Unpaid Balance</th>
           <th>Paid Amount</th>
           <th>Status</th>
@@ -161,22 +160,22 @@
         </tr>
       </thead>
       <tbody id="invoice-records-table">
-        <tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⏳</div>Loading billing records...</td></tr>
+        <tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⏳</div>Loading statement records...</td></tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Off-screen wrapper for robust PDF generation -->
   <div id="pdf-container"></div>
 
   <script>
-    const API = '/api'; // Adjust to match your backend mount route
+    const API = '/api';
     const auth = {
       headers: () => ({ 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') })
     };
 
     let rawLogsData = [];
     let clientsData = [];
+    let fixedPaymentsData = [];
     let generatingPDF = false;
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -202,12 +201,21 @@
 
     async function fetchMasterData() {
       try {
-        const [logsRes, clientsRes] = await Promise.all([
+        const [logsRes, clientsRes, fixedRes] = await Promise.all([
           fetch(`${API}/timelogs`, { headers: auth.headers() }),
-          fetch(`${API}/clients`, { headers: auth.headers() })
+          fetch(`${API}/clients`, { headers: auth.headers() }),
+          fetch(`${API}/fixed-payments`, { headers: auth.headers() }).catch(() => ({ json: () => [] }))
         ]);
+        
         rawLogsData = await logsRes.json();
         clientsData = await clientsRes.json();
+        
+        try {
+          fixedPaymentsData = await fixedRes.json();
+        } catch {
+          fixedPaymentsData = [];
+        }
+
         applyTimeWindowFilters();
       } catch(e) { console.error("Master data pull error:", e); }
     }
@@ -222,20 +230,57 @@
 
       const clientGroups = {};
 
-      // Initialize all clients, pulling fixed-rate profiles natively even without individual row entries
       clientsData.forEach(c => {
         if (!selectedClient || c.name === selectedClient) {
           clientGroups[c.name] = { 
             rateType: c.rate_type || 'hourly',
             fixedRate: parseFloat(c.fixed_rate || 0),
             unpaidHours: 0, 
-            totalUnpaid: c.rate_type === 'fixed' ? parseFloat(c.fixed_rate || 0) : 0, 
-            totalPaid: 0 
+            totalUnpaid: 0, 
+            totalPaid: 0,
+            hasRecords: false
           };
         }
       });
 
-      // Aggregate regular/hourly logs
+      // Aggregate month-specific fixed-rate payments from fixed_monthly_payments endpoint
+      fixedPaymentsData.forEach(fp => {
+        const clientObj = clientsData.find(c => c.id === fp.client_id || c.name === fp.client_name);
+        const clientName = clientObj ? clientObj.name : fp.client_name;
+
+        if (!clientName) return;
+        if (selectedClient && clientName !== selectedClient) return;
+
+        const paymentMonthStr = fp.month ? `${fp.month}-01` : null;
+        if (paymentMonthStr) {
+          const paymentTime = new Date(paymentMonthStr + "T00:00:00").getTime();
+          if (startTime && paymentTime < new Date(startVal.slice(0, 7) + "-01T00:00:00").getTime()) return;
+          if (endTime && paymentTime > new Date(endVal.slice(0, 7) + "-28T23:59:59").getTime()) return;
+        }
+
+        if (!clientGroups[clientName]) {
+          clientGroups[clientName] = { rateType: 'fixed', unpaidHours: 0, totalUnpaid: 0, totalPaid: 0, hasRecords: true };
+        }
+
+        clientGroups[clientName].hasRecords = true;
+        const amount = parseFloat(fp.amount || 0);
+
+        if (fp.status === 'paid') {
+          clientGroups[clientName].totalPaid += amount;
+        } else {
+          clientGroups[clientName].totalUnpaid += amount;
+        }
+      });
+
+      Object.keys(clientGroups).forEach(cName => {
+        const group = clientGroups[cName];
+        if (group.rateType === 'fixed' && !group.hasRecords) {
+          const clientMeta = clientsData.find(c => c.name === cName);
+          const baseVal = clientMeta ? parseFloat(clientMeta.fixed_rate || 0) : 0;
+          group.totalUnpaid += baseVal;
+        }
+      });
+
       rawLogsData.forEach(l => {
         if (!l.date) return;
         const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
@@ -246,8 +291,9 @@
         
         if (matchesClient && matchesStart && matchesEnd) {
           if(!clientGroups[l.client_name]) {
-            clientGroups[l.client_name] = { rateType: 'hourly', unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
+            clientGroups[l.client_name] = { rateType: 'hourly', unpaidHours: 0, totalUnpaid: 0, totalPaid: 0, hasRecords: true };
           }
+          clientGroups[l.client_name].hasRecords = true;
           const amt = parseFloat(l.amount || 0);
           const hrs = parseFloat(l.hours || 0);
           
@@ -261,7 +307,7 @@
       });
 
       const tableBody = document.getElementById('invoice-records-table');
-      const groupsArray = Object.keys(clientGroups);
+      const groupsArray = Object.keys(clientGroups).filter(k => clientGroups[k].hasRecords || clientGroups[k].rateType === 'fixed');
 
       let totalOutstanding = 0;
       let totalPaid = 0;
@@ -275,20 +321,20 @@
       document.getElementById('s-upcoming').textContent = groupsArray.length;
 
       if(!groupsArray.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">📭</div><div>No invoices match your filters</div></td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">📭</div><div>No statement records match your filters</div></td></tr>';
         return;
       }
 
       tableBody.innerHTML = groupsArray.map((client, idx) => {
         const data = clientGroups[client];
-        const dummyInvId = `INV-2026-${3000 + idx}`;
+        const dummyInvId = `SOA-2026-${3000 + idx}`;
         const hasOutstanding = data.totalUnpaid > 0;
         
         return `
           <tr>
             <td><strong>${dummyInvId}</strong></td>
-            <td><strong>${client}</strong> ${data.rateType === 'fixed' ? '<span style="font-size:0.7rem; color:var(--gold2);">(Fixed)</span>' : ''}</td>
-            <td>${data.unpaidHours.toFixed(2)}</td>
+            <td><strong>${client}</strong> ${data.rateType === 'fixed' ? '<span style="font-size:0.7rem; color:var(--gold2);">(Fixed Retainer)</span>' : ''}</td>
+            <td>${data.rateType === 'fixed' ? 'Monthly Commitment' : data.unpaidHours.toFixed(2) + ' hrs'}</td>
             <td style="color:${hasOutstanding ? '#f97316':'var(--success)'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
             <td style="color:var(--success); font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
             <td>
@@ -313,35 +359,35 @@
         <div style="font-family: sans-serif; padding: 20px;">
           <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px;">
             <div>
-              <h2 style="margin: 0; color: #1e293b;">INVOICE STATEMENT</h2>
+              <h2 style="margin: 0; color: #1e293b;">STATEMENT OF ACCOUNT</h2>
               <span style="color: #64748b; font-size: 0.85rem;">Ref: ${invoiceId}</span>
             </div>
             <div style="text-align: right;">
-              <strong style="color: #1e293b;">Billed To:</strong><br/>
+              <strong style="color: #1e293b;">Client:</strong><br/>
               <span style="color: #475569;">${clientName}</span>
             </div>
           </div>
           <div style="margin-bottom: 25px; font-size: 0.9rem; color: #475569;">
-            <strong>Billing Window:</strong> ${startDate || 'N/A'} to ${endDate || 'N/A'}
+            <strong>Period Covered:</strong> ${startDate || 'N/A'} to ${endDate || 'N/A'}
           </div>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
             <thead>
               <tr style="background: #f1f5f9; text-align: left;">
-                <th style="padding: 10px; border: 1px solid #cbd5e1;">Description</th>
-                <th style="padding: 10px; border: 1px solid #cbd5e1;">Hours / Rate Type</th>
-                <th style="padding: 10px; border: 1px solid #cbd5e1; text-align: right;">Amount</th>
+                <th style="padding: 10px; border: 1px solid #cbd5e1;">Billing Particulars</th>
+                <th style="padding: 10px; border: 1px solid #cbd5e1;">Metric / Hours</th>
+                <th style="padding: 10px; border: 1px solid #cbd5e1; text-align: right;">Total Balance</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style="padding: 10px; border: 1px solid #cbd5e1;">Professional Services & Retainer Allocation</td>
-                <td style="padding: 10px; border: 1px solid #cbd5e1;">${hours > 0 ? hours.toFixed(2) + ' hrs' : 'Fixed Monthly Term'}</td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1;">Statement Balance / Retainer Allocation</td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1;">${hours > 0 ? hours.toFixed(2) + ' hrs' : 'Fixed Rate Period'}</td>
                 <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">$${amount.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
           <div style="text-align: right; font-size: 1.2rem; font-weight: bold; color: #1e293b;">
-            Total Due: $${amount.toFixed(2)}
+            Net Amount Due: $${amount.toFixed(2)}
           </div>
         </div>
       `;
@@ -358,7 +404,7 @@
         await html2pdf().from(container).set(opt).save();
       } catch (err) {
         console.error("PDF generation failed:", err);
-        alert("Could not generate invoice PDF.");
+        alert("Could not generate statement PDF.");
       } finally {
         container.innerHTML = '';
         generatingPDF = false;
