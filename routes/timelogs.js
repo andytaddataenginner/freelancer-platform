@@ -1,3 +1,5 @@
+// File name: timelogs.js
+
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
@@ -14,14 +16,23 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     if (to)             { where.push(`t.date <= $${i++}::date`);      params.push(to); }
     if (payment_status) { where.push(`t.payment_status = $${i++}`);   params.push(payment_status); }
     const { rows } = await pool.query(`
-      SELECT t.*, u.name AS client_name, u.company AS client_company
+      SELECT t.*, u.name AS client_name, u.company AS client_company, c.rate_type, c.fixed_price, c.hourly_rate
       FROM time_logs t
       JOIN users u ON u.id = t.client_id
+      JOIN clients c ON c.user_id = t.client_id
       WHERE ${where.join(' AND ')}
       ORDER BY t.date DESC, t.created_at DESC
       LIMIT $${i++} OFFSET $${i++}
     `, [...params, limit, offset]);
-    res.json(rows);
+
+    const processedRows = rows.map(row => {
+      if (row.rate_type === 'fixed' && (!row.amount || parseFloat(row.amount) === 0)) {
+        row.amount = row.fixed_price || 0;
+      }
+      return row;
+    });
+
+    res.json(processedRows);
   } catch (e) { next(e); }
 });
 
@@ -32,7 +43,6 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     if (!client_id || !date || !hours || !task_description)
       return res.status(400).json({ error: 'client_id, date, hours, task_description required' });
 
-    // Auto-calculate amount from client billing rate
     const clientInfo = await pool.query(
       'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id = $1',
       [client_id]
@@ -82,14 +92,13 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/timelogs/:id — now also updates amount
+// PUT /api/timelogs/:id
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
 
     let finalAmount = amount;
 
-    // If amount not provided, recalculate from client rate
     if (finalAmount === undefined || finalAmount === null) {
       const logRow = await pool.query('SELECT client_id FROM time_logs WHERE id=$1', [req.params.id]);
       if (logRow.rows.length) {
@@ -100,6 +109,8 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
         const c = clientInfo.rows[0] || {};
         if (c.rate_type === 'hourly' && c.hourly_rate) {
           finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
+        } else if (c.rate_type === 'fixed' && c.fixed_price) {
+          finalAmount = parseFloat(c.fixed_price).toFixed(2);
         }
       }
     }
