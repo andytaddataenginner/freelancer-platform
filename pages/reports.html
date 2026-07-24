@@ -678,64 +678,20 @@ width:100%;
 </div>
 
 <script>
-const API = 'https://freelancer-platform-9jut.onrender.com/api';
-const auth = {
-  token: () => localStorage.getItem('token'),
-  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
-  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
-  isLoggedIn: () => !!localStorage.getItem('token'),
-  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
-};
-
-(function() {
-  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
-  document.getElementById('user-name').textContent = auth.user()?.name || '';
-})();
-
-function logout() { auth.clear(); window.location.href = 'login.html'; }
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('mobile-open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
-}
-
-// Ledger-style tally animation for the statement figures — respects
-// prefers-reduced-motion by jumping straight to the final value.
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-function animateCount(el, endValue, { prefix = '', suffix = '', decimals = 0 } = {}) {
-  if (!el || !isFinite(endValue)) return;
-  if (prefersReducedMotion) {
-    el.textContent = `${prefix}${endValue.toFixed(decimals)}${suffix}`;
-    return;
-  }
-  const duration = 850;
-  const start = performance.now();
-  function tick(now) {
-    const t = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - t, 3);
-    el.textContent = `${prefix}${(endValue * eased).toFixed(decimals)}${suffix}`;
-    if (t < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('report-month').value = new Date().toISOString().slice(0, 7);
-  const asOfEl = document.getElementById('ledger-asof');
-  if (asOfEl) {
-    asOfEl.textContent = 'As of ' + new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-  loadReportData();
-});
-
 async function loadReportData() {
   const month = document.getElementById('report-month').value;
   try {
-    const res = await fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() });
-    const data = await res.json();
+    // 1. Fetch the main freelancer stats overview and required tables
+    const statsRes = await fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() });
+    const data = await statsRes.json();
     
-    const allLogsRes = await fetch(`${API}/timelogs`, { headers: auth.headers() });
-    const allLogs = await allLogsRes.json();
+    const [allLogsRes, fixedPaymentsRes] = await Promise.all([
+      fetch(`${API}/timelogs`, { headers: auth.headers() }),
+      fetch(`${API}/fixed-payments`, { headers: auth.headers() }).catch(() => ({ json: () => [] }))
+    ]);
+    
+    const allLogs = await allLogsRes.json().catch(() => []);
+    const fixedPayments = await fixedPaymentsRes.json().catch(() => []);
     
     let monthPaid = 0;
     let monthUnpaid = 0;
@@ -749,54 +705,55 @@ async function loadReportData() {
     let minDate = null;
     let maxDate = null;
     
+    // Process Time Logs (Hourly clients)[cite: 3]
     allLogs.forEach(log => {
       const amt = parseFloat(log.amount || 0);
       const isPaid = log.payment_status === 'paid';
       
-      if (isPaid) {
-        macroPaid += amt;
-      } else {
-        macroUnpaid += amt;
-      }
+      if (isPaid) macroPaid += amt;
+      else macroUnpaid += amt;
 
       if (log.date && log.date.startsWith(month)) {
-        if (isPaid) {
-          monthPaid += amt;
-        } else {
-          monthUnpaid += amt;
-        }
+        if (isPaid) monthPaid += amt;
+        else monthUnpaid += amt;
       }
 
-      if(log.client_name){
-    uniqueClients.add(log.client_name);
-}
+      if (log.client_name) uniqueClients.add(log.client_name);
+      totalHours += parseFloat(log.hours || 0);
 
-
-totalHours += parseFloat(log.hours || 0);
-
-
-
-if(log.date){
-
-    const logMonth = log.date.substring(0,7);
-
-    activeMonths.add(logMonth);
-
-
-    if(!minDate || log.date < minDate){
-        minDate = log.date;
-    }
-
-
-    if(!maxDate || log.date > maxDate){
-        maxDate = log.date;
-    }
-
-}
-
-      
+      if (log.date) {
+        const logMonth = log.date.substring(0, 7);
+        activeMonths.add(logMonth);
+        if (!minDate || log.date < minDate) minDate = log.date;
+        if (!maxDate || log.date > maxDate) maxDate = log.date;
+      }
     });
 
+    // Process Fixed Monthly Payments (Fixed-rate clients)[cite: 1, 2]
+    fixedPayments.forEach(fp => {
+      const amt = parseFloat(fp.amount || fp.fixed_price || 0);
+      const isPaid = fp.payment_status === 'paid';
+      
+      if (isPaid) macroPaid += amt;
+      else macroUnpaid += amt;
+
+      const fpMonth = (fp.month || fp.date || '').substring(0, 7);
+      if (fpMonth === month) {
+        if (isPaid) monthPaid += amt;
+        else monthUnpaid += amt;
+      }
+
+      if (fp.client_name) uniqueClients.add(fp.client_name);
+      if (fpMonth) activeMonths.add(fpMonth);
+      
+      const fpDate = fp.date || (fp.month ? fp.month + '-01' : null);
+      if (fpDate) {
+        if (!minDate || fpDate < minDate) minDate = fpDate;
+        if (!maxDate || fpDate > maxDate) maxDate = fpDate;
+      }
+    });
+
+    // Update global counters
     animateCount(document.getElementById('global-total-all'), macroPaid + macroUnpaid, { prefix: '$', decimals: 2 });
     animateCount(document.getElementById('global-paid-all'), macroPaid, { prefix: '$', decimals: 2 });
     animateCount(document.getElementById('global-unpaid-all'), macroUnpaid, { prefix: '$', decimals: 2 });
@@ -808,18 +765,12 @@ if(log.date){
     animateCount(document.getElementById('global-hours-total'), totalHours, { suffix: ' hrs', decimals: 2 });
     animateCount(document.getElementById('global-month-count'), activeMonths.size, { suffix: activeMonths.size === 1 ? ' Month' : ' Months', decimals: 0 });
 
+    if (minDate && maxDate) {
+      const startYear = new Date(minDate).getFullYear();
+      const endYear = new Date(maxDate).getFullYear();
+      document.getElementById('global-period').textContent = startYear === endYear ? startYear : `${startYear} - ${endYear}`;
+    }
 
-if(minDate && maxDate){
-
-    const startYear = new Date(minDate).getFullYear();
-    const endYear = new Date(maxDate).getFullYear();
-
-    document.getElementById('global-period').textContent =
-    startYear === endYear 
-    ? startYear 
-    : `${startYear} - ${endYear}`;
-
-}
     const combinedMonthTotal = monthPaid + monthUnpaid;
     if (combinedMonthTotal > 0) {
       document.getElementById('health-paid-bar').style.width = `${(monthPaid / combinedMonthTotal) * 100}%`;
@@ -834,12 +785,13 @@ if(minDate && maxDate){
     const leaderboard = document.getElementById('leaderboard-body');
     const tfoot = document.getElementById('leaderboard-tfoot');
     
-    if(!data.clientBreakdown || data.clientBreakdown.length === 0) {
+    if (!data.clientBreakdown || data.clientBreakdown.length === 0) {
       chartContainer.innerHTML = '<p style="color:var(--ink3); font-size:0.85rem; padding: 1rem 0;">No logs found for this timeframe.</p>';
       leaderboard.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--ink3)">No records found for this month timeline.</td></tr>';
       tfoot.style.display = 'none';
       return;
     }
+
     const amounts = data.clientBreakdown.map(c => parseFloat(c.total || 0));
     const maxVal = Math.max(...amounts, 1);
     chartContainer.innerHTML = '';
@@ -850,10 +802,8 @@ if(minDate && maxDate){
 
     data.clientBreakdown.forEach((c, idx) => {
       const totalAmt = parseFloat(c.total || 0);
-      const pct = Math.max(
-        (totalAmt / maxVal) * 100,
-        8
-        );
+      const pct = Math.max((totalAmt / maxVal) * 100, 8);
+      
       chartContainer.innerHTML += `
         <div class="chart-row">
           <div class="chart-label" title="${c.client_name}">${c.client_name}</div>
@@ -861,38 +811,18 @@ if(minDate && maxDate){
           <div class="chart-val">$${totalAmt.toFixed(2)}</div>
         </div>`;
 
-      const distributionPct =
-(totalAmt / (macroPaid + macroUnpaid)) * 100;
+      const distributionPct = (macroPaid + macroUnpaid) > 0 ? (totalAmt / (macroPaid + macroUnpaid)) * 100 : 0;
 
-
-distributionChart.innerHTML += `
-
-<div class="distribution-item">
-
-
-<div class="distribution-header">
-
-<span>${c.client_name}</span>
-
-<span>
-${distributionPct.toFixed(1)}%
-</span>
-
-</div>
-
-
-<div class="distribution-track">
-
-<div class="distribution-fill"
-style="width:${distributionPct}%">
-</div>
-
-</div>
-
-
-</div>
-
-`;
+      distributionChart.innerHTML += `
+        <div class="distribution-item">
+          <div class="distribution-header">
+            <span>${c.client_name}</span>
+            <span>${distributionPct.toFixed(1)}%</span>
+          </div>
+          <div class="distribution-track">
+            <div class="distribution-fill" style="width:${distributionPct}%"></div>
+          </div>
+        </div>`;
 
       leaderHoursSum += parseFloat(c.hours || 0);
       leaderOwedSum += totalAmt;
@@ -902,19 +832,9 @@ style="width:${distributionPct}%">
         <tr style="--i:${idx}">
           <td><strong>${c.client_name}</strong></td>
           <td><span style="text-transform:capitalize; font-size: 0.8rem; background: var(--bg2); padding: 3px 8px; border-radius: 4px;">${c.rate_type}</span></td>
-          <td>${parseFloat(c.hours).toFixed(2)} hrs</td>
-          <td style="
-color:#ef4444;
-font-weight:700;">
-$${totalAmt.toFixed(2)}
-</td>
-
-
-<td style="
-color:#10b981;
-font-weight:700;">
-$${parseFloat(c.paid || 0).toFixed(2)}
-</td>
+          <td>${parseFloat(c.hours || 0).toFixed(2)} hrs</td>
+          <td style="color:#ef4444; font-weight:700;">$${totalAmt.toFixed(2)}</td>
+          <td style="color:#10b981; font-weight:700;">$${parseFloat(c.paid || 0).toFixed(2)}</td>
         </tr>`;
     });
 
@@ -925,44 +845,14 @@ $${parseFloat(c.paid || 0).toFixed(2)}
   } catch(e) { console.error("Dashboard Render Error:", e); }
 }
 
-async function exportFilteredCSV() {
-  const monthFilter = document.getElementById('report-month').value;
-  try {
-    const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
-    const logs = await res.json();
-    
-    if(!logs || !logs.length) { alert("No logs available."); return; }
-    const filteredLogs = logs.filter(l => l.date && l.date.startsWith(monthFilter));
-
-    if(!filteredLogs.length) {
-      alert(`No logs found matching selection: ${monthFilter}`);
-      return;
-    }
-
-    const headersArray = ['Log_ID', 'Client', 'Date', 'Hours', 'Calculated_Amount', 'Payment_Status', 'Task_Description'];
-    const csvRows = [
-      headersArray.join(','),
-      ...filteredLogs.map(l => [
-        l.id,
-        `"${l.client_name.replace(/"/g, '""')}"`,
-        l.date.slice(0,10),
-        l.hours,
-        l.amount || 0,
-        l.payment_status,
-        `"${(l.task_description || '').replace(/"/g, '""')}"`
-      ].join(','))
-    ];
-
-    const csvBlob = new Blob([csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-    const blobUrl = URL.createObjectURL(csvBlob);
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.href = blobUrl;
-    downloadAnchor.setAttribute('download', `QFA_FilteredLogs_${monthFilter}.csv`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    document.body.removeChild(downloadAnchor);
-  } catch(e) { alert("Export processing error: " + e.message); }
-}
+// Ensure execution on load and month changes
+document.addEventListener('DOMContentLoaded', () => {
+  const monthInput = document.getElementById('report-month');
+  if (monthInput) {
+    monthInput.addEventListener('change', loadReportData);
+  }
+  loadReportData();
+});
 </script>
 </body>
 </html>
