@@ -517,7 +517,8 @@ function renderFixedCardUI(record, formattedMonth) {
     container.innerHTML = `
         <div class="card p-4 border shadow-sm bg-white">
             <h5>Fixed Price Project Overview</h5>
-            <p class="mb-1">Billing Period: <strong>${formattedMonth}</strong></p>
+            <!-- Explicitly displaying the month and year context -->
+            <p class="mb-1 text-primary">Billing Period: <strong>${formattedMonth}</strong></p>
             <p class="mb-3">Project Amount: <strong>$${record.amount}</strong></p>
             <div class="d-flex align-items-center justify-content-between">
                 <div>
@@ -528,7 +529,7 @@ function renderFixedCardUI(record, formattedMonth) {
                 </div>
                 <button class="btn btn-sm ${isPaid ? 'btn-outline-secondary' : 'btn-outline-success'}"
                     onclick="toggleMonthlyPaymentStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${formattedMonth}')">
-                    Mark as ${isPaid ? 'Unpaid' : 'Paid'}
+                    Mark as ${isPaid ? 'Unpaid' : 'Paid'} for ${formattedMonth}
                 </button>
             </div>
         </div>
