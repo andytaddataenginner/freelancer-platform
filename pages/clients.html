@@ -326,13 +326,7 @@ async function loadClients() {
 
       const fixedPayBtn = isFixed ? `
         <div style="margin:0.8rem 0;padding:0.8rem;background:${isPaid?'#dcfce7':'#fef3c7'};border-radius:8px;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:0.82rem;font-weight:600;color:${isPaid?'#166534':'#92400e'}">
-            ${isPaid ? '✅ Fixed payment received' : '⏳ Fixed payment pending'}
-          </span>
-          <button class="btn-sm ${isPaid?'btn-outline':'btn-green'}"
-            onclick="toggleFixedPayment(${c.id}, '${isPaid?'unpaid':'paid'}')">
-            ${isPaid ? 'Mark unpaid' : 'Mark paid ✓'}
-          </button>
+          
         </div>` : '';
 
       return `
