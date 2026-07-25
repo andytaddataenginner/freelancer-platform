@@ -140,4 +140,44 @@ router.get('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// POST /api/fixed-payments/backfill-all
+// body: { start_month: 'YYYY-MM' }
+// One-time seed: creates an 'unpaid' row for every fixed-rate client for
+// every month from start_month through the current month. Safe to re-run —
+// ON CONFLICT DO NOTHING skips months that already have a record.
+router.post('/backfill-all', requireFreelancer, async (req, res, next) => {
+  try {
+    const { start_month } = req.body;
+    if (!start_month) return res.status(400).json({ error: 'start_month required (YYYY-MM)' });
+
+    const clients = await pool.query(`
+      SELECT c.user_id, c.fixed_price FROM clients c
+      WHERE c.freelancer_id = $1 AND c.rate_type = 'fixed' AND c.fixed_price IS NOT NULL
+    `, [req.user.id]);
+
+    const months = [];
+    let [y, m] = start_month.split('-').map(Number);
+    const now = new Date();
+    const endY = now.getFullYear(), endM = now.getMonth() + 1;
+    while (y < endY || (y === endY && m <= endM)) {
+      months.push(`${y}-${String(m).padStart(2, '0')}`);
+      m++; if (m > 12) { m = 1; y++; }
+    }
+
+    let created = 0;
+    for (const cl of clients.rows) {
+      for (const mo of months) {
+        const r = await pool.query(`
+          INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
+          VALUES ($1, $2, $3, $4, 'unpaid')
+          ON CONFLICT (client_id, month) DO NOTHING
+          RETURNING id
+        `, [cl.user_id, req.user.id, mo, cl.fixed_price]);
+        if (r.rows.length) created++;
+      }
+    }
+    res.json({ clients: clients.rows.length, months: months.length, created });
+  } catch (e) { next(e); }
+});
+
 module.exports = router;
