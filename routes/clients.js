@@ -7,7 +7,7 @@ const { requireFreelancer } = require('../middleware/auth');
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
-      SELECT u.id, u.name, u.email, u.company, u.phone,
+      SELECT u.id, u.name, u.email, u.company,
              c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
              c.fixed_payment_status,
              COALESCE(c.credit_balance, 0)::float AS credit_balance,
@@ -18,7 +18,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       LEFT JOIN time_logs t ON t.client_id = u.id AND t.freelancer_id = $1
       WHERE u.role = 'client'
         AND c.freelancer_id = $1
-      GROUP BY u.id, u.name, u.email, u.company, u.phone,
+      GROUP BY u.id, u.name, u.email, u.company,
                c.is_active, c.notes, c.rate_type, c.hourly_rate, 
                c.fixed_price, c.fixed_payment_status, c.credit_balance
       ORDER BY u.name
@@ -30,7 +30,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 // POST /api/clients — creates client and links to THIS freelancer
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
-    const { name, email, company, phone, password, notes, rate_type, hourly_rate, fixed_price } = req.body;
+    const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price } = req.body;
     if (!name || !email || !password) 
       return res.status(400).json({ error: 'name, email, password required' });
 
@@ -38,9 +38,9 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     await pool.query('BEGIN');
     try {
       const userRow = await pool.query(
-        `INSERT INTO users (name, email, phone, password_hash, role, company)
-         VALUES ($1,$2,$3,$4,'client',$5) RETURNING id, name, email, phone, company`,
-        [name, email.toLowerCase().trim(), phone || null, hash, company || null]
+        `INSERT INTO users (name, email, password_hash, role, company)
+         VALUES ($1,$2,$3,'client',$4) RETURNING id, name, email, company`,
+        [name, email.toLowerCase().trim(), hash, company || null]
       );
       await pool.query(
         `INSERT INTO clients (user_id, freelancer_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance)
@@ -61,11 +61,11 @@ router.post('/', requireFreelancer, async (req, res, next) => {
 // PUT /api/clients/:id — only update if belongs to this freelancer
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
-    const { name, company, phone, notes, is_active, rate_type, hourly_rate, fixed_price } = req.body;
+    const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price } = req.body;
     await pool.query(
-      `UPDATE users SET name=$1, company=$2, phone=$3, updated_at=NOW()
-       WHERE id=$4 AND role='client'`,
-      [name, company, phone || null, req.params.id]
+      `UPDATE users SET name=$1, company=$2, updated_at=NOW()
+       WHERE id=$3 AND role='client'`,
+      [name, company, req.params.id]
     );
     await pool.query(
       `UPDATE clients 
@@ -96,6 +96,7 @@ router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => 
 // DELETE /api/clients/:id
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
+    // Only delete if this client belongs to this freelancer
     const check = await pool.query(
       'SELECT id FROM clients WHERE user_id=$1 AND freelancer_id=$2',
       [req.params.id, req.user.id]
