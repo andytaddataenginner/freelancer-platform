@@ -762,17 +762,33 @@ async function loadReportData() {
 
     const data = await statsRes.json();
     const allLogs = await allLogsRes.json();
+
+    // Logs the real reason a call came back empty (bad status, bad JSON,
+    // wrong shape) instead of silently pretending it returned nothing.
+    async function safeJsonArray(res, label) {
+      let body;
+      try {
+        body = await res.json();
+      } catch (err) {
+        console.error(`[fixed-payments] ${label}: response wasn't valid JSON`, err);
+        return [];
+      }
+      if (!res.ok) {
+        console.error(`[fixed-payments] ${label}: request failed (${res.status})`, body);
+        return [];
+      }
+      if (!Array.isArray(body)) {
+        console.error(`[fixed-payments] ${label}: expected an array, got`, body);
+        return [];
+      }
+      return body;
+    }
+
     // NEW: the freelancer's whole fixed-fee ledger, all time — this is what
     // powers the "Statement of Account · All Time" figures for fixed clients.
-    let fixedAllRows = [];
-    let fixedMonthRows = [];
-    let clientsList = [];
-    try { fixedAllRows = await fixedAllRes.json(); } catch { fixedAllRows = []; }
-    try { fixedMonthRows = await fixedMonthRes.json(); } catch { fixedMonthRows = []; }
-    try { clientsList = await clientsRes.json(); } catch { clientsList = []; }
-    if (!Array.isArray(fixedAllRows)) fixedAllRows = [];
-    if (!Array.isArray(fixedMonthRows)) fixedMonthRows = [];
-    if (!Array.isArray(clientsList)) clientsList = [];
+    const fixedAllRows = await safeJsonArray(fixedAllRes, 'GET /fixed-payments');
+    const fixedMonthRows = await safeJsonArray(fixedMonthRes, 'POST /fixed-payments/bulk-generate');
+    const clientsList = await safeJsonArray(clientsRes, 'GET /clients');
 
     // client_id (users.id) -> rate_type, straight from the clients table —
     // this is the real source of truth for billing type.
