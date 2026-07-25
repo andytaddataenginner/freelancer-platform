@@ -417,14 +417,28 @@ document.querySelectorAll('.sb-nav a').forEach(a=>
 );
 
 let rawLogsData = [];
+// NEW — every fixed_monthly_payments record for this freelancer, all
+// clients, all time. Fixed-rate clients are billed from this, never from
+// time_logs amounts.
+let rawFixedData = [];
+// NEW — client_id (users.id) -> { name, rate_type }, from /clients, so we
+// know which clients are fixed-rate even if a given timelog is missing
+// its own rate_type.
+let clientRateMap = new Map();
+// NEW — holds the exact data behind each rendered invoice row, keyed by
+// its dummy invoice id, so the PDF button doesn't need to cram
+// hours/amounts/fixed-month arrays into an inline onclick string.
+let lastInvoiceGroups = {};
 let generatingPDF=false;
+
 document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('start-date').value = "2026-01-01";
   document.getElementById('end-date').value = today;
 
   await populateClientSelector();
-  await fetchMasterLogs();
+  await Promise.all([fetchMasterLogs(), fetchFixedPayments()]);
+  applyTimeWindowFilters();
 });
 
 async function populateClientSelector() {
@@ -432,8 +446,9 @@ async function populateClientSelector() {
     const res = await fetch(`${API}/clients`, { headers: auth.headers() });
     const clients = await res.json();
     const selector = document.getElementById('client-select');
-    clients.forEach(c => {
+    (clients || []).forEach(c => {
       selector.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+      clientRateMap.set(c.user_id ?? c.id, { name: c.name, rate_type: c.rate_type });
     });
   } catch(e) { console.error("Client selector error:", e); }
 }
@@ -441,9 +456,40 @@ async function populateClientSelector() {
 async function fetchMasterLogs() {
   try {
     const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
-    rawLogsData = await res.json();
-    applyTimeWindowFilters();
-  } catch(e) { console.error("Logs pull error:", e); }
+    const body = await res.json();
+    rawLogsData = Array.isArray(body) ? body : [];
+    if (!Array.isArray(body)) console.error("[invoices] GET /timelogs: unexpected response shape", body);
+  } catch(e) { console.error("Logs pull error:", e); rawLogsData = []; }
+}
+
+// NEW — pulls every fixed-fee monthly record so fixed-rate clients show
+// up in the invoice list even when they've never logged an hour.
+async function fetchFixedPayments() {
+  try {
+    const res = await fetch(`${API}/fixed-payments`, { headers: auth.headers() });
+    let body;
+    try {
+      body = await res.json();
+    } catch (err) {
+      console.error("[invoices] GET /fixed-payments: response wasn't valid JSON", err);
+      rawFixedData = [];
+      return;
+    }
+    if (!res.ok) {
+      console.error("[invoices] GET /fixed-payments: request failed", res.status, body);
+      rawFixedData = [];
+      return;
+    }
+    rawFixedData = Array.isArray(body) ? body : [];
+  } catch(e) { console.error("Fixed payments pull error:", e); rawFixedData = []; }
+}
+
+function formatMonthLabel(monthStr) {
+  // 'YYYY-MM' -> 'July 2026'
+  const [y, m] = (monthStr || '').split('-').map(Number);
+  if (!y || !m) return monthStr || '';
+  const d = new Date(y, m - 1, 1);
+  return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
 function applyTimeWindowFilters() {
@@ -453,31 +499,62 @@ function applyTimeWindowFilters() {
 
   const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
   const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
+  // fixed_monthly_payments.month is a 'YYYY-MM' string — compare against
+  // the same window using the month portion of the chosen dates.
+  const startMonth = startVal ? startVal.slice(0, 7) : null;
+  const endMonth = endVal ? endVal.slice(0, 7) : null;
+
+  const clientGroups = {};
+  function ensureGroup(name, type) {
+    if (!clientGroups[name]) {
+      clientGroups[name] = { type, unpaidHours: 0, totalUnpaid: 0, totalPaid: 0, fixedMonths: [] };
+    }
+    return clientGroups[name];
+  }
 
   let records = rawLogsData.filter(l => {
     if (!l.date) return false;
     const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
-    
     const matchesClient = !selectedClient || l.client_name === selectedClient;
     const matchesStart = !startTime || logTime >= startTime;
     const matchesEnd = !endTime || logTime <= endTime;
     return matchesClient && matchesStart && matchesEnd;
   });
 
-  const clientGroups = {};
   records.forEach(r => {
-    if(!clientGroups[r.client_name]) {
-      clientGroups[r.client_name] = { unpaidHours: 0, totalUnpaid: 0, totalPaid: 0 };
-    }
+    const info = clientRateMap.get(r.client_id);
+    const isFixed = r.rate_type === 'fixed' || (info && info.rate_type === 'fixed');
+    // Fixed clients are billed through fixed_monthly_payments below, not
+    // per-log amounts — the backend currently stamps the full monthly fee
+    // on every single log entry for a fixed client, so summing those here
+    // would multiply their fee by however many times they logged hours.
+    if (isFixed) return;
+
+    const g = ensureGroup(r.client_name, 'hourly');
     const amt = parseFloat(r.amount || 0);
     const hrs = parseFloat(r.hours || 0);
-    
-    if(r.payment_status !== 'paid') {
-      clientGroups[r.client_name].unpaidHours += hrs;
-      clientGroups[r.client_name].totalUnpaid += amt;
+    if (r.payment_status !== 'paid') {
+      g.unpaidHours += hrs;
+      g.totalUnpaid += amt;
     } else {
-      clientGroups[r.client_name].totalPaid += amt;
+      g.totalPaid += amt;
     }
+  });
+
+  // Fixed-fee monthly records that fall inside the selected date window.
+  rawFixedData.forEach(f => {
+    if (selectedClient && f.client_name !== selectedClient) return;
+    if (startMonth && f.month < startMonth) return;
+    if (endMonth && f.month > endMonth) return;
+
+    const g = ensureGroup(f.client_name, 'fixed');
+    const amt = parseFloat(f.amount || 0);
+    if (f.status === 'paid') {
+      g.totalPaid += amt;
+    } else {
+      g.totalUnpaid += amt;
+    }
+    g.fixedMonths.push({ month: f.month, amount: amt, status: f.status });
   });
 
   const tableBody = document.getElementById('invoice-records-table');
@@ -494,6 +571,8 @@ function applyTimeWindowFilters() {
   document.getElementById('s-confirmed').textContent = '$' + totalPaid.toFixed(2);
   document.getElementById('s-upcoming').textContent = groupsArray.length;
 
+  lastInvoiceGroups = {};
+
   if(!groupsArray.length) {
     tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">📭</div><div>No invoices match your filters</div></td></tr>';
     return;
@@ -503,12 +582,25 @@ function applyTimeWindowFilters() {
     const data = clientGroups[client];
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
-    
+    const fixedTag = data.type === 'fixed'
+      ? ' <span style="font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); background:#fef3c7; padding:2px 7px; border-radius:4px; vertical-align:middle;">Fixed</span>'
+      : '';
+
+    lastInvoiceGroups[dummyInvId] = {
+      clientName: client,
+      type: data.type,
+      hours: data.unpaidHours,
+      totalUnpaid: data.totalUnpaid,
+      fixedMonths: data.fixedMonths,
+      start: startVal,
+      end: endVal
+    };
+
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
-        <td><strong>${client}</strong></td>
-        <td>${data.unpaidHours.toFixed(2)}</td>
+        <td><strong>${client}</strong>${fixedTag}</td>
+        <td>${data.type === 'fixed' ? '—' : data.unpaidHours.toFixed(2)}</td>
         <td style="color:${hasOutstanding ? '#b45309':'#10b981'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
         <td style="color:#10b981; font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
         <td>
@@ -516,7 +608,7 @@ function applyTimeWindowFilters() {
                             : '<span class="badge badge-paid">Paid</span>'}
         </td>
         <td>
-         <button class="download-btn" onclick="downloadInvoice('${dummyInvId}','${client}',${data.unpaidHours},${data.totalUnpaid},'${document.getElementById('start-date').value}','${document.getElementById('end-date').value}')">
+         <button class="download-btn" onclick="downloadInvoice('${dummyInvId}')">
           ⬇ PDF
          </button>
         </td>
@@ -524,7 +616,11 @@ function applyTimeWindowFilters() {
   }).join('');
 }
 
-async function downloadInvoice(invId, clientName, hours, totalAmount, start, end) {
+async function downloadInvoice(invId) {
+  const group = lastInvoiceGroups[invId];
+  if (!group) { alert("Couldn't find that invoice's data — try reapplying your filters and downloading again."); return; }
+  const { clientName, type, hours, totalUnpaid, fixedMonths, start, end } = group;
+
   if(generatingPDF) return;
   generatingPDF=true;
 
@@ -544,6 +640,25 @@ async function downloadInvoice(invId, clientName, hours, totalAmount, start, end
 
   const container = document.getElementById("pdf-container");
   container.classList.add("rendering");
+
+  // Fixed-fee clients get one line item per unpaid month; hourly clients
+  // keep the single consolidated services line.
+  const unpaidFixedMonths = (fixedMonths || []).filter(m => m.status !== 'paid');
+  const lineItemsHtml = type === 'fixed'
+    ? (unpaidFixedMonths.length
+        ? unpaidFixedMonths.map(m => `
+        <tr>
+          <td>Fixed Monthly Fee — ${formatMonthLabel(m.month)}</td>
+          <td>—</td>
+          <td>$${m.amount.toFixed(2)}</td>
+        </tr>`).join('')
+        : `<tr><td>Fixed Monthly Fee</td><td>—</td><td>$0.00</td></tr>`)
+    : `
+        <tr>
+          <td>Professional Freelance Consulting Services</td>
+          <td>${hours.toFixed(2)}</td>
+          <td>$${totalUnpaid.toFixed(2)}</td>
+        </tr>`;
 
   container.innerHTML = `
 <div class="invoice-card">
@@ -578,7 +693,7 @@ async function downloadInvoice(invId, clientName, hours, totalAmount, start, end
 <div class="party-label">Billing Period</div>
 <div class="party-detail">${start} &mdash; ${end}</div>
 <div class="party-label spaced">Status</div>
-<div class="party-detail"><span class="status-pill ${totalAmount > 0 ? 'outstanding' : 'settled'}">${totalAmount > 0 ? 'Outstanding' : 'Fully Settled'}</span></div>
+<div class="party-detail"><span class="status-pill ${totalUnpaid > 0 ? 'outstanding' : 'settled'}">${totalUnpaid > 0 ? 'Outstanding' : 'Fully Settled'}</span></div>
 </td>
 </tr>
 </table>
@@ -591,16 +706,12 @@ async function downloadInvoice(invId, clientName, hours, totalAmount, start, end
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>Professional Freelance Consulting Services</td>
-<td>${hours.toFixed(2)}</td>
-<td>$${totalAmount.toFixed(2)}</td>
-</tr>
+${lineItemsHtml}
 </tbody>
 <tfoot>
 <tr>
 <td colspan="2">Total Amount Due</td>
-<td>$${totalAmount.toFixed(2)}</td>
+<td>$${totalUnpaid.toFixed(2)}</td>
 </tr>
 </tfoot>
 </table>
