@@ -722,11 +722,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadReportData();
 });
 
-// ────────────────────────────────────────────────────────────────
-// Helper: resolve a fixed_monthly_payments row into paid/unpaid split.
-// Schema only has 'paid' | 'unpaid' (no partial), and a single `amount`
-// field — so the split is just "all of it, on one side or the other".
-// ────────────────────────────────────────────────────────────────
 function splitFixedPayment(row) {
   const amt = parseFloat(row.amount || 0);
   return row.status === 'paid'
@@ -738,16 +733,6 @@ async function loadReportData() {
   const month = document.getElementById('report-month').value; // "YYYY-MM"
 
   try {
-    // fixedAllRes: every fixed-fee record for this freelancer, all clients,
-    // all months — powers the "All Time" statement. Requires the GET /
-    // (root) route on the fixed-payments router.
-    // fixedMonthRes: bulk-generate also ensures a row exists for every
-    // fixed client for the selected month (creating 'unpaid' ones that
-    // don't exist yet) and returns them already joined to client_name —
-    // so this doubles as both "ensure" and "fetch" for the month view.
-    // clientsRes: the authoritative source for "is this client fixed-fee"
-    // — clients.rate_type — so a brand-new fixed client with no
-    // fixed_monthly_payments row yet still gets excluded from hourly math.
     const [statsRes, allLogsRes, fixedAllRes, fixedMonthRes, clientsRes] = await Promise.all([
       fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() }),
       fetch(`${API}/timelogs`, { headers: auth.headers() }),
@@ -763,8 +748,6 @@ async function loadReportData() {
     const data = await statsRes.json();
     const allLogs = await allLogsRes.json();
 
-    // Logs the real reason a call came back empty (bad status, bad JSON,
-    // wrong shape) instead of silently pretending it returned nothing.
     async function safeJsonArray(res, label) {
       let body;
       try {
@@ -784,20 +767,13 @@ async function loadReportData() {
       return body;
     }
 
-    // NEW: the freelancer's whole fixed-fee ledger, all time — this is what
-    // powers the "Statement of Account · All Time" figures for fixed clients.
     const fixedAllRows = await safeJsonArray(fixedAllRes, 'GET /fixed-payments');
     const fixedMonthRows = await safeJsonArray(fixedMonthRes, 'POST /fixed-payments/bulk-generate');
     const clientsList = await safeJsonArray(clientsRes, 'GET /clients');
 
-    // client_id (users.id) -> rate_type, straight from the clients table —
-    // this is the real source of truth for billing type.
     const clientRateTypeMap = new Map(
       clientsList.map(c => [c.user_id ?? c.id, c.rate_type])
     );
-    // Fallback net: anyone who already has a fixed_monthly_payments row
-    // is fixed-rate too, in case /clients doesn't expose user_id/rate_type
-    // the way we expect above.
     const fixedClientIds = new Set(fixedAllRows.map(f => f.client_id));
 
     function isFixedRateClient(log) {
@@ -823,10 +799,6 @@ async function loadReportData() {
       const isPaid = log.payment_status === 'paid';
       const isFixedClient = isFixedRateClient(log);
 
-      // Dollar figures from timelogs only apply to HOURLY clients now.
-      // A fixed client's dollars are tallied separately from
-      // fixed_monthly_payments below, so we skip them here to avoid
-      // double-counting.
       if (!isFixedClient) {
         if (isPaid) {
           macroPaid += amt;
@@ -843,8 +815,6 @@ async function loadReportData() {
         }
       }
 
-      // Hours, client roster, and coverage period still include fixed
-      // clients — they still log hours, it's just not what they're billed on.
       if (log.client_name) {
         uniqueClients.add(log.client_name);
       }
@@ -859,7 +829,6 @@ async function loadReportData() {
       }
     });
 
-    // Fold the fixed-fee ledger into the same totals.
     fixedAllRows.forEach(f => {
       const { paid, unpaid } = splitFixedPayment(f);
       macroPaid += paid;
@@ -905,22 +874,23 @@ async function loadReportData() {
     const leaderboard = document.getElementById('leaderboard-body');
     const tfoot = document.getElementById('leaderboard-tfoot');
 
-    // ── Merge fixed-fee clients into this month's breakdown ──────────
-    // data.clientBreakdown comes from /stats/freelancer and is presumed
-    // to be built off timelogs, so a fixed client's `total`/`paid` there
-    // reflect stale/irrelevant hourly math. We override those two fields
-    // with the real fixed_monthly_payments figures for the selected
-    // month, and add an entry for any fixed client that owes a fee this
-    // month but logged zero hours (the fee is still owed either way).
     let breakdown = (data.clientBreakdown || []).map(c => ({ ...c }));
 
+    // UPDATED FIXED-FEE MERGING LOGIC (PREVENTS DUPLICATES)
     fixedMonthRows.forEach(f => {
       const { due, paid } = splitFixedPayment(f);
-      let row = breakdown.find(c => c.client_id === f.client_id);
+      const fixedClientIdStr = String(f.client_id);
+      
+      let row = breakdown.find(c => 
+        String(c.client_id) === fixedClientIdStr || 
+        (c.client_name && f.client_name && c.client_name.toLowerCase() === f.client_name.toLowerCase())
+      );
+
       if (row) {
         row.total = due;
         row.paid = paid;
         row.rate_type = 'fixed';
+        if (!row.client_id) row.client_id = f.client_id;
       } else {
         breakdown.push({
           client_id: f.client_id,
@@ -1035,8 +1005,6 @@ async function exportFilteredCSV() {
       ].join(','));
     });
 
-    // Fixed-fee clients don't live in timelogs money-wise, so their
-    // monthly fee gets its own row(s) in the same export.
     fixedRows.forEach(f => {
       csvRows.push([
         f.id,
