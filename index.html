@@ -804,6 +804,18 @@ themeToggleBtn.addEventListener('click', () => {
   updateToggleIcon(newTheme);
 });
 
+// ── Close mobile menu when a link is clicked ──────────────────
+const navLinksContainer = document.getElementById('nav-links');
+const navLinks = navLinksContainer.querySelectorAll('a');
+
+navLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    if (navLinksContainer.classList.contains('open')) {
+      navLinksContainer.classList.remove('open');
+    }
+  });
+});
+
 // ── Default portfolio (shown immediately, swapped for live data if the API responds) ──
 const DEMO_PORTFOLIO = [
   { emoji:'📊', cat:'Business Intelligence', title:'Sales Analytics Dashboard', desc:'Interactive Power BI dashboard tracking monthly revenue across 12 regions for a logistics company.' },
