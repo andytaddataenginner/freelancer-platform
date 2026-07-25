@@ -104,16 +104,6 @@
     .topbar-control-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); font-weight: 600; }
     .content { padding: 1.5rem; flex: 1; }
 
-    /* ══════════════════════════════════════════════════════════════
-       LEDGER STATEMENT HEADER
-       Replaces the old six-box, six-color KPI grid. Color there was
-       decorative (each stat got an arbitrary rainbow border with no
-       meaning), so instead: one hero figure (Total Volume, the actual
-       headline number) gets the emphasis, four neutral facts sit in a
-       ruled 2×2 grid like an accounting worksheet, and color is spent
-       only where it means something — paid vs. outstanding.
-       ══════════════════════════════════════════════════════════════ */
-
     .global-summary {
       position: relative;
       overflow: hidden;
@@ -243,8 +233,8 @@
     gap: 1.5rem;
     margin-bottom: 1.5rem;
       }
-      
-      
+
+
       /* REPORT DASHBOARD */
       .grid-3 {
     display:grid;
@@ -254,8 +244,8 @@
     margin-bottom:1.5rem;
     align-items:start;
 }
-      
-      
+
+
       .grid-3 .card {
 
     margin-bottom:0;
@@ -267,41 +257,41 @@
     flex-direction:column;
 
 }
-      
-      
+
+
       /* Client Chart card */
       .grid-3 .card:nth-child(3) {
           min-width: 0;
       }
-      
-      
+
+
       /* Tablet */
       @media(max-width:1200px){
-      
+
           .grid-3 {
               grid-template-columns: 1fr 1fr;
           }
-      
+
           .grid-3 .card:nth-child(3){
               grid-column:1 / -1;
           }
-      
+
       }
-      
-      
+
+
       /* Mobile */
       @media(max-width:768px){
-      
+
           .grid-3 {
               grid-template-columns:1fr;
           }
-      
+
           .grid-3 .card:nth-child(3){
               min-width:auto;
           }
-      
+
       }
-    .chart-container { 
+    .chart-container {
     display:flex;
     flex-direction:column;
     gap:0.8rem;
@@ -365,9 +355,9 @@ width:100%;
 
 
     .chart-bar {
-    
+
     height:100%;
-    
+
     min-width:8px;
 
     transform-origin: left center;
@@ -377,9 +367,9 @@ width:100%;
     #0d2353,
     var(--gold2)
     );
-    
+
     border-radius:8px;
-    
+
     }
 
 .chart-val {
@@ -426,7 +416,6 @@ width:100%;
     .ledger-total-row td:nth-child(3), .ledger-total-row td:nth-child(4), .ledger-total-row td:nth-child(5) {
       font-family: var(--mono);
     }
-    /* Accounting convention: a double rule marks a totals row */
     .ledger-total-row td {
       border-top: 3px double var(--navy);
       border-bottom: none;
@@ -458,6 +447,13 @@ width:100%;
       .mobile-header { display: flex; }
       .topbar { position: relative !important; top: 0 !important; }
       .content { padding: 1rem; }
+    }
+
+    /* NEW — small badge for the fixed-fee row/marker in tables */
+    .fixed-fee-tag {
+      display:inline-block; margin-left:6px; font-size:0.62rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:0.05em; color: var(--navy);
+      background: rgba(201,164,76,0.22); padding: 1px 6px; border-radius: 4px; vertical-align: middle;
     }
   </style>
 </head>
@@ -699,8 +695,6 @@ function toggleSidebar() {
   document.getElementById('sidebar-overlay').classList.toggle('open');
 }
 
-// Ledger-style tally animation for the statement figures — respects
-// prefers-reduced-motion by jumping straight to the final value.
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 function animateCount(el, endValue, { prefix = '', suffix = '', decimals = 0 } = {}) {
   if (!el || !isFinite(endValue)) return;
@@ -728,73 +722,139 @@ document.addEventListener('DOMContentLoaded', () => {
   loadReportData();
 });
 
+// ────────────────────────────────────────────────────────────────
+// Helper: resolve a fixed_monthly_payments row into paid/unpaid split.
+// Schema only has 'paid' | 'unpaid' (no partial), and a single `amount`
+// field — so the split is just "all of it, on one side or the other".
+// ────────────────────────────────────────────────────────────────
+function splitFixedPayment(row) {
+  const amt = parseFloat(row.amount || 0);
+  return row.status === 'paid'
+    ? { due: amt, paid: amt, unpaid: 0 }
+    : { due: amt, paid: 0, unpaid: amt };
+}
+
 async function loadReportData() {
-  const month = document.getElementById('report-month').value;
+  const month = document.getElementById('report-month').value; // "YYYY-MM"
+
   try {
-    const res = await fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() });
-    const data = await res.json();
-    
-    const allLogsRes = await fetch(`${API}/timelogs`, { headers: auth.headers() });
+    // fixedAllRes: every fixed-fee record for this freelancer, all clients,
+    // all months — powers the "All Time" statement. Requires the GET /
+    // (root) route on the fixed-payments router.
+    // fixedMonthRes: bulk-generate also ensures a row exists for every
+    // fixed client for the selected month (creating 'unpaid' ones that
+    // don't exist yet) and returns them already joined to client_name —
+    // so this doubles as both "ensure" and "fetch" for the month view.
+    // clientsRes: the authoritative source for "is this client fixed-fee"
+    // — clients.rate_type — so a brand-new fixed client with no
+    // fixed_monthly_payments row yet still gets excluded from hourly math.
+    const [statsRes, allLogsRes, fixedAllRes, fixedMonthRes, clientsRes] = await Promise.all([
+      fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() }),
+      fetch(`${API}/timelogs`, { headers: auth.headers() }),
+      fetch(`${API}/fixed-payments`, { headers: auth.headers() }),
+      fetch(`${API}/fixed-payments/bulk-generate`, {
+        method: 'POST',
+        headers: auth.headers(),
+        body: JSON.stringify({ month })
+      }),
+      fetch(`${API}/clients`, { headers: auth.headers() })
+    ]);
+
+    const data = await statsRes.json();
     const allLogs = await allLogsRes.json();
-    
+    // NEW: the freelancer's whole fixed-fee ledger, all time — this is what
+    // powers the "Statement of Account · All Time" figures for fixed clients.
+    let fixedAllRows = [];
+    let fixedMonthRows = [];
+    let clientsList = [];
+    try { fixedAllRows = await fixedAllRes.json(); } catch { fixedAllRows = []; }
+    try { fixedMonthRows = await fixedMonthRes.json(); } catch { fixedMonthRows = []; }
+    try { clientsList = await clientsRes.json(); } catch { clientsList = []; }
+    if (!Array.isArray(fixedAllRows)) fixedAllRows = [];
+    if (!Array.isArray(fixedMonthRows)) fixedMonthRows = [];
+    if (!Array.isArray(clientsList)) clientsList = [];
+
+    // client_id (users.id) -> rate_type, straight from the clients table —
+    // this is the real source of truth for billing type.
+    const clientRateTypeMap = new Map(
+      clientsList.map(c => [c.user_id ?? c.id, c.rate_type])
+    );
+    // Fallback net: anyone who already has a fixed_monthly_payments row
+    // is fixed-rate too, in case /clients doesn't expose user_id/rate_type
+    // the way we expect above.
+    const fixedClientIds = new Set(fixedAllRows.map(f => f.client_id));
+
+    function isFixedRateClient(log) {
+      if (log.rate_type) return log.rate_type === 'fixed';
+      if (clientRateTypeMap.has(log.client_id)) return clientRateTypeMap.get(log.client_id) === 'fixed';
+      return fixedClientIds.has(log.client_id);
+    }
+
     let monthPaid = 0;
     let monthUnpaid = 0;
     let macroPaid = 0;
     let macroUnpaid = 0;
-    
+
     let totalHours = 0;
     let uniqueClients = new Set();
     let activeMonths = new Set();
-    
+
     let minDate = null;
     let maxDate = null;
-    
+
     allLogs.forEach(log => {
       const amt = parseFloat(log.amount || 0);
       const isPaid = log.payment_status === 'paid';
-      
-      if (isPaid) {
-        macroPaid += amt;
-      } else {
-        macroUnpaid += amt;
-      }
+      const isFixedClient = isFixedRateClient(log);
 
-      if (log.date && log.date.startsWith(month)) {
+      // Dollar figures from timelogs only apply to HOURLY clients now.
+      // A fixed client's dollars are tallied separately from
+      // fixed_monthly_payments below, so we skip them here to avoid
+      // double-counting.
+      if (!isFixedClient) {
         if (isPaid) {
-          monthPaid += amt;
+          macroPaid += amt;
         } else {
-          monthUnpaid += amt;
+          macroUnpaid += amt;
+        }
+
+        if (log.date && log.date.startsWith(month)) {
+          if (isPaid) {
+            monthPaid += amt;
+          } else {
+            monthUnpaid += amt;
+          }
         }
       }
 
-      if(log.client_name){
-    uniqueClients.add(log.client_name);
-}
+      // Hours, client roster, and coverage period still include fixed
+      // clients — they still log hours, it's just not what they're billed on.
+      if (log.client_name) {
+        uniqueClients.add(log.client_name);
+      }
 
+      totalHours += parseFloat(log.hours || 0);
 
-totalHours += parseFloat(log.hours || 0);
+      if (log.date) {
+        const logMonth = log.date.substring(0, 7);
+        activeMonths.add(logMonth);
+        if (!minDate || log.date < minDate) minDate = log.date;
+        if (!maxDate || log.date > maxDate) maxDate = log.date;
+      }
+    });
 
+    // Fold the fixed-fee ledger into the same totals.
+    fixedAllRows.forEach(f => {
+      const { paid, unpaid } = splitFixedPayment(f);
+      macroPaid += paid;
+      macroUnpaid += unpaid;
+      if (f.client_name) uniqueClients.add(f.client_name);
+    });
 
-
-if(log.date){
-
-    const logMonth = log.date.substring(0,7);
-
-    activeMonths.add(logMonth);
-
-
-    if(!minDate || log.date < minDate){
-        minDate = log.date;
-    }
-
-
-    if(!maxDate || log.date > maxDate){
-        maxDate = log.date;
-    }
-
-}
-
-      
+    fixedMonthRows.forEach(f => {
+      const { paid, unpaid } = splitFixedPayment(f);
+      monthPaid += paid;
+      monthUnpaid += unpaid;
     });
 
     animateCount(document.getElementById('global-total-all'), macroPaid + macroUnpaid, { prefix: '$', decimals: 2 });
@@ -808,18 +868,13 @@ if(log.date){
     animateCount(document.getElementById('global-hours-total'), totalHours, { suffix: ' hrs', decimals: 2 });
     animateCount(document.getElementById('global-month-count'), activeMonths.size, { suffix: activeMonths.size === 1 ? ' Month' : ' Months', decimals: 0 });
 
+    if (minDate && maxDate) {
+      const startYear = new Date(minDate).getFullYear();
+      const endYear = new Date(maxDate).getFullYear();
+      document.getElementById('global-period').textContent =
+        startYear === endYear ? startYear : `${startYear} - ${endYear}`;
+    }
 
-if(minDate && maxDate){
-
-    const startYear = new Date(minDate).getFullYear();
-    const endYear = new Date(maxDate).getFullYear();
-
-    document.getElementById('global-period').textContent =
-    startYear === endYear 
-    ? startYear 
-    : `${startYear} - ${endYear}`;
-
-}
     const combinedMonthTotal = monthPaid + monthUnpaid;
     if (combinedMonthTotal > 0) {
       document.getElementById('health-paid-bar').style.width = `${(monthPaid / combinedMonthTotal) * 100}%`;
@@ -833,66 +888,76 @@ if(minDate && maxDate){
     const distributionChart = document.getElementById('client-chart');
     const leaderboard = document.getElementById('leaderboard-body');
     const tfoot = document.getElementById('leaderboard-tfoot');
-    
-    if(!data.clientBreakdown || data.clientBreakdown.length === 0) {
+
+    // ── Merge fixed-fee clients into this month's breakdown ──────────
+    // data.clientBreakdown comes from /stats/freelancer and is presumed
+    // to be built off timelogs, so a fixed client's `total`/`paid` there
+    // reflect stale/irrelevant hourly math. We override those two fields
+    // with the real fixed_monthly_payments figures for the selected
+    // month, and add an entry for any fixed client that owes a fee this
+    // month but logged zero hours (the fee is still owed either way).
+    let breakdown = (data.clientBreakdown || []).map(c => ({ ...c }));
+
+    fixedMonthRows.forEach(f => {
+      const { due, paid } = splitFixedPayment(f);
+      let row = breakdown.find(c => c.client_id === f.client_id);
+      if (row) {
+        row.total = due;
+        row.paid = paid;
+        row.rate_type = 'fixed';
+      } else {
+        breakdown.push({
+          client_id: f.client_id,
+          client_name: f.client_name,
+          rate_type: 'fixed',
+          hours: 0,
+          total: due,
+          paid: paid
+        });
+      }
+    });
+
+    if (!breakdown.length) {
       chartContainer.innerHTML = '<p style="color:var(--ink3); font-size:0.85rem; padding: 1rem 0;">No logs found for this timeframe.</p>';
       leaderboard.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--ink3)">No records found for this month timeline.</td></tr>';
       tfoot.style.display = 'none';
       return;
     }
-    const amounts = data.clientBreakdown.map(c => parseFloat(c.total || 0));
+
+    const amounts = breakdown.map(c => parseFloat(c.total || 0));
     const maxVal = Math.max(...amounts, 1);
     chartContainer.innerHTML = '';
     distributionChart.innerHTML = '';
     leaderboard.innerHTML = '';
 
     let leaderHoursSum = 0, leaderOwedSum = 0, leaderProcessedSum = 0;
+    const allTimeGrandTotal = macroPaid + macroUnpaid;
 
-    data.clientBreakdown.forEach((c, idx) => {
+    breakdown.forEach((c, idx) => {
       const totalAmt = parseFloat(c.total || 0);
-      const pct = Math.max(
-        (totalAmt / maxVal) * 100,
-        8
-        );
+      const isFixed = c.rate_type === 'fixed';
+      const fixedTag = isFixed ? '<span class="fixed-fee-tag">Fixed</span>' : '';
+
+      const pct = Math.max((totalAmt / maxVal) * 100, 8);
       chartContainer.innerHTML += `
         <div class="chart-row">
-          <div class="chart-label" title="${c.client_name}">${c.client_name}</div>
+          <div class="chart-label" title="${c.client_name}">${c.client_name}${fixedTag}</div>
           <div class="chart-bar-wrapper"><div class="chart-bar" style="width: ${pct}%"></div></div>
           <div class="chart-val">$${totalAmt.toFixed(2)}</div>
         </div>`;
 
-      const distributionPct =
-(totalAmt / (macroPaid + macroUnpaid)) * 100;
+      const distributionPct = allTimeGrandTotal > 0 ? (totalAmt / allTimeGrandTotal) * 100 : 0;
 
-
-distributionChart.innerHTML += `
-
-<div class="distribution-item">
-
-
-<div class="distribution-header">
-
-<span>${c.client_name}</span>
-
-<span>
-${distributionPct.toFixed(1)}%
-</span>
-
-</div>
-
-
-<div class="distribution-track">
-
-<div class="distribution-fill"
-style="width:${distributionPct}%">
-</div>
-
-</div>
-
-
-</div>
-
-`;
+      distributionChart.innerHTML += `
+        <div class="distribution-item">
+          <div class="distribution-header">
+            <span>${c.client_name}${fixedTag}</span>
+            <span>${distributionPct.toFixed(1)}%</span>
+          </div>
+          <div class="distribution-track">
+            <div class="distribution-fill" style="width:${distributionPct}%"></div>
+          </div>
+        </div>`;
 
       leaderHoursSum += parseFloat(c.hours || 0);
       leaderOwedSum += totalAmt;
@@ -902,19 +967,9 @@ style="width:${distributionPct}%">
         <tr style="--i:${idx}">
           <td><strong>${c.client_name}</strong></td>
           <td><span style="text-transform:capitalize; font-size: 0.8rem; background: var(--bg2); padding: 3px 8px; border-radius: 4px;">${c.rate_type}</span></td>
-          <td>${parseFloat(c.hours).toFixed(2)} hrs</td>
-          <td style="
-color:#ef4444;
-font-weight:700;">
-$${totalAmt.toFixed(2)}
-</td>
-
-
-<td style="
-color:#10b981;
-font-weight:700;">
-$${parseFloat(c.paid || 0).toFixed(2)}
-</td>
+          <td>${parseFloat(c.hours || 0).toFixed(2)} hrs</td>
+          <td style="color:#ef4444; font-weight:700;">$${totalAmt.toFixed(2)}</td>
+          <td style="color:#10b981; font-weight:700;">$${parseFloat(c.paid || 0).toFixed(2)}</td>
         </tr>`;
     });
 
@@ -928,30 +983,56 @@ $${parseFloat(c.paid || 0).toFixed(2)}
 async function exportFilteredCSV() {
   const monthFilter = document.getElementById('report-month').value;
   try {
-    const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
-    const logs = await res.json();
-    
-    if(!logs || !logs.length) { alert("No logs available."); return; }
-    const filteredLogs = logs.filter(l => l.date && l.date.startsWith(monthFilter));
+    const [logsRes, fixedRes] = await Promise.all([
+      fetch(`${API}/timelogs`, { headers: auth.headers() }),
+      fetch(`${API}/fixed-payments/bulk-generate`, {
+        method: 'POST',
+        headers: auth.headers(),
+        body: JSON.stringify({ month: monthFilter })
+      })
+    ]);
+    const logs = await logsRes.json();
+    let fixedRows = [];
+    try { fixedRows = await fixedRes.json(); } catch { fixedRows = []; }
+    if (!Array.isArray(fixedRows)) fixedRows = [];
 
-    if(!filteredLogs.length) {
-      alert(`No logs found matching selection: ${monthFilter}`);
+    const filteredLogs = (logs || []).filter(l => l.date && l.date.startsWith(monthFilter));
+
+    if (!filteredLogs.length && !fixedRows.length) {
+      alert(`No records found matching selection: ${monthFilter}`);
       return;
     }
 
-    const headersArray = ['Log_ID', 'Client', 'Date', 'Hours', 'Calculated_Amount', 'Payment_Status', 'Task_Description'];
-    const csvRows = [
-      headersArray.join(','),
-      ...filteredLogs.map(l => [
+    const headersArray = ['Log_ID', 'Client', 'Billing_Type', 'Date', 'Hours', 'Calculated_Amount', 'Payment_Status', 'Task_Description'];
+    const csvRows = [headersArray.join(',')];
+
+    filteredLogs.forEach(l => {
+      csvRows.push([
         l.id,
-        `"${l.client_name.replace(/"/g, '""')}"`,
-        l.date.slice(0,10),
+        `"${(l.client_name || '').replace(/"/g, '""')}"`,
+        'hourly',
+        l.date.slice(0, 10),
         l.hours,
         l.amount || 0,
         l.payment_status,
         `"${(l.task_description || '').replace(/"/g, '""')}"`
-      ].join(','))
-    ];
+      ].join(','));
+    });
+
+    // Fixed-fee clients don't live in timelogs money-wise, so their
+    // monthly fee gets its own row(s) in the same export.
+    fixedRows.forEach(f => {
+      csvRows.push([
+        f.id,
+        `"${(f.client_name || '').replace(/"/g, '""')}"`,
+        'fixed',
+        f.month,
+        '',
+        f.amount || 0,
+        f.status,
+        ''
+      ].join(','));
+    });
 
     const csvBlob = new Blob([csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     const blobUrl = URL.createObjectURL(csvBlob);
