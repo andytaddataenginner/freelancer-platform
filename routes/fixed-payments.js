@@ -126,4 +126,19 @@ router.delete('/:id', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// GET /api/fixed-payments — every fixed-fee record for this freelancer,
+// across all clients and all months. Powers the "All Time" statement.
+router.get('/', requireFreelancer, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT f.*, u.name AS client_name, u.company AS client_company
+      FROM fixed_monthly_payments f
+      JOIN users u ON u.id = f.client_id
+      WHERE f.freelancer_id = $1
+      ORDER BY f.month DESC, u.name
+    `, [req.user.id]);
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
 module.exports = router;
