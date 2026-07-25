@@ -447,17 +447,8 @@ document.querySelectorAll('.sb-nav a').forEach(a=>
 );
 
 let rawLogsData = [];
-// NEW — every fixed_monthly_payments record for this freelancer, all
-// clients, all time. Fixed-rate clients are billed from this, never from
-// time_logs amounts.
 let rawFixedData = [];
-// NEW — client_id (users.id) -> { name, rate_type }, from /clients, so we
-// know which clients are fixed-rate even if a given timelog is missing
-// its own rate_type.
 let clientRateMap = new Map();
-// NEW — holds the exact data behind each rendered invoice row, keyed by
-// its dummy invoice id, so the PDF button doesn't need to cram
-// hours/amounts/fixed-month arrays into an inline onclick string.
 let lastInvoiceGroups = {};
 let generatingPDF=false;
 
@@ -492,8 +483,6 @@ async function fetchMasterLogs() {
   } catch(e) { console.error("Logs pull error:", e); rawLogsData = []; }
 }
 
-// NEW — pulls every fixed-fee monthly record so fixed-rate clients show
-// up in the invoice list even when they've never logged an hour.
 async function fetchFixedPayments() {
   try {
     const res = await fetch(`${API}/fixed-payments`, { headers: auth.headers() });
@@ -515,7 +504,6 @@ async function fetchFixedPayments() {
 }
 
 function formatMonthLabel(monthStr) {
-  // 'YYYY-MM' -> 'July 2026'
   const [y, m] = (monthStr || '').split('-').map(Number);
   if (!y || !m) return monthStr || '';
   const d = new Date(y, m - 1, 1);
@@ -529,8 +517,6 @@ function applyTimeWindowFilters() {
 
   const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
   const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
-  // fixed_monthly_payments.month is a 'YYYY-MM' string — compare against
-  // the same window using the month portion of the chosen dates.
   const startMonth = startVal ? startVal.slice(0, 7) : null;
   const endMonth = endVal ? endVal.slice(0, 7) : null;
 
@@ -554,10 +540,6 @@ function applyTimeWindowFilters() {
   records.forEach(r => {
     const info = clientRateMap.get(r.client_id);
     const isFixed = r.rate_type === 'fixed' || (info && info.rate_type === 'fixed');
-    // Fixed clients are billed through fixed_monthly_payments below, not
-    // per-log amounts — the backend currently stamps the full monthly fee
-    // on every single log entry for a fixed client, so summing those here
-    // would multiply their fee by however many times they logged hours.
     if (isFixed) return;
 
     const g = ensureGroup(r.client_name, 'hourly');
@@ -571,7 +553,6 @@ function applyTimeWindowFilters() {
     }
   });
 
-  // Fixed-fee monthly records that fall inside the selected date window.
   rawFixedData.forEach(f => {
     if (selectedClient && f.client_name !== selectedClient) return;
     if (startMonth && f.month < startMonth) return;
@@ -671,8 +652,6 @@ async function downloadInvoice(invId) {
   const container = document.getElementById("pdf-container");
   container.classList.add("rendering");
 
-  // Fixed-fee clients get one line item per unpaid month; hourly clients
-  // keep the single consolidated services line.
   const unpaidFixedMonths = (fixedMonths || []).filter(m => m.status !== 'paid');
   const lineItemsHtml = type === 'fixed'
     ? (unpaidFixedMonths.length
