@@ -14,83 +14,69 @@
     }
 
     :root {
-      --navy: #0d2353; --navy2: #1a3a7a; --accent: #2563eb; --accent-glow: rgba(37, 99, 235, 0.15);
-      --gold2: #f5c842; --white: #fff; --bg: #f8fafc; --bg2: #f1f5f9;
-      --ink: #0f172a; --ink2: #334155; --ink3: #64748b;
-      --green: #059669; --green-bg: #ecfdf5;
-      --amber: #d97706; --amber-bg: #fffbeb;
-      --red: #dc2626; --red-bg: #fef2f2;
+      --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --green: #166534; --green-bg: #dcfce7;
+      --amber: #92400e; --amber-bg: #fef3c7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --gray: #4b5563; --gray-bg: #f3f4f6;
       --serif: 'Playfair Display', serif;
       --sans: 'Outfit', sans-serif;
-      --radius: 16px; 
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow: 0 10px 25px -5px rgba(13, 35, 83, 0.05), 0 8px 10px -6px rgba(13, 35, 83, 0.05);
-      --shadow-lg: 0 20px 25px -5px rgba(13, 35, 83, 0.1), 0 10px 10px -5px rgba(13, 35, 83, 0.04);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
     }
     
-    body { font-family: var(--sans); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
     /* ── MOBILE TOP BAR ── */
     .mob-bar {
-      display: none; position: fixed; top: 0; left: 0; right: 0; height: 64px;
-      background: rgba(13, 35, 83, 0.95); backdrop-filter: blur(12px); z-index: 200;
+      display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px;
+      background: var(--navy); z-index: 200;
       align-items: center; justify-content: space-between;
-      padding: 0 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 0 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
     }
-    .mob-brand { display: flex; align-items: center; gap: 0.75rem; }
-    .mob-brand img { height: 32px; background: #fff; border-radius: 8px; padding: 3px; box-shadow: var(--shadow-sm); }
-    .mob-brand span { color: #fff; font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em; }
-    .mob-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 40px; height: 40px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
-    .mob-btn:hover { background: rgba(255,255,255,0.2); }
+    .mob-brand { display: flex; align-items: center; gap: 0.5rem; }
+    .mob-brand img { height: 28px; background: #fff; border-radius: 6px; padding: 2px; }
+    .mob-brand span { color: #fff; font-size: 0.82rem; font-weight: 700; }
+    .mob-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     
     /* ── BLUR OVERLAY ── */
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 149; backdrop-filter: blur(4px); transition: var(--transition); }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 149; backdrop-filter: blur(2px); }
     .overlay.on { display: block; }
 
     /* ── SIDEBAR ── */
-    .sidebar { width: 260px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; box-shadow: 4px 0 25px rgba(0,0,0,0.05); }
-    .sb-brand { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.85rem; }
-    .sb-logo { width: 40px; height: 40px; background: #fff; border-radius: 10px; overflow: hidden; padding: 4px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
+    .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
+    .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .sb-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .sb-text strong { display: block; color: #fff; font-size: 0.88rem; font-weight: 700; letter-spacing: -0.01em; }
-    .sb-text span { font-size: 0.68rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+    .sb-text strong { display: block; color: #fff; font-size: 0.8rem; font-weight: 700; }
+    .sb-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
     
-    .sb-nav { flex: 1; padding: 1.5rem 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; }
-    .sb-nav::-webkit-scrollbar { width: 4px; }
-    .sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-    .sb-nav a { display: flex; align-items: center; gap: 0.85rem; padding: 0.75rem 1rem; font-size: 0.9rem; font-weight: 500; color: rgba(255,255,255,0.7); text-decoration: none; transition: var(--transition); border-radius: 10px; }
+    .sb-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sb-nav a { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.55); text-decoration: none; transition: all 0.2s; border-right: 3px solid transparent; }
     .sb-nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
-    .sb-nav a.active { color: #fff; background: var(--accent); font-weight: 600; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+    .sb-nav a.active { color: #fff; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
     
-    .sb-user { padding: 1.25rem; margin: 0.75rem; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
-    .sb-user strong { display: block; color: #fff; font-size: 0.9rem; font-weight: 600; }
-    .sb-user span { font-size: 0.75rem; color: rgba(255,255,255,0.45); }
-    .sb-user a { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.6rem; font-size: 0.78rem; font-weight: 600; color: var(--gold2); text-decoration: none; transition: var(--transition); }
-    .sb-user a:hover { opacity: 0.8; transform: translateX(2px); }
+    .sb-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); }
+    .sb-user strong { display: block; color: #fff; font-size: 0.88rem; }
+    .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
+    .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
     /* ── MAIN ── */
-    .main { margin-left: 260px; min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; }
-    .topbar { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); padding: 1.5rem 2rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-    .topbar h2 { font-family: var(--serif); font-size: 1.6rem; letter-spacing: -0.02em; color: var(--navy); }
-    .topbar p { font-size: 0.88rem; color: var(--ink3); margin-top: 0.15rem; font-weight: 400; }
-    .content { padding: 2rem; max-width: 1400px; width: 100%; margin: 0 auto; flex: 1; }
+    .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; }
+    .topbar { background: #fff; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1.2rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; }
+    .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+    .content { padding: 1.5rem; }
 
     /* ── CARDS ── */
     .card {
-      background: white; border-radius: var(--radius); padding: 1.75rem;
-      box-shadow: var(--shadow); border: 1px solid rgba(226, 232, 240, 0.8);
-      margin-bottom: 1.75rem;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
+      background: white; border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
     }
-    .card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--navy), var(--accent));
-      opacity: 0.8;
-    }
-    .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+    .card:hover { box-shadow: 0 4px 30px rgba(13,35,83,0.1); }
 
     .card-header { 
       display: flex; align-items: center; justify-content: space-between; 
@@ -98,110 +84,96 @@
       padding-bottom: 1rem; border-bottom: 1px solid var(--bg2);
     }
     .card-header h3 { 
-      font-family: var(--serif); font-size: 1.25rem; font-weight: 700; color: var(--navy);
+      font-family: var(--serif); font-size: 1.1rem; font-weight: 700;
     }
 
     /* ── FILTER ROW ── */
     .filter-row { 
-      display: flex; gap: 1.25rem; align-items: flex-end; flex-wrap: wrap;
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      padding: 1.5rem; border-radius: 14px; border: 1px solid rgba(226, 232, 240, 0.8);
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+      display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+      background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+      padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(13,35,83,0.08);
     }
-    .filter-group { display: flex; flex-direction: column; gap: 0.45rem; }
-    .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.06em; }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
     .filter-row select, .filter-row input { 
-      padding: 0.7rem 1rem; border: 1.5px solid #cbd5e1; 
-      border-radius: 10px; font-family: var(--sans); font-size: 0.9rem; 
-      outline: none; background: white; color: var(--ink); transition: var(--transition);
-      box-shadow: var(--shadow-sm);
+      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); 
+      border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; 
+      outline: none; background: white; transition: border-color 0.2s;
     }
-    .filter-row select:hover, .filter-row input:hover { border-color: #94a3b8; }
     .filter-row select:focus, .filter-row input:focus { 
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-glow);
+      box-shadow: 0 0 0 3px rgba(26,92,255,0.1);
     }
 
     /* ── STATS CARDS ── */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 1.75rem; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
     .stat-card {
-      background: white; border-radius: var(--radius); padding: 1.75rem;
-      box-shadow: var(--shadow); border: 1px solid rgba(226, 232, 240, 0.8);
-      display: flex; flex-direction: column; gap: 0.6rem;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
+      background: white; border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      display: flex; flex-direction: column; gap: 0.5rem;
     }
-    .stat-card::after {
-      content: ''; position: absolute; bottom: 0; right: 0; width: 80px; height: 80px;
-      background: radial-gradient(circle, var(--accent-glow) 0%, rgba(255,255,255,0) 70%);
-      pointer-events: none;
-    }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-    .stat-num { font-size: 2.1rem; font-weight: 800; color: var(--navy); line-height: 1.1; letter-spacing: -0.02em; }
-    .stat-label { font-size: 0.78rem; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
+    .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
 
     /* ── BADGES ── */
     .badge { 
-      display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; border-radius: 30px; 
-      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-      box-shadow: var(--shadow-sm);
+      display: inline-block; padding: 0.3rem 0.75rem; border-radius: 20px; 
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    .badge-paid { background: var(--green-bg); color: var(--green); border: 1px solid rgba(5, 150, 105, 0.15); }
-    .badge-outstanding { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(217, 119, 6, 0.15); }
+    .badge-paid { background: var(--green-bg); color: var(--green); }
+    .badge-outstanding { background: var(--amber-bg); color: var(--amber); }
 
     /* ── BUTTONS ── */
     .btn { 
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
-      color: white; padding: 0.75rem 1.5rem; font-size: 0.88rem; 
-      border-radius: 10px; border: none; cursor: pointer; font-weight: 700; 
+      color: white; padding: 0.65rem 1.3rem; font-size: 0.82rem; 
+      border-radius: 8px; border: none; cursor: pointer; font-weight: 700; 
       display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; 
-      transition: var(--transition);
-      box-shadow: 0 4px 15px rgba(13,35,83,0.25);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
     }
     .btn:hover { 
-      background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
-      box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 20px rgba(26,92,255,0.3);
       transform: translateY(-2px);
     }
     .btn:active { transform: translateY(0); }
 
-    .download-btn {
+    .download-btn{
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
       color: white;
       font-weight: 700;
       font-size: 0.75rem;
-      padding: 0.55rem 1rem;
+      padding: 0.5rem 0.9rem;
       border-radius: 8px;
       border: none;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.25s ease;
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      box-shadow: 0 3px 10px rgba(13,35,83,0.2);
+      box-shadow: 0 4px 12px rgba(13,35,83,0.2);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
     }
     .download-btn:hover {
-      background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
-      box-shadow: 0 5px 15px rgba(37,99,235,0.3);
+      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
+      box-shadow: 0 6px 16px rgba(26,92,255,0.3);
       transform: translateY(-2px);
     }
     .download-btn:active { transform: translateY(0); }
 
     /* ── TABLE ── */
-    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
-    th { text-align: left; padding: 1rem 1.25rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; font-weight: 700; letter-spacing: 0.08em; background: #f8fafc; }
-    th:first-child { border-top-left-radius: 10px; }
-    th:last-child { border-top-right-radius: 10px; }
-    td { padding: 1.1rem 1.25rem; border-bottom: 1px solid #f1f5f9; color: var(--ink2); vertical-align: middle; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 700; letter-spacing: 0.05em; }
+    td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
-    tbody tr { transition: var(--transition); }
-    tbody tr:hover { background: rgba(37, 99, 235, 0.03); transform: scale(1.001); }
+    tbody tr { transition: all 0.2s ease; }
+    tbody tr:hover { background: rgba(26,92,255,0.04); }
 
-    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--ink3); }
-    .empty-state-icon { font-size: 3.5rem; margin-bottom: 1rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08)); }
+    .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
 
     /* ── PDF CONTAINER ── */
     .invoice-card{
@@ -211,7 +183,7 @@
       font-family:Outfit,sans-serif;
       color:#1f2937;
     }
-    .invoice-top-strip{ height:5px; border-radius:3px; background:linear-gradient(90deg,#0d2353,#2563eb); margin-bottom:36px; }
+    .invoice-top-strip{ height:5px; border-radius:3px; background:linear-gradient(90deg,#0d2353,#1a5cff); margin-bottom:36px; }
     .invoice-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:38px; }
     .invoice-brand{ display:flex; align-items:center; gap:14px; }
     .invoice-brand-name{ font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:#0d2353; }
@@ -230,12 +202,12 @@
     .status-pill.outstanding{ color:#b45309; background:#fffbeb; }
     .status-pill.settled{ color:#0f9d6c; background:#dcfce7; }
     .invoice-table{ width:100%; border-collapse:collapse; margin-bottom:32px; }
-    .invoice-table thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; font-weight:600; padding:0 14px 12px 14px; border-bottom:2px solid #0d2353; background: transparent; }
+    .invoice-table thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; font-weight:600; padding:0 14px 12px 14px; border-bottom:2px solid #0d2353; }
     .invoice-table thead th:last-child, .invoice-table tbody td:last-child, .invoice-table tfoot td:last-child{ text-align:right; }
     .invoice-table tbody td{ padding:16px 14px; font-size:13px; color:#374151; border-bottom:1px solid #e5e7eb; }
     .invoice-table tfoot td{ padding:16px 14px 4px 14px; font-size:15px; font-weight:700; color:#0d2353; border-top:2px solid #0d2353; }
     .invoice-table tfoot td:first-child{ font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; }
-    .payment-box{ padding:16px 18px; border-radius:8px; background:#f8fafc; border-left:3px solid #2563eb; font-size:12.5px; color:#4b5563; margin-bottom:34px; }
+    .payment-box{ padding:16px 18px; border-radius:8px; background:#f8fafc; border-left:3px solid #1a5cff; font-size:12.5px; color:#4b5563; margin-bottom:34px; }
     .payment-box strong{ color:#0d2353; }
     .footer-note{ text-align:center; font-size:11.5px; color:#9ca3af; padding-top:22px; border-top:1px solid #f0f0f0; }
     .invoice-logo { width:52px; height:52px; object-fit:contain; background:white; border-radius:10px; padding:6px; }
@@ -258,50 +230,48 @@
       position: fixed;
       inset: 0;
       z-index: 999;
-      background: rgba(13, 35, 83, 0.95);
-      backdrop-filter: blur(8px);
+      background: rgba(13, 35, 83, 0.97);
       color: white;
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 1rem;
       font-family: var(--sans);
     }
     #pdf-generating-overlay.active { display: flex; }
     #pdf-generating-overlay .spinner {
-      width: 52px; height: 52px;
-      border: 4px solid rgba(255,255,255,0.2);
+      width: 48px; height: 48px;
+      border: 4px solid rgba(255,255,255,0.25);
       border-top-color: var(--gold2);
       border-radius: 50%;
-      animation: pdf-spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-      box-shadow: 0 0 20px rgba(245, 200, 66, 0.3);
+      animation: pdf-spin 0.8s linear infinite;
     }
     @keyframes pdf-spin { to { transform: rotate(360deg); } }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       .mob-bar { display: flex; }
-      .sidebar { transform: translateX(-100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); width: 260px; }
-      .sidebar.open { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.3); }
-      .main { margin-left: 0; padding-top: 64px; }
-      .topbar { position: static !important; padding: 1.25rem 1rem 1rem !important; }
-      .content { padding: 1.25rem 1rem; }
-      .filter-row { flex-direction: column; gap: 1rem; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
+      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
+      .main { margin-left: 0; padding-top: 52px; }
+      .topbar { position: static !important; padding: 1rem 1rem 0.8rem !important; }
+      .content { padding: 1rem; }
+      .filter-row { flex-direction: column; }
       .filter-group { width: 100%; }
       .filter-row select, .filter-row input { width: 100%; }
-      .stats-row { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
-      table { font-size: 0.85rem; }
-      th { padding: 0.75rem 0.75rem; font-size: 0.68rem; }
-      td { padding: 0.85rem 0.75rem; }
+      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
+      table { font-size: 0.8rem; }
+      th { padding: 0.6rem 0.5rem; font-size: 0.65rem; }
+      td { padding: 0.7rem 0.5rem; }
     }
     @media (max-width: 480px) {
       .stats-row { grid-template-columns: 1fr !important; }
-      .card { padding: 1.25rem; }
+      .card { padding: 1.2rem; }
       .card-header { flex-direction: column; align-items: flex-start; }
-      table { font-size: 0.8rem; }
-      th { padding: 0.6rem 0.4rem; }
-      td { padding: 0.7rem 0.4rem; }
-      .download-btn { padding: 0.45rem 0.8rem; font-size: 0.7rem; }
+      table { font-size: 0.75rem; }
+      th { padding: 0.5rem 0.3rem; }
+      td { padding: 0.6rem 0.3rem; }
+      .download-btn { padding: 0.4rem 0.7rem; font-size: 0.65rem; }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -344,7 +314,7 @@
   <div class="topbar">
     <div>
       <h2>Invoice Hub</h2>
-      <p>View and manage your invoices seamlessly.</p>
+      <p>View and manage your invoices.</p>
     </div>
   </div>
 
@@ -384,10 +354,10 @@
           <label>End Date</label>
           <input type="date" id="end-date"/>
         </div>
-        <button class="btn" style="height: 46px; min-width: 130px;" onclick="applyTimeWindowFilters()">Apply Filters</button>
+        <button class="btn" style="height: 42px; min-width: 120px;" onclick="applyTimeWindowFilters()">Apply</button>
       </div>
 
-      <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1.75rem;">
+      <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1.5rem;">
         <table>
           <thead>
             <tr>
@@ -411,7 +381,7 @@
 
 <div id="pdf-generating-overlay">
   <div class="spinner"></div>
-  <div style="font-weight: 600; letter-spacing: 0.02em;">Generating your professional invoice…</div>
+  <div>Generating your invoice…</div>
 </div>
 <div id="pdf-container"></div>
 
@@ -447,8 +417,17 @@ document.querySelectorAll('.sb-nav a').forEach(a=>
 );
 
 let rawLogsData = [];
+// NEW — every fixed_monthly_payments record for this freelancer, all
+// clients, all time. Fixed-rate clients are billed from this, never from
+// time_logs amounts.
 let rawFixedData = [];
+// NEW — client_id (users.id) -> { name, rate_type }, from /clients, so we
+// know which clients are fixed-rate even if a given timelog is missing
+// its own rate_type.
 let clientRateMap = new Map();
+// NEW — holds the exact data behind each rendered invoice row, keyed by
+// its dummy invoice id, so the PDF button doesn't need to cram
+// hours/amounts/fixed-month arrays into an inline onclick string.
 let lastInvoiceGroups = {};
 let generatingPDF=false;
 
@@ -483,6 +462,8 @@ async function fetchMasterLogs() {
   } catch(e) { console.error("Logs pull error:", e); rawLogsData = []; }
 }
 
+// NEW — pulls every fixed-fee monthly record so fixed-rate clients show
+// up in the invoice list even when they've never logged an hour.
 async function fetchFixedPayments() {
   try {
     const res = await fetch(`${API}/fixed-payments`, { headers: auth.headers() });
@@ -504,6 +485,7 @@ async function fetchFixedPayments() {
 }
 
 function formatMonthLabel(monthStr) {
+  // 'YYYY-MM' -> 'July 2026'
   const [y, m] = (monthStr || '').split('-').map(Number);
   if (!y || !m) return monthStr || '';
   const d = new Date(y, m - 1, 1);
@@ -517,6 +499,8 @@ function applyTimeWindowFilters() {
 
   const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
   const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
+  // fixed_monthly_payments.month is a 'YYYY-MM' string — compare against
+  // the same window using the month portion of the chosen dates.
   const startMonth = startVal ? startVal.slice(0, 7) : null;
   const endMonth = endVal ? endVal.slice(0, 7) : null;
 
@@ -540,6 +524,10 @@ function applyTimeWindowFilters() {
   records.forEach(r => {
     const info = clientRateMap.get(r.client_id);
     const isFixed = r.rate_type === 'fixed' || (info && info.rate_type === 'fixed');
+    // Fixed clients are billed through fixed_monthly_payments below, not
+    // per-log amounts — the backend currently stamps the full monthly fee
+    // on every single log entry for a fixed client, so summing those here
+    // would multiply their fee by however many times they logged hours.
     if (isFixed) return;
 
     const g = ensureGroup(r.client_name, 'hourly');
@@ -553,6 +541,7 @@ function applyTimeWindowFilters() {
     }
   });
 
+  // Fixed-fee monthly records that fall inside the selected date window.
   rawFixedData.forEach(f => {
     if (selectedClient && f.client_name !== selectedClient) return;
     if (startMonth && f.month < startMonth) return;
@@ -594,7 +583,7 @@ function applyTimeWindowFilters() {
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
     const fixedTag = data.type === 'fixed'
-      ? ' <span style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--amber); background:var(--amber-bg); padding:3px 8px; border-radius:6px; vertical-align:middle; border: 1px solid rgba(217,119,6,0.2);">Fixed</span>'
+      ? ' <span style="font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); background:#fef3c7; padding:2px 7px; border-radius:4px; vertical-align:middle;">Fixed</span>'
       : '';
 
     lastInvoiceGroups[dummyInvId] = {
@@ -609,11 +598,11 @@ function applyTimeWindowFilters() {
 
     return `
       <tr>
-        <td><strong style="color: var(--navy); font-weight: 700;">${dummyInvId}</strong></td>
-        <td><strong style="color: var(--ink);">${client}</strong>${fixedTag}</td>
+        <td><strong>${dummyInvId}</strong></td>
+        <td><strong>${client}</strong>${fixedTag}</td>
         <td>${data.type === 'fixed' ? '—' : data.unpaidHours.toFixed(2)}</td>
-        <td style="color:${hasOutstanding ? 'var(--amber)':'var(--green)'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
-        <td style="color:var(--green); font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
+        <td style="color:${hasOutstanding ? '#b45309':'#10b981'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
+        <td style="color:#10b981; font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
         <td>
           ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding</span>' 
                             : '<span class="badge badge-paid">Paid</span>'}
@@ -652,6 +641,8 @@ async function downloadInvoice(invId) {
   const container = document.getElementById("pdf-container");
   container.classList.add("rendering");
 
+  // Fixed-fee clients get one line item per unpaid month; hourly clients
+  // keep the single consolidated services line.
   const unpaidFixedMonths = (fixedMonths || []).filter(m => m.status !== 'paid');
   const lineItemsHtml = type === 'fixed'
     ? (unpaidFixedMonths.length
