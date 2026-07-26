@@ -169,6 +169,7 @@
       font-size: 0.88rem; color: var(--ink); width: 100%;
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); background: var(--card-bg); }
+    .form-hint { font-size: 0.72rem; color: var(--ink3); }
     .form-status { font-size: 0.8rem; margin-top: 0.4rem; font-weight: 500; }
     .form-status.success { color: var(--green); }
     .form-status.error   { color: var(--red); }
@@ -250,6 +251,11 @@
       <div class="form-group"><label>Full name</label><input type="text" name="name" required/></div>
       <div class="form-group"><label>Email address</label><input type="email" name="email" required/></div>
       <div class="form-group"><label>Company (optional)</label><input type="text" name="company"/></div>
+      <div class="form-group">
+        <label>Phone number</label>
+        <input type="tel" name="phone" placeholder="e.g. +251911234567"/>
+        <div class="form-hint">Include the country code — used for WhatsApp payment reminders on the Invoices page.</div>
+      </div>
       <div class="form-group"><label>Temporary password</label><input type="text" name="password" required placeholder="Client uses this to log in"/></div>
       <div style="border-top:1px solid var(--paper3);padding-top:1rem;margin-top:0.5rem">
         <p style="font-size:0.85rem;font-weight:600;margin-bottom:0.8rem;color:var(--ink)">💰 Billing Settings</p>
@@ -285,6 +291,11 @@
       <input type="hidden" name="id" id="edit-id"/>
       <div class="form-group"><label>Full name</label><input type="text" name="name" id="edit-name" required/></div>
       <div class="form-group"><label>Company</label><input type="text" name="company" id="edit-company"/></div>
+      <div class="form-group">
+        <label>Phone number</label>
+        <input type="tel" name="phone" id="edit-phone" placeholder="e.g. +251911234567"/>
+        <div class="form-hint">Include the country code — used for WhatsApp payment reminders on the Invoices page.</div>
+      </div>
       <div class="form-group"><label>Notes</label><textarea name="notes" id="edit-notes" rows="2"></textarea></div>
       <div style="border-top:1px solid var(--paper3);padding-top:1rem;margin-top:0.5rem">
         <p style="font-size:0.85rem;font-weight:600;margin-bottom:0.8rem;color:var(--ink)">💰 Billing Settings</p>
@@ -401,6 +412,7 @@ async function loadClients() {
             <span>⏱ ${parseFloat(c.total_hours||0).toFixed(1)}h logged</span>
             <span>📋 ${c.log_count || 0} entries</span>
             <span>💰 ${rateInfo}</span>
+            <span>📞 ${c.phone || '—'}</span>
           </div>
           ${fixedPayBtn}
           <div style="display:flex;gap:0.6rem;margin-top:0.5rem">
@@ -426,6 +438,7 @@ function openEdit(c) {
   document.getElementById('edit-id').value          = c.id;
   document.getElementById('edit-name').value        = c.name;
   document.getElementById('edit-company').value     = c.company || '';
+  document.getElementById('edit-phone').value       = c.phone || '';
   document.getElementById('edit-notes').value       = c.notes || '';
   document.getElementById('edit-rate-type').value   = c.rate_type || 'hourly';
   document.getElementById('edit-hourly-rate').value = c.hourly_rate || '';
