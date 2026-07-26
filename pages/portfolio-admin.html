@@ -22,8 +22,29 @@
       --gray: #4b5563; --gray-bg: #f3f4f6;
       --serif: 'Playfair Display', serif; --sans: 'Outfit', sans-serif;
       --r: 14px; --sh: 0 2px 20px rgba(13,35,83,0.08);
+      --card-bg: #fff;
+      --topbar-bg: #fff;
+      --modal-bg: #fff;
+      --input-bg: var(--bg);
+      --input-border: rgba(13,35,83,0.1);
     }
-    body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
+    [data-theme="dark"] {
+      --navy: #0b1736; --navy2: #11224d; --accent: #3b82f6; --gold: #d9a73d; --gold2: #facc15;
+      --white: #1e293b; --bg: #090d16; --bg2: #131d31;
+      --ink: #f8fafc; --ink2: #94a3b8; --ink3: #64748b;
+      --green: #4ade80; --gbg: rgba(74, 222, 128, 0.15); --amber: #fbbf24; --abg: rgba(251, 191, 36, 0.15);
+      --red: #f87171; --rbg: rgba(248, 113, 113, 0.15);
+      --gray: #9ca3af; --gray-bg: #1e293b;
+      --sh: 0 2px 20px rgba(0,0,0,0.4);
+      --card-bg: #111c30;
+      --topbar-bg: #0b1736;
+      --modal-bg: #111c30;
+      --input-bg: #090d16;
+      --input-border: rgba(255,255,255,0.1);
+    }
+
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); transition: background 0.3s, color 0.3s; }
 
     /* ── MOBILE TOP BAR ── */
     .mob-bar {
@@ -42,7 +63,7 @@
     .overlay.on { display: block; }
 
     /* ── SIDEBAR SYSTEM FRAMEWORK ── */
-    .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
+    .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; border-right: 1px solid var(--input-border); }
     .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
     .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .sb-logo img { width: 100%; height: 100%; object-fit: contain; }
@@ -59,15 +80,21 @@
     .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
+    /* ── DARK MODE TOGGLE BUTTON STYLING ── */
+    .theme-toggle-container { padding: 0.6rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; }
+    .theme-toggle-container span { font-size: 0.78rem; color: rgba(255,255,255,0.6); font-weight: 500; }
+    .theme-switch { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s; }
+    .theme-switch:hover { background: rgba(255,255,255,0.2); }
+
     /* ── MAIN WORKSPACE PANEL ── */
     .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; }
-    .topbar { background: #fff; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
-    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; }
+    .topbar { background: var(--topbar-bg); border-bottom: 1px solid var(--input-border); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; color: var(--ink); }
     .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
     .content { padding: 1.5rem; }
 
     /* ── CARDS & BLOCKS ── */
-    .card { background: #fff; border-radius: var(--r); box-shadow: var(--sh); border: 1px solid rgba(13,35,83,0.05); padding: 1.2rem; }
+    .card { background: var(--card-bg); border-radius: var(--r); box-shadow: var(--sh); border: 1px solid var(--input-border); padding: 1.2rem; color: var(--ink); }
     
     /* ── BUTTONS ── */
     .btn-primary { background: var(--navy); color: #fff; padding: 0.55rem 1.2rem; border-radius: 8px; font-family: var(--sans); font-size: 0.82rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
@@ -79,18 +106,18 @@
     /* ── DIALOG SYSTEM MODALS ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 1rem; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal { background: #fff; border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); animation: modalIn 0.25s ease; }
+    .modal { background: var(--modal-bg); border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.3); animation: modalIn 0.25s ease; color: var(--ink); border: 1px solid var(--input-border); }
     @keyframes modalIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
     .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
-    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
+    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); }
     .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
     .modal-close:hover { background: var(--rbg); color: var(--red); }
     
     .modal-form { display: flex; flex-direction: column; gap: 0.9rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
     .form-group label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink2); }
-    .form-group input, .form-group textarea { width: 100%; padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 9px; background: var(--bg); font-family: var(--sans); font-size: 0.88rem; color: var(--navy); transition: border-color 0.2s; }
-    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(26,92,255,0.08); }
+    .form-group input, .form-group textarea { width: 100%; padding: 0.7rem 0.9rem; border: 1.5px solid var(--input-border); border-radius: 9px; background: var(--input-bg); font-family: var(--sans); font-size: 0.88rem; color: var(--ink); transition: border-color 0.2s; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); background: var(--card-bg); box-shadow: 0 0 0 3px rgba(26,92,255,0.08); }
     .form-status { font-size: 0.8rem; margin-top: 0.3rem; }
     .form-status.success { color: var(--green); }
     .form-status.error { color: var(--red); }
@@ -109,6 +136,15 @@
       #portfolio-grid { grid-template-columns: 1fr !important; }
     }
   </style>
+  <script>
+    // Prevent theme flashing on page load
+    (function() {
+      const savedTheme = localStorage.getItem('qfa_theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -132,11 +168,15 @@
     <a href="time-logs.html">⏱ Time Logs</a>
     <a href="clients.html">👥 Clients</a>
     <a href="schedule.html">📅 Schedule</a>
-    <a href="reports.html">📈 Reports</a> <!-- Add this link -->
-    <a href="fixed-invoices.html">📄 Invoices</a> <!-- Add this link -->
+    <a href="reports.html">📈 Reports</a>
+    <a href="fixed-invoices.html">📄 Invoices</a>
     <a href="portfolio-admin.html" class="active">🖼 Portfolio</a>
     <a href="../index.html" target="_blank">🌐 Public Site</a>
   </nav>
+  <div class="theme-toggle-container">
+    <span>Dark Mode</span>
+    <button class="theme-switch" id="theme-switch-btn" onclick="toggleTheme()">🌙 Dark</button>
+  </div>
   <div class="sb-user">
     <strong id="user-name">Loading…</strong>
     <span>Freelancer · QFA</span>
@@ -201,10 +241,33 @@ async function apiFetch(path, options = {}) {
 document.addEventListener('DOMContentLoaded', () => {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   document.getElementById('user-name').textContent = auth.user()?.name || '';
+  
+  // Sync button state on load
+  updateThemeButtonUI();
   loadPortfolio();
 });
 
 function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+// Dark Mode Toggle Logic
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  if (currentTheme === 'dark') {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('qfa_theme', 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('qfa_theme', 'dark');
+  }
+  updateThemeButtonUI();
+}
+
+function updateThemeButtonUI() {
+  const btn = document.getElementById('theme-switch-btn');
+  if (!btn) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
+}
 
 // Mobile Control Actions
 function sbOpen(){
@@ -232,14 +295,14 @@ async function loadPortfolio() {
 
     grid.innerHTML = data.map(item => `
       <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;margin-bottom:0">
-        ${item.image_url ? `<div style="width:100%;height:160px;background:#eef1f8;overflow:hidden"><img src="${item.image_url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/></div>` : ''}
+        ${item.image_url ? `<div style="width:100%;height:160px;background:var(--bg2);overflow:hidden"><img src="${item.image_url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/></div>` : ''}
         <div style="padding:1.2rem;flex:1;display:flex;flex-direction:column;justify-content:space-between">
           <div>
             <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;font-weight:700;color:var(--accent);background:rgba(26,92,255,0.08);padding:0.2rem 0.5rem;border-radius:4px">${item.category || 'General'}</span>
-            <h4 style="font-size:1.1rem;font-weight:600;margin:0.5rem 0 0.3rem">${item.title}</h4>
+            <h4 style="font-size:1.1rem;font-weight:600;margin:0.5rem 0 0.3rem;color:var(--ink);">${item.title}</h4>
             <p style="font-size:0.85rem;color:var(--ink2);line-height:1.4;margin-bottom:1rem">${item.description || ''}</p>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:0.5rem;border-top:1px solid var(--bg2)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:0.5rem;border-top:1px solid var(--input-border)">
             ${item.project_url ? `<a href="${item.project_url}" target="_blank" style="font-size:0.8rem;color:var(--accent);text-decoration:none;font-weight:600">View Project ↗</a>` : '<span></span>'}
             <button class="btn-sm btn-red" onclick="deletePortfolioItem(${item.id})">Delete</button>
           </div>
