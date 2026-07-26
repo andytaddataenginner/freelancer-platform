@@ -9,7 +9,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     const { rows } = await pool.query(`
       SELECT u.id, u.name, u.email, u.company,
              c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
-             c.fixed_payment_status,
+             c.fixed_payment_status,c.phone,
              COALESCE(c.credit_balance, 0)::float AS credit_balance,
              COUNT(t.id)::int AS log_count,
              COALESCE(SUM(t.hours),0)::float AS total_hours
@@ -20,7 +20,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
         AND c.freelancer_id = $1
       GROUP BY u.id, u.name, u.email, u.company,
                c.is_active, c.notes, c.rate_type, c.hourly_rate, 
-               c.fixed_price, c.fixed_payment_status, c.credit_balance
+               c.fixed_price, c.fixed_payment_status, c.phone,c.credit_balance
       ORDER BY u.name
     `, [req.user.id]);
     res.json(rows);
