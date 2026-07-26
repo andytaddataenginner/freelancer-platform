@@ -17,6 +17,9 @@
       --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold2: #f5c842;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --card-bg: #ffffff; --topbar-bg: rgba(255, 255, 255, 0.9);
+      --filter-bg: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+      --input-bg: #ffffff; --input-border: rgba(13,35,83,0.1);
       --green: #166534; --green-bg: #dcfce7;
       --amber: #92400e; --amber-bg: #fef3c7;
       --red: #b91c1c; --red-bg: #fee2e2;
@@ -25,8 +28,22 @@
       --sans: 'Outfit', sans-serif;
       --radius: 14px; --shadow: 0 4px 24px rgba(13,35,83,0.06);
     }
+
+    [data-theme="dark"] {
+      --navy: #0b1329; --navy2: #111f4d; --accent: #3b82f6; --gold2: #fbbf24;
+      --white: #1e293b; --bg: #090d16; --bg2: #131c31;
+      --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #94a3b8;
+      --card-bg: #111827; --topbar-bg: rgba(17, 24, 39, 0.9);
+      --filter-bg: linear-gradient(135deg, #131c31 0%, #0f172a 100%);
+      --input-bg: #1f2937; --input-border: rgba(255,255,255,0.1);
+      --green: #4ade80; --green-bg: rgba(74, 222, 128, 0.15);
+      --amber: #fbbf24; --amber-bg: rgba(251, 191, 36, 0.15);
+      --red: #f87171; --red-bg: rgba(248, 113, 113, 0.15);
+      --gray: #9ca3af; --gray-bg: #1f2937;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
     
-    body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); transition: background 0.3s ease, color 0.3s ease; }
 
     /* ── MOBILE TOP BAR ── */
     .mob-bar {
@@ -44,7 +61,7 @@
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 149; backdrop-filter: blur(2px); }
     .overlay.on { display: block; }
 
-    /* ── SIDEBAR (Restored original spacing & structure) ── */
+    /* ── SIDEBAR ── */
     .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
     .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
     .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
@@ -60,23 +77,28 @@
     .sb-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); }
     .sb-user strong { display: block; color: #fff; font-size: 0.88rem; }
     .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
-    .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+    .sb-user-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 0.4rem; }
+    .sb-user a { font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+    
+    /* Dark Mode Toggle Button */
+    .theme-toggle { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--gold2); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s; }
+    .theme-toggle:hover { background: rgba(255,255,255,0.2); }
 
     /* ── MAIN ── */
-    .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; background: radial-gradient(circle at top right, #f8faff 0%, var(--bg) 100%); }
-    .topbar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1.2rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; box-shadow: 0 2px 15px rgba(0,0,0,0.02); }
-    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; color: var(--navy); }
+    .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; background: var(--bg); }
+    .topbar { background: var(--topbar-bg); backdrop-filter: blur(10px); border-bottom: 1px solid var(--input-border); padding: 1.2rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; box-shadow: 0 2px 15px rgba(0,0,0,0.02); }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; color: var(--ink); }
     .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
     .content { padding: 1.5rem; }
 
-    /* ── CARDS (Enhanced Look) ── */
+    /* ── CARDS ── */
     .card {
-      background: white; border-radius: var(--radius); padding: 1.5rem;
-      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid var(--input-border);
       margin-bottom: 1.5rem;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .card:hover { box-shadow: 0 8px 30px rgba(13,35,83,0.09); transform: translateY(-1px); }
+    .card:hover { transform: translateY(-1px); }
 
     .card-header { 
       display: flex; align-items: center; justify-content: space-between; 
@@ -84,56 +106,52 @@
       padding-bottom: 1rem; border-bottom: 1px solid var(--bg2);
     }
     .card-header h3 { 
-      font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--navy);
+      font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--ink);
     }
 
-    /* ── FILTER ROW (Enhanced Look) ── */
+    /* ── FILTER ROW ── */
     .filter-row { 
       display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
-      background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
-      padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(13,35,83,0.08);
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.01);
+      background: var(--filter-bg);
+      padding: 1.2rem; border-radius: 12px; border: 1px solid var(--input-border);
     }
     .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
     .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.05em; }
     .filter-row select, .filter-row input { 
-      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1); 
+      padding: 0.6rem 0.8rem; border: 1.5px solid var(--input-border); 
       border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; 
-      outline: none; background: white; transition: all 0.2s;
-      color: var(--navy);
+      outline: none; background: var(--input-bg); transition: all 0.2s;
+      color: var(--ink);
     }
     .filter-row select:focus, .filter-row input:focus { 
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(26,92,255,0.12);
     }
 
-    /* ── STATS CARDS (Enhanced Look) ── */
+    /* ── STATS CARDS ── */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
     .stat-card {
-      background: white; border-radius: var(--radius); padding: 1.5rem;
-      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--shadow); border: 1px solid var(--input-border);
       display: flex; flex-direction: column; gap: 0.5rem;
       position: relative; overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13,35,83,0.08); }
     .stat-card::before {
       content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
       background: var(--accent); opacity: 0.7;
     }
-    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--navy); line-height: 1.2; font-family: var(--serif); }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--ink); line-height: 1.2; font-family: var(--serif); }
     .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
 
     /* ── BADGES ── */
     .badge { 
       display: inline-block; padding: 0.3rem 0.75rem; border-radius: 20px; 
       font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .badge-paid { background: var(--green-bg); color: var(--green); }
     .badge-outstanding { background: var(--amber-bg); color: var(--amber); }
 
-    /* ── BUTTONS (Enhanced Look) ── */
+    /* ── BUTTONS ── */
     .btn { 
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
       color: white; padding: 0.65rem 1.3rem; font-size: 0.82rem; 
@@ -142,149 +160,58 @@
       transition: all 0.25s ease;
       box-shadow: 0 4px 12px rgba(13,35,83,0.2);
     }
-    .btn:hover { 
-      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
-      box-shadow: 0 6px 20px rgba(26,92,255,0.3);
-      transform: translateY(-2px);
-    }
-    .btn:active { transform: translateY(0); }
+    .btn:hover { background: linear-gradient(135deg, var(--accent) 0%, #0f47cc); }
 
-    .download-btn{
+    .download-btn {
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
-      color: white;
-      font-weight: 700;
-      font-size: 0.75rem;
-      padding: 0.5rem 0.9rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      box-shadow: 0 3px 10px rgba(13,35,83,0.15);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+      color: white; font-weight: 700; font-size: 0.75rem;
+      padding: 0.5rem 0.9rem; border-radius: 8px; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.4rem; text-transform: uppercase;
     }
-    .download-btn:hover {
-      background: linear-gradient(135deg, var(--accent) 0%, #0f47cc 100%);
-      box-shadow: 0 5px 15px rgba(26,92,255,0.3);
-      transform: translateY(-2px);
-    }
-    .download-btn:active { transform: translateY(0); }
+    .download-btn:hover { background: linear-gradient(135deg, var(--accent) 0%, #0f47cc); }
 
-    /* ── TABLE (Enhanced Look) ── */
+    /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 700; letter-spacing: 0.05em; background: rgba(244,246,251,0.5); }
+    th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 700; background: var(--bg2); }
     td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
-    tbody tr { transition: all 0.2s ease; }
-    tbody tr:hover { background: rgba(26,92,255,0.03); }
+    tbody tr:hover { background: rgba(26,92,255,0.04); }
 
     .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
     .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
 
-    /* ── PDF CONTAINER ── */
-    .invoice-card{
-      background:white;
-      width:794px;
-      padding:56px 60px;
-      font-family:Outfit,sans-serif;
-      color:#1f2937;
-    }
-    .invoice-top-strip{ height:5px; border-radius:3px; background:linear-gradient(90deg,#0d2353,#1a5cff); margin-bottom:36px; }
-    .invoice-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:38px; }
-    .invoice-brand{ display:flex; align-items:center; gap:14px; }
-    .invoice-brand-name{ font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:#0d2353; }
-    .invoice-brand-tag{ font-size:12px; color:#6b7280; margin-top:3px; letter-spacing:.02em; }
-    .invoice-meta{ text-align:right; }
-    .invoice-meta-label{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#9ca3af; font-weight:600; }
-    .invoice-meta-number{ font-size:19px; font-weight:600; color:#0d2353; margin-top:3px; }
-    .invoice-meta-date{ font-size:12px; color:#6b7280; margin-top:5px; }
-    .invoice-parties{ width:100%; border-collapse:collapse; margin-bottom:36px; }
-    .invoice-parties td{ vertical-align:top; width:33.33%; padding:0 20px 0 0; }
-    .party-label{ font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:#9ca3af; font-weight:600; margin-bottom:7px; }
-    .party-label.spaced{ margin-top:14px; }
-    .party-name{ font-size:14px; font-weight:600; color:#111827; margin-bottom:4px; }
-    .party-detail{ font-size:12.5px; color:#4b5563; line-height:1.65; }
-    .status-pill{ display:inline-block; padding:3px 11px; border-radius:100px; font-size:12px; font-weight:600; }
-    .status-pill.outstanding{ color:#b45309; background:#fffbeb; }
-    .status-pill.settled{ color:#0f9d6c; background:#dcfce7; }
-    .invoice-table{ width:100%; border-collapse:collapse; margin-bottom:32px; }
-    .invoice-table thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; font-weight:600; padding:0 14px 12px 14px; border-bottom:2px solid #0d2353; }
-    .invoice-table thead th:last-child, .invoice-table tbody td:last-child, .invoice-table tfoot td:last-child{ text-align:right; }
-    .invoice-table tbody td{ padding:16px 14px; font-size:13px; color:#374151; border-bottom:1px solid #e5e7eb; }
-    .invoice-table tfoot td{ padding:16px 14px 4px 14px; font-size:15px; font-weight:700; color:#0d2353; border-top:2px solid #0d2353; }
-    .invoice-table tfoot td:first-child{ font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; }
-    .payment-box{ padding:16px 18px; border-radius:8px; background:#f8fafc; border-left:3px solid #1a5cff; font-size:12.5px; color:#4b5563; margin-bottom:34px; }
-    .payment-box strong{ color:#0d2353; }
-    .footer-note{ text-align:center; font-size:11.5px; color:#9ca3af; padding-top:22px; border-top:1px solid #f0f0f0; }
-    .invoice-logo { width:52px; height:52px; object-fit:contain; background:white; border-radius:10px; padding:6px; }
-
-    #pdf-container {
-      display: none;
-      width: 794px;
-      background-color: #ffffff;
-    }
+    /* PDF container & utilities remain fixed for rendering */
+    #pdf-container { display: none; width: 794px; background-color: #ffffff; color: #1f2937; }
     #pdf-container.rendering { display: block; }
-
-    body.pdf-generating .main,
-    body.pdf-generating .mob-bar,
-    body.pdf-generating .overlay {
-      display: none !important;
-    }
+    body.pdf-generating .main, body.pdf-generating .mob-bar, body.pdf-generating .overlay { display: none !important; }
 
     #pdf-generating-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 999;
-      background: rgba(13, 35, 83, 0.97);
-      backdrop-filter: blur(4px);
-      color: white;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1rem;
-      font-family: var(--sans);
+      display: none; position: fixed; inset: 0; z-index: 999;
+      background: rgba(13, 35, 83, 0.97); backdrop-filter: blur(4px); color: white;
+      align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
     }
     #pdf-generating-overlay.active { display: flex; }
     #pdf-generating-overlay .spinner {
-      width: 48px; height: 48px;
-      border: 4px solid rgba(255,255,255,0.25);
-      border-top-color: var(--gold2);
-      border-radius: 50%;
-      animation: pdf-spin 0.8s linear infinite;
+      width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.25);
+      border-top-color: var(--gold2); border-radius: 50%; animation: pdf-spin 0.8s linear infinite;
     }
     @keyframes pdf-spin { to { transform: rotate(360deg); } }
 
-    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       .mob-bar { display: flex; }
-      .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
-      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
+      .sidebar { transform: translateX(-100%); transition: transform 0.28s; width: 240px; }
+      .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; padding-top: 52px; }
-      .topbar { position: static !important; padding: 1rem 1rem 0.8rem !important; }
-      .content { padding: 1rem; }
-      .filter-row { flex-direction: column; }
-      .filter-group { width: 100%; }
-      .filter-row select, .filter-row input { width: 100%; }
-      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
-      table { font-size: 0.8rem; }
-      th { padding: 0.6rem 0.5rem; font-size: 0.65rem; }
-      td { padding: 0.7rem 0.5rem; }
-    }
-    @media (max-width: 480px) {
-      .stats-row { grid-template-columns: 1fr !important; }
-      .card { padding: 1.2rem; }
-      .card-header { flex-direction: column; align-items: flex-start; }
-      table { font-size: 0.75rem; }
-      th { padding: 0.5rem 0.3rem; }
-      td { padding: 0.6rem 0.3rem; }
-      .download-btn { padding: 0.4rem 0.7rem; font-size: 0.65rem; }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    // Prevent flash of unthemed layout
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
 </head>
 <body>
 
@@ -316,7 +243,10 @@
   <div class="sb-user">
     <strong id="user-name">Loading…</strong>
     <span>Freelancer · QFA</span>
-    <a href="#" onclick="logout()">Sign out →</a>
+    <div class="sb-user-actions">
+      <a href="#" onclick="logout()">Sign out →</a>
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-btn">🌓 Theme</button>
+    </div>
   </div>
 </aside>
 
@@ -367,7 +297,7 @@
         <button class="btn" style="height: 42px; min-width: 120px;" onclick="applyTimeWindowFilters()">Apply</button>
       </div>
 
-      <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1.5rem;">
+      <div style="overflow-x: auto; margin-top: 1.5rem;">
         <table>
           <thead>
             <tr>
@@ -405,6 +335,13 @@ const auth = {
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
 
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   document.getElementById('user-name').textContent = auth.user()?.name || '';
@@ -422,24 +359,12 @@ function sbClose(){
   document.getElementById('overlay').classList.remove('on');
   document.body.style.overflow='';
 }
-document.querySelectorAll('.sb-nav a').forEach(a=>
-  a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();})
-);
 
 let rawLogsData = [];
-// NEW — every fixed_monthly_payments record for this freelancer, all
-// clients, all time. Fixed-rate clients are billed from this, never from
-// time_logs amounts.
 let rawFixedData = [];
-// NEW — client_id (users.id) -> { name, rate_type }, from /clients, so we
-// know which clients are fixed-rate even if a given timelog is missing
-// its own rate_type.
 let clientRateMap = new Map();
-// NEW — holds the exact data behind each rendered invoice row, keyed by
-// its dummy invoice id, so the PDF button doesn't need to cram
-// hours/amounts/fixed-month arrays into an inline onclick string.
 let lastInvoiceGroups = {};
-let generatingPDF=false;
+let generatingPDF = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date().toISOString().slice(0, 10);
@@ -468,38 +393,21 @@ async function fetchMasterLogs() {
     const res = await fetch(`${API}/timelogs`, { headers: auth.headers() });
     const body = await res.json();
     rawLogsData = Array.isArray(body) ? body : [];
-    if (!Array.isArray(body)) console.error("[invoices] GET /timelogs: unexpected response shape", body);
-  } catch(e) { console.error("Logs pull error:", e); rawLogsData = []; }
+  } catch(e) { rawLogsData = []; }
 }
 
-// NEW — pulls every fixed-fee monthly record so fixed-rate clients show
-// up in the invoice list even when they've never logged an hour.
 async function fetchFixedPayments() {
   try {
     const res = await fetch(`${API}/fixed-payments`, { headers: auth.headers() });
-    let body;
-    try {
-      body = await res.json();
-    } catch (err) {
-      console.error("[invoices] GET /fixed-payments: response wasn't valid JSON", err);
-      rawFixedData = [];
-      return;
-    }
-    if (!res.ok) {
-      console.error("[invoices] GET /fixed-payments: request failed", res.status, body);
-      rawFixedData = [];
-      return;
-    }
+    const body = await res.json();
     rawFixedData = Array.isArray(body) ? body : [];
-  } catch(e) { console.error("Fixed payments pull error:", e); rawFixedData = []; }
+  } catch(e) { rawFixedData = []; }
 }
 
 function formatMonthLabel(monthStr) {
-  // 'YYYY-MM' -> 'July 2026'
   const [y, m] = (monthStr || '').split('-').map(Number);
   if (!y || !m) return monthStr || '';
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
 function applyTimeWindowFilters() {
@@ -509,8 +417,6 @@ function applyTimeWindowFilters() {
 
   const startTime = startVal ? new Date(startVal + "T00:00:00").getTime() : null;
   const endTime = endVal ? new Date(endVal + "T23:59:59").getTime() : null;
-  // fixed_monthly_payments.month is a 'YYYY-MM' string — compare against
-  // the same window using the month portion of the chosen dates.
   const startMonth = startVal ? startVal.slice(0, 7) : null;
   const endMonth = endVal ? endVal.slice(0, 7) : null;
 
@@ -525,20 +431,14 @@ function applyTimeWindowFilters() {
   let records = rawLogsData.filter(l => {
     if (!l.date) return false;
     const logTime = new Date(l.date.slice(0, 10) + "T12:00:00").getTime();
-    const matchesClient = !selectedClient || l.client_name === selectedClient;
-    const matchesStart = !startTime || logTime >= startTime;
-    const matchesEnd = !endTime || logTime <= endTime;
-    return matchesClient && matchesStart && matchesEnd;
+    return (!selectedClient || l.client_name === selectedClient) &&
+           (!startTime || logTime >= startTime) &&
+           (!endTime || logTime <= endTime);
   });
 
   records.forEach(r => {
     const info = clientRateMap.get(r.client_id);
-    const isFixed = r.rate_type === 'fixed' || (info && info.rate_type === 'fixed');
-    // Fixed clients are billed through fixed_monthly_payments below, not
-    // per-log amounts — the backend currently stamps the full monthly fee
-    // on every single log entry for a fixed client, so summing those here
-    // would multiply their fee by however many times they logged hours.
-    if (isFixed) return;
+    if (r.rate_type === 'fixed' || (info && info.rate_type === 'fixed')) return;
 
     const g = ensureGroup(r.client_name, 'hourly');
     const amt = parseFloat(r.amount || 0);
@@ -551,7 +451,6 @@ function applyTimeWindowFilters() {
     }
   });
 
-  // Fixed-fee monthly records that fall inside the selected date window.
   rawFixedData.forEach(f => {
     if (selectedClient && f.client_name !== selectedClient) return;
     if (startMonth && f.month < startMonth) return;
@@ -559,19 +458,15 @@ function applyTimeWindowFilters() {
 
     const g = ensureGroup(f.client_name, 'fixed');
     const amt = parseFloat(f.amount || 0);
-    if (f.status === 'paid') {
-      g.totalPaid += amt;
-    } else {
-      g.totalUnpaid += amt;
-    }
+    if (f.status === 'paid') g.totalPaid += amt;
+    else g.totalUnpaid += amt;
     g.fixedMonths.push({ month: f.month, amount: amt, status: f.status });
   });
 
   const tableBody = document.getElementById('invoice-records-table');
   const groupsArray = Object.keys(clientGroups);
 
-  let totalOutstanding = 0;
-  let totalPaid = 0;
+  let totalOutstanding = 0, totalPaid = 0;
   groupsArray.forEach(client => {
     totalOutstanding += clientGroups[client].totalUnpaid;
     totalPaid += clientGroups[client].totalPaid;
@@ -582,8 +477,7 @@ function applyTimeWindowFilters() {
   document.getElementById('s-upcoming').textContent = groupsArray.length;
 
   lastInvoiceGroups = {};
-
-  if(!groupsArray.length) {
+  if (!groupsArray.length) {
     tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">📭</div><div>No invoices match your filters</div></td></tr>';
     return;
   }
@@ -592,227 +486,72 @@ function applyTimeWindowFilters() {
     const data = clientGroups[client];
     const dummyInvId = `INV-2026-${3000 + idx}`;
     const hasOutstanding = data.totalUnpaid > 0;
-    const fixedTag = data.type === 'fixed'
-      ? ' <span style="font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); background:#fef3c7; padding:2px 7px; border-radius:4px; vertical-align:middle;">Fixed</span>'
-      : '';
+    const fixedTag = data.type === 'fixed' ? ' <span style="font-size:0.62rem; font-weight:700; color:var(--navy); background:var(--gold2); padding:2px 7px; border-radius:4px;">Fixed</span>' : '';
 
-    lastInvoiceGroups[dummyInvId] = {
-      clientName: client,
-      type: data.type,
-      hours: data.unpaidHours,
-      totalUnpaid: data.totalUnpaid,
-      fixedMonths: data.fixedMonths,
-      start: startVal,
-      end: endVal
-    };
+    lastInvoiceGroups[dummyInvId] = { clientName: client, type: data.type, hours: data.unpaidHours, totalUnpaid: data.totalUnpaid, fixedMonths: data.fixedMonths, start: startVal, end: endVal };
 
     return `
       <tr>
         <td><strong>${dummyInvId}</strong></td>
         <td><strong>${client}</strong>${fixedTag}</td>
         <td>${data.type === 'fixed' ? '—' : data.unpaidHours.toFixed(2)}</td>
-        <td style="color:${hasOutstanding ? '#b45309':'#10b981'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
-        <td style="color:#10b981; font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
-        <td>
-          ${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding</span>' 
-                            : '<span class="badge badge-paid">Paid</span>'}
-        </td>
-        <td>
-         <button class="download-btn" onclick="downloadInvoice('${dummyInvId}')">
-          ⬇ PDF
-         </button>
-        </td>
+        <td style="color:${hasOutstanding ? 'var(--amber)':'var(--green)'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
+        <td style="color:var(--green); font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
+        <td>${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding</span>' : '<span class="badge badge-paid">Paid</span>'}</td>
+        <td><button class="download-btn" onclick="downloadInvoice('${dummyInvId}')">⬇ PDF</button></td>
       </tr>`;
   }).join('');
 }
 
 async function downloadInvoice(invId) {
   const group = lastInvoiceGroups[invId];
-  if (!group) { alert("Couldn't find that invoice's data — try reapplying your filters and downloading again."); return; }
+  if (!group) return;
   const { clientName, type, hours, totalUnpaid, fixedMonths, start, end } = group;
 
-  if(generatingPDF) return;
-  generatingPDF=true;
-
-  if(typeof html2pdf === "undefined"){
-    generatingPDF=false;
-    alert("PDF engine is not loaded. Please refresh the page.");
-    return;
-  }
-
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const pdfWindow = isMobile ? window.open("", "_blank") : null;
+  if (generatingPDF) return;
+  generatingPDF = true;
   const freelancer = auth.user()?.name || "Freelancer";
 
   document.getElementById("pdf-generating-overlay").classList.add("active");
-  window.scrollTo(0, 0);
-  document.body.classList.add("pdf-generating");
-
   const container = document.getElementById("pdf-container");
   container.classList.add("rendering");
 
-  // Fixed-fee clients get one line item per unpaid month; hourly clients
-  // keep the single consolidated services line.
   const unpaidFixedMonths = (fixedMonths || []).filter(m => m.status !== 'paid');
   const lineItemsHtml = type === 'fixed'
-    ? (unpaidFixedMonths.length
-        ? unpaidFixedMonths.map(m => `
-        <tr>
-          <td>Fixed Monthly Fee — ${formatMonthLabel(m.month)}</td>
-          <td>—</td>
-          <td>$${m.amount.toFixed(2)}</td>
-        </tr>`).join('')
-        : `<tr><td>Fixed Monthly Fee</td><td>—</td><td>$0.00</td></tr>`)
-    : `
-        <tr>
-          <td>Professional Freelance Consulting Services</td>
-          <td>${hours.toFixed(2)}</td>
-          <td>$${totalUnpaid.toFixed(2)}</td>
-        </tr>`;
+    ? (unpaidFixedMonths.length ? unpaidFixedMonths.map(m => `<tr><td>Fixed Monthly Fee — ${formatMonthLabel(m.month)}</td><td>—</td><td>$${m.amount.toFixed(2)}</td></tr>`).join('') : `<tr><td>Fixed Monthly Fee</td><td>—</td><td>$0.00</td></tr>`)
+    : `<tr><td>Professional Freelance Consulting Services</td><td>${hours.toFixed(2)}</td><td>$${totalUnpaid.toFixed(2)}</td></tr>`;
 
   container.innerHTML = `
-<div class="invoice-card">
-<div class="invoice-top-strip"></div>
-<div class="invoice-head">
-<div class="invoice-brand">
-<img class="invoice-logo" src="../QFA_Logo.png"/>
-<div>
-<div class="invoice-brand-name">Quick Freelancing Agency</div>
-<div class="invoice-brand-tag">Professional Consulting Invoice</div>
-</div>
-</div>
-<div class="invoice-meta">
-<div class="invoice-meta-label">Invoice</div>
-<div class="invoice-meta-number">${invId}</div>
-<div class="invoice-meta-date">${new Date().toLocaleDateString()}</div>
-</div>
-</div>
-<table class="invoice-parties">
-<tr>
-<td>
-<div class="party-label">Issued By</div>
-<div class="party-name">Quick Freelancing Agency</div>
-<div class="party-detail">ndy.andupa@gmail.com<br>+251 911 859 866</div>
-</td>
-<td>
-<div class="party-label">Bill To</div>
-<div class="party-name">${clientName}</div>
-<div class="party-detail">Prepared by ${freelancer}</div>
-</td>
-<td>
-<div class="party-label">Billing Period</div>
-<div class="party-detail">${start} &mdash; ${end}</div>
-<div class="party-label spaced">Status</div>
-<div class="party-detail"><span class="status-pill ${totalUnpaid > 0 ? 'outstanding' : 'settled'}">${totalUnpaid > 0 ? 'Outstanding' : 'Fully Settled'}</span></div>
-</td>
-</tr>
-</table>
-<table class="invoice-table">
-<thead>
-<tr>
-<th>Description</th>
-<th>Hours</th>
-<th>Amount</th>
-</tr>
-</thead>
-<tbody>
-${lineItemsHtml}
-</tbody>
-<tfoot>
-<tr>
-<td colspan="2">Total Amount Due</td>
-<td>$${totalUnpaid.toFixed(2)}</td>
-</tr>
-</tfoot>
-</table>
-<div class="payment-box">
-Payment is due upon receipt. Reference: <strong>${invId}</strong>
-</div>
-<div class="footer-note">
-Thank you for choosing <strong>Quick Freelancing Agency</strong>
-</div>
-</div>
-`;
+    <div style="background:white; width:794px; padding:56px 60px; font-family:Outfit,sans-serif; color:#1f2937;">
+      <div style="height:5px; border-radius:3px; background:linear-gradient(90deg,#0d2353,#1a5cff); margin-bottom:36px;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:38px;">
+        <div style="font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:#0d2353;">Quick Freelancing Agency</div>
+        <div style="text-align:right;"><div style="font-size:19px; font-weight:600; color:#0d2353;">${invId}</div><div style="font-size:12px; color:#6b7280;">${new Date().toLocaleDateString()}</div></div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:36px;">
+        <tr>
+          <td style="width:33%;"><strong>Issued By:</strong><br>Quick Freelancing Agency</td>
+          <td style="width:33%;"><strong>Bill To:</strong><br>${clientName}</td>
+          <td style="width:33%;"><strong>Period:</strong><br>${start} &mdash; ${end}</td>
+        </tr>
+      </table>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:32px;">
+        <thead><tr style="border-bottom:2px solid #0d2353;"><th style="text-align:left; padding:8px;">Description</th><th style="padding:8px;">Hours</th><th style="text-align:right; padding:8px;">Amount</th></tr></thead>
+        <tbody>${lineItemsHtml}</tbody>
+        <tfoot><tr style="border-top:2px solid #0d2353;"><td colspan="2" style="padding:12px; font-weight:700;">Total Due</td><td style="text-align:right; padding:12px; font-weight:700;">$${totalUnpaid.toFixed(2)}</td></tr></tfoot>
+      </table>
+    </div>`;
 
-  await new Promise(resolve => setTimeout(resolve, 100));
-  const images = container.querySelectorAll("img");
-
-  await Promise.all(
-    [...images].map(img => {
-      if(img.complete) return Promise.resolve();
-      return new Promise(resolve=>{
-        img.onload = resolve;
-        img.onerror = resolve;
-      });
-    })
-  );
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  const renderedWidth = container.scrollWidth || 794;
-  const renderedHeight = container.scrollHeight || 1123;
-
-  const options = {
-    margin: 0,
-    filename: `${invId}.pdf`,
-    image: { type:"jpeg", quality:1 },
-    html2canvas:{
-      scale:2,
-      useCORS:true,
-      allowTaint:false,
-      backgroundColor:"#ffffff",
-      logging: false,
-      imageTimeout:0,
-      x: 0,
-      y: 0,
-      width: renderedWidth,
-      height: renderedHeight,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: renderedWidth,
-      windowHeight: renderedHeight
-    },
-    jsPDF:{ unit:"mm", format:"a4", orientation:"portrait" }
-  };
-
+  await new Promise(r => setTimeout(r, 300));
   try {
-    await document.fonts.ready;
-    const worker = html2pdf().set(options).from(container).toCanvas();
-    const canvas = await worker.get("canvas");
-    const pdfWidthMm = 210;
-    const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
-
-    const pdfWorker = worker.set({
-      jsPDF: { unit: "mm", format: [pdfWidthMm, pdfHeightMm], orientation: "portrait" }
-    }).toPdf();
-
-    if (isMobile) {
-      const pdfBlob = await pdfWorker.outputPdf("blob");
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      if (pdfWindow) {
-        pdfWindow.location.href = blobUrl;
-      } else {
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = `${invId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-    } else {
-      await pdfWorker.save();
-    }
-  } catch(error){
-    console.error("PDF generation error:", error);
-    if (pdfWindow) pdfWindow.close();
-    alert("Invoice PDF generation failed.");
-  } finally {
-    setTimeout(() => {
-      container.innerHTML = "";
-      container.classList.remove("rendering");
-      document.body.classList.remove("pdf-generating");
-      document.getElementById("pdf-generating-overlay").classList.remove("active");
-      generatingPDF = false;
-    }, 1000);
+    const worker = html2pdf().set({ margin: 0, filename: `${invId}.pdf`, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" } }).from(container);
+    await worker.save();
+  } catch(e) { console.error(e); }
+  finally {
+    container.innerHTML = "";
+    container.classList.remove("rendering");
+    document.getElementById("pdf-generating-overlay").classList.remove("active");
+    generatingPDF = false;
   }
 }
 </script>
