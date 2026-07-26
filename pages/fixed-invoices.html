@@ -170,6 +170,17 @@
     }
     .download-btn:hover { background: linear-gradient(135deg, var(--accent) 0%, #0f47cc); }
 
+    /* NEW — WhatsApp reminder button */
+    .whatsapp-btn {
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      color: white; font-weight: 700; font-size: 0.75rem;
+      padding: 0.5rem 0.9rem; border-radius: 8px; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.4rem; text-transform: uppercase;
+    }
+    .whatsapp-btn:hover { filter: brightness(1.08); }
+    .whatsapp-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+    .action-cell { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
     /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     th { text-align: left; padding: 0.8rem 1rem; color: var(--ink3); font-size: 0.72rem; text-transform: uppercase; border-bottom: 2px solid var(--bg2); font-weight: 700; background: var(--bg2); }
@@ -363,6 +374,10 @@ function sbClose(){
 let rawLogsData = [];
 let rawFixedData = [];
 let clientRateMap = new Map();
+// NEW — client name -> { rate_type, phone }. Keyed by name because the
+// invoice groups themselves are keyed by client name (matching the
+// existing client-select filter, which also uses names as values).
+let clientByName = new Map();
 let lastInvoiceGroups = {};
 let generatingPDF = false;
 
@@ -383,7 +398,9 @@ async function populateClientSelector() {
     const selector = document.getElementById('client-select');
     (clients || []).forEach(c => {
       selector.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-      clientRateMap.set(c.user_id ?? c.id, { name: c.name, rate_type: c.rate_type });
+      const info = { rate_type: c.rate_type, phone: c.phone };
+      clientRateMap.set(c.user_id ?? c.id, info);
+      clientByName.set(c.name, info);
     });
   } catch(e) { console.error("Client selector error:", e); }
 }
@@ -488,7 +505,20 @@ function applyTimeWindowFilters() {
     const hasOutstanding = data.totalUnpaid > 0;
     const fixedTag = data.type === 'fixed' ? ' <span style="font-size:0.62rem; font-weight:700; color:var(--navy); background:var(--gold2); padding:2px 7px; border-radius:4px;">Fixed</span>' : '';
 
-    lastInvoiceGroups[dummyInvId] = { clientName: client, type: data.type, hours: data.unpaidHours, totalUnpaid: data.totalUnpaid, fixedMonths: data.fixedMonths, start: startVal, end: endVal };
+    lastInvoiceGroups[dummyInvId] = {
+      clientName: client,
+      type: data.type,
+      hours: data.unpaidHours,
+      totalUnpaid: data.totalUnpaid,
+      fixedMonths: data.fixedMonths,
+      start: startVal,
+      end: endVal,
+      phone: (clientByName.get(client) || {}).phone || ''
+    };
+    const hasPhone = !!lastInvoiceGroups[dummyInvId].phone;
+    const whatsappBtn = hasOutstanding
+      ? `<button class="whatsapp-btn" ${hasPhone ? '' : 'disabled title="No phone number on file for this client"'} onclick="sendWhatsAppReminder('${dummyInvId}')">💬 WhatsApp</button>`
+      : '';
 
     return `
       <tr>
@@ -498,9 +528,79 @@ function applyTimeWindowFilters() {
         <td style="color:${hasOutstanding ? 'var(--amber)':'var(--green)'}; font-weight:700;">$${data.totalUnpaid.toFixed(2)}</td>
         <td style="color:var(--green); font-weight:600;">$${data.totalPaid.toFixed(2)}</td>
         <td>${hasOutstanding ? '<span class="badge badge-outstanding">Outstanding</span>' : '<span class="badge badge-paid">Paid</span>'}</td>
-        <td><button class="download-btn" onclick="downloadInvoice('${dummyInvId}')">⬇ PDF</button></td>
+        <td><div class="action-cell"><button class="download-btn" onclick="downloadInvoice('${dummyInvId}')">⬇ PDF</button>${whatsappBtn}</div></td>
       </tr>`;
   }).join('');
+}
+
+// ────────────────────────────────────────────────────────────────
+// WhatsApp reminder — opens WhatsApp (web or app) with the client's
+// number and a fully drafted message. This is the practical limit of
+// what's possible without WhatsApp's paid Business Platform API: the
+// message can't send itself, and a PDF can't ride along automatically.
+// The freelancer reviews the drafted text and taps Send themselves.
+// ────────────────────────────────────────────────────────────────
+
+// Strips everything but digits. IMPORTANT: wa.me requires the FULL
+// international number with country code and no leading zero or '+'
+// (e.g. Ethiopia: 251911234567, not 0911234567 or +251911234567).
+// If your clients.phone values are stored WITHOUT a country code, set
+// DEFAULT_COUNTRY_CODE below and local-looking numbers will get it
+// prepended automatically (adjust or remove this default as needed).
+const DEFAULT_COUNTRY_CODE = '251'; // Ethiopia — change to match your clients
+
+function sanitizePhoneForWhatsApp(raw) {
+  if (!raw) return null;
+  let digits = String(raw).replace(/[^\d]/g, '');
+  if (!digits) return null;
+  // A number starting with a single 0 and shorter than a typical
+  // country-code-included number is almost certainly a local format —
+  // strip the leading 0 and prepend the default country code.
+  if (digits.startsWith('0') && digits.length <= 10 && DEFAULT_COUNTRY_CODE) {
+    digits = DEFAULT_COUNTRY_CODE + digits.slice(1);
+  }
+  return digits;
+}
+
+function buildWhatsAppMessage(group, invId) {
+  const { clientName, type, hours, totalUnpaid, fixedMonths, start, end } = group;
+  const lines = [];
+  lines.push(`Hello ${clientName},`);
+  lines.push('');
+  lines.push(`This is a friendly reminder about invoice *${invId}* from *Quick Freelancing Agency*.`);
+  lines.push('');
+  lines.push(`*Billing period:* ${start} to ${end}`);
+
+  if (type === 'fixed') {
+    const unpaid = (fixedMonths || []).filter(m => m.status !== 'paid');
+    if (unpaid.length) {
+      lines.push('*Outstanding months:*');
+      unpaid.forEach(m => lines.push(`  • ${formatMonthLabel(m.month)} — $${m.amount.toFixed(2)}`));
+    }
+  } else {
+    lines.push(`*Hours logged:* ${hours.toFixed(2)}`);
+  }
+
+  lines.push('');
+  lines.push(`*Total amount due:* $${totalUnpaid.toFixed(2)}`);
+  lines.push('');
+  lines.push('Please let us know if you have any questions or need a copy of the invoice PDF. Thank you!');
+  return lines.join('\n');
+}
+
+function sendWhatsAppReminder(invId) {
+  const group = lastInvoiceGroups[invId];
+  if (!group) { alert("Couldn't find that invoice's data — try reapplying your filters."); return; }
+
+  const phoneDigits = sanitizePhoneForWhatsApp(group.phone);
+  if (!phoneDigits) {
+    alert(`No phone number on file for ${group.clientName}. Add one on the Clients page first.`);
+    return;
+  }
+
+  const message = buildWhatsAppMessage(group, invId);
+  const url = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
 }
 
 async function downloadInvoice(invId) {
