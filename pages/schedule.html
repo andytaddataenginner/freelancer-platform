@@ -3,48 +3,65 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Schedule & Calendar — QFA</title>
+  <title>Schedule — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { overflow-y: scroll; }
+    
+    html {
+      overflow-y: scroll;
+    }
 
     :root {
       --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold: #c9952a; --gold2: #f5c842;
       --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
       --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
-      --green: #166534; --gbg: #dcfce7; --amber: #92400e; --abg: #fef3c7;
-      --red: #b91c1c; --rbg: #fee2e2;
+      --green: #166534; --green-bg: #dcfce7; 
+      --amber: #92400e; --amber-bg: #fef3c7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --gray: #4b5563; --gray-bg: #f3f4f6;
       --serif: 'Playfair Display', serif; --sans: 'Outfit', sans-serif;
-      --r: 14px; --sh: 0 2px 20px rgba(13,35,83,0.08);
-      --card-bg: #fff; --topbar-bg: #fff; --modal-bg: #fff;
-      --input-bg: var(--bg); --input-border: rgba(13,35,83,0.1);
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --card-bg: #ffffff;
+      --topbar-bg: #ffffff;
+      --border-color: rgba(13,35,83,0.05);
     }
 
     [data-theme="dark"] {
-      --navy: #0b1736; --navy2: #11224d; --accent: #3b82f6; --gold: #d9a73d; --gold2: #facc15;
-      --white: #1e293b; --bg: #090d16; --bg2: #131d31;
-      --ink: #f8fafc; --ink2: #94a3b8; --ink3: #64748b;
-      --green: #4ade80; --gbg: rgba(74, 222, 128, 0.15); --amber: #fbbf24; --abg: rgba(251, 191, 36, 0.15);
-      --red: #f87171; --rbg: rgba(248, 113, 113, 0.15);
-      --sh: 0 2px 20px rgba(0,0,0,0.4);
-      --card-bg: #111c30; --topbar-bg: #0b1736; --modal-bg: #111c30;
-      --input-bg: #090d16; --input-border: rgba(255,255,255,0.1);
+      --navy: #0b1736; --navy2: #11224d; --accent: #3b82f6; --gold: #d97706; --gold2: #fbbf24;
+      --white: #1e293b; --bg: #0f172a; --bg2: #1e293b;
+      --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #94a3b8;
+      --green: #4ade80; --green-bg: rgba(22, 101, 52, 0.4);
+      --amber: #fbbf24; --amber-bg: rgba(146, 64, 14, 0.4);
+      --red: #f87171; --red-bg: rgba(185, 28, 28, 0.4);
+      --gray: #9ca3af; --gray-bg: #334155;
+      --shadow: 0 2px 20px rgba(0,0,0,0.4);
+      --card-bg: #1e293b;
+      --topbar-bg: #1e293b;
+      --border-color: rgba(255,255,255,0.08);
     }
 
     body { font-family: var(--sans); background: var(--bg); color: var(--ink); transition: background 0.3s, color 0.3s; }
 
-    .mob-bar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px; background: var(--navy); z-index: 200; align-items: center; justify-content: space-between; padding: 0 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+    /* ── MOBILE TOP BAR ── */
+    .mob-bar {
+      display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px;
+      background: var(--navy); z-index: 200;
+      align-items: center; justify-content: space-between;
+      padding: 0 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
     .mob-brand { display: flex; align-items: center; gap: 0.5rem; }
     .mob-brand img { height: 28px; background: #fff; border-radius: 6px; padding: 2px; }
     .mob-brand span { color: #fff; font-size: 0.82rem; font-weight: 700; }
     .mob-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     
+    /* ── BLUR OVERLAY ── */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 149; backdrop-filter: blur(2px); }
     .overlay.on { display: block; }
 
-    .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; border-right: 1px solid var(--input-border); }
+    /* ── SIDEBAR SYSTEM FRAMEWORK ── */
+    .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
     .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
     .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
     .sb-logo img { width: 100%; height: 100%; object-fit: contain; }
@@ -56,54 +73,105 @@
     .sb-nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
     .sb-nav a.active { color: #fff; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
     
-    .theme-toggle-container { padding: 0.6rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; }
-    .theme-toggle-container span { font-size: 0.78rem; color: rgba(255,255,255,0.6); font-weight: 500; }
-    .theme-switch { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s; }
-    .theme-switch:hover { background: rgba(255,255,255,0.2); }
-
     .sb-user { padding: 1rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); }
     .sb-user strong { display: block; color: #fff; font-size: 0.88rem; }
     .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
+    /* ── MAIN WORKSPACE PANEL ── */
     .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; }
-    .topbar { background: var(--topbar-bg); border-bottom: 1px solid var(--input-border); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; }
-    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); }
+    .topbar { background: var(--topbar-bg); border-bottom: 1px solid var(--border-color); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; transition: background 0.3s; }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; color: var(--ink); }
     .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
     .content { padding: 1.5rem; }
 
-    .card { background: var(--card-bg); border-radius: var(--r); box-shadow: var(--sh); border: 1px solid var(--input-border); padding: 1.2rem; color: var(--ink); }
-    .btn-primary { background: var(--navy); color: #fff; padding: 0.55rem 1.2rem; border-radius: 8px; font-family: var(--sans); font-size: 0.82rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
-    .btn-primary:hover { background: var(--accent); }
+    /* ── CARDS ── */
+    .card {
+      background: var(--card-bg); border-radius: var(--radius); padding: 1.2rem;
+      box-shadow: var(--shadow); border: 1px solid var(--border-color);
+      margin-bottom: 1.2rem; transition: background 0.3s, border-color 0.3s;
+    }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 1rem; backdrop-filter: blur(4px); }
-    .modal-overlay.open { display: flex; }
-    .modal { background: var(--modal-bg); border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; box-shadow: 0 24px 80px rgba(0,0,0,0.3); border: 1px solid var(--input-border); color: var(--ink); }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
-    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); }
-    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
+    /* ── STATS CARDS ── */
+    .stat-card {
+      background: var(--card-bg); border-radius: var(--radius); padding: 1.2rem;
+      box-shadow: var(--shadow); border: 1px solid var(--border-color);
+      display: flex; flex-direction: column; gap: 0.2rem; transition: background 0.3s, border-color 0.3s;
+    }
+    .stat-num { font-size: 1.8rem; font-weight: 600; color: var(--ink); line-height: 1.2; }
+    .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-blue  { background: #dbeafe; color: #1e40af; }
+    .badge-gray  { background: var(--gray-bg); color: var(--gray); }
+
+    /* ── BUTTONS ── */
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
+    .btn-green  { background: var(--green-bg); color: var(--green); }
+    .btn-green:hover { background: var(--green); color: white; }
+    .btn-red    { background: var(--red-bg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border-color); color: var(--ink2); padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
+    .btn-outline:hover { border-color: var(--accent); color: var(--ink); }
     
-    .form-group { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
-    .form-group label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--ink2); }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.7rem 0.9rem; border: 1.5px solid var(--input-border); border-radius: 9px; background: var(--input-bg); font-family: var(--sans); font-size: 0.88rem; color: var(--ink); }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); background: var(--card-bg); }
+    /* ── ACTIVE FILTER STYLING ── */
+    .btn-filter-toggle.active {
+      background: var(--accent) !important;
+      color: white !important;
+      border-color: var(--accent) !important;
+    }
 
+    /* ── DATE INPUT CUSTOM DESIGN ── */
+    .date-picker-input {
+      border: 1.5px solid var(--border-color);
+      padding: 0.3rem 0.5rem;
+      font-size: 0.75rem;
+      border-radius: 5px;
+      font-family: var(--sans);
+      color: var(--ink2);
+      background: var(--card-bg);
+      outline: none;
+    }
+    .date-picker-input:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── TABLES ── */
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    th { padding: 0.8rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); border-bottom: 1px solid var(--bg2); }
+    td { padding: 0.9rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── THEME TOGGLE BUTTON ── */
+    .theme-toggle-btn {
+      background: rgba(255,255,255,0.1); border: 1.5px solid var(--border-color); color: var(--ink2);
+      padding: 0.35rem 0.7rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s;
+    }
+    .theme-toggle-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+    /* ── BREAKPOINTS RESPONSIVE ENGINE ── */
     @media (max-width: 768px) {
       .mob-bar { display: flex; }
       .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
       .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
       .main { margin-left: 0; padding-top: 52px; }
-      .topbar { position: static !important; padding: 1.2rem 1rem 0.8rem !important; }
+      
+      .topbar { position: static !important; padding: 1.2rem 1rem 0.8rem !important; } 
+      
       .content { padding: 1rem; }
+      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; display: grid !important; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr !important; }
+      .card-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.8rem !important; }
+      .card-header div { width: 100%; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .card-header button { flex: 1; text-align: center; }
     }
   </style>
-  <script>
-    (function() {
-      if (localStorage.getItem('qfa_theme') === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
-    })();
-  </script>
 </head>
 <body>
 
@@ -127,15 +195,11 @@
     <a href="time-logs.html">⏱ Time Logs</a>
     <a href="clients.html">👥 Clients</a>
     <a href="schedule.html" class="active">📅 Schedule</a>
-    <a href="reports.html">📈 Reports</a>
+     <a href="reports.html">📈 Reports</a>
     <a href="fixed-invoices.html">📄 Invoices</a>
     <a href="portfolio-admin.html">🖼 Portfolio</a>
     <a href="../index.html" target="_blank">🌐 Public Site</a>
   </nav>
-  <div class="theme-toggle-container">
-    <span>Dark Mode</span>
-    <button class="theme-switch" id="theme-switch-btn" onclick="toggleTheme()">🌙 Dark</button>
-  </div>
   <div class="sb-user">
     <strong id="user-name">Loading…</strong>
     <span>Freelancer · QFA</span>
@@ -146,33 +210,68 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <h2>Schedule & Milestones</h2>
-      <p>Manage upcoming meetings, deadlines, and project checkpoints.</p>
+      <h2>Schedule</h2>
+      <p>View and manage client booking requests.</p>
     </div>
-    <button class="btn-primary" onclick="document.getElementById('modal-add').classList.add('open')">+ Add Event</button>
+    <div>
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
   </div>
 
   <div class="content">
-    <div class="card">
-      <div id="schedule-list" style="display:flex;flex-direction:column;gap:0.8rem">
-        <p style="color:var(--ink3)">Loading calendar items…</p>
+    <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
+      <div class="stat-card">
+        <span class="stat-num" id="s-pending">—</span>
+        <span class="stat-label">Pending requests</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-confirmed">—</span>
+        <span class="stat-label">Confirmed</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-upcoming">—</span>
+        <span class="stat-label">Upcoming (7 days)</span>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="modal-overlay" id="modal-add">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Schedule New Event</h3>
-      <button class="modal-close" onclick="document.getElementById('modal-add').classList.remove('open')">✕</button>
+    <div class="card">
+      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.2rem;">
+        <h3 style="font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--ink);">Bookings List</h3>
+        
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:0.75rem; font-weight:500; color:var(--ink3)">From:</label>
+          <input type="date" id="date-from" class="date-picker-input" onchange="loadBookings()"/>
+          <label style="font-size:0.75rem; font-weight:500; color:var(--ink3)">To:</label>
+          <input type="date" id="date-to" class="date-picker-input" onchange="loadBookings()"/>
+          <button class="btn-sm btn-outline" onclick="clearDateRange()" style="padding:0.3rem 0.5rem;">Clear Range</button>
+        </div>
+
+        <div style="display:flex;gap:0.4rem">
+          <button class="btn-sm btn-outline btn-filter-toggle active" id="filter-all" onclick="filterBookings('all')">All</button>
+          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-pending" onclick="filterBookings('pending')">Pending</button>
+          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-confirmed" onclick="filterBookings('confirmed')">Confirmed</button>
+          <button class="btn-sm btn-outline btn-filter-toggle" id="filter-cancelled" onclick="filterBookings('cancelled')">Cancelled</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Date & Time</th>
+              <th>Type</th>
+              <th>Duration</th>
+              <th>Message</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-table">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <form onsubmit="addEvent(event)">
-      <div class="form-group"><label>Event Title</label><input type="text" name="title" required placeholder="e.g. Client Call / Code Review"/></div>
-      <div class="form-group"><label>Date & Time</label><input type="datetime-local" name="event_date" required/></div>
-      <div class="form-group"><label>Client / Context</label><input type="text" name="context" placeholder="Optional client name"/></div>
-      <button type="submit" class="btn-primary" style="width:100%;margin-top:0.5rem;justify-content:center">Save Event</button>
-    </form>
   </div>
 </div>
 
@@ -193,63 +292,157 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+(function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   document.getElementById('user-name').textContent = auth.user()?.name || '';
-  updateThemeButtonUI();
-  loadSchedule();
-});
+  initTheme();
+})();
 
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
+// Dark Mode Handling
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('theme-toggle-btn').innerHTML = '☀️ Light Mode';
+  }
+}
+
 function toggleTheme() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  if (isDark) {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const btn = document.getElementById('theme-toggle-btn');
+  if (currentTheme === 'dark') {
     document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('qfa_theme', 'light');
+    localStorage.setItem('theme', 'light');
+    btn.innerHTML = '🌙 Dark Mode';
   } else {
     document.documentElement.setAttribute('data-theme', 'dark');
-    localStorage.setItem('qfa_theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+    btn.innerHTML = '☀️ Light Mode';
   }
-  updateThemeButtonUI();
 }
 
-function updateThemeButtonUI() {
-  const btn = document.getElementById('theme-switch-btn');
-  if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️ Light' : '🌙 Dark';
+function sbOpen(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow='hidden';
 }
+function sbClose(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.sb-nav a').forEach(a=>
+  a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();})
+);
 
-function sbOpen(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('on'); document.body.style.overflow='hidden'; }
-function sbClose(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('on'); document.body.style.overflow=''; }
+let allBookings = [];
+let activeTab = 'all';
 
-async function loadSchedule() {
+async function loadBookings() {
   try {
-    // Falls back gracefully if backend endpoint differs
-    const data = await apiFetch('/schedule').catch(() => []);
-    const list = document.getElementById('schedule-list');
-    if (!data.length) {
-      list.innerHTML = '<p style="color:var(--ink3);padding:1rem 0">No upcoming events or milestones scheduled.</p>';
-      return;
+    const fromVal = document.getElementById('date-from').value;
+    const toVal = document.getElementById('date-to').value;
+    
+    let url = '/schedule';
+    let queryParams = [];
+    if (fromVal) queryParams.push(`from=${fromVal}`);
+    if (toVal) queryParams.push(`to=${toVal}`);
+    if (queryParams.length > 0) {
+      url += '?' + queryParams.join('&');
     }
-    list.innerHTML = data.map(ev => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.8rem 1rem;background:var(--bg);border-radius:10px;border:1px solid var(--input-border)">
-        <div>
-          <strong style="font-size:0.9rem;color:var(--ink)">${ev.title}</strong>
-          <div style="font-size:0.75rem;color:var(--ink3);margin-top:0.1rem">${new Date(ev.event_date).toLocaleString()} ${ev.context ? '· ' + ev.context : ''}</div>
-        </div>
-      </div>`).join('');
-  } catch(e) { console.error(e); }
+
+    const data = await apiFetch(url);
+    allBookings = Array.isArray(data) ? data : [];
+    
+    const now = new Date();
+    const in7 = new Date(); in7.setDate(in7.getDate()+7);
+    
+    document.getElementById('s-pending').textContent   = allBookings.filter(b=>b && b.status==='pending').length;
+    document.getElementById('s-confirmed').textContent = allBookings.filter(b=>b && b.status==='confirmed').length;
+    document.getElementById('s-upcoming').textContent  = allBookings.filter(b => {
+      if(!b || !b.date) return false;
+      const d = new Date(b.date);
+      return d >= now && d <= in7 && b.status !== 'cancelled';
+    }).length;
+    
+    filterBookings(activeTab);
+  } catch(e) { 
+    console.error(e);
+    document.getElementById('bookings-table').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--red)">Failed to load data. Please check connection.</td></tr>`;
+  }
 }
 
-async function addEvent(e) {
-  e.preventDefault();
-  try {
-    await apiFetch('/schedule', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
-    document.getElementById('modal-add').classList.remove('open');
-    e.target.reset();
-    loadSchedule();
-  } catch(err) { alert(err.message); }
+function clearDateRange() {
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  loadBookings();
 }
+
+function filterBookings(status) {
+  activeTab = status;
+  ['all', 'pending', 'confirmed', 'cancelled'].forEach(t => {
+    const btn = document.getElementById('filter-' + t);
+    if (btn) {
+      if (t === status) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+
+  const filtered = status === 'all' ? allBookings : allBookings.filter(b => b && b.status === status);
+  renderBookings(filtered.slice(0, 5));
+}
+
+function renderBookings(bookings) {
+  const tbody = document.getElementById('bookings-table');
+  if (!tbody) return;
+  if (!bookings || !bookings.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No bookings found for the selected view.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = bookings.map(b => {
+    if(!b) return '';
+    const badgeClass = b.status==='confirmed' ? 'badge-green' : b.status==='pending' ? 'badge-amber' : 'badge-gray';
+    const actions = b.status === 'pending'
+      ? `<div style="display:flex; gap:4px; min-width:130px;">
+           <button class="btn-sm btn-green" onclick="updateStatus(${b.id},'confirmed')">Confirm</button>
+           <button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')">Cancel</button>
+         </div>`
+      : b.status === 'confirmed'
+      ? `<button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')">Cancel</button>`
+      : '—';
+      
+    let formattedDate = '—';
+    if(b.date) {
+      try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
+    }
+    
+    return `
+      <tr>
+        <td><strong style="color:var(--ink);">${b.client_name || 'Unknown'}</strong><br/><span style="font-size:0.78rem;color:var(--ink3)">${b.client_email || ''}</span></td>
+        <td>${formattedDate} at ${b.time || '—'}</td>
+        <td>${b.type_label || b.type || '—'}</td>
+        <td>${b.duration || 0}h</td>
+        <td>
+          <div style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${b.message || ''}">
+            ${b.message || '—'}
+          </div>
+        </td>
+        <td><span class="badge ${badgeClass}">${b.status || 'pending'}</span></td>
+        <td>${actions}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function updateStatus(id, status) {
+  try {
+    await apiFetch('/schedule/' + id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
+    loadBookings();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+loadBookings();
 </script>
 </body>
 </html>
