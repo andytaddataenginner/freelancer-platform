@@ -9,7 +9,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     const { rows } = await pool.query(`
       SELECT u.id, u.name, u.email, u.company,
              c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
-             c.fixed_payment_status,c.phone,
+             c.fixed_payment_status, c.phone,
              COALESCE(c.credit_balance, 0)::float AS credit_balance,
              COUNT(t.id)::int AS log_count,
              COALESCE(SUM(t.hours),0)::float AS total_hours
@@ -20,7 +20,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
         AND c.freelancer_id = $1
       GROUP BY u.id, u.name, u.email, u.company,
                c.is_active, c.notes, c.rate_type, c.hourly_rate, 
-               c.fixed_price, c.fixed_payment_status, c.phone,c.credit_balance
+               c.fixed_price, c.fixed_payment_status, c.phone, c.credit_balance
       ORDER BY u.name
     `, [req.user.id]);
     res.json(rows);
@@ -30,7 +30,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 // POST /api/clients — creates client and links to THIS freelancer
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
-    const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price } = req.body;
+    const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price, phone } = req.body;
     if (!name || !email || !password) 
       return res.status(400).json({ error: 'name, email, password required' });
 
@@ -43,10 +43,10 @@ router.post('/', requireFreelancer, async (req, res, next) => {
         [name, email.toLowerCase().trim(), hash, company || null]
       );
       await pool.query(
-        `INSERT INTO clients (user_id, freelancer_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance)
-         VALUES ($1,$2,$3,$4,$5,$6,'unpaid', 0)`,
+        `INSERT INTO clients (user_id, freelancer_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance, phone)
+         VALUES ($1,$2,$3,$4,$5,$6,'unpaid', 0, $7)`,
         [userRow.rows[0].id, req.user.id, notes || null, 
-         rate_type || 'hourly', hourly_rate || null, fixed_price || null]
+         rate_type || 'hourly', hourly_rate || null, fixed_price || null, phone || null]
       );
       await pool.query('COMMIT');
       res.status(201).json(userRow.rows[0]);
@@ -61,7 +61,7 @@ router.post('/', requireFreelancer, async (req, res, next) => {
 // PUT /api/clients/:id — only update if belongs to this freelancer
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
-    const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price } = req.body;
+    const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price, phone } = req.body;
     await pool.query(
       `UPDATE users SET name=$1, company=$2, updated_at=NOW()
        WHERE id=$3 AND role='client'`,
@@ -69,10 +69,10 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
     );
     await pool.query(
       `UPDATE clients 
-       SET notes=$1, is_active=$2, rate_type=$3, hourly_rate=$4, fixed_price=$5
-       WHERE user_id=$6 AND freelancer_id=$7`,
+       SET notes=$1, is_active=$2, rate_type=$3, hourly_rate=$4, fixed_price=$5, phone=$6
+       WHERE user_id=$7 AND freelancer_id=$8`,
       [notes, is_active ?? true, rate_type || 'hourly', 
-       hourly_rate || null, fixed_price || null, req.params.id, req.user.id]
+       hourly_rate || null, fixed_price || null, phone || null, req.params.id, req.user.id]
     );
     res.json({ message: 'Updated' });
   } catch (e) { next(e); }
