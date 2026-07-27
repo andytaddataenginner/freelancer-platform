@@ -52,10 +52,14 @@ router.post('/remit', requireAdmin, async (req, res, next) => {
       }
     }
 
+    // FIX: clients.id is the value being passed in as client_id (same id used
+    // by /clients and time_logs.client_id) — NOT clients.user_id, which is a
+    // separate foreign key column. Filtering on user_id matched zero rows and
+    // silently left credit_balance unchanged.
     await client.query(
       `UPDATE clients 
        SET credit_balance = COALESCE(credit_balance, 0) + $1 
-       WHERE user_id = $2`,
+       WHERE id = $2`,
       [remainingCash, client_id]
     );
 
