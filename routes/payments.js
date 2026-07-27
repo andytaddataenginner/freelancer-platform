@@ -36,7 +36,6 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
        VALUES ($1, $2, $3, $4) RETURNING id`,
       [targetUserId, parsedAmount, date || new Date().toISOString().slice(0,10), notes || null]
     );
-    const paymentId = paymentRes.rows[0].id;
 
     let remainingCash = parsedAmount;
 
@@ -68,9 +67,9 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
         remainingCash -= logCost;
         await client.query(
           `UPDATE time_logs 
-           SET payment_status = 'paid', payment_id = $1 
-           WHERE id = $2`,
-          [paymentId, log.id]
+           SET payment_status = 'paid' 
+           WHERE id = $1`,
+          [log.id]
         );
       } else {
         break; 
