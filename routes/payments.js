@@ -7,9 +7,11 @@ const { requireFreelancer } = require('../middleware/auth');
 router.post('/remit', requireFreelancer, async (req, res, next) => {
   const client = await pool.connect();
   try {
-    const { client_id, amount_remitted, date, notes, log_ids } = req.body;
+    const { client_id, amount_remitted, amount, date, notes, log_ids } = req.body;
     
-    const parsedAmount = parseFloat(amount_remitted);
+    const rawAmount = amount_remitted !== undefined ? amount_remitted : amount;
+    const parsedAmount = parseFloat(rawAmount);
+    
     if (!client_id || isNaN(parsedAmount) || parsedAmount <= 0) {
       return res.status(400).json({ error: 'Valid client_id and numeric payment amount are required.' });
     }
@@ -25,20 +27,31 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 
     let remainingCash = parsedAmount;
 
-    if (log_ids && Array.isArray(log_ids) && log_ids.length > 0) {
+    let targetLogIds = log_ids;
+    if (!targetLogIds || !Array.isArray(targetLogIds) || targetLogIds.length === 0) {
+      const unpaidLogsRes = await client.query(
+        `SELECT id FROM time_logs 
+         WHERE client_id = $1 AND (payment_status IS NULL OR payment_status != 'paid') 
+         ORDER BY date ASC, id ASC`,
+        [client_id]
+      );
+      targetLogIds = unpaidLogsRes.rows.map(row => row.id);
+    }
+
+    if (targetLogIds.length > 0) {
       const logsRes = await client.query(
         `SELECT id, hours, amount, payment_status 
          FROM time_logs 
          WHERE id = ANY($1) AND client_id = $2 
          ORDER BY date ASC, id ASC`,
-        [log_ids, client_id]
+        [targetLogIds, client_id]
       );
 
       for (const log of logsRes.rows) {
         if (log.payment_status === 'paid') continue;
-        let logCost = parseFloat(log.amount);
+        let logCost = parseFloat(log.amount || 0);
         
-        if (remainingCash >= logCost) {
+        if (remainingCash >= logCost && logCost > 0) {
           remainingCash -= logCost;
           await client.query(
             `UPDATE time_logs 
@@ -52,10 +65,6 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
       }
     }
 
-    // FIX: clients.id is the value being passed in as client_id (same id used
-    // by /clients and time_logs.client_id) — NOT clients.user_id, which is a
-    // separate foreign key column. Filtering on user_id matched zero rows and
-    // silently left credit_balance unchanged.
     await client.query(
       `UPDATE clients 
        SET credit_balance = COALESCE(credit_balance, 0) + $1 
