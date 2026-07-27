@@ -16,7 +16,7 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 
     await client.query('BEGIN');
 
-    // 1. Fetch the client record by checking BOTH clients.id or clients.user_id to ensure synchronization with frontend payloads
+    // 1. Fetch the client record by checking BOTH clients.id or clients.user_id
     const clientRecordRes = await client.query(
       `SELECT id, user_id, credit_balance FROM clients WHERE id = $1 OR user_id = $1`,
       [client_id]
@@ -32,27 +32,31 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 
     // 2. Insert into payments using targetUserId (since payments.client_id references users.id)
     const paymentRes = await client.query(
+      `SELECT id FROM payments LIMIT 0` // test connection snippet / standard insert below
+    );
+    
+    const actualPaymentRes = await client.query(
       `INSERT INTO payments (client_id, amount, date, notes) 
        VALUES ($1, $2, $3, $4) RETURNING id`,
       [targetUserId, parsedAmount, date || new Date().toISOString().slice(0,10), notes || null]
     );
-    const paymentId = paymentRes.rows[0].id;
+    const paymentId = actualPaymentRes.rows[0].id;
 
     let remainingCash = parsedAmount;
 
-    // 3. Allocate funds using targetUserId for time_logs lookup
+    // 3. Allocate funds: check time_logs against BOTH targetUserId and actualClientId to catch any foreign key variation
     if (log_ids && Array.isArray(log_ids) && log_ids.length > 0) {
       const logsRes = await client.query(
-        `SELECT id, hours, amount, payment_status 
+        `SELECT id, hours, amount, payment_status, client_id 
          FROM time_logs 
-         WHERE id = ANY($1) AND client_id = $2 
+         WHERE id = ANY($1) AND (client_id = $2 OR client_id = $3) 
          ORDER BY date ASC, id ASC`,
-        [log_ids, targetUserId]
+        [log_ids, targetUserId, actualClientId]
       );
 
       for (const log of logsRes.rows) {
         if (log.payment_status === 'paid') continue;
-        let logCost = parseFloat(log.amount);
+        let logCost = parseFloat(log.amount || 0);
         
         if (remainingCash >= logCost) {
           remainingCash -= logCost;
@@ -63,6 +67,7 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
             [paymentId, log.id]
           );
         } else {
+          // If partial payment logic or stopping condition is reached
           break;
         }
       }
