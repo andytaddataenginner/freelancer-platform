@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -465,7 +464,7 @@ initTheme();
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
   if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
-  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||e.message||'Failed'); }
   return res.json();
 }
 
@@ -519,6 +518,7 @@ function updateClientCreditDisplay() {
     const balance = parseFloat(selectedOpt.dataset.credit || 0);
     creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
     creditDisplay.style.display = 'inline';
+    creditDisplay.style.color = balance < 0 ? '#f87171' : '#1a5cff';
   } else {
     creditDisplay.textContent = '';
     creditDisplay.style.display = 'none';
@@ -674,14 +674,32 @@ function fmtHours(h) {
   return `${hrs}h ${mins}min`;
 }
 
+/**
+ * Handles payment remittance submission.
+ * Validates target client and amount, submits request, updates client list, 
+ * and auto-selects the remitted client in the filter to instantly show updated credit balance.
+ */
 async function handleRecordPayment(event) {
   event.preventDefault();
   const clientId = document.getElementById('payment-client').value;
   const amount   = document.getElementById('payment-amount').value;
   const date     = document.getElementById('payment-date').value;
 
-  if (!clientId || !amount || !date) {
-    alert('Please fill out all fields.');
+  if (!clientId) {
+    alert('Please select a Target Client from the payment form dropdown.');
+    document.getElementById('payment-client').focus();
+    return;
+  }
+
+  if (!amount || parseFloat(amount) <= 0) {
+    alert('Please enter a valid amount remitted.');
+    document.getElementById('payment-amount').focus();
+    return;
+  }
+
+  if (!date) {
+    alert('Please select a payment date.');
+    document.getElementById('payment-date').focus();
     return;
   }
 
@@ -689,16 +707,25 @@ async function handleRecordPayment(event) {
     const result = await apiFetch('/payments/record-admin', {
       method: 'POST',
       body: JSON.stringify({
-        client_id: Number(clientId),
+        client_id: parseInt(clientId),
         amount: parseFloat(amount),
         date: date,
         notes: `Manual balance posting via Freelancer Time Logs layout UI.`
       })
     });
 
-    alert(`Success! ${result.message}\nRecalculated surplus retainer balance of $${Number(result.remainingCreditSurplus || 0).toFixed(2)} credited forward.`);
+    alert(`Success! ${result.message || 'Payment applied successfully.'}`);
     document.getElementById('payment-amount').value = '';
+    
+    // Refresh client data to pull latest balance values
     await fetchAndPopulateClients();
+    
+    // Auto-select target client in the Client Filter dropdown to view new balance
+    const filterSelect = document.getElementById('filter-client');
+    if (filterSelect) {
+      filterSelect.value = clientId;
+    }
+    
     handleFilterChange();
   } catch (err) {
     alert('Payment Allocation Error: ' + err.message);
@@ -836,5 +863,3 @@ init();
 </script>
 </body>
 </html>
-
-```
