@@ -30,11 +30,10 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
     const actualClientId = clientRow.id; 
     const targetUserId = clientRow.user_id; 
     
-    // Total purchasing power = newly remitted cash + existing credit balance
     let existingCredit = parseFloat(clientRow.credit_balance || 0);
-    let totalAvailableFunds = parsedAmount + existingCredit;
+    let remainingCash = parsedAmount;
 
-    // 2. Insert into payments table
+    // 2. Insert into payments table (tracks the actual fresh money sent)
     const paymentRes = await client.query(
       `INSERT INTO payments (client_id, amount, date, notes) 
        VALUES ($1, $2, $3, $4) RETURNING id`,
@@ -61,42 +60,53 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
       );
     }
 
-    // 4. Draw down from total available funds (Cash + Credit) to clear unpaid logs
+    // 4. Allocation Phase: Pay logs using new cash first, then existing credit if needed
     for (const log of logsRes.rows) {
       if (log.payment_status === 'paid') continue;
       let logCost = parseFloat(log.amount || 0);
       
-      if (totalAvailableFunds >= logCost) {
-        totalAvailableFunds -= logCost;
+      if (remainingCash >= logCost) {
+        // Covered fully by new remittance cash
+        remainingCash -= logCost;
         await client.query(
-          `UPDATE time_logs 
-           SET payment_status = 'paid' 
-           WHERE id = $1`,
+          `UPDATE time_logs SET payment_status = 'paid' WHERE id = $1`,
+          [log.id]
+        );
+      } else if ((remainingCash + existingCredit) >= logCost) {
+        // New cash ran out, but existing credit covers the rest of this log
+        let deficit = logCost - remainingCash;
+        remainingCash = 0; // all new cash is spent
+        existingCredit -= deficit; // draw down from existing credit balance
+
+        await client.query(
+          `UPDATE time_logs SET payment_status = 'paid' WHERE id = $1`,
           [log.id]
         );
       } else {
-        break; // Stop if total available funds are insufficient to cover the next log
+        // Neither remaining cash nor credit is enough to cover this log
+        break; 
       }
     }
 
-    // 5. Calculate new credit balance / debit state
-    // totalAvailableFunds now holds whatever is left over (or becomes negative if logs exceeded funds)
-    const newCreditBalance = totalAvailableFunds;
+    // 5. Finalize the new credit balance
+    // If there is still unspent cash left over, add it to the existing credit pool.
+    // If logs completely drained both cash and credit, existingCredit will naturally drop into negative (debit).
+    const finalCreditBalance = existingCredit + remainingCash;
 
-    // 6. Update the client's credit balance and total paid
+    // 6. Update the client's ledger
     await client.query(
       `UPDATE clients 
        SET credit_balance = $1,
            total_paid = COALESCE(total_paid, 0) + $2 
        WHERE id = $3`,
-      [newCreditBalance, parsedAmount, actualClientId]
+      [finalCreditBalance, parsedAmount, actualClientId]
     );
 
     await client.query('COMMIT');
     res.status(200).json({ 
       success: true, 
-      message: 'Remittance processed, credit drawn down, and time logs updated.', 
-      new_credit_balance: newCreditBalance 
+      message: 'Remittance processed logically with cash and credit breakdown.', 
+      new_credit_balance: finalCreditBalance 
     });
 
   } catch (error) {
@@ -108,3 +118,4 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 });
 
 module.exports = router;
+
