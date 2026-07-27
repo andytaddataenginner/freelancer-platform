@@ -690,13 +690,11 @@ async function handleRecordPayment(event) {
     document.getElementById('payment-client').focus();
     return;
   }
-
   if (!amount || parseFloat(amount) <= 0) {
     alert('Please enter a valid amount remitted.');
     document.getElementById('payment-amount').focus();
     return;
   }
-
   if (!date) {
     alert('Please select a payment date.');
     document.getElementById('payment-date').focus();
@@ -704,11 +702,11 @@ async function handleRecordPayment(event) {
   }
 
   try {
-    const result = await apiFetch('/payments/record-admin', {
+    const result = await apiFetch('/payments/remit', {
       method: 'POST',
       body: JSON.stringify({
         client_id: parseInt(clientId),
-        amount: parseFloat(amount),
+        amount_remitted: parseFloat(amount),
         date: date,
         notes: `Manual balance posting via Freelancer Time Logs layout UI.`
       })
@@ -716,22 +714,17 @@ async function handleRecordPayment(event) {
 
     alert(`Success! ${result.message || 'Payment applied successfully.'}`);
     document.getElementById('payment-amount').value = '';
-    
-    // Refresh client data to pull latest balance values
+
     await fetchAndPopulateClients();
-    
-    // Auto-select target client in the Client Filter dropdown to view new balance
+
     const filterSelect = document.getElementById('filter-client');
-    if (filterSelect) {
-      filterSelect.value = clientId;
-    }
-    
+    if (filterSelect) filterSelect.value = clientId;
+
     handleFilterChange();
   } catch (err) {
     alert('Payment Allocation Error: ' + err.message);
   }
 }
-
 async function togglePayment(id, status) {
   try {
     await apiFetch('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:status})});
