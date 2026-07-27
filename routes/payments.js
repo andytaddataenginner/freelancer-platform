@@ -16,9 +16,9 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 
     await client.query('BEGIN');
 
-    // 1. Fetch the client record to get the associated user_id and current credit balance
+    // 1. Fetch the client record by checking BOTH clients.id or clients.user_id to ensure synchronization with frontend payloads
     const clientRecordRes = await client.query(
-      `SELECT id, user_id, credit_balance FROM clients WHERE id = $1`,
+      `SELECT id, user_id, credit_balance FROM clients WHERE id = $1 OR user_id = $1`,
       [client_id]
     );
 
@@ -27,7 +27,8 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
     }
 
     const clientRow = clientRecordRes.rows[0];
-    const targetUserId = clientRow.user_id; 
+    const actualClientId = clientRow.id; // Primary key of clients table
+    const targetUserId = clientRow.user_id; // Primary key of users table (used in payments & time_logs)
 
     // 2. Insert into payments using targetUserId (since payments.client_id references users.id)
     const paymentRes = await client.query(
@@ -67,13 +68,13 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
       }
     }
 
-    // 4. Update the client's credit balance and total paid using the clients table primary key (client_id)
+    // 4. Update the client's credit balance and total paid using the resolved clients table primary key (actualClientId)
     await client.query(
       `UPDATE clients 
        SET credit_balance = COALESCE(credit_balance, 0) + $1,
            total_paid = COALESCE(total_paid, 0) + $2 
        WHERE id = $3`,
-      [remainingCash, parsedAmount, client_id]
+      [remainingCash, parsedAmount, actualClientId]
     );
 
     await client.query('COMMIT');
