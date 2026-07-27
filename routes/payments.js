@@ -32,44 +32,49 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 
     // 2. Insert into payments using targetUserId (since payments.client_id references users.id)
     const paymentRes = await client.query(
-      `SELECT id FROM payments LIMIT 0` // test connection snippet / standard insert below
-    );
-    
-    const actualPaymentRes = await client.query(
       `INSERT INTO payments (client_id, amount, date, notes) 
        VALUES ($1, $2, $3, $4) RETURNING id`,
       [targetUserId, parsedAmount, date || new Date().toISOString().slice(0,10), notes || null]
     );
-    const paymentId = actualPaymentRes.rows[0].id;
+    const paymentId = paymentRes.rows[0].id;
 
     let remainingCash = parsedAmount;
 
-    // 3. Allocate funds: check time_logs against BOTH targetUserId and actualClientId to catch any foreign key variation
+    // 3. Time Log Allocation: Use explicit log_ids if provided, otherwise fetch oldest unpaid logs automatically
+    let logsRes;
     if (log_ids && Array.isArray(log_ids) && log_ids.length > 0) {
-      const logsRes = await client.query(
-        `SELECT id, hours, amount, payment_status, client_id 
+      logsRes = await client.query(
+        `SELECT id, hours, amount, payment_status 
          FROM time_logs 
          WHERE id = ANY($1) AND (client_id = $2 OR client_id = $3) 
          ORDER BY date ASC, id ASC`,
         [log_ids, targetUserId, actualClientId]
       );
+    } else {
+      // Automatic fallback: target oldest unpaid logs if frontend didn't pass specific IDs[cite: 1]
+      logsRes = await client.query(
+        `SELECT id, hours, amount, payment_status 
+         FROM time_logs 
+         WHERE (client_id = $2 OR client_id = $3) AND payment_status = 'unpaid' 
+         ORDER BY date ASC, id ASC`,
+        [targetUserId, targetUserId, actualClientId]
+      );
+    }
 
-      for (const log of logsRes.rows) {
-        if (log.payment_status === 'paid') continue;
-        let logCost = parseFloat(log.amount || 0);
-        
-        if (remainingCash >= logCost) {
-          remainingCash -= logCost;
-          await client.query(
-            `UPDATE time_logs 
-             SET payment_status = 'paid', payment_id = $1 
-             WHERE id = $2`,
-            [paymentId, log.id]
-          );
-        } else {
-          // If partial payment logic or stopping condition is reached
-          break;
-        }
+    for (const log of logsRes.rows) {
+      if (log.payment_status === 'paid') continue;
+      let logCost = parseFloat(log.amount || 0);
+      
+      if (remainingCash >= logCost) {
+        remainingCash -= logCost;
+        await client.query(
+          `UPDATE time_logs 
+           SET payment_status = 'paid', payment_id = $1 
+           WHERE id = $2`,
+          [paymentId, log.id]
+        );
+      } else {
+        break; // Stop when remaining cash is insufficient to cover the next log
       }
     }
 
@@ -85,7 +90,7 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
     await client.query('COMMIT');
     res.status(200).json({ 
       success: true, 
-      message: 'Remittance processed successfully.', 
+      message: 'Remittance processed successfully and time logs updated.', 
       applied_to_credit: remainingCash 
     });
 
