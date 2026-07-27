@@ -46,18 +46,17 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
       logsRes = await client.query(
         `SELECT id, hours, amount, payment_status 
          FROM time_logs 
-         WHERE id = ANY($1) AND (client_id = $2 OR client_id = $3) 
+         WHERE id = ANY($1::integer[]) AND (client_id = $2 OR client_id = $3) 
          ORDER BY date ASC, id ASC`,
         [log_ids, targetUserId, actualClientId]
       );
     } else {
-      // Automatic fallback: target oldest unpaid logs if frontend didn't pass specific IDs[cite: 1]
       logsRes = await client.query(
         `SELECT id, hours, amount, payment_status 
          FROM time_logs 
-         WHERE (client_id = $2 OR client_id = $3) AND payment_status = 'unpaid' 
+         WHERE (client_id = $1 OR client_id = $2) AND payment_status = 'unpaid' 
          ORDER BY date ASC, id ASC`,
-        [targetUserId, targetUserId, actualClientId]
+        [targetUserId, actualClientId]
       );
     }
 
@@ -74,7 +73,7 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
           [paymentId, log.id]
         );
       } else {
-        break; // Stop when remaining cash is insufficient to cover the next log
+        break; 
       }
     }
 
