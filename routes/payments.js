@@ -7,7 +7,7 @@ const { requireFreelancer } = require('../middleware/auth');
 router.post('/remit', requireFreelancer, async (req, res, next) => {
   const client = await pool.connect();
   try {
-    const { client_id, amount_remitted, amount, date, notes, log_ids } = req.body;
+    const { client_id, amount_remitted, amount, date, notes } = req.body;
     
     const rawAmount = amount_remitted !== undefined ? amount_remitted : amount;
     const parsedAmount = parseFloat(rawAmount);
@@ -18,6 +18,7 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 
     await client.query('BEGIN');
 
+    // 1. Insert the payment record
     const paymentRes = await client.query(
       `INSERT INTO payments (client_id, amount, date, notes) 
        VALUES ($1, $2, $3, $4) RETURNING id`,
@@ -27,44 +28,33 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
 
     let remainingCash = parsedAmount;
 
-    let targetLogIds = log_ids;
-    if (!targetLogIds || !Array.isArray(targetLogIds) || targetLogIds.length === 0) {
-      const unpaidLogsRes = await client.query(
-        `SELECT id FROM time_logs 
-         WHERE client_id = $1 AND (payment_status IS NULL OR payment_status != 'paid') 
-         ORDER BY date ASC, id ASC`,
-        [client_id]
-      );
-      targetLogIds = unpaidLogsRes.rows.map(row => row.id);
-    }
+    // 2. Fetch all unpaid time logs for this client ordered chronologically
+    const unpaidLogsRes = await client.query(
+      `SELECT id, hours, amount, payment_status 
+       FROM time_logs 
+       WHERE client_id = $1 AND (payment_status IS NULL OR payment_status != 'paid') 
+       ORDER BY date ASC, id ASC`,
+      [client_id]
+    );
 
-    if (targetLogIds.length > 0) {
-      const logsRes = await client.query(
-        `SELECT id, hours, amount, payment_status 
-         FROM time_logs 
-         WHERE id = ANY($1) AND client_id = $2 
-         ORDER BY date ASC, id ASC`,
-        [targetLogIds, client_id]
-      );
-
-      for (const log of logsRes.rows) {
-        if (log.payment_status === 'paid') continue;
-        let logCost = parseFloat(log.amount || 0);
-        
-        if (remainingCash >= logCost && logCost > 0) {
-          remainingCash -= logCost;
-          await client.query(
-            `UPDATE time_logs 
-             SET payment_status = 'paid', payment_id = $1 
-             WHERE id = $2`,
-            [paymentId, log.id]
-          );
-        } else {
-          break;
-        }
+    // 3. Sequentially pay off the logs using the remitted cash
+    for (const log of unpaidLogsRes.rows) {
+      let logCost = parseFloat(log.amount || 0);
+      
+      if (remainingCash >= logCost && logCost > 0) {
+        remainingCash -= logCost;
+        await client.query(
+          `UPDATE time_logs 
+           SET payment_status = 'paid', payment_id = $1 
+           WHERE id = $2`,
+          [paymentId, log.id]
+        );
+      } else {
+        break; // Stop once remaining cash is less than the next log's cost
       }
     }
 
+    // 4. Update the client's available credit balance with any leftover cash
     await client.query(
       `UPDATE clients 
        SET credit_balance = COALESCE(credit_balance, 0) + $1 
@@ -75,7 +65,7 @@ router.post('/remit', requireFreelancer, async (req, res, next) => {
     await client.query('COMMIT');
     res.status(200).json({ 
       success: true, 
-      message: 'Remittance processed successfully.', 
+      message: 'Remittance processed, time logs updated, and credit balance adjusted successfully.', 
       applied_to_credit: remainingCash 
     });
 
