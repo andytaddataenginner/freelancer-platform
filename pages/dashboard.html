@@ -306,7 +306,7 @@
 
       <div class="card">
         <div class="ch">
-          <h3>👥 Active Clients</h3>
+          <h3>👥 Active Clients — <span id="acmonth"></span></h3>
           <span style="font-size:.72rem;color:var(--ink3)" id="ac-count"></span>
         </div>
         <div class="ac-list" id="active-clients-list">
@@ -474,24 +474,36 @@ function initials(name){
   return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
 }
 
-function renderActiveClients(clients){
+function renderActiveClients(clients, breakdown){
   const list=document.getElementById('active-clients-list');
   const count=document.getElementById('ac-count');
-  count.textContent = clients.length ? clients.length+' total' : '';
 
-  if(!clients.length){
-    list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">No clients yet — add your first one below.</div>';
+  // "Active this month" = appears in this month's breakdown (same data
+  // driving the Payment Breakdown table and the Clients-this-month KPI),
+  // not just "exists in the clients table". Matched by name+company since
+  // the breakdown rows don't carry a client id.
+  const breakdownByKey = new Map();
+  (breakdown||[]).forEach(b => breakdownByKey.set((b.client_name||'')+'|'+(b.company||''), b));
+
+  const active = clients.filter(c => breakdownByKey.has((c.name||'')+'|'+(c.company||'')));
+
+  count.textContent = active.length ? active.length+' this month' : '';
+
+  if(!active.length){
+    list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">No client activity logged yet this month.</div>';
     return;
   }
 
-  const sorted=[...clients].sort((a,b)=>a.name.localeCompare(b.name));
+  const sorted=[...active].sort((a,b)=>a.name.localeCompare(b.name));
   list.innerHTML=sorted.map(c=>{
+    const b = breakdownByKey.get((c.name||'')+'|'+(c.company||''));
     const rateLabel = c.rate_type==='fixed'
       ? `Fixed $${parseFloat(c.fixed_price||0).toFixed(0)}`
       : `$${parseFloat(c.hourly_rate||0).toFixed(0)}/hr`;
     const rateBadge = c.rate_type==='fixed'
       ? `<span class="badge bg-b">${rateLabel}</span>`
       : `<span class="badge" style="background:#e8f0ff;color:var(--accent)">${rateLabel}</span>`;
+    const hoursLine = b ? `<span style="font-size:.68rem;color:var(--ink3)">${fmtH(parseFloat(b.hours||0))} logged</span>` : '';
     const credit=parseFloat(c.credit_balance||0);
     const creditLine = credit!==0
       ? `<span class="ac-credit" style="color:${credit>0?'var(--accent)':'var(--red)'}">${credit>0?'Credit':'Owes'} $${Math.abs(credit).toFixed(2)}</span>`
@@ -504,6 +516,7 @@ function renderActiveClients(clients){
       </div>
       <div class="ac-meta">
         ${rateBadge}
+        ${hoursLine}
         ${creditLine}
       </div>
     </div>`;
@@ -555,7 +568,8 @@ async function load(){
     const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
     document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
     document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
-    renderActiveClients(cl);
+    document.getElementById('acmonth').textContent=ml;
+    renderActiveClients(cl, st.clientBreakdown);
 
     // Restore the timer's selected client/task from a persisted session, now
     // that the client dropdown options actually exist to select among.
