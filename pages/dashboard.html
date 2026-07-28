@@ -593,9 +593,9 @@ function timerStart(){
   if(timerState!=='idle') return;
   accumulatedMs=0;
   startTimestamp=Date.now();
+  tSetUI('running');
   persistTimerState();
   tiv=setInterval(tDisp,1000);
-  tSetUI('running');
   tDisp();
 }
 
@@ -604,16 +604,16 @@ function timerPause(){
   accumulatedMs += Date.now()-startTimestamp;
   startTimestamp=null;
   clearInterval(tiv); tiv=null;
-  persistTimerState();
   tSetUI('paused');
+  persistTimerState();
 }
 
 function timerResume(){
   if(timerState!=='paused') return;
   startTimestamp=Date.now();
+  tSetUI('running');
   persistTimerState();
   tiv=setInterval(tDisp,1000);
-  tSetUI('running');
   tDisp();
 }
 
@@ -635,8 +635,9 @@ async function timerStop(){
   if(hours<0.01){ alert('Timer too short to log.'); timerReset(); return; }
 
   if(!confirm(`Save ${fmtH(hours)} to logs?`)){
-    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; persistTimerState(); }
+    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; }
     tSetUI('paused');
+    persistTimerState();
     return;
   }
 
@@ -651,8 +652,9 @@ async function timerStop(){
     timerReset(); load();
   }catch(e){
     alert('Failed to save: '+e.message);
-    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; persistTimerState(); }
+    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; }
     tSetUI('paused');
+    persistTimerState();
   }
 }
 
