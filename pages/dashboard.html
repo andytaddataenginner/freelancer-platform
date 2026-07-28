@@ -99,6 +99,19 @@
     .two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:1.2rem;align-items:start}
     .log-form-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:.9rem;align-items:start}
     @media(max-width:700px){.log-form-row{grid-template-columns:1fr}}
+    .entry-clients-row{display:grid;grid-template-columns:1.4fr 1fr;gap:1.2rem;align-items:start}
+    @media(max-width:900px){.entry-clients-row{grid-template-columns:1fr}}
+    .ac-list{max-height:420px;overflow-y:auto}
+    .ac-row{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.4rem;border-bottom:1px solid var(--bg2);cursor:pointer;transition:background .15s}
+    .ac-row:last-child{border-bottom:none}
+    .ac-row:hover{background:var(--table-hover)}
+    .ac-avatar{width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+    .ac-info{min-width:0;flex:1}
+    .ac-info strong{display:block;font-size:.85rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ac-info span{font-size:.7rem;color:var(--ink3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ac-meta{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:.25rem;align-items:flex-end;flex-shrink:0}
+    .ac-meta .badge{font-size:.6rem}
+    .ac-credit{font-size:.7rem;font-weight:700;color:var(--accent)}
     .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem}
     .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
     input,textarea,select{width:100%;padding:.7rem .9rem;border:1.5px solid rgba(13,35,83,.1);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--ink);transition:border-color .2s}
@@ -268,25 +281,35 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
-      <div class="cb">
-        <form onsubmit="submitLog(event)">
-          <div class="log-form-row">
+    <div class="entry-clients-row">
+      <div class="card">
+        <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
+        <div class="cb">
+          <form onsubmit="submitLog(event)">
             <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
-            <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
-            <div class="fg">
-              <label>Hours</label>
-              <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33" required/>
-              <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+              <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
+              <div class="fg">
+                <label>Hours (any value)</label>
+                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
+                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
+              </div>
             </div>
-          </div>
-          <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
-          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-            <button type="submit" class="btn btn-p">Add Log Entry</button>
-            <div id="ls" class="fs" style="margin:0"></div>
-          </div>
-        </form>
+            <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
+            <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
+            <div id="ls" class="fs"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">
+          <h3>👥 Active Clients</h3>
+          <span style="font-size:.72rem;color:var(--ink3)" id="ac-count"></span>
+        </div>
+        <div class="ac-list" id="active-clients-list">
+          <div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">Loading…</div>
+        </div>
       </div>
     </div>
 
@@ -445,6 +468,55 @@ async function toggleFixed(recordId, newStatus){
   }catch(e){alert('Failed: '+e.message);}
 }
 
+function initials(name){
+  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+}
+
+function renderActiveClients(clients){
+  const list=document.getElementById('active-clients-list');
+  const count=document.getElementById('ac-count');
+  count.textContent = clients.length ? clients.length+' total' : '';
+
+  if(!clients.length){
+    list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">No clients yet — add your first one below.</div>';
+    return;
+  }
+
+  const sorted=[...clients].sort((a,b)=>a.name.localeCompare(b.name));
+  list.innerHTML=sorted.map(c=>{
+    const rateLabel = c.rate_type==='fixed'
+      ? `Fixed $${parseFloat(c.fixed_price||0).toFixed(0)}`
+      : `$${parseFloat(c.hourly_rate||0).toFixed(0)}/hr`;
+    const rateBadge = c.rate_type==='fixed'
+      ? `<span class="badge bg-b">${rateLabel}</span>`
+      : `<span class="badge" style="background:#e8f0ff;color:var(--accent)">${rateLabel}</span>`;
+    const credit=parseFloat(c.credit_balance||0);
+    const creditLine = credit!==0
+      ? `<span class="ac-credit" style="color:${credit>0?'var(--accent)':'var(--red)'}">${credit>0?'Credit':'Owes'} $${Math.abs(credit).toFixed(2)}</span>`
+      : '';
+    return `<div class="ac-row" onclick="selectClientForEntry(${c.id})" title="Click to select for Manual Log Entry">
+      <div class="ac-avatar">${initials(c.name)}</div>
+      <div class="ac-info">
+        <strong>${c.name}</strong>
+        ${c.company?`<span>${c.company}</span>`:''}
+      </div>
+      <div class="ac-meta">
+        ${rateBadge}
+        ${creditLine}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectClientForEntry(id){
+  const sel=document.getElementById('mc');
+  sel.value=id;
+  sel.focus();
+  sel.style.borderColor='var(--accent)';
+  sel.style.boxShadow='0 0 0 3px rgba(26,92,255,.15)';
+  setTimeout(()=>{ sel.style.borderColor=''; sel.style.boxShadow=''; }, 800);
+}
+
 async function load(){
   const mo=document.getElementById('mpicker').value;
   const ml=new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
@@ -481,6 +553,7 @@ async function load(){
     const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
     document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
     document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
+    renderActiveClients(cl);
 
     // Restore the timer's selected client/task from a persisted session, now
     // that the client dropdown options actually exist to select among.
