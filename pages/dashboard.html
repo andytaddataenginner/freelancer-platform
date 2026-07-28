@@ -54,7 +54,7 @@
     .sb-user span{font-size:.72rem;color:rgba(255,255,255,.4)}
     .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none}
     .main{margin-left:240px;min-height:100vh;overflow-x:hidden}
-    
+
     .topbar{background:var(--card-bg);border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;transition: background 0.3s ease;}
     .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em;color:var(--ink)}
     .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.1rem}
@@ -62,7 +62,7 @@
     .mpick{display:flex;align-items:center;gap:.5rem}
     .mpick label{font-size:.78rem;font-weight:700;color:var(--ink2)}
     .mpick input{padding:.4rem .8rem;border:1.5px solid rgba(13,35,83,.1);border-radius:8px;font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--bg)}
-    
+
     /* Theme Toggle Button */
     .theme-toggle {
       background: var(--bg2); border: 1px solid rgba(13,35,83,0.1);
@@ -73,13 +73,13 @@
     .theme-toggle:hover { background: var(--accent); color: white; }
 
     .content{padding:1.5rem}
-    
+
      .stats-row{
       display:grid;
       grid-template-columns:repeat(6, 1fr);
       gap:0.8rem;
       margin-bottom:1.5rem;
-  }    
+  }
     .sc{background:var(--card-bg);border-radius:var(--r);padding:1rem 1.4rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);position:relative;overflow:hidden;transition:transform .2s, background 0.3s ease;}
     .sc:hover{transform:translateY(-2px)}
     .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -111,15 +111,41 @@
     .btn-o{background:transparent;border:1.5px solid rgba(13,35,83,.15);color:var(--ink2)}.btn-o:hover{border-color:var(--navy);color:var(--ink)}
     .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff}
     .btn-sm{padding:.38rem .8rem;font-size:.75rem}
-    
-    /* ── TIMER ── */
-    .timer-disp{font-family:var(--serif);font-size:3rem;text-align:center;padding:.8rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.04em;transition:color .3s}
+
+    /* ── TIMER (shared display/status styles used inside the floating panel) ── */
+    .timer-disp{font-family:var(--serif);font-size:2.4rem;text-align:center;padding:.7rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.04em;transition:color .3s}
     .timer-disp.running{color:var(--green)}
     .timer-disp.paused{color:var(--amber)}
     .timer-disp.idle{color:var(--navy)}
-    .timer-status{text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;height:1rem}
-    .timer-btns{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap}
-    
+    .timer-status{text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;height:1rem}
+    .timer-btns{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap}
+
+    /* ── FLOATING DRAGGABLE TIMER WIDGET ── */
+    .float-timer{
+      position:fixed; bottom:20px; right:20px; width:280px;
+      background:var(--card-bg); border-radius:var(--r);
+      box-shadow:0 12px 40px rgba(13,35,83,.22);
+      border:1px solid rgba(13,35,83,.08); z-index:250; overflow:hidden;
+      transition:background .3s ease, box-shadow .2s ease, width .2s ease;
+      user-select:none;
+    }
+    .float-timer.dragging{ box-shadow:0 20px 60px rgba(13,35,83,.35); }
+    .float-timer-handle{
+      background:var(--navy); color:#fff; padding:.6rem .9rem; cursor:grab;
+      display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+      font-size:.8rem; font-weight:700;
+    }
+    .float-timer-handle:active{ cursor:grabbing; }
+    .float-timer-handle-title{ display:flex; align-items:center; gap:.4rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .float-timer-mini-time{ display:none; font-family:var(--serif); font-size:.85rem; opacity:.9; }
+    .float-timer.collapsed .float-timer-mini-time{ display:inline; }
+    .float-timer-min{ background:rgba(255,255,255,.15); border:none; color:#fff; width:22px;height:22px;border-radius:5px; cursor:pointer; font-size:.95rem; line-height:1; flex-shrink:0; }
+    .float-timer-min:hover{ background:rgba(255,255,255,.3); }
+    .float-timer-body{ padding:.9rem 1rem 1rem; }
+    .float-timer.collapsed{ width:210px; }
+    .float-timer.collapsed .float-timer-body{ display:none; }
+    @media(max-width:480px){ .float-timer{ width:calc(100vw - 24px) !important; } }
+
     /* ── TABLE ── */
     .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
@@ -141,24 +167,24 @@
     .mc:hover{background:var(--rbg);color:var(--red)}
 
     @media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
-    
+
     @media(max-width:768px){
       .mob-bar{display:flex}
       .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:150}
       .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
-      
+
       .main{
         margin-left:0;
         padding-top:52px !important;
       }
-      
+
       .topbar{
         position: relative !important;
         top: 0 !important;
         padding: 1rem !important;
         border-bottom: 1px solid rgba(13,35,83,.08);
       }
-      
+
       .stats-row{grid-template-columns:1fr 1fr !important;gap:.8rem}
       .two-col{grid-template-columns:1fr}
       .content{padding:1rem}
@@ -240,42 +266,23 @@
       </div>
     </div>
 
-    <div class="two-col">
-      <div class="card">
-        <div class="ch"><h3>⏱ Live Timer</h3></div>
-        <div class="cb">
-          <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
-          <div class="fg"><label>Task</label><input type="text" id="tt" placeholder="What are you working on?"/></div>
-          <div class="timer-status" id="t-status" style="color:var(--ink3)">Ready</div>
-          <div class="timer-disp idle" id="tdisp">00:00:00</div>
-          <div class="timer-btns">
-            <button class="btn btn-g" id="t-start" onclick="timerStart()">▶ Start</button>
-            <button class="btn" id="t-pause" onclick="timerPause()" style="display:none;background:var(--abg);color:var(--amber)">⏸ Pause</button>
-            <button class="btn btn-g" id="t-resume" onclick="timerResume()" style="display:none">▶ Resume</button>
-            <button class="btn btn-r" id="t-stop" onclick="timerStop()" style="display:none">■ Stop & Save</button>
-            <button class="btn btn-o btn-sm" onclick="timerReset()">↺ Reset</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
-        <div class="cb">
-          <form onsubmit="submitLog(event)">
-            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
-              <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
-              <div class="fg">
-                <label>Hours (any value)</label>
-                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
-                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
-              </div>
+    <div class="card">
+      <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
+      <div class="cb">
+        <form onsubmit="submitLog(event)">
+          <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+            <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
+            <div class="fg">
+              <label>Hours (any value)</label>
+              <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
+              <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
             </div>
-            <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
-            <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
-            <div id="ls" class="fs"></div>
-          </form>
-        </div>
+          </div>
+          <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
+          <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
+          <div id="ls" class="fs"></div>
+        </form>
       </div>
     </div>
 
@@ -293,6 +300,30 @@
     </div>
 
     <button class="btn btn-p" onclick="show('modal-client')">+ Add New Client</button>
+  </div>
+</div>
+
+<!-- ── Floating draggable Live Timer widget ── -->
+<div class="float-timer" id="float-timer">
+  <div class="float-timer-handle" id="float-timer-handle">
+    <div class="float-timer-handle-title">
+      <span>⏱ Live Timer</span>
+      <span class="float-timer-mini-time" id="float-timer-mini-time">00:00:00</span>
+    </div>
+    <button class="float-timer-min" id="float-timer-min-btn" onclick="toggleMinimize()" title="Minimize">–</button>
+  </div>
+  <div class="float-timer-body" id="float-timer-body">
+    <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
+    <div class="fg"><label>Task</label><input type="text" id="tt" placeholder="What are you working on?"/></div>
+    <div class="timer-status" id="t-status" style="color:var(--ink3)">Ready</div>
+    <div class="timer-disp idle" id="tdisp">00:00:00</div>
+    <div class="timer-btns">
+      <button class="btn btn-g" id="t-start" onclick="timerStart()">▶ Start</button>
+      <button class="btn" id="t-pause" onclick="timerPause()" style="display:none;background:var(--abg);color:var(--amber)">⏸ Pause</button>
+      <button class="btn btn-g" id="t-resume" onclick="timerResume()" style="display:none">▶ Resume</button>
+      <button class="btn btn-r" id="t-stop" onclick="timerStop()" style="display:none">■ Stop & Save</button>
+      <button class="btn btn-o btn-sm" onclick="timerReset()">↺ Reset</button>
+    </div>
   </div>
 </div>
 
@@ -390,6 +421,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
   document.getElementById('ld').value=new Date().toISOString().slice(0,10);
   load();
+  initFloatingTimer();
 });
 
 function go(p){window.location.href=p;}
@@ -446,6 +478,14 @@ async function load(){
     document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
     document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
 
+    // Restore the timer's selected client/task from a persisted session, now
+    // that the client dropdown options actually exist to select among.
+    const savedTimer=JSON.parse(localStorage.getItem('qfa_timer_v2')||'null');
+    if(savedTimer){
+      if(savedTimer.clientId) document.getElementById('tc').value=savedTimer.clientId;
+      if(savedTimer.taskText) document.getElementById('tt').value=savedTimer.taskText;
+    }
+
     const rt=document.getElementById('rtable');
     if(!lg.length){
       rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
@@ -494,17 +534,41 @@ async function saveEdit(){
   }catch(e){s.className='fs er';s.textContent=e.message;}
 }
 
-let tiv=null, tSecs=0, tState='idle';
+/* ────────────────────────────────────────────────────────────────────────
+   LIVE TIMER — timestamp-based (survives refresh/navigation) + draggable
+   floating panel (position remembered via localStorage).
+   ──────────────────────────────────────────────────────────────────────── */
+let tiv=null;
+let timerState='idle';       // 'idle' | 'running' | 'paused'
+let startTimestamp=null;     // ms epoch when the current running segment began
+let accumulatedMs=0;         // ms banked from previous running segments
+
+function persistTimerState(){
+  localStorage.setItem('qfa_timer_v2', JSON.stringify({
+    timerState, startTimestamp, accumulatedMs,
+    clientId: document.getElementById('tc').value,
+    taskText: document.getElementById('tt').value
+  }));
+}
+
+function currentElapsedMs(){
+  return timerState==='running' && startTimestamp
+    ? accumulatedMs + (Date.now()-startTimestamp)
+    : accumulatedMs;
+}
 
 function tDisp(){
-  const h=Math.floor(tSecs/3600).toString().padStart(2,'0');
-  const m=Math.floor((tSecs%3600)/60).toString().padStart(2,'0');
-  const s=(tSecs%60).toString().padStart(2,'0');
-  document.getElementById('tdisp').textContent=`${h}:${m}:${s}`;
+  const secs=Math.floor(currentElapsedMs()/1000);
+  const h=Math.floor(secs/3600).toString().padStart(2,'0');
+  const m=Math.floor((secs%3600)/60).toString().padStart(2,'0');
+  const s=(secs%60).toString().padStart(2,'0');
+  const str=`${h}:${m}:${s}`;
+  document.getElementById('tdisp').textContent=str;
+  document.getElementById('float-timer-mini-time').textContent=str;
 }
 
 function tSetUI(state){
-  tState=state;
+  timerState=state;
   const el=id=>document.getElementById(id);
   const disp=el('tdisp'), status=el('t-status');
   ['t-start','t-pause','t-resume','t-stop'].forEach(id=>el(id).style.display='none');
@@ -526,40 +590,54 @@ function tSetUI(state){
 }
 
 function timerStart(){
-  if(tState!=='idle') return;
-  tiv=setInterval(()=>{tSecs++;tDisp();},1000);
+  if(timerState!=='idle') return;
+  accumulatedMs=0;
+  startTimestamp=Date.now();
+  persistTimerState();
+  tiv=setInterval(tDisp,1000);
   tSetUI('running');
+  tDisp();
 }
 
 function timerPause(){
-  if(tState!=='running') return;
+  if(timerState!=='running') return;
+  accumulatedMs += Date.now()-startTimestamp;
+  startTimestamp=null;
   clearInterval(tiv); tiv=null;
+  persistTimerState();
   tSetUI('paused');
 }
 
 function timerResume(){
-  if(tState!=='paused') return;
-  tiv=setInterval(()=>{tSecs++;tDisp();},1000);
+  if(timerState!=='paused') return;
+  startTimestamp=Date.now();
+  persistTimerState();
+  tiv=setInterval(tDisp,1000);
   tSetUI('running');
+  tDisp();
 }
 
 async function timerStop(){
-  if(tState==='idle') return;
+  if(timerState==='idle') return;
+  const wasRunning = timerState==='running';
   clearInterval(tiv); tiv=null;
 
-  const hours=Math.round(tSecs/3600*100)/100;
+  const elapsedMs = wasRunning ? accumulatedMs+(Date.now()-startTimestamp) : accumulatedMs;
+  const hours=Math.round(elapsedMs/1000/3600*100)/100;
   const cid=document.getElementById('tc').value;
   const task=document.getElementById('tt').value;
 
   if(!cid){
     alert('Please select a client before saving.');
-    if(tState==='running'){ tiv=setInterval(()=>{tSecs++;tDisp();},1000); }
+    if(wasRunning){ tiv=setInterval(tDisp,1000); } // resume ticking, nothing was committed
     return;
   }
   if(hours<0.01){ alert('Timer too short to log.'); timerReset(); return; }
 
   if(!confirm(`Save ${fmtH(hours)} to logs?`)){
-    tSetUI('paused'); return;
+    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; persistTimerState(); }
+    tSetUI('paused');
+    return;
   }
 
   try{
@@ -573,14 +651,108 @@ async function timerStop(){
     timerReset(); load();
   }catch(e){
     alert('Failed to save: '+e.message);
+    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; persistTimerState(); }
     tSetUI('paused');
   }
 }
 
 function timerReset(){
-  clearInterval(tiv); tiv=null; tSecs=0;
-  tDisp(); tSetUI('idle');
+  clearInterval(tiv); tiv=null;
+  accumulatedMs=0; startTimestamp=null;
+  localStorage.removeItem('qfa_timer_v2');
+  tSetUI('idle');
+  tDisp();
   document.getElementById('tt').value='';
+}
+
+function initFloatingTimer(){
+  const saved=JSON.parse(localStorage.getItem('qfa_timer_v2')||'null');
+  if(saved){
+    startTimestamp=saved.startTimestamp||null;
+    accumulatedMs=saved.accumulatedMs||0;
+    if(saved.timerState==='running' && startTimestamp){
+      tiv=setInterval(tDisp,1000);
+      tSetUI('running');
+    } else if(saved.timerState==='paused'){
+      tSetUI('paused');
+    } else {
+      tSetUI('idle');
+    }
+  } else {
+    tSetUI('idle');
+  }
+  tDisp();
+
+  // Keep persisted client/task selections in sync while a session is active
+  document.getElementById('tc').addEventListener('change', ()=>{ if(timerState!=='idle') persistTimerState(); });
+  document.getElementById('tt').addEventListener('input', ()=>{ if(timerState!=='idle') persistTimerState(); });
+
+  initTimerDrag();
+  initTimerCollapse();
+}
+
+/* ── Dragging ── */
+function initTimerDrag(){
+  const panel=document.getElementById('float-timer');
+  const handle=document.getElementById('float-timer-handle');
+  const savedPos=JSON.parse(localStorage.getItem('qfa_timer_pos')||'null');
+  if(savedPos){
+    panel.style.left=savedPos.left+'px';
+    panel.style.top=savedPos.top+'px';
+    panel.style.right='auto';
+    panel.style.bottom='auto';
+  }
+
+  let dragging=false, offsetX=0, offsetY=0;
+
+  function startDrag(cx,cy){
+    const rect=panel.getBoundingClientRect();
+    dragging=true;
+    offsetX=cx-rect.left;
+    offsetY=cy-rect.top;
+    panel.style.right='auto'; panel.style.bottom='auto';
+    panel.classList.add('dragging');
+  }
+  function moveDrag(cx,cy){
+    if(!dragging) return;
+    let x=cx-offsetX, y=cy-offsetY;
+    const maxX=window.innerWidth-panel.offsetWidth-8;
+    const maxY=window.innerHeight-panel.offsetHeight-8;
+    x=Math.max(8,Math.min(x,maxX));
+    y=Math.max(8,Math.min(y,maxY));
+    panel.style.left=x+'px';
+    panel.style.top=y+'px';
+  }
+  function endDrag(){
+    if(!dragging) return;
+    dragging=false;
+    panel.classList.remove('dragging');
+    const rect=panel.getBoundingClientRect();
+    localStorage.setItem('qfa_timer_pos', JSON.stringify({left:rect.left, top:rect.top}));
+  }
+
+  handle.addEventListener('mousedown', e=>{ startDrag(e.clientX,e.clientY); e.preventDefault(); });
+  window.addEventListener('mousemove', e=> moveDrag(e.clientX,e.clientY));
+  window.addEventListener('mouseup', endDrag);
+
+  handle.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX,t.clientY); }, {passive:true});
+  window.addEventListener('touchmove', e=>{ if(dragging){ const t=e.touches[0]; moveDrag(t.clientX,t.clientY); } }, {passive:true});
+  window.addEventListener('touchend', endDrag);
+}
+
+/* ── Minimize/collapse ── */
+function initTimerCollapse(){
+  const collapsed=localStorage.getItem('qfa_timer_collapsed')==='1';
+  if(collapsed){
+    document.getElementById('float-timer').classList.add('collapsed');
+    document.getElementById('float-timer-min-btn').textContent='+';
+  }
+}
+function toggleMinimize(){
+  const panel=document.getElementById('float-timer');
+  const collapsed=panel.classList.toggle('collapsed');
+  document.getElementById('float-timer-min-btn').textContent=collapsed?'+':'–';
+  localStorage.setItem('qfa_timer_collapsed', collapsed?'1':'0');
 }
 
 async function submitLog(e){
