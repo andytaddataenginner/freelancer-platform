@@ -97,6 +97,8 @@
     .ch h3{font-size:.9rem;font-weight:700;color:var(--ink)}
     .cb{padding:1.4rem}
     .two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:1.2rem;align-items:start}
+    .log-form-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:.9rem;align-items:start}
+    @media(max-width:700px){.log-form-row{grid-template-columns:1fr}}
     .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem}
     .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
     input,textarea,select{width:100%;padding:.7rem .9rem;border:1.5px solid rgba(13,35,83,.1);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--ink);transition:border-color .2s}
@@ -270,18 +272,20 @@
       <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
       <div class="cb">
         <form onsubmit="submitLog(event)">
-          <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+          <div class="log-form-row">
+            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
             <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
             <div class="fg">
-              <label>Hours (any value)</label>
-              <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
+              <label>Hours</label>
+              <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33" required/>
               <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
             </div>
           </div>
           <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
-          <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
-          <div id="ls" class="fs"></div>
+          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+            <button type="submit" class="btn btn-p">Add Log Entry</button>
+            <div id="ls" class="fs" style="margin:0"></div>
+          </div>
         </form>
       </div>
     </div>
