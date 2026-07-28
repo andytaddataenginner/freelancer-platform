@@ -99,9 +99,11 @@
     .two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:1.2rem;align-items:start}
     .log-form-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:.9rem;align-items:start}
     @media(max-width:700px){.log-form-row{grid-template-columns:1fr}}
-    .entry-clients-row{display:grid;grid-template-columns:1.4fr 1fr;gap:1.2rem;align-items:start}
+    .entry-clients-row{display:grid;grid-template-columns:1.4fr 1fr;gap:1.2rem;align-items:stretch}
     @media(max-width:900px){.entry-clients-row{grid-template-columns:1fr}}
-    .ac-list{max-height:420px;overflow-y:auto}
+    .entry-clients-row>.card{display:flex;flex-direction:column}
+    .entry-clients-row>.card>.cb{flex:1}
+    .ac-list{flex:1;overflow-y:auto}
     .ac-row{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.4rem;border-bottom:1px solid var(--bg2);cursor:pointer;transition:background .15s}
     .ac-row:last-child{border-bottom:none}
     .ac-row:hover{background:var(--table-hover)}
