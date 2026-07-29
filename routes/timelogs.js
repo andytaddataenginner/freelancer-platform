@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
-const { requireFreelancer } = require('../middleware/auth'); // Or requireClient depending on your middleware setup
+const { requireFreelancer, requireClient } = require('../middleware/auth'); 
 const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 
 // GET /api/timelogs (or /api/client/timelogs depending on your mount path)
@@ -51,6 +51,45 @@ router.get('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// GET /api/client/timelogs (Dedicated client-facing timelogs route)
+router.get('/client/timelogs', requireClient, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const clientInfo = await pool.query(
+      `SELECT id, rate_type FROM clients WHERE user_id = $1`,
+      [userId]
+    );
+    
+    if (clientInfo.rows.length === 0) {
+      return res.status(404).json({ error: 'Client record not found' });
+    }
+
+    const rateType = clientInfo.rows[0].rate_type || 'hourly';
+
+    if (rateType === 'fixed') {
+      const { rows } = await pool.query(
+        `SELECT id, client_id, month AS date, amount, status AS payment_status, 'Fixed Milestone' AS task_description, 0 AS hours 
+         FROM fixed_monthly_payments 
+         WHERE client_id = $1 
+         ORDER BY month DESC`,
+        [userId]
+      );
+      return res.json(rows);
+    }
+
+    const { rows } = await pool.query(
+      `SELECT * FROM time_logs 
+       WHERE client_id = $1 
+       ORDER BY date DESC, created_at DESC`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
 // POST /api/timelogs
 router.post('/', requireFreelancer, async (req, res, next) => {
   const client = await pool.connect();
@@ -59,8 +98,7 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     if (!client_id || !date || !hours || !task_description)
       return res.status(400).json({ error: 'client_id, date, hours, task_description required' });
 
-    // Auto-calculate amount from client billing rate
-    const clientInfo = await pool.query(
+    const clientInfo = await client.query(
       'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id = $1',
       [client_id]
     );
