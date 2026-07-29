@@ -1,34 +1,47 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { requireClient } = require('../middleware/auth'); 
+const { requireClient } = require('../middleware/auth');
 
 // GET /api/client/stats - Fetch dashboard summary
 router.get('/stats', requireClient, async (req, res, next) => {
   try {
     const clientId = req.user.id;
     const clientRes = await pool.query(
-      `SELECT rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance 
+      `SELECT rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance
        FROM clients WHERE user_id = $1`, [clientId]
     );
-
     if (clientRes.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
-
     const profile = clientRes.rows[0];
-    const logsRes = await pool.query(
-      `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`, [clientId]
-    );
 
     let totalPaid = 0;
     let totalUnpaid = 0;
-    const rate = parseFloat(profile.hourly_rate || 0);
 
-    logsRes.rows.forEach(log => {
-      let amt = parseFloat(log.amount || 0);
-      if (!amt && log.hours) amt = parseFloat(log.hours) * rate;
-      if (log.payment_status === 'paid') totalPaid += amt;
-      else totalUnpaid += amt;
-    });
+    if (profile.rate_type === 'fixed') {
+      // Fixed-rate billing lives in fixed_monthly_payments (one row per
+      // client per month), not time_logs — querying time_logs here was
+      // always returning zero rows for fixed clients.
+      const fixedRes = await pool.query(
+        `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
+        [clientId]
+      );
+      fixedRes.rows.forEach(r => {
+        const amt = parseFloat(r.amount || 0);
+        if (r.status === 'paid') totalPaid += amt;
+        else totalUnpaid += amt;
+      });
+    } else {
+      const logsRes = await pool.query(
+        `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`, [clientId]
+      );
+      const rate = parseFloat(profile.hourly_rate || 0);
+      logsRes.rows.forEach(log => {
+        let amt = parseFloat(log.amount || 0);
+        if (!amt && log.hours) amt = parseFloat(log.hours) * rate;
+        if (log.payment_status === 'paid') totalPaid += amt;
+        else totalUnpaid += amt;
+      });
+    }
 
     res.json({
       rateType: profile.rate_type,
@@ -42,7 +55,6 @@ router.get('/stats', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// GET /api/client/timelogs - Fixes your 404 error
 // GET /api/client/timelogs
 router.get('/timelogs', requireClient, async (req, res, next) => {
     try {
@@ -64,17 +76,15 @@ router.post('/payments/record', requireClient, async (req, res, next) => {
   try {
     const { amount, date, notes } = req.body;
     const parsedAmount = parseFloat(amount);
-    
+
     await pool.query(
       `INSERT INTO payments (client_id, amount, date, notes) VALUES ($1, $2, $3, $4)`,
       [req.user.id, parsedAmount, date, notes || null]
     );
-
     await pool.query(
       `UPDATE clients SET credit_balance = COALESCE(credit_balance, 0) + $1 WHERE user_id = $2`,
       [parsedAmount, req.user.id]
     );
-
     res.status(201).json({ success: true });
   } catch (e) { next(e); }
 });
