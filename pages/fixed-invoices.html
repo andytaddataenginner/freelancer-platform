@@ -603,35 +603,35 @@ async function downloadInvoice(invId) {
   const lineItemsHtml = type === 'fixed'
     ? (unpaidFixedMonths.length ? unpaidFixedMonths.map(m => `
         <tr>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px;">Fixed Monthly Fee &mdash; ${formatMonthLabel(m.month)}</td>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px; text-align: center;">&mdash;</td>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #0d2353; font-weight: 600; font-size: 13px; text-align: right;">$${m.amount.toFixed(2)}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px;">Fixed Monthly Fee &mdash; ${formatMonthLabel(m.month)}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px; text-align: center;">&mdash;</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #0d2353; font-weight: 600; font-size: 13px; text-align: right;">$${m.amount.toFixed(2)}</td>
         </tr>`).join('') : `
         <tr>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px;">Fixed Monthly Fee</td>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px; text-align: center;">&mdash;</td>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #0d2353; font-weight: 600; font-size: 13px; text-align: right;">$0.00</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px;">Fixed Monthly Fee</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px; text-align: center;">&mdash;</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #0d2353; font-weight: 600; font-size: 13px; text-align: right;">$0.00</td>
         </tr>`)
     : `
         <tr>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px;">Professional Freelance Consulting Services</td>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px; text-align: center;">${hours.toFixed(2)}</td>
-          <td style="padding: 14px 10px; border-bottom: 1px solid #eef1f8; color: #0d2353; font-weight: 600; font-size: 13px; text-align: right;">$${totalUnpaid.toFixed(2)}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px;">Professional Freelance Consulting Services</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #3a4a6a; font-size: 13px; text-align: center;">${hours.toFixed(2)}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #0d2353; font-weight: 600; font-size: 13px; text-align: right;">$${totalUnpaid.toFixed(2)}</td>
         </tr>`;
 
   container.innerHTML = `
-    <div style="background: #ffffff; width: 794px; padding: 48px 56px; font-family: 'Outfit', sans-serif; color: #0d2353; box-sizing: border-box;">
+    <div style="background: #ffffff; width: 794px; padding: 36px 56px; font-family: 'Outfit', sans-serif; color: #0d2353; box-sizing: border-box;">
       <!-- Top Accent Bar -->
-      <div style="height: 4px; border-radius: 2px; background: linear-gradient(90deg, #0d2353 0%, #1a5cff 100%); margin-bottom: 32px;"></div>
+      <div style="height: 4px; border-radius: 2px; background: linear-gradient(90deg, #0d2353 0%, #1a5cff 100%); margin-bottom: 24px;"></div>
 
       <!-- Header Section -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
         <div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <div style="width: 28px; height: 28px; background: #0d2353; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">Q</div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <img src="../QFA_Logo.png" alt="QFA" style="height: 24px; background: #fff; border-radius: 4px; padding: 2px; border: 1px solid #eef1f8;"/>
             <span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #0d2353; letter-spacing: -0.01em;">Quick Freelancing Agency</span>
           </div>
-          <div style="font-size: 12px; color: #7a8aaa; font-weight: 500;">Professional Consulting Invoice</div>
+          <div style="font-size: 12px; color: #7a8aaa; font-weight: 500; margin-left: 32px;">Professional Consulting Invoice</div>
         </div>
         <div style="text-align: right;">
           <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 600; margin-bottom: 2px;">Invoice</div>
@@ -641,22 +641,23 @@ async function downloadInvoice(invId) {
       </div>
 
       <!-- Metadata Grid -->
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; background: #f8fafc; border-radius: 10px; border: 1px solid #eef1f8;">
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
         <tr>
-          <td style="width: 33%; padding: 16px; vertical-align: top;">
+          <td style="width: 33%; vertical-align: top; padding-right: 15px;">
             <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 4px;">Issued By</div>
             <div style="font-size: 13px; font-weight: 700; color: #0d2353; margin-bottom: 2px;">Quick Freelancing Agency</div>
             <div style="font-size: 12px; color: #3a4a6a; margin-bottom: 1px;">${freelancerEmail}</div>
             <div style="font-size: 12px; color: #3a4a6a;">+251 911 859 866</div>
           </td>
-          <td style="width: 33%; padding: 16px; vertical-align: top; border-left: 1px solid #eef1f8;">
+          <td style="width: 33%; vertical-align: top; padding-right: 15px;">
             <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 4px;">Bill To</div>
             <div style="font-size: 13px; font-weight: 700; color: #0d2353; margin-bottom: 2px;">${clientName}</div>
             <div style="font-size: 12px; color: #3a4a6a;">Prepared by ${freelancer}</div>
           </td>
-          <td style="width: 34%; padding: 16px; vertical-align: top; border-left: 1px solid #eef1f8;">
-            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 4px;">Billing Period & Status</div>
+          <td style="width: 34%; vertical-align: top;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 4px;">Billing Period</div>
             <div style="font-size: 12px; font-weight: 600; color: #0d2353; margin-bottom: 6px;">${start} &mdash; ${end}</div>
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 2px;">Status</div>
             <div>
               <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Outstanding</span>
             </div>
@@ -665,12 +666,12 @@ async function downloadInvoice(invId) {
       </table>
 
       <!-- Line Items Table -->
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
         <thead>
           <tr style="border-bottom: 2px solid #0d2353;">
-            <th style="text-align: left; padding: 10px; color: #7a8aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Description</th>
-            <th style="text-align: center; padding: 10px; color: #7a8aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; width: 100px;">Hours</th>
-            <th style="text-align: right; padding: 10px; color: #7a8aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; width: 120px;">Amount</th>
+            <th style="text-align: left; padding: 8px 0; color: #7a8aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Description</th>
+            <th style="text-align: center; padding: 8px 0; color: #7a8aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; width: 100px;">Hours</th>
+            <th style="text-align: right; padding: 8px 0; color: #7a8aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; width: 120px;">Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -678,19 +679,19 @@ async function downloadInvoice(invId) {
         </tbody>
         <tfoot>
           <tr style="border-top: 2px solid #0d2353;">
-            <td colspan="2" style="padding: 16px 10px; font-size: 14px; font-weight: 700; color: #0d2353;">Total Amount Due</td>
-            <td style="text-align: right; padding: 16px 10px; font-size: 18px; font-weight: 700; color: #0d2353; font-family: 'Playfair Display', serif;">$${totalUnpaid.toFixed(2)}</td>
+            <td colspan="2" style="padding: 12px 0; font-size: 13px; font-weight: 700; color: #0d2353;">Total Amount Due</td>
+            <td style="text-align: right; padding: 12px 0; font-size: 16px; font-weight: 700; color: #0d2353; font-family: 'Playfair Display', serif;">$${totalUnpaid.toFixed(2)}</td>
           </tr>
         </tfoot>
       </table>
 
       <!-- Footer Notes Box -->
-      <div style="background: #f8fafc; border: 1px solid #eef1f8; border-left: 4px solid #1a5cff; padding: 14px 18px; border-radius: 8px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="background: #f8fafc; border: 1px solid #eef1f8; border-left: 4px solid #1a5cff; padding: 12px 16px; border-radius: 6px; margin-bottom: 30px;">
         <span style="font-size: 12px; color: #3a4a6a; font-weight: 500;">Payment is due upon receipt. Reference: <strong style="color: #0d2353;">${invId}</strong></span>
       </div>
 
       <!-- Bottom Brand Tag -->
-      <div style="text-align: center; border-top: 1px solid #eef1f8; padding-top: 20px; font-size: 11px; color: #7a8aaa;">
+      <div style="text-align: center; border-top: 1px solid #eef1f8; padding-top: 16px; font-size: 11px; color: #7a8aaa;">
         Thank you for choosing Quick Freelancing Agency
       </div>
     </div>`;
