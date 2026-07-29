@@ -1,82 +1,126 @@
-const express = require('express');
-const router = express.Router();
-const pool = require('../db/pool');
-const { requireClient } = require('../middleware/auth'); 
+const router = require('express').Router();
+const pool   = require('../db/pool');
+const { requireClient } = require('../middleware/auth');
 
-// GET /api/client/stats - Fetch dashboard summary
+// GET /api/client/stats
 router.get('/stats', requireClient, async (req, res, next) => {
   try {
-    const clientId = req.user.id;
+    const userId = req.user.id; // users.id
+
     const clientRes = await pool.query(
-      `SELECT rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance 
-       FROM clients WHERE user_id = $1`, [clientId]
+      `SELECT id, user_id, rate_type, hourly_rate, fixed_price, credit_balance, total_paid 
+       FROM clients WHERE user_id = $1`,
+      [userId]
     );
 
-    if (clientRes.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    if (clientRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Client record not found' });
+    }
 
-    const profile = clientRes.rows[0];
-    const logsRes = await pool.query(
-      `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`, [clientId]
+    const clientRow = clientRes.rows[0];
+    const rateType = clientRow.rate_type || 'hourly';
+    const creditBalance = parseFloat(clientRow.credit_balance || 0);
+
+    // Handle Fixed-Rate Clients
+    if (rateType === 'fixed') {
+      const fixedPaymentsRes = await pool.query(
+        `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
+        [userId]
+      );
+
+      let totalPaid = 0;
+      let totalUnpaid = 0;
+
+      fixedPaymentsRes.rows.forEach(p => {
+        const amt = parseFloat(p.amount || 0);
+        if (p.status === 'paid') totalPaid += amt;
+        else totalUnpaid += amt;
+      });
+
+      return res.json({
+        rateType: 'fixed',
+        fixedPrice: parseFloat(clientRow.fixed_price || 0),
+        creditBalance: creditBalance,
+        totalPaid: totalPaid,
+        totalUnpaid: totalUnpaid,
+        hourlyRate: 0
+      });
+    }
+
+    // Handle Hourly Clients
+    const hourlyLogsRes = await pool.query(
+      `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`,
+      [userId]
     );
 
     let totalPaid = 0;
     let totalUnpaid = 0;
-    const rate = parseFloat(profile.hourly_rate || 0);
+    let totalHours = 0;
 
-    logsRes.rows.forEach(log => {
-      let amt = parseFloat(log.amount || 0);
-      if (!amt && log.hours) amt = parseFloat(log.hours) * rate;
-      if (log.payment_status === 'paid') totalPaid += amt;
-      else totalUnpaid += amt;
+    hourlyLogsRes.rows.forEach(l => {
+      const h = parseFloat(l.hours || 0);
+      const amt = parseFloat(l.amount || (h * (clientRow.hourly_rate || 0)));
+      totalHours += h;
+      if (l.payment_status === 'paid') {
+        totalPaid += amt;
+      } else {
+        totalUnpaid += amt;
+      }
     });
 
     res.json({
-      rateType: profile.rate_type,
-      hourlyRate: profile.hourly_rate,
-      fixedPrice: profile.fixed_price,
-      fixedStatus: profile.fixed_payment_status,
-      creditBalance: parseFloat(profile.credit_balance || 0),
-      totalPaid,
-      totalUnpaid
+      rateType: 'hourly',
+      hourlyRate: parseFloat(clientRow.hourly_rate || 0),
+      creditBalance: creditBalance,
+      totalPaid: totalPaid,
+      totalUnpaid: totalUnpaid,
+      totalHours: totalHours
     });
-  } catch (e) { next(e); }
+
+  } catch (e) {
+    next(e);
+  }
 });
 
-// GET /api/client/timelogs - Fixes your 404 error
 // GET /api/client/timelogs
 router.get('/timelogs', requireClient, async (req, res, next) => {
-    try {
-        const result = await pool.query('SELECT * FROM time_logs WHERE client_id = $1 ORDER BY date DESC', [req.user.id]);
-        res.json(result.rows);
-    } catch (e) { next(e); }
-});
-
-// GET /api/client/bookings
-router.get('/bookings', requireClient, async (req, res, next) => {
-    try {
-        const result = await pool.query('SELECT * FROM bookings WHERE client_id = $1 ORDER BY date ASC', [req.user.id]);
-        res.json(result.rows);
-    } catch (e) { next(e); }
-});
-
-// POST /api/client/payments/record
-router.post('/payments/record', requireClient, async (req, res, next) => {
   try {
-    const { amount, date, notes } = req.body;
-    const parsedAmount = parseFloat(amount);
+    const userId = req.user.id;
+
+    const clientInfo = await pool.query(
+      `SELECT id, rate_type FROM clients WHERE user_id = $1`,
+      [userId]
+    );
     
-    await pool.query(
-      `INSERT INTO payments (client_id, amount, date, notes) VALUES ($1, $2, $3, $4)`,
-      [req.user.id, parsedAmount, date, notes || null]
-    );
+    if (clientInfo.rows.length === 0) {
+      return res.status(404).json({ error: 'Client record not found' });
+    }
 
-    await pool.query(
-      `UPDATE clients SET credit_balance = COALESCE(credit_balance, 0) + $1 WHERE user_id = $2`,
-      [parsedAmount, req.user.id]
-    );
+    const rateType = clientInfo.rows[0].rate_type || 'hourly';
 
-    res.status(201).json({ success: true });
-  } catch (e) { next(e); }
+    // If fixed-rate, pull records from fixed_monthly_payments mapped cleanly for the frontend UI table
+    if (rateType === 'fixed') {
+      const { rows } = await pool.query(
+        `SELECT id, client_id, month AS date, amount, status AS payment_status, 'Fixed Milestone' AS task_description, 0 AS hours 
+         FROM fixed_monthly_payments 
+         WHERE client_id = $1 
+         ORDER BY month DESC`,
+        [userId]
+      );
+      return res.json(rows);
+    }
+
+    // Otherwise, pull regular time logs
+    const { rows } = await pool.query(
+      `SELECT * FROM time_logs 
+       WHERE client_id = $1 
+       ORDER BY date DESC, created_at DESC`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
 });
 
 module.exports = router;
