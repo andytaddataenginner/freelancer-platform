@@ -189,16 +189,22 @@
     .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
     .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
 
+    /* ── PDF CONTAINER ── */
     #pdf-container { 
       display: none; 
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 794px; 
-      min-height: 1123px;
       background-color: #ffffff !important; 
       color: #1f2937 !important; 
       box-sizing: border-box;
+      z-index: -9999;
     }
-    #pdf-container.rendering { display: block; }
-    body.pdf-generating .main, body.pdf-generating .mob-bar, body.pdf-generating .overlay { display: none !important; }
+    #pdf-container.rendering { 
+      display: block; 
+      z-index: 99999;
+    }
 
     #pdf-generating-overlay {
       display: none; position: fixed; inset: 0; z-index: 999;
@@ -602,7 +608,7 @@ async function downloadInvoice(invId) {
   
   const container = document.getElementById("pdf-container");
   container.innerHTML = "";
-  container.style.cssText = "display: block; width: 794px; min-height: 1123px; background-color: #ffffff !important; color: #1f2937 !important; box-sizing: border-box;";
+  container.style.cssText = "display: block; position: fixed; top: 0; left: 0; width: 794px; background-color: #ffffff !important; color: #1f2937 !important; box-sizing: border-box; z-index: 99999;";
   container.classList.add("rendering");
 
   const unpaidFixedMonths = (fixedMonths || []).filter(m => m.status !== 'paid');
@@ -714,7 +720,14 @@ async function downloadInvoice(invId) {
     const worker = html2pdf().set({ 
       margin: 0, 
       filename: `${invId}.pdf`, 
-      html2canvas: { scale: 2, useCORS: true, logging: false }, 
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 794
+      }, 
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" } 
     }).from(container);
     await worker.save();
@@ -722,6 +735,7 @@ async function downloadInvoice(invId) {
     console.error(e); 
   } finally {
     container.innerHTML = "";
+    container.style.cssText = "display: none;";
     container.classList.remove("rendering");
     document.getElementById("pdf-generating-overlay").classList.remove("active");
     generatingPDF = false;
