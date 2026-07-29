@@ -80,7 +80,6 @@
     .sb-user-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 0.4rem; }
     .sb-user a { font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
     
-    /* Dark Mode Toggle Button */
     .theme-toggle { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--gold2); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s; }
     .theme-toggle:hover { background: rgba(255,255,255,0.2); }
 
@@ -170,7 +169,6 @@
     }
     .download-btn:hover { background: linear-gradient(135deg, var(--accent) 0%, #0f47cc); }
 
-    /* NEW — WhatsApp reminder button */
     .whatsapp-btn {
       background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
       color: white; font-weight: 700; font-size: 0.75rem;
@@ -191,7 +189,6 @@
     .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
     .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
 
-    /* PDF container & utilities remain fixed for rendering */
     #pdf-container { display: none; width: 794px; background-color: #ffffff; color: #1f2937; }
     #pdf-container.rendering { display: block; }
     body.pdf-generating .main, body.pdf-generating .mob-bar, body.pdf-generating .overlay { display: none !important; }
@@ -217,7 +214,6 @@
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
-    // Prevent flash of unthemed layout
     (function() {
       const savedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
@@ -620,41 +616,43 @@ async function downloadInvoice(invId) {
         </tr>`;
 
   container.innerHTML = `
-    <div style="background: #ffffff; width: 794px; padding: 36px 56px; font-family: 'Outfit', sans-serif; color: #0d2353; box-sizing: border-box;">
+    <div style="background: #ffffff; width: 794px; padding: 24px 50px 30px 50px; font-family: 'Outfit', sans-serif; color: #0d2353; box-sizing: border-box;">
       <!-- Top Accent Bar -->
-      <div style="height: 4px; border-radius: 2px; background: linear-gradient(90deg, #0d2353 0%, #1a5cff 100%); margin-bottom: 24px;"></div>
+      <div style="height: 4px; border-radius: 2px; background: linear-gradient(90deg, #0d2353 0%, #1a5cff 100%); margin-bottom: 20px;"></div>
 
       <!-- Header Section -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
-        <div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <img src="../QFA_Logo.png" alt="QFA" style="height: 24px; background: #fff; border-radius: 4px; padding: 2px; border: 1px solid #eef1f8;"/>
-            <span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #0d2353; letter-spacing: -0.01em;">Quick Freelancing Agency</span>
-          </div>
-          <div style="font-size: 12px; color: #7a8aaa; font-weight: 500; margin-left: 32px;">Professional Consulting Invoice</div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 600; margin-bottom: 2px;">Invoice</div>
-          <div style="font-size: 20px; font-weight: 700; color: #0d2353; font-family: 'Playfair Display', serif; margin-bottom: 2px;">${invId}</div>
-          <div style="font-size: 12px; color: #7a8aaa;">${new Date().toLocaleDateString()}</div>
-        </div>
-      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+        <tr>
+          <td style="vertical-align: top; padding: 0;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <img src="../QFA_Logo.png" alt="QFA" style="height: 22px; width: auto; background: #fff; border-radius: 4px; padding: 2px; border: 1px solid #eef1f8; display: inline-block; vertical-align: middle;"/>
+              <span style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #0d2353; letter-spacing: -0.01em; display: inline-block; vertical-align: middle;">Quick Freelancing Agency</span>
+            </div>
+            <div style="font-size: 12px; color: #7a8aaa; font-weight: 500; margin-left: 30px;">Professional Consulting Invoice</div>
+          </td>
+          <td style="vertical-align: top; text-align: right; padding: 0;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 600; margin-bottom: 2px;">Invoice</div>
+            <div style="font-size: 20px; font-weight: 700; color: #0d2353; font-family: 'Playfair Display', serif; margin-bottom: 2px;">${invId}</div>
+            <div style="font-size: 12px; color: #7a8aaa;">${new Date().toLocaleDateString()}</div>
+          </td>
+        </tr>
+      </table>
 
       <!-- Metadata Grid -->
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
         <tr>
-          <td style="width: 33%; vertical-align: top; padding-right: 15px;">
+          <td style="width: 33%; vertical-align: top; padding-right: 15px; padding: 0;">
             <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 4px;">Issued By</div>
             <div style="font-size: 13px; font-weight: 700; color: #0d2353; margin-bottom: 2px;">Quick Freelancing Agency</div>
             <div style="font-size: 12px; color: #3a4a6a; margin-bottom: 1px;">${freelancerEmail}</div>
             <div style="font-size: 12px; color: #3a4a6a;">+251 911 859 866</div>
           </td>
-          <td style="width: 33%; vertical-align: top; padding-right: 15px;">
+          <td style="width: 33%; vertical-align: top; padding-right: 15px; padding: 0;">
             <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 4px;">Bill To</div>
             <div style="font-size: 13px; font-weight: 700; color: #0d2353; margin-bottom: 2px;">${clientName}</div>
             <div style="font-size: 12px; color: #3a4a6a;">Prepared by ${freelancer}</div>
           </td>
-          <td style="width: 34%; vertical-align: top;">
+          <td style="width: 34%; vertical-align: top; padding: 0;">
             <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 4px;">Billing Period</div>
             <div style="font-size: 12px; font-weight: 600; color: #0d2353; margin-bottom: 6px;">${start} &mdash; ${end}</div>
             <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa; font-weight: 700; margin-bottom: 2px;">Status</div>
@@ -686,12 +684,16 @@ async function downloadInvoice(invId) {
       </table>
 
       <!-- Footer Notes Box -->
-      <div style="background: #f8fafc; border: 1px solid #eef1f8; border-left: 4px solid #1a5cff; padding: 12px 16px; border-radius: 6px; margin-bottom: 30px;">
-        <span style="font-size: 12px; color: #3a4a6a; font-weight: 500;">Payment is due upon receipt. Reference: <strong style="color: #0d2353;">${invId}</strong></span>
-      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+        <tr>
+          <td style="background: #f8fafc; border: 1px solid #eef1f8; border-left: 4px solid #1a5cff; padding: 12px 16px; border-radius: 6px;">
+            <span style="font-size: 12px; color: #3a4a6a; font-weight: 500;">Payment is due upon receipt. Reference: <strong style="color: #0d2353;">${invId}</strong></span>
+          </td>
+        </tr>
+      </table>
 
       <!-- Bottom Brand Tag -->
-      <div style="text-align: center; border-top: 1px solid #eef1f8; padding-top: 16px; font-size: 11px; color: #7a8aaa;">
+      <div style="text-align: center; border-top: 1px solid #eef1f8; padding-top: 14px; font-size: 11px; color: #7a8aaa;">
         Thank you for choosing Quick Freelancing Agency
       </div>
     </div>`;
