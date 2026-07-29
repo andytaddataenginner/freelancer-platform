@@ -21,7 +21,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
     const rateType = clientRow.rate_type || 'hourly';
     const creditBalance = parseFloat(clientRow.credit_balance || 0);
 
-    // Handle Fixed-Rate Clients
+    // Fixed-Rate Logic
     if (rateType === 'fixed') {
       const fixedPaymentsRes = await pool.query(
         `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
@@ -38,16 +38,20 @@ router.get('/stats', requireClient, async (req, res, next) => {
       });
 
       return res.json({
+        rate_type: 'fixed',
         rateType: 'fixed',
-        fixedPrice: parseFloat(clientRow.fixed_price || 0),
-        creditBalance: creditBalance,
+        fixed_price: parseFloat(clientRow.fixed_price || 0),
+        credit_balance: creditBalance,
+        total_paid: totalPaid,
+        total_unpaid: totalUnpaid,
         totalPaid: totalPaid,
         totalUnpaid: totalUnpaid,
-        hourlyRate: 0
+        total_hours: 0,
+        hourly_rate: 0
       });
     }
 
-    // Handle Hourly Clients
+    // Hourly Logic
     const hourlyLogsRes = await pool.query(
       `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`,
       [userId]
@@ -69,12 +73,15 @@ router.get('/stats', requireClient, async (req, res, next) => {
     });
 
     res.json({
+      rate_type: 'hourly',
       rateType: 'hourly',
-      hourlyRate: parseFloat(clientRow.hourly_rate || 0),
-      creditBalance: creditBalance,
+      hourly_rate: parseFloat(clientRow.hourly_rate || 0),
+      credit_balance: creditBalance,
+      total_paid: totalPaid,
+      total_unpaid: totalUnpaid,
       totalPaid: totalPaid,
       totalUnpaid: totalUnpaid,
-      totalHours: totalHours
+      total_hours: totalHours
     });
 
   } catch (e) {
@@ -98,10 +105,10 @@ router.get('/timelogs', requireClient, async (req, res, next) => {
 
     const rateType = clientInfo.rows[0].rate_type || 'hourly';
 
-    // If fixed-rate, pull records from fixed_monthly_payments mapped cleanly for the frontend UI table
+    // Fixed-Rate logs mapping to match table column expectations
     if (rateType === 'fixed') {
       const { rows } = await pool.query(
-        `SELECT id, client_id, month AS date, amount, status AS payment_status, 'Fixed Milestone' AS task_description, 0 AS hours 
+        `SELECT id, client_id, month AS date, amount, status AS payment_status, 'Fixed Monthly Payment' AS task_description, 0 AS hours 
          FROM fixed_monthly_payments 
          WHERE client_id = $1 
          ORDER BY month DESC`,
@@ -110,7 +117,7 @@ router.get('/timelogs', requireClient, async (req, res, next) => {
       return res.json(rows);
     }
 
-    // Otherwise, pull regular time logs
+    // Hourly logs
     const { rows } = await pool.query(
       `SELECT * FROM time_logs 
        WHERE client_id = $1 
