@@ -12,6 +12,87 @@ router.get('/public', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// GET /api/client/stats — Portal stats endpoint for logged-in clients (handles both hourly and fixed rates)
+router.get('/client/stats', async (req, res, next) => {
+  try {
+    const clientId = req.user.id;
+
+    // 1. Fetch client details including rate type, fixed price, and credit balance
+    const clientRes = await pool.query(
+      `SELECT id, user_id, rate_type, hourly_rate, fixed_price, credit_balance, total_paid 
+       FROM clients WHERE user_id = $1 OR id = $1`,
+      [clientId]
+    );
+
+    if (clientRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Client record not found' });
+    }
+
+    const clientRow = clientRes.rows[0];
+    const rateType = clientRow.rate_type || 'hourly';
+    const creditBalance = parseFloat(clientRow.credit_balance || 0);
+
+    // 2. Handle Fixed-Rate Clients
+    if (rateType === 'fixed') {
+      const fixedPaymentsRes = await pool.query(
+        `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
+        [clientRow.id || clientId]
+      );
+
+      let totalPaid = 0;
+      let totalUnpaid = 0;
+
+      fixedPaymentsRes.rows.forEach(p => {
+        const amt = parseFloat(p.amount || 0);
+        if (p.status === 'paid') totalPaid += amt;
+        else totalUnpaid += amt;
+      });
+
+      return res.json({
+        rateType: 'fixed',
+        fixedPrice: parseFloat(clientRow.fixed_price || 0),
+        creditBalance: creditBalance,
+        totalPaid: totalPaid,
+        totalUnpaid: totalUnpaid,
+        hourlyRate: 0
+      });
+    }
+
+    // 3. Handle Hourly Clients
+    const hourlyLogsRes = await pool.query(
+      `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1 OR client_id = $2`,
+      [clientId, clientRow.id]
+    );
+
+    let totalPaid = 0;
+    let totalUnpaid = 0;
+    let totalHours = 0;
+
+    hourlyLogsRes.rows.forEach(l => {
+      const h = parseFloat(l.hours || 0);
+      const amt = parseFloat(l.amount || (h * (clientRow.hourly_rate || 0)));
+      totalHours += h;
+      if (l.payment_status === 'paid') {
+        totalPaid += amt;
+      } else {
+        totalUnpaid += amt;
+      }
+    });
+
+    res.json({
+      rateType: 'hourly',
+      hourlyRate: parseFloat(clientRow.hourly_rate || 0),
+      creditBalance: creditBalance,
+      totalPaid: totalPaid,
+      totalUnpaid: totalUnpaid,
+      totalHours: totalHours
+    });
+
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.get('/freelancer', requireFreelancer, async (req, res, next) => {
   try {
     const freelancerId = req.user.id;
