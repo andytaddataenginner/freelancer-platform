@@ -3,27 +3,45 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Work Logs — YourName</title>
+  <title>My Work Logs — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
-    /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    /* ── FLEX LAYOUT STABILITY ── */
-    .dashboard { display: flex; min-height: 100vh; background: #f8fafc; font-family: 'DM Sans', sans-serif; }
+
+    :root{
+      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
+      --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
+      --bg:#f4f6fb;--bg2:#eef1f8;--card-bg:#ffffff;
+      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;--red:#b91c1c;--rbg:#fee2e2;
+      --info:#4338ca;--info-bg:#e0e7ff;
+      --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
+      --r:10px;--sh:0 1px 3px rgba(0,0,0,.05);
+      --table-hover:var(--bg);
+    }
+    [data-theme="dark"]{
+      --navy:#1e293b;--navy2:#334155;--accent:#3b82f6;--gold:#d97706;--gold2:#fbbf24;
+      --ink:#f8fafc;--ink2:#cbd5e1;--ink3:#94a3b8;
+      --bg:#090d16;--bg2:#1e293b;--card-bg:#111827;
+      --green:#4ade80;--gbg:rgba(22,101,52,.4);--amber:#fbbf24;--abg:rgba(146,64,14,.4);--red:#f87171;--rbg:rgba(185,28,28,.4);
+      --info:#a5b4fc;--info-bg:rgba(67,56,202,.35);
+      --sh:0 2px 20px rgba(0,0,0,.4);
+      --table-hover:#1f2937;
+    }
+
+    .dashboard { display: flex; min-height: 100vh; background: var(--bg); font-family: var(--sans); color:var(--ink); transition:background .3s ease,color .3s ease; }
 
     /* ── FIXED DESKTOP SIDEBAR ── */
     .sidebar {
-      width: 240px !important; 
-      background: #0d2353 !important; 
+      width: 240px !important;
+      background: var(--navy) !important;
       position: fixed !important;
-      top: 0 !important; left: 0 !important; height: 100vh !important; 
-      display: flex !important; flex-direction: column !important; 
+      top: 0 !important; left: 0 !important; height: 100vh !important;
+      display: flex !important; flex-direction: column !important;
       z-index: 150 !important;
       transform: translateX(0);
-      transition: transform 0.3s ease-in-out !important;
+      transition: transform 0.3s ease-in-out, background .3s ease !important;
     }
     .sidebar-brand {
       padding: 1.2rem 1.5rem !important;
@@ -31,7 +49,7 @@
       display: flex !important; align-items: center !important; gap: 0.7rem !important;
       flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
     }
-    .sidebar-nav { 
+    .sidebar-nav {
       flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
       display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
     }
@@ -44,17 +62,17 @@
       justify-content: flex-start !important;
     }
     .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
-    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: #f5c842 !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: var(--gold2) !important; }
 
-    .sidebar-user { 
-      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
+    .sidebar-user {
+      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important;
       font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
     }
 
     /* ── MOBILE HEADER BAR ── */
     .mobile-header {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: #0d2353; padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
+      background: var(--navy); padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
       box-shadow: 0 2px 12px rgba(13,35,83,0.2);
     }
     .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
@@ -65,51 +83,55 @@
       width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    
+
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
     /* ── RESPONSIVE MAIN CONTAINER ── */
     .main-content { margin-left: 240px; flex: 1; padding: 2.5rem 2rem; position: relative; }
 
-    /* ── FANCY HEADER DESIGN ── */
+    /* ── THEME TOGGLE ── */
+    .theme-toggle{
+      background:var(--bg2); border:1px solid rgba(13,35,83,.1);
+      color:var(--ink); width:38px; height:38px; border-radius:50%;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:1.05rem; transition:all .2s; flex-shrink:0;
+    }
+    .theme-toggle:hover{ background:var(--accent); color:#fff; }
+    .mobile-header .theme-toggle{ background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.2); color:#fff; }
+    .mobile-header .theme-toggle:hover{ background:rgba(255,255,255,.25); }
+
+    /* ── HEADER ── */
     .header-container {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 2rem;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--bg2);
       padding-bottom: 1.5rem;
       flex-wrap: wrap;
       gap: 1.5rem;
     }
     .title-group h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 2.2rem;
-      color: #0d2353;
-      font-weight: 400;
+      font-family: var(--serif);
+      font-size: 2.1rem;
+      color: var(--ink);
+      font-weight: 700;
       line-height: 1.1;
       display: flex;
       align-items: center;
       gap: 0.5rem;
       flex-wrap: wrap;
     }
-    .title-group p {
-      color: #64748b;
-      font-size: 0.95rem;
-      margin-top: 0.4rem;
+    .title-group p { color: var(--ink3); font-size: 0.95rem; margin-top: 0.4rem; }
+
+    .badge-pill{
+      font-family: var(--sans); font-size: 0.8rem; font-weight: 700;
+      padding: 0.25rem 0.75rem; border-radius: 9999px;
+      display: inline-block; vertical-align: middle; margin-left: 0.75rem;
+      transition: background .2s ease, color .2s ease;
     }
-    .period-badge {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      background: #e0e7ff;
-      color: #4338ca;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      display: inline-block;
-      vertical-align: middle;
-      margin-left: 0.75rem;
-    }
+    .badge-pill.info{ background: var(--info-bg); color: var(--info); }
+    .badge-pill.neutral{ background: var(--bg2); color: var(--ink3); }
 
     /* ── UTILITY CONTROLS BAR ── */
     .controls-wrapper {
@@ -124,41 +146,76 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: #ffffff;
+      background: var(--card-bg);
       padding: 0.5rem 1rem;
-      border: 1px solid #cbd5e1;
+      border: 1px solid rgba(13,35,83,.15);
       border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: var(--sh);
+      transition: background .3s ease;
     }
     .fancy-dropdown-box label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #475569;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 0.8rem; font-weight: 700; color: var(--ink2);
+      text-transform: uppercase; letter-spacing: 0.05em;
     }
     .fancy-select {
-      border: 1px solid #e2e8f0;
-      background: #f8fafc;
+      border: 1px solid rgba(13,35,83,.12);
+      background: var(--bg);
       padding: 0.4rem 2rem 0.4rem 0.8rem;
       border-radius: 6px;
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: #0d2353;
-      cursor: pointer;
-      outline: none;
-      appearance: none;
+      font-size: 0.88rem; font-weight: 500; color: var(--ink);
+      cursor: pointer; outline: none; appearance: none;
       background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d2353' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 0.6rem center;
-      background-size: 1em;
-      min-width: 180px;
-      transition: border-color 0.2s;
+      background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 1em;
+      min-width: 180px; transition: border-color 0.2s;
     }
-    .fancy-select:focus {
-      border-color: #1a5cff;
-      background-color: #ffffff;
+    [data-theme="dark"] .fancy-select{
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     }
+    .fancy-select:focus { border-color: var(--accent); }
+
+    /* ── TAB BUTTONS ── */
+    .tab-btn{
+      background:transparent; color:var(--ink2); border:1.5px solid rgba(13,35,83,.15);
+      border-radius:6px; padding:.5rem 1.2rem; cursor:pointer; font-weight:600;
+      font-family:var(--sans); font-size:.85rem; transition:all .15s;
+    }
+    .tab-btn.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+
+    /* ── STAT CARDS ── */
+    .stats-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .stat-card{
+      background:var(--card-bg); padding:1.2rem 1.3rem; border-radius:var(--r);
+      box-shadow:var(--sh); border:1px solid rgba(13,35,83,.05);
+      transition:transform .2s ease, background .3s ease;
+    }
+    .stat-card:hover{ transform:translateY(-2px); }
+    .stat-num{ display:block; font-size:1.6rem; font-weight:700; font-family:var(--serif); }
+    .stat-label{ color:var(--ink3); font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; font-weight:600; display:block; margin-top:.3rem; }
+
+    /* ── CARD / TABLE ── */
+    .card{ background:var(--card-bg); border-radius:var(--r); box-shadow:var(--sh); overflow:hidden; border:1px solid rgba(13,35,83,.08); transition:background .3s ease; }
+    .card-header{ padding:1.2rem; border-bottom:1px solid var(--bg2); background:var(--bg); transition:background .3s ease; }
+    .card-header h3{ color:var(--ink); font-size:1rem; font-weight:700; }
+    table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+    th{ padding:.75rem .9rem; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink3); border-bottom:2px solid var(--bg2); font-weight:700; text-align:left; white-space:nowrap; }
+    td{ padding:.85rem .9rem; border-bottom:1px solid var(--bg2); color:var(--ink2); vertical-align:middle; }
+    tr:last-child td{ border-bottom:none; }
+    tr:hover td{ background:var(--table-hover); }
+    .row-unpaid td{ background:rgba(245,158,11,.06); }
+    #table-footer{ padding:1rem; font-size:.85rem; color:var(--ink2); border-top:1px solid var(--bg2); background:var(--bg); transition:background .3s ease; }
+
+    .badge{ display:inline-block; padding:.2rem .6rem; border-radius:100px; font-size:.75rem; font-weight:700; }
+    .bg-g{ background:var(--gbg); color:var(--green); }
+    .bg-a{ background:var(--abg); color:var(--amber); }
+
+    /* ── FIXED-RATE COMPACT BANNER ── */
+    #fixed-compact-banner{
+      background:var(--card-bg); border:1px solid rgba(13,35,83,.12); border-left:4px solid var(--gold2);
+      padding:.8rem 1.2rem; border-radius:var(--r); margin-bottom:1.5rem;
+      align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;
+      transition:background .3s ease;
+    }
+    #fixed-contract-name, #fixed-contract-amount{ color:var(--ink); }
 
     /* ── MOBILE MEDIA QUERIES ── */
     @media (max-width: 768px) {
@@ -170,7 +227,7 @@
       .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
       .controls-wrapper { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
       .header-container { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-      .period-badge { margin-left: 0; margin-top: 0.5rem; display: block; width: max-content; }
+      .badge-pill { margin-left: 0; margin-top: 0.5rem; display: block; width: max-content; }
     }
     @media (max-width: 480px) {
       .stats-row { grid-template-columns: 1fr !important; }
@@ -184,7 +241,10 @@
     <img src="../QFA_Logo.png" alt="QFA"/>
     <span>QFA Portal</span>
   </div>
-  <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+  <div style="display:flex;align-items:center;gap:.6rem">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+  </div>
 </div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -197,7 +257,7 @@
       </div>
       <div style="line-height:1.2">
         <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
-        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+        <div style="color:var(--gold2);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -208,33 +268,34 @@
     </nav>
     <div class="sidebar-user">
       <strong id="user-name" style="color:white; display:block;">Loading…</strong>
-      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+      <a href="#" onclick="logout()" style="color:var(--gold2);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
     </div>
   </aside>
 
   <main class="main-content">
-    
+
     <div class="header-container">
       <div class="title-group">
-        <h2 id="page-main-title">⏱ My Work Logs <span class="period-badge" id="header-badge">Loading Month…</span></h2>
+        <h2 id="page-main-title">⏱ My Work Logs <span class="badge-pill neutral" id="header-badge">Loading Month…</span></h2>
         <p id="page-subtitle">Track project items, monitor accumulated totals, and verify status payments context scopes.</p>
       </div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" id="page-theme-btn">🌙</button>
     </div>
 
     <!-- Small compact display badge for Fixed Rate clients -->
-    <div id="fixed-compact-banner" style="display:none; background:#ffffff; border:1px solid #cbd5e1; border-left:4px solid #f5c842; padding:0.8rem 1.2rem; border-radius:8px; margin-bottom:1.5rem; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+    <div id="fixed-compact-banner" style="display:none;">
       <div style="display:flex; align-items:center; gap:0.8rem;">
-        <span style="background:#fef3c7; color:#b45309; font-size:0.75rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:100px; text-transform:uppercase;">Fixed-Rate Contract</span>
-        <span style="font-size:0.95rem; font-weight:700; color:#0d2353;" id="fixed-contract-name">Milestone Agreement</span>
+        <span class="badge bg-a" style="text-transform:uppercase;">Fixed-Rate Contract</span>
+        <span style="font-size:0.95rem; font-weight:700;" id="fixed-contract-name">Milestone Agreement</span>
       </div>
-      <div style="font-size:0.95rem; font-weight:700; color:#0d2353;" id="fixed-contract-amount">$0.00</div>
+      <div style="font-size:0.95rem; font-weight:700;" id="fixed-contract-amount">$0.00</div>
     </div>
 
     <div class="controls-wrapper">
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
-        <button class="btn-sm" id="tab-all"     onclick="switchTab('all')"     style="background:#0d2353;color:white;border:none;border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-weight:500;">All Items</button>
-        <button class="btn-sm" id="tab-unpaid" onclick="switchTab('unpaid')" style="background:transparent;color:#475569;border:1px solid #cbd5e1;border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-weight:500;">⚠ Unpaid</button>
-        <button class="btn-sm" id="tab-paid"   onclick="switchTab('paid')"   style="background:transparent;color:#475569;border:1px solid #cbd5e1;border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-weight:500;">✓ Paid</button>
+        <button class="tab-btn active" id="tab-all"    onclick="switchTab('all')">All Items</button>
+        <button class="tab-btn"        id="tab-unpaid" onclick="switchTab('unpaid')">⚠ Unpaid</button>
+        <button class="tab-btn"        id="tab-paid"   onclick="switchTab('paid')">✓ Paid</button>
       </div>
 
       <div class="fancy-dropdown-box">
@@ -245,28 +306,28 @@
       </div>
     </div>
 
-    <div class="stats-row" style="margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
-      <div class="stat-card" style="background:#fff; padding:1.2rem; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border-left:4px solid #1a6640">
-        <span class="stat-num" id="s-paid" style="color:#1a6640; display:block; font-size:1.6rem; font-weight:700;">$--</span>
-        <span class="stat-label" id="lbl-paid" style="color:#64748b; font-size:0.8rem; text-transform:uppercase; font-weight:500;">Total paid</span>
+    <div class="stats-row">
+      <div class="stat-card" style="border-left:4px solid #22c55e">
+        <span class="stat-num" id="s-paid" style="color:var(--green)">$--</span>
+        <span class="stat-label" id="lbl-paid">Total paid</span>
       </div>
-      <div class="stat-card" style="background:#fff; padding:1.2rem; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border-left:4px solid #92400e">
-        <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.6rem; font-weight:700;">$--</span>
-        <span class="stat-label" id="lbl-unpaid" style="color:#64748b; font-size:0.8rem; text-transform:uppercase; font-weight:500;">Outstanding balance</span>
+      <div class="stat-card" style="border-left:4px solid #f59e0b">
+        <span class="stat-num" id="s-unpaid" style="color:var(--amber)">$--</span>
+        <span class="stat-label" id="lbl-unpaid">Outstanding balance</span>
       </div>
-      <div class="stat-card" id="card-hours-container" style="background:#fff; padding:1.2rem; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border-left:4px solid #1a5cff">
-        <span class="stat-num" id="s-hours" style="color:#1a5cff; display:block; font-size:1.6rem; font-weight:700;">—</span>
-        <span class="stat-label" id="lbl-hours" style="color:#64748b; font-size:0.8rem; text-transform:uppercase; font-weight:500;">Total hours</span>
+      <div class="stat-card" id="card-hours-container" style="border-left:4px solid #3b82f6">
+        <span class="stat-num" id="s-hours" style="color:var(--accent)">—</span>
+        <span class="stat-label" id="lbl-hours">Total hours</span>
       </div>
-      <div class="stat-card" style="background:#fff; padding:1.2rem; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border-left:4px solid #64748b">
-        <span class="stat-num" id="s-entries" style="color:#334155; display:block; font-size:1.6rem; font-weight:700;">—</span>
-        <span class="stat-label" id="lbl-entries" style="color:#64748b; font-size:0.8rem; text-transform:uppercase; font-weight:500;">Log entries</span>
+      <div class="stat-card" style="border-left:4px solid #94a3b8">
+        <span class="stat-num" id="s-entries" style="color:var(--ink)">—</span>
+        <span class="stat-label" id="lbl-entries">Log entries</span>
       </div>
     </div>
 
-    <div class="card" style="background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); overflow:hidden; border:1px solid #e2e8f0;">
-      <div class="card-header" style="padding:1.2rem; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
-        <h3 id="table-title" style="color:#0d2353; font-size:1rem; font-weight:700;">All Work Logs</h3>
+    <div class="card">
+      <div class="card-header">
+        <h3 id="table-title">All Work Logs</h3>
       </div>
       <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table>
@@ -280,11 +341,11 @@
             </tr>
           </thead>
           <tbody id="logs-table">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:#64748b">Loading…</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
           </tbody>
         </table>
       </div>
-      <div id="table-footer" style="padding:1rem;font-size:0.85rem;color:#475569;border-top:1px solid #e2e8f0; background:#f8fafc;"></div>
+      <div id="table-footer"></div>
     </div>
   </main>
 </div>
@@ -298,6 +359,25 @@ const auth = {
   isLoggedIn: () => !!localStorage.getItem('token'),
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
+
+/* ── Theme ── */
+function initTheme(){
+  const saved = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeButtons(saved);
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+  updateThemeButtons(next);
+}
+function updateThemeButtons(theme){
+  const icon = theme==='dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(b=>b.textContent=icon);
+}
+initTheme();
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
@@ -326,19 +406,17 @@ async function loadLogs() {
       apiFetch('/client/stats'),
       apiFetch('/client/timelogs?limit=500')
     ]);
-    
+
     clientStats = stats || {};
     isFixedClient = clientStats.rateType === 'fixed';
     allLogs = logs || [];
 
-    // Customize UI labels and elements for Fixed Rate vs Hourly Rate
     if (isFixedClient) {
       document.getElementById('sidebar-logs-link').textContent = '📋 My Milestones';
-      document.getElementById('page-main-title').innerHTML = `📋 My Project Milestones <span class="period-badge" id="header-badge">Loading Month…</span>`;
+      document.getElementById('page-main-title').innerHTML = `📋 My Project Milestones <span class="badge-pill neutral" id="header-badge">Loading Month…</span>`;
       document.getElementById('page-subtitle').textContent = 'Track milestone phases, verify contract milestones, and review periodic payments.';
       document.getElementById('table-title').textContent = 'All Milestone Deliverables';
-      
-      // Update table columns header for fixed client
+
       document.getElementById('table-header-row').innerHTML = `
         <th>Date</th>
         <th>Milestone / Phase</th>
@@ -347,10 +425,8 @@ async function loadLogs() {
         <th>Description</th>
       `;
 
-      // Hide total hours card for fixed rate clients
       document.getElementById('card-hours-container').style.display = 'none';
 
-      // Show small compact fixed rate banner
       const banner = document.getElementById('fixed-compact-banner');
       banner.style.display = 'flex';
       document.getElementById('fixed-contract-name').textContent = clientStats.projectName || clientStats.company || 'Fixed Price Agreement';
@@ -359,33 +435,27 @@ async function loadLogs() {
 
     buildDropdownOptions();
     applyFilters();
-  } catch(e) { 
+  } catch(e) {
     console.error(e);
-    document.getElementById('logs-table').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:#b91c1c">Failed to load system log items.</td></tr>`;
+    document.getElementById('logs-table').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--red)">Failed to load system log items.</td></tr>`;
   }
 }
 
-// Dynamically extract all available months/years from log payload entries or creation dates
 function buildDropdownOptions() {
   const dropdown = document.getElementById('month-dropdown');
   const monthsSet = new Set();
 
   allLogs.forEach(l => {
     const dateStr = l.date || l.createdAt;
-    if (dateStr && dateStr.length >= 7) {
-      monthsSet.add(dateStr.slice(0, 7)); // Extracts YYYY-MM
-    }
+    if (dateStr && dateStr.length >= 7) monthsSet.add(dateStr.slice(0, 7));
   });
 
-  // If fixed client has no logs, include client's creation/update month
   if (monthsSet.size === 0 && isFixedClient && (clientStats.createdAt || clientStats.updatedAt)) {
     const dStr = clientStats.updatedAt || clientStats.createdAt;
     monthsSet.add(dStr.slice(0, 7));
   }
 
-  // Sort months downwardly (Latest Month first)
   const sortedMonths = Array.from(monthsSet).sort().reverse();
-  
   const currentMonthStr = new Date().toISOString().slice(0, 7);
   let initialSelection = '';
 
@@ -396,72 +466,53 @@ function buildDropdownOptions() {
     option.value = m;
     option.textContent = label;
     dropdown.appendChild(option);
-
-    if (m === currentMonthStr) {
-      initialSelection = m;
-    }
+    if (m === currentMonthStr) initialSelection = m;
   });
 
-  // Default dropdown choice selection prioritizes current calendar month if present
-  if (initialSelection) {
-    dropdown.value = initialSelection;
-  } else if (sortedMonths.length > 0) {
-    dropdown.value = sortedMonths[0]; // Otherwise fallback to latest log month entry available
-  } else {
-    dropdown.value = ''; // fallback completely to Show All
-  }
+  if (initialSelection) dropdown.value = initialSelection;
+  else if (sortedMonths.length > 0) dropdown.value = sortedMonths[0];
+  else dropdown.value = '';
 }
 
 function applyFilters() {
   const dropdown = document.getElementById('month-dropdown');
   const selectedMonth = dropdown.value;
-  
+  const badge = document.getElementById('header-badge');
+
   let targetLogs = allLogs;
-  
+
   if (selectedMonth) {
     const localizedMonth = dropdown.options[dropdown.selectedIndex].text;
-    document.getElementById('header-badge').textContent = localizedMonth;
-    document.getElementById('header-badge').style.background = '#e0e7ff';
-    document.getElementById('header-badge').style.color = '#4338ca';
-    
+    badge.textContent = localizedMonth;
+    badge.classList.remove('neutral'); badge.classList.add('info');
+
     targetLogs = allLogs.filter(l => {
       const dStr = l.date || l.createdAt || '';
       return dStr.startsWith(selectedMonth);
     });
-    
+
     document.getElementById('lbl-paid').textContent = 'Paid (' + localizedMonth + ')';
     document.getElementById('lbl-unpaid').textContent = 'Outstanding (' + localizedMonth + ')';
-    if (!isFixedClient) {
-      document.getElementById('lbl-hours').textContent = 'Hours (' + localizedMonth + ')';
-    }
+    if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Hours (' + localizedMonth + ')';
     document.getElementById('lbl-entries').textContent = (isFixedClient ? 'Milestones (' : 'Entries (') + localizedMonth + ')';
   } else {
-    document.getElementById('header-badge').textContent = 'All Historical Logs';
-    document.getElementById('header-badge').style.background = '#f1f5f9';
-    document.getElementById('header-badge').style.color = '#475569';
-    
+    badge.textContent = 'All Historical Logs';
+    badge.classList.remove('info'); badge.classList.add('neutral');
+
     document.getElementById('lbl-paid').textContent = 'Total paid';
     document.getElementById('lbl-unpaid').textContent = 'Outstanding balance';
-    if (!isFixedClient) {
-      document.getElementById('lbl-hours').textContent = 'Total hours';
-    }
+    if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Total hours';
     document.getElementById('lbl-entries').textContent = isFixedClient ? 'Total milestones' : 'Log entries';
   }
 
-  // Calculate parameters dynamically over array filter subset runtime
   let monthPaid = 0, monthUnpaid = 0, monthHours = 0;
   targetLogs.forEach(l => {
     const amt = parseFloat(l.amount || 0);
     const hrs = parseFloat(l.hours || 0);
     monthHours += hrs;
-    if (l.payment_status === 'paid') {
-      monthPaid += amt;
-    } else {
-      monthUnpaid += amt;
-    }
+    if (l.payment_status === 'paid') monthPaid += amt; else monthUnpaid += amt;
   });
 
-  // If fixed client has no specific log rows for the month, reflect account aggregate or fixed contract breakdown accurately
   if (isFixedClient && targetLogs.length === 0 && !selectedMonth) {
     monthPaid = parseFloat(clientStats.totalPaid || 0);
     monthUnpaid = parseFloat(clientStats.totalUnpaid || 0);
@@ -469,9 +520,7 @@ function applyFilters() {
 
   document.getElementById('s-paid').textContent = '$' + monthPaid.toFixed(2);
   document.getElementById('s-unpaid').textContent = '$' + monthUnpaid.toFixed(2);
-  if (!isFixedClient) {
-    document.getElementById('s-hours').textContent = monthHours.toFixed(1) + 'h';
-  }
+  if (!isFixedClient) document.getElementById('s-hours').textContent = monthHours.toFixed(1) + 'h';
   document.getElementById('s-entries').textContent = targetLogs.length > 0 ? targetLogs.length : (isFixedClient ? 1 : 0);
 
   const filteredByTab = currentTab === 'all' ? targetLogs : targetLogs.filter(l => l.payment_status === currentTab);
@@ -481,18 +530,14 @@ function applyFilters() {
 function switchTab(tab) {
   currentTab = tab;
   ['all','unpaid','paid'].forEach(t => {
-    const btn = document.getElementById('tab-' + t);
-    btn.style.background = t === tab ? '#0d2353' : 'transparent';
-    btn.style.color      = t === tab ? 'white'       : '#475569';
-    btn.style.border     = t === tab ? 'none'        : '1px solid #cbd5e1';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
-  
-  const titles = isFixedClient ? 
+
+  const titles = isFixedClient ?
     { all: 'All Milestone Deliverables', unpaid: '⚠ Unpaid Milestones', paid: '✓ Paid Milestones' } :
     { all: 'All Work Logs', unpaid: '⚠ Unpaid Logs', paid: '✓ Paid Logs' };
-    
+
   document.getElementById('table-title').textContent = titles[tab];
-  
   applyFilters();
 }
 
@@ -502,18 +547,14 @@ function renderLogs(logs) {
   const isFiltered = !!document.getElementById('month-dropdown').value;
 
   if (!logs.length) {
-    // If fixed client has no separate itemized logs, display the overall contract milestone summary row gracefully
     if (isFixedClient) {
       const contractAmt = parseFloat(clientStats.fixedPrice || 0);
       const isPaid = (clientStats.totalPaid || 0) >= contractAmt;
-      const badge = isPaid
-        ? '<span class="badge badge-green" style="background:#dcfce7;color:#166534;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.75rem;font-weight:700;">✓ Paid</span>'
-        : '<span class="badge badge-amber" style="background:#fef3c7;color:#92400e;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.75rem;font-weight:700;">⚠ Unpaid</span>';
-      
+      const badge = isPaid ? '<span class="badge bg-g">✓ Paid</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
       const dateVal = clientStats.createdAt ? new Date(clientStats.createdAt).toLocaleDateString() : 'Current Period';
-      
+
       tbody.innerHTML = `
-        <tr style="${!isPaid ? 'background:rgba(255,200,100,0.03)' : ''}">
+        <tr class="${!isPaid?'row-unpaid':''}">
           <td>${dateVal}</td>
           <td><strong>Fixed Price Contract Agreement</strong></td>
           <td><strong>$${contractAmt.toFixed(2)}</strong></td>
@@ -528,8 +569,8 @@ function renderLogs(logs) {
     if (currentTab === 'unpaid') msg = 'No unpaid logs — all settled! ✓';
     else if (currentTab === 'paid') msg = 'No paid logs found.';
     else if (isFiltered) msg = 'No work entry logs tracked during this selected statement period.';
-    
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:#64748b">${msg}</td></tr>`;
+
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">${msg}</td></tr>`;
     footer.textContent = '';
     return;
   }
@@ -542,17 +583,15 @@ function renderLogs(logs) {
     sumHours  += hrs;
     sumAmount += amount;
 
-    const badge = isPaid
-      ? '<span class="badge badge-green" style="background:#dcfce7;color:#166534;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.75rem;font-weight:700;">✓ Paid</span>'
-      : '<span class="badge badge-amber" style="background:#fef3c7;color:#92400e;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.75rem;font-weight:700;">⚠ Unpaid</span>';
-
+    const badge = isPaid ? '<span class="badge bg-g">✓ Paid</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
     const dateStr = l.date || l.createdAt;
     const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString() : '—';
     const desc = l.task_description || l.title || l.description || 'Milestone deliverable item';
+    const rowClass = !isPaid ? 'row-unpaid' : '';
 
     if (isFixedClient) {
       return `
-        <tr style="${!isPaid ? 'background:rgba(255,200,100,0.03)' : ''}">
+        <tr class="${rowClass}">
           <td>${formattedDate}</td>
           <td><strong>${l.title || 'Milestone Phase'}</strong></td>
           <td>${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
@@ -561,7 +600,7 @@ function renderLogs(logs) {
         </tr>`;
     } else {
       return `
-        <tr style="${!isPaid ? 'background:rgba(255,200,100,0.03)' : ''}">
+        <tr class="${rowClass}">
           <td>${formattedDate}</td>
           <td><strong>${hrs}h</strong></td>
           <td>${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
