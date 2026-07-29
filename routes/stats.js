@@ -12,16 +12,15 @@ router.get('/public', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// GET /api/client/stats — Portal stats endpoint for logged-in clients (handles both hourly and fixed rates)
+// GET /api/client/stats — Portal stats endpoint for logged-in clients
 router.get('/client/stats', async (req, res, next) => {
   try {
-    const clientId = req.user.id;
+    const userId = req.user.id;
 
-    // 1. Fetch client details including rate type, fixed price, and credit balance
     const clientRes = await pool.query(
       `SELECT id, user_id, rate_type, hourly_rate, fixed_price, credit_balance, total_paid 
-       FROM clients WHERE user_id = $1 OR id = $1`,
-      [clientId]
+       FROM clients WHERE user_id = $1`,
+      [userId]
     );
 
     if (clientRes.rows.length === 0) {
@@ -32,11 +31,10 @@ router.get('/client/stats', async (req, res, next) => {
     const rateType = clientRow.rate_type || 'hourly';
     const creditBalance = parseFloat(clientRow.credit_balance || 0);
 
-    // 2. Handle Fixed-Rate Clients
     if (rateType === 'fixed') {
       const fixedPaymentsRes = await pool.query(
         `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
-        [clientRow.id || clientId]
+        [userId]
       );
 
       let totalPaid = 0;
@@ -58,10 +56,9 @@ router.get('/client/stats', async (req, res, next) => {
       });
     }
 
-    // 3. Handle Hourly Clients
     const hourlyLogsRes = await pool.query(
-      `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1 OR client_id = $2`,
-      [clientId, clientRow.id]
+      `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`,
+      [userId]
     );
 
     let totalPaid = 0;
@@ -113,7 +110,6 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
-    // ── Auto-generate fixed monthly records for this month ────
     await pool.query(`
       INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
       SELECT u.id, c.freelancer_id, $1, c.fixed_price, 'unpaid'
@@ -125,7 +121,6 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       ON CONFLICT (client_id, month) DO NOTHING
     `, [currentMonth, freelancerId]);
 
-    // ── Hourly stats from time_logs ───────────────────────────
     const [hours, tasks, hourlyEarned, hourlyUnpaid, monthClients, bookings] = await Promise.all([
       pool.query(`SELECT COALESCE(SUM(hours),0)::float AS h FROM time_logs WHERE freelancer_id=$1 AND date>=$2::date AND date<=$3::date`, [freelancerId, firstOfMonth, lastOfMonth]),
       pool.query(`SELECT COUNT(*)::int AS cnt FROM time_logs WHERE freelancer_id=$1 AND date>=$2::date AND date<=$3::date`, [freelancerId, firstOfMonth, lastOfMonth]),
@@ -135,7 +130,6 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       pool.query(`SELECT COUNT(*)::int AS cnt FROM bookings WHERE freelancer_id=$1 AND date>=NOW()::date AND status!='cancelled'`, [freelancerId]),
     ]);
 
-    // ── Fixed monthly payments for THIS month ─────────────────
     const fixedMonthly = await pool.query(`
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_monthly_payments f
@@ -147,7 +141,6 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
     const fixedPaid   = fixedMonthly.rows.filter(r => r.status === 'paid').reduce((s,r) => s + parseFloat(r.amount), 0);
     const fixedUnpaid = fixedMonthly.rows.filter(r => r.status === 'unpaid').reduce((s,r) => s + parseFloat(r.amount), 0);
 
-    // ── Totals ────────────────────────────────────────────────
     const totalEarned   = parseFloat(hourlyEarned.rows[0].total) + fixedPaid;
     const totalUnpaid   = parseFloat(hourlyUnpaid.rows[0].total) + fixedUnpaid;
     const totalExpected = (totalEarned + totalUnpaid).toFixed(2);
@@ -155,7 +148,6 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
     const allClients   = await pool.query(`SELECT COUNT(*)::int AS cnt FROM clients WHERE freelancer_id=$1`, [freelancerId]);
     const clientsCount = monthClients.rows[0].cnt + fixedMonthly.rows.length;
 
-    // ── Client breakdown ──────────────────────────────────────
     const hourlyBreakdown = await pool.query(`
       SELECT u.name AS client_name, u.company, 'hourly' AS rate_type,
              COALESCE(SUM(t.hours),0)::float AS hours,
@@ -169,7 +161,6 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       ORDER BY total DESC
     `, [freelancerId, firstOfMonth, lastOfMonth]);
 
-    // Fixed breakdown — one row per fixed client this month
     const fixedBreakdown = fixedMonthly.rows.map(r => ({
       client_name: r.client_name,
       company:     r.client_company,
@@ -199,7 +190,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       clientsThisMonth: clientsCount,
       upcomingBookings: bookings.rows[0].cnt,
       clientBreakdown,
-      fixedMonthlyRecords: fixedMonthly.rows  // raw fixed records for UI
+      fixedMonthlyRecords: fixedMonthly.rows
     });
 
   } catch (e) { console.error('Stats error:', e); next(e); }
