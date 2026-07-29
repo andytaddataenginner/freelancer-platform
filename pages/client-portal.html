@@ -10,18 +10,38 @@
   <style>
     /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root{
+      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
+      --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
+      --bg:#f4f6fb;--bg2:#eef1f8;--card-bg:#ffffff;
+      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;--red:#b91c1c;--rbg:#fee2e2;
+      --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
+      --r:14px;--sh:0 2px 20px rgba(13,35,83,.08);
+      --table-hover:var(--bg);
+    }
+    [data-theme="dark"]{
+      --navy:#1e293b;--navy2:#334155;--accent:#3b82f6;--gold:#d97706;--gold2:#fbbf24;
+      --ink:#f8fafc;--ink2:#cbd5e1;--ink3:#94a3b8;
+      --bg:#090d16;--bg2:#1e293b;--card-bg:#111827;
+      --green:#4ade80;--gbg:rgba(22,101,52,.4);--amber:#fbbf24;--abg:rgba(146,64,14,.4);--red:#f87171;--rbg:rgba(185,28,28,.4);
+      --sh:0 2px 20px rgba(0,0,0,.4);
+      --table-hover:#1f2937;
+    }
+
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);transition:background .3s ease,color .3s ease;}
     .dashboard { display: flex; min-height: 100vh; }
 
     /* ── FIXED DESKTOP SIDEBAR ── */
     .sidebar {
-      width: 240px !important; 
-      background: #0d2353 !important; 
+      width: 240px !important;
+      background: var(--navy) !important;
       position: fixed !important;
-      top: 0 !important; left: 0 !important; height: 100vh !important; 
-      display: flex !important; flex-direction: column !important; 
+      top: 0 !important; left: 0 !important; height: 100vh !important;
+      display: flex !important; flex-direction: column !important;
       z-index: 150 !important;
       transform: translateX(0);
-      transition: transform 0.3s ease-in-out !important;
+      transition: transform 0.3s ease-in-out, background .3s ease !important;
     }
     .sidebar-brand {
       padding: 1.2rem 1.5rem !important;
@@ -29,7 +49,7 @@
       display: flex !important; align-items: center !important; gap: 0.7rem !important;
       flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
     }
-    .sidebar-nav { 
+    .sidebar-nav {
       flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
       display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
     }
@@ -42,16 +62,16 @@
       justify-content: flex-start !important;
     }
     .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
-    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: #f5c842 !important; }
-    .sidebar-user { 
-      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
+    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: var(--gold2) !important; }
+    .sidebar-user {
+      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important;
       font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
     }
 
     /* ── MOBILE HEADER BAR ── */
     .mobile-header {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: #0d2353; padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
+      background: var(--navy); padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
       box-shadow: 0 2px 12px rgba(13,35,83,0.2);
     }
     .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
@@ -62,12 +82,67 @@
       width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-      
+
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
     /* ── RESPONSIVE MAIN CONTAINER ── */
     .main-content { margin-left: 240px; flex: 1; padding: 2rem; position: relative; }
     .booking-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    /* ── THEME TOGGLE ── */
+    .theme-toggle{
+      background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+      color:#fff; width:38px; height:38px; border-radius:50%;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:1.05rem; transition:all .2s; flex-shrink:0;
+    }
+    .theme-toggle:hover{ background:rgba(255,255,255,.25); }
+
+    /* ── CARD / TABLE SYSTEM ── */
+    .card{background:var(--card-bg);border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);margin-bottom:1.2rem;transition:background .3s ease;}
+    .card-header{padding:1rem 1.4rem;border-bottom:1px solid var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+    .card-header h3{font-size:.9rem;font-weight:700;color:var(--ink)}
+    .cb{padding:1.2rem 1.4rem}
+    table{width:100%;border-collapse:collapse;font-size:.85rem}
+    th{padding:.7rem .9rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.8rem .9rem;border-bottom:1px solid var(--bg2);color:var(--ink2);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--table-hover)}
+    .row-unpaid td{background:rgba(245,158,11,.06)}
+    .badge{display:inline-block;padding:.2rem .65rem;border-radius:100px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+    .bg-g{background:var(--gbg);color:var(--green)}
+    .bg-a{background:var(--abg);color:var(--amber)}
+    .bg-gray{background:var(--bg2);color:var(--ink3)}
+
+    /* ── STAT CARDS ── */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+    .stat-card{background:var(--card-bg);border-radius:var(--r);padding:1.1rem 1.3rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);transition:transform .2s ease,background .3s ease;position:relative;overflow:hidden}
+    .stat-card:hover{transform:translateY(-2px)}
+    .stat-num{font-family:var(--serif);font-size:1.5rem;font-weight:700;display:block;color:var(--ink);line-height:1}
+    .stat-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-top:.4rem;display:block}
+
+    /* ── BUTTONS / FORMS ── */
+    .btn{padding:.6rem 1.2rem;border-radius:8px;font-family:var(--sans);font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
+    .btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--accent)}
+    .btn-p:disabled{opacity:.6;cursor:default}
+    .fg{display:flex;flex-direction:column;gap:.35rem}
+    .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+    input,select,textarea{width:100%;padding:.65rem .85rem;border:1.5px solid rgba(13,35,83,.12);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--ink);transition:border-color .2s}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,92,255,.08)}
+    .fs{font-size:.8rem}
+    .fs.ok{color:var(--green)}.fs.er{color:var(--red)}
+
+    /* ── FILTER CHIPS / TABS ── */
+    .chip{padding:.4rem .95rem;border-radius:100px;border:1.5px solid rgba(13,35,83,.15);background:transparent;color:var(--ink2);font-family:var(--sans);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
+    .chip:hover{border-color:var(--navy)}
+    .chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+    .tab-btn{padding:.5rem 1.2rem;border-radius:6px;border:1.5px solid rgba(13,35,83,.15);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.85rem;font-weight:600;color:var(--ink2);transition:all .15s}
+    .tab-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+    /* ── PERIODIC BREAKDOWN CARDS ── */
+    .period-card{background:var(--bg);border:1px solid rgba(13,35,83,.08);border-radius:10px;padding:1rem}
+    .period-card .ph{font-weight:600;font-size:.9rem;color:var(--ink);border-bottom:1px solid var(--bg2);padding-bottom:.4rem;margin-bottom:.6rem;display:flex;justify-content:space-between;align-items:center}
+    .period-row{display:flex;justify-content:space-between;font-size:.82rem;padding:.1rem 0}
 
     /* ── MOBILE MEDIA QUERIES ── */
     @media (max-width: 768px) {
@@ -91,7 +166,10 @@
     <img src="../QFA_Logo.png" alt="QFA"/>
     <span>QFA Portal</span>
   </div>
-  <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+  <div style="display:flex;align-items:center;gap:.6rem">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+  </div>
 </div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -104,7 +182,7 @@
       </div>
       <div style="line-height:1.2">
         <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
-        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+        <div style="color:var(--gold2);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -116,30 +194,33 @@
     <div class="sidebar-user">
       <strong id="user-name" style="color:white; display:block;">Loading…</strong>
       <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
-      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+      <a href="#" onclick="logout()" style="color:var(--gold2);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
     </div>
   </aside>
 
   <main class="main-content">
-    
-    <div style="background: linear-gradient(135deg, #0d2353, #1e3c72); border-radius: 16px; padding: 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(13,35,83,0.15); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+
+    <div style="background: linear-gradient(135deg, #0d2353, #1e3c72); border-radius: 16px; padding: 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(13,35,83,0.15); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
       <div>
-        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: #f5c842; font-weight: 700; display: block; margin-bottom: 0.4rem;">Client Management Workspace</span>
+        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold2); font-weight: 700; display: block; margin-bottom: 0.4rem;">Client Management Workspace</span>
         <h2 style="margin:0; font-family:'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; line-height: 1.2;">My Project Portal</h2>
         <p style="margin: 0.4rem 0 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem;">Track real-time deliverables, active balance updates, and book direct working sessions.</p>
       </div>
-      <div id="engagement-badge-container">
-        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
-          <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Syncing Profile…
-        </span>
+      <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
+        <div id="engagement-badge-container">
+          <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Syncing Profile…
+          </span>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" id="hero-theme-btn">🌙</button>
       </div>
     </div>
 
     <!-- Compact Notice Box for Fixed-Rate Clients -->
     <div id="fixed-notice" style="display:none; margin-bottom:1.5rem;">
-      <div style="background: linear-gradient(135deg, #0d2353, #1a3a7a); border-radius: 12px; padding: 1.2rem 1.5rem; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-left: 4px solid #f5c842;">
+      <div style="background: linear-gradient(135deg, #0d2353, #1a3a7a); border-radius: 12px; padding: 1.2rem 1.5rem; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-left: 4px solid var(--gold2);">
         <div>
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:#f5c842; font-weight:700; margin-bottom:0.1rem;">Fixed Price Contract</div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold2); font-weight:700; margin-bottom:0.1rem;">Fixed Price Contract</div>
           <div style="font-size:1.3rem; font-weight:700; font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
         </div>
         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); text-align: right;">
@@ -148,38 +229,53 @@
       </div>
     </div>
 
-    <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stats-row">
       <div class="stat-card" style="border-left:4px solid #22c55e">
-        <span class="stat-num" id="s-paid" style="color:#166534; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
+        <span class="stat-num" id="s-paid">$0.00</span>
         <span class="stat-label">Total paid</span>
       </div>
       <div class="stat-card" style="border-left:4px solid #f59e0b">
-        <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
+        <span class="stat-num" id="s-unpaid">$0.00</span>
         <span class="stat-label">Outstanding balance</span>
       </div>
       <div class="stat-card" style="border-left:4px solid #3b82f6">
-        <span class="stat-num" id="s-credit" style="color:#1d4ed8; display:block; font-size:1.5rem; font-weight:700;">$0.00</span>
+        <span class="stat-num" id="s-credit">$0.00</span>
         <span class="stat-label">Available account credit</span>
       </div>
       <div class="stat-card" style="border-left:4px solid transparent">
-        <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">0.0h</span>
+        <span class="stat-num" id="s-hours">0.0h</span>
         <span class="stat-label">Total hours logged</span>
       </div>
       <div class="stat-card" style="border-left:4px solid transparent">
-        <span class="stat-num" id="s-bookings" style="display:block; font-size:1.5rem; font-weight:700;">0</span>
+        <span class="stat-num" id="s-bookings">0</span>
         <span class="stat-label">Upcoming sessions</span>
       </div>
     </div>
 
     <div id="hourly-section">
+
+      <div class="card">
+        <div class="cb">
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
+            <button class="chip" id="chip-recent" onclick="setDatePreset('recent')">Last 30 days</button>
+            <button class="chip" id="chip-month" onclick="setDatePreset('month')">This month</button>
+            <button class="chip" id="chip-all" onclick="setDatePreset('all')">All time</button>
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end">
+            <div class="fg" style="flex:1;min-width:150px"><label>From</label><input type="date" id="filter-from" onchange="onCustomDateChange()"/></div>
+            <div class="fg" style="flex:1;min-width:150px"><label>To</label><input type="date" id="filter-to" onchange="onCustomDateChange()"/></div>
+          </div>
+        </div>
+      </div>
+
       <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
-        <button id="tab-all"    onclick="switchTab('all')"     style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
-        <button id="tab-unpaid" onclick="switchTab('unpaid')" style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">⚠ Unpaid</button>
-        <button id="tab-paid"   onclick="switchTab('paid')"   style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">✓ Paid</button>
+        <button id="tab-all"    class="tab-btn active" onclick="switchTab('all')">All</button>
+        <button id="tab-unpaid" class="tab-btn" onclick="switchTab('unpaid')">⚠ Unpaid</button>
+        <button id="tab-paid"   class="tab-btn" onclick="switchTab('paid')">✓ Paid</button>
       </div>
 
       <div class="card">
-        <div class="card-header"><h3 id="logs-title">All Work Logs</h3></div>
+        <div class="card-header"><h3 id="logs-title">Work Logs</h3></div>
         <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
           <table>
             <thead>
@@ -190,41 +286,40 @@
             </tbody>
           </table>
         </div>
-        <div id="logs-footer" style="padding:1rem;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--paper2)"></div>
+        <div id="logs-footer" style="padding:1rem;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--bg2)"></div>
       </div>
 
-      <div class="card" style="margin-top: 1.5rem;">
-        <div class="card-header" style="background: var(--paper2);">
-          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Outstanding Payments Breakdown (By Month & Year)</h3>
+      <div class="card">
+        <div class="card-header">
+          <h3 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Billing History (By Month & Year)</h3>
         </div>
-        <div id="periodic-breakdown-container" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
+        <div id="periodic-breakdown-container" style="padding: 1.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
           <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting entry analysis...</p>
         </div>
       </div>
     </div>
 
     <div id="fixed-section" style="display:none">
-      <!-- Dedicated Monthly/Yearly Breakdown for Fixed-Rate Clients -->
-      <div class="card" style="margin-top: 0.5rem;">
-        <div class="card-header" style="background: var(--paper2);">
-          <h3 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Milestone & Contract Billing Breakdown (By Month & Year)</h3>
+      <div class="card">
+        <div class="card-header">
+          <h3 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Milestone & Contract Billing Breakdown (By Month & Year)</h3>
         </div>
-        <div id="fixed-periodic-breakdown-container" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
+        <div id="fixed-periodic-breakdown-container" style="padding: 1.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
           <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting schedule analysis...</p>
         </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:1.5rem">
+    <div class="card">
       <div class="card-header"><h3>📅 Book a Session</h3></div>
-      <div style="padding:1.5rem">
+      <div class="cb">
         <p style="color:var(--ink2);font-size:0.9rem;margin-bottom:1.4rem">Request a meeting or working session. I'll confirm within 24 hours.</p>
         <form onsubmit="bookSession(event)" class="booking-form-grid">
-          <div class="form-group">
+          <div class="fg">
             <label>Preferred date</label>
             <input type="date" name="date" id="book-date" required/>
           </div>
-          <div class="form-group">
+          <div class="fg">
             <label>Preferred time</label>
             <select name="time" required>
               <option value="">Select time…</option>
@@ -237,7 +332,7 @@
               <option value="16:00">4:00 PM</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="fg">
             <label>Session type</label>
             <select name="type" required>
               <option value="">Select…</option>
@@ -247,7 +342,7 @@
               <option value="other">Other</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="fg">
             <label>Duration</label>
             <select name="duration">
               <option value="0.5">30 minutes</option>
@@ -256,19 +351,19 @@
               <option value="2">2 hours</option>
             </select>
           </div>
-          <div class="form-group" style="grid-column:1/-1">
+          <div class="fg" style="grid-column:1/-1">
             <label>Message / agenda</label>
             <textarea name="message" rows="2" placeholder="What would you like to discuss?"></textarea>
           </div>
           <div style="grid-column:1/-1">
-            <button type="submit" class="btn-primary">Request session →</button>
-            <div id="book-status" class="form-status" style="margin-top:0.5rem"></div>
+            <button type="submit" class="btn btn-p">Request session →</button>
+            <div id="book-status" class="fs" style="margin-top:0.5rem"></div>
           </div>
         </form>
       </div>
     </div>
 
-    <div class="card" style="margin-top:1.5rem">
+    <div class="card">
       <div class="card-header"><h3>Upcoming Sessions</h3></div>
       <div id="upcoming-sessions" style="padding:1rem"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
     </div>
@@ -286,6 +381,25 @@ const auth = {
 };
 
 const TYPE_LABELS = { call: 'Video call', review: 'Project review', workshop: 'Working session', other: 'Other' };
+
+/* ── Theme ── */
+function initTheme(){
+  const saved = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeButtons(saved);
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+  updateThemeButtons(next);
+}
+function updateThemeButtons(theme){
+  const icon = theme==='dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(b=>b.textContent=icon);
+}
+initTheme();
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
@@ -307,24 +421,25 @@ function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 let allLogs = [];
 let currentTab = 'all';
-let currentHourlyRate = 20; 
+let currentHourlyRate = 20;
 let currentCreditBalance = 0;
+let filtersInitialized = false;
 
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
-    
+
     try {
         const [stats, logs, bookings] = await Promise.all([
             apiFetch('/client/stats'),
             apiFetch('/client/timelogs'),
             apiFetch('/client/bookings')
         ]);
-                
+
         if (!stats) {
             badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load. Please refresh.</span>`;
             return;
         }
-        
+
         const isFixed = stats.rateType === 'fixed';
         currentHourlyRate = parseFloat(stats.hourlyRate || 0);
         currentCreditBalance = parseFloat(stats.creditBalance || 0);
@@ -351,15 +466,23 @@ async function loadPortal() {
             document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid ||0).toFixed(2);
             document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
             document.getElementById('s-hours').textContent  = '—';
-
-            // Render detailed month & year breakdown for fixed rate using stats history or logs
             renderFixedPeriodicBreakdown(stats, logs);
         } else {
             document.getElementById('fixed-notice').style.display = 'none';
             document.getElementById('fixed-section').style.display = 'none';
             document.getElementById('hourly-section').style.display = 'block';
             allLogs = logs;
-            calculateAndRenderMetrics(allLogs);
+
+            // Top stat cards + monthly breakdown always reflect TRUE all-time
+            // totals, independent of whatever the table filters below are set to.
+            renderOverallStats(allLogs);
+
+            if(!filtersInitialized){
+              setDatePreset('recent'); // also renders the table
+              filtersInitialized = true;
+            } else {
+              switchTab(currentTab); // re-apply whatever the client already had selected
+            }
         }
 
         const upcoming = document.getElementById('upcoming-sessions');
@@ -369,18 +492,19 @@ async function loadPortal() {
             upcoming.innerHTML = futureBookings.map(b => {
                 let formattedDate = b.date;
                 try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
+                const statusClass = b.status==='confirmed'?'bg-g':b.status==='pending'?'bg-a':'bg-gray';
                 return `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--paper2)">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--bg2)">
                   <div>
                     <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
                     <div style="color:var(--ink2);font-size:0.82rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
                     ${b.message?`<div style="color:var(--ink3);font-size:0.8rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
                   </div>
-                  <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='pending'?'badge-amber':'badge-gray'}">${b.status}</span>
+                  <span class="badge ${statusClass}">${b.status}</span>
                 </div>`;
             }).join('');
         }
-    } catch(e) { 
+    } catch(e) {
         console.error("Portal load error:", e);
         if (badgeContainer) {
             badgeContainer.innerHTML = `<span style="color:#ef4444;">⚠️ Failed to load dashboard data.</span>`;
@@ -390,8 +514,6 @@ async function loadPortal() {
 
 function renderFixedPeriodicBreakdown(stats, logs) {
     const container = document.getElementById('fixed-periodic-breakdown-container');
-    
-    // If backend provides logs or milestones for fixed clients, group them accurately by Month & Year
     const periodicData = {};
 
     if (logs && logs.length > 0) {
@@ -401,33 +523,24 @@ function renderFixedPeriodicBreakdown(stats, logs) {
                 const d = new Date(l.date || l.createdAt);
                 if (!isNaN(d.getTime())) {
                     const periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
-                    if (!periodicData[periodKey]) {
-                        periodicData[periodKey] = { amount: 0, paid: 0, unpaid: 0, count: 0 };
-                    }
+                    if (!periodicData[periodKey]) periodicData[periodKey] = { amount: 0, paid: 0, unpaid: 0, count: 0 };
                     periodicData[periodKey].amount += amt;
                     periodicData[periodKey].count += 1;
-                    if (l.payment_status === 'paid') {
-                        periodicData[periodKey].paid += amt;
-                    } else {
-                        periodicData[periodKey].unpaid += amt;
-                    }
+                    if (l.payment_status === 'paid') periodicData[periodKey].paid += amt;
+                    else periodicData[periodKey].unpaid += amt;
                 }
             } catch(err) {}
         });
     }
 
-    // Fallback if no log elements exist: group by project creation or current date month/year
     if (Object.keys(periodicData).length === 0) {
         let periodKey = "Current Billing Period";
         if (stats.updatedAt || stats.createdAt) {
             try {
                 const d = new Date(stats.updatedAt || stats.createdAt);
-                if (!isNaN(d.getTime())) {
-                    periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
-                }
+                if (!isNaN(d.getTime())) periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
             } catch(err) {}
         }
-        
         periodicData[periodKey] = {
             amount: parseFloat(stats.fixedPrice || 0),
             paid: parseFloat(stats.totalPaid || 0),
@@ -440,127 +553,130 @@ function renderFixedPeriodicBreakdown(stats, logs) {
     container.innerHTML = periods.map(period => {
         const data = periodicData[period];
         return `
-            <div style="background: var(--paper1); border: 1px solid var(--paper3); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-              <div style="font-weight: 600; font-size: 0.9rem; color: var(--ink); border-bottom: 1px solid var(--paper2); padding-bottom: 0.4rem; margin-bottom: 0.6rem; display:flex; justify-content:space-between; align-items:center;">
+            <div class="period-card">
+              <div class="ph">
                 <span>📅 ${period}</span>
-                <span style="font-size:0.8rem; background:rgba(245,200,66,0.15); padding:0.1rem 0.4rem; border-radius:4px; color:#b45309">Fixed Milestone</span>
+                <span style="font-size:0.75rem; background:rgba(245,200,66,0.15); padding:0.15rem 0.5rem; border-radius:4px; color:#b45309">Fixed Milestone</span>
               </div>
-              <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem;">
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: var(--ink3)">Total Milestone Value:</span>
-                  <strong style="color: var(--ink)">$${data.amount.toFixed(2)}</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #166534">Settled Paid:</span>
-                  <span style="color: #166534; font-weight: 600;">$${data.paid.toFixed(2)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #92400e">Outstanding Balance:</span>
-                  <span style="color: #92400e; font-weight: 600;">$${data.unpaid.toFixed(2)}</span>
-                </div>
-              </div>
+              <div class="period-row"><span style="color:var(--ink3)">Total Milestone Value:</span><strong style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
+              <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
+              <div class="period-row"><span style="color:var(--amber)">Outstanding Balance:</span><span style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
             </div>
         `;
     }).join('');
 }
 
-function calculateAndRenderMetrics(filteredLogs) {
-  let totalPaidAdjusted = 0;
-  let totalBilledAdjusted = 0;
-  let totalHoursAdjusted = 0;
-  
+/* ── Overall (all-time) stats + monthly breakdown — independent of table filters ── */
+function renderOverallStats(logs){
+  let totalPaid=0, totalBilled=0, totalHours=0;
   const periodicData = {};
 
-  filteredLogs.forEach(l => {
+  logs.forEach(l => {
     const h = parseFloat(l.hours || 0);
     let amt = parseFloat(l.amount || 0);
-    if (!amt && h && currentHourlyRate) {
-      amt = h * currentHourlyRate;
-    }
-    
-    totalHoursAdjusted += h;
-    totalBilledAdjusted += amt;
-    if (l.payment_status === 'paid') {
-      totalPaidAdjusted += amt;
-    }
+    if (!amt && h && currentHourlyRate) amt = h * currentHourlyRate;
+
+    totalHours += h;
+    totalBilled += amt;
+    if (l.payment_status === 'paid') totalPaid += amt;
 
     try {
-      const dateObj = new Date(l.date);
-      if (!isNaN(dateObj.getTime())) {
-        const year = dateObj.getFullYear();
-        const monthLabel = dateObj.toLocaleString('default', { month: 'long' });
-        const periodKey = `${monthLabel} ${year}`;
-
-        if (!periodicData[periodKey]) {
-          periodicData[periodKey] = { hours: 0, amount: 0, paid: 0, unpaid: 0 };
-        }
-        periodicData[periodKey].hours += h;
-        periodicData[periodKey].amount += amt;
-        if (l.payment_status === 'paid') {
-          periodicData[periodKey].paid += amt;
-        } else {
-          periodicData[periodKey].unpaid += amt;
-        }
+      const d = new Date(l.date);
+      if (!isNaN(d.getTime())) {
+        const key = `${d.toLocaleString('default',{month:'long'})} ${d.getFullYear()}`;
+        if (!periodicData[key]) periodicData[key] = { hours:0, amount:0, paid:0, unpaid:0 };
+        periodicData[key].hours += h;
+        periodicData[key].amount += amt;
+        if (l.payment_status === 'paid') periodicData[key].paid += amt;
+        else periodicData[key].unpaid += amt;
       }
-    } catch(err) { console.error("Period breakdown parsing error", err); }
+    } catch(err) {}
   });
 
-  let balanceDiff = totalPaidAdjusted - totalBilledAdjusted;
-  let outstandingBalance = balanceDiff < 0 ? Math.abs(balanceDiff) : 0;
-
-  document.getElementById('s-paid').textContent   = '$' + totalPaidAdjusted.toFixed(2);
-  document.getElementById('s-unpaid').textContent = '$' + outstandingBalance.toFixed(2);
-  document.getElementById('s-hours').textContent  = totalHoursAdjusted.toFixed(1) + 'h';
+  const outstanding = Math.max(0, totalBilled - totalPaid);
+  document.getElementById('s-paid').textContent   = '$' + totalPaid.toFixed(2);
+  document.getElementById('s-unpaid').textContent = '$' + outstanding.toFixed(2);
+  document.getElementById('s-hours').textContent  = totalHours.toFixed(1) + 'h';
   document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
 
-  const breakdownContainer = document.getElementById('periodic-breakdown-container');
-  const periods = Object.keys(periodicData);
-  
-  if (!periods.length) {
-    breakdownContainer.innerHTML = `<p style="color: var(--ink3); font-size: 0.85rem; padding: 0.5rem;">No historical billing periods detected inside chosen filter.</p>`;
-  } else {
-    breakdownContainer.innerHTML = periods.map(period => {
-      const data = periodicData[period];
-      return `
-        <div style="background: var(--paper1); border: 1px solid var(--paper3); border-radius: 10px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-          <div style="font-weight: 600; font-size: 0.9rem; color: var(--ink); border-bottom: 1px solid var(--paper2); padding-bottom: 0.4rem; margin-bottom: 0.6rem; display:flex; justify-content:space-between; align-items:center;">
-            <span>📅 ${period}</span>
-            <span style="font-size:0.8rem; background:rgba(13,35,83,0.06); padding:0.1rem 0.4rem; border-radius:4px; color:var(--ink2)">${data.hours.toFixed(1)}h</span>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem;">
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--ink3)">Total Volume:</span>
-              <strong style="color: var(--ink)">$${data.amount.toFixed(2)}</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: #166534">Settled Paid:</span>
-              <span style="color: #166534; font-weight: 600;">$${data.paid.toFixed(2)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: #92400e">Outstanding:</span>
-              <span style="color: #92400e; font-weight: 600;">$${data.unpaid.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  renderLogs(filteredLogs);
+  renderPeriodicBreakdown(periodicData);
 }
 
+function renderPeriodicBreakdown(periodicData){
+  const container = document.getElementById('periodic-breakdown-container');
+  const periods = Object.keys(periodicData);
+
+  if (!periods.length) {
+    container.innerHTML = `<p style="color:var(--ink3);font-size:.85rem;padding:.5rem">No billing history yet.</p>`;
+    return;
+  }
+  container.innerHTML = periods.map(period => {
+    const data = periodicData[period];
+    return `
+      <div class="period-card">
+        <div class="ph">
+          <span>📅 ${period}</span>
+          <span style="font-size:.75rem;background:rgba(13,35,83,.06);padding:.15rem .5rem;border-radius:4px;color:var(--ink2)">${data.hours.toFixed(1)}h</span>
+        </div>
+        <div class="period-row"><span style="color:var(--ink3)">Total Volume:</span><strong style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
+        <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
+        <div class="period-row"><span style="color:var(--amber)">Outstanding:</span><span style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ── Date range filter presets ── */
+function updateChipStates(active){
+  ['recent','month','all'].forEach(p=>{
+    document.getElementById('chip-'+p).classList.toggle('active', p===active);
+  });
+}
+function setDatePreset(preset){
+  const today = new Date();
+  let from='', to=today.toISOString().slice(0,10);
+  if(preset==='recent'){
+    const d=new Date(); d.setDate(d.getDate()-30);
+    from=d.toISOString().slice(0,10);
+  } else if(preset==='month'){
+    from=new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0,10);
+  } else if(preset==='all'){
+    from=''; to='';
+  }
+  document.getElementById('filter-from').value=from;
+  document.getElementById('filter-to').value=to;
+  updateChipStates(preset);
+  renderLogsTable();
+}
+function onCustomDateChange(){
+  updateChipStates(null);
+  renderLogsTable();
+}
+
+/* ── Table tab (payment status) + combined filtering ── */
 function switchTab(tab) {
   currentTab = tab;
   ['all','unpaid','paid'].forEach(t => {
-    const btn = document.getElementById('tab-'+t);
-    btn.style.background = t===tab ? 'var(--ink)' : 'transparent';
-    btn.style.color      = t===tab ? 'white'      : 'var(--ink2)';
-    btn.style.border     = t===tab ? 'none'        : '1.5px solid var(--paper3)';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
-  document.getElementById('logs-title').textContent = { all:'All Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' }[tab];
-  
-  const filtered = tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab);
-  calculateAndRenderMetrics(filtered);
+  document.getElementById('logs-title').textContent = { all:'Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' }[tab];
+  renderLogsTable();
+}
+
+function getFilteredLogs(){
+  const from = document.getElementById('filter-from').value;
+  const to   = document.getElementById('filter-to').value;
+  return allLogs.filter(l => {
+    if (currentTab !== 'all' && l.payment_status !== currentTab) return false;
+    const d = (l.date || '').slice(0,10);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  });
+}
+
+function renderLogsTable(){
+  renderLogs(getFilteredLogs());
 }
 
 function renderLogs(logs) {
@@ -568,7 +684,7 @@ function renderLogs(logs) {
   const footer = document.getElementById('logs-footer');
   if (!logs.length) {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">${
-      currentTab==='unpaid' ? 'No unpaid logs — all settled! ✓' : currentTab==='paid' ? 'No paid logs yet.' : 'No logs found.'
+      currentTab==='unpaid' ? 'No unpaid logs in this range — all settled! ✓' : currentTab==='paid' ? 'No paid logs in this range.' : 'No logs in this range.'
     }</td></tr>`;
     footer.textContent = '';
     return;
@@ -577,17 +693,15 @@ function renderLogs(logs) {
   tbody.innerHTML = logs.map(l => {
     const isPaid  = l.payment_status === 'paid';
     const hours = parseFloat(l.hours || 0);
-    
+
     let amount = parseFloat(l.amount || 0);
-    if (!amount && hours && currentHourlyRate) {
-      amount = hours * currentHourlyRate;
-    }
+    if (!amount && hours && currentHourlyRate) amount = hours * currentHourlyRate;
 
     sumHours  += hours;
     sumAmount += amount;
-    const badge = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">⚠ Unpaid</span>';
+    const badge = isPaid ? '<span class="badge bg-g">✓ Paid</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
     return `
-      <tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
+      <tr class="${!isPaid?'row-unpaid':''}">
         <td>${new Date(l.date).toLocaleDateString()}</td>
         <td><strong>${hours}h</strong></td>
         <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
@@ -605,13 +719,13 @@ async function bookSession(e) {
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
     await apiFetch('/client/bookings', { method:'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
-    status.className = 'form-status success';
+    status.className = 'fs ok';
     status.textContent = '✓ Request sent! I\'ll confirm within 24 hours.';
     e.target.reset();
     document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
     loadPortal();
   } catch(err) {
-    status.className = 'form-status error';
+    status.className = 'fs er';
     status.textContent = err.message;
   } finally {
     btn.disabled = false; btn.textContent = 'Request session →';
