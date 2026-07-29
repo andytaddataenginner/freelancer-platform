@@ -189,25 +189,20 @@
     .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
     .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
 
-    /* ── PDF CONTAINER ── */
+    /* ── PDF CONTAINER (OFF-SCREEN CONTAINER) ── */
     #pdf-container { 
-      display: none; 
-      position: fixed;
+      position: absolute;
       top: 0;
-      left: 0;
+      left: -9999px;
       width: 794px; 
       background-color: #ffffff !important; 
       color: #1f2937 !important; 
       box-sizing: border-box;
-      z-index: -9999;
-    }
-    #pdf-container.rendering { 
-      display: block; 
-      z-index: 99999;
+      pointer-events: none;
     }
 
     #pdf-generating-overlay {
-      display: none; position: fixed; inset: 0; z-index: 999;
+      display: none; position: fixed; inset: 0; z-index: 9999;
       background: rgba(13, 35, 83, 0.97); backdrop-filter: blur(4px); color: white;
       align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
     }
@@ -608,8 +603,6 @@ async function downloadInvoice(invId) {
   
   const container = document.getElementById("pdf-container");
   container.innerHTML = "";
-  container.style.cssText = "display: block; position: fixed; top: 0; left: 0; width: 794px; background-color: #ffffff !important; color: #1f2937 !important; box-sizing: border-box; z-index: 99999;";
-  container.classList.add("rendering");
 
   const unpaidFixedMonths = (fixedMonths || []).filter(m => m.status !== 'paid');
   const lineItemsHtml = type === 'fixed'
@@ -641,7 +634,7 @@ async function downloadInvoice(invId) {
         <tr>
           <td style="vertical-align: top; padding: 0; background: transparent !important;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <img src="../QFA_Logo.png" alt="QFA" style="height: 22px; width: auto; background: #fff; border-radius: 4px; padding: 2px; border: 1px solid #eef1f8; display: inline-block; vertical-align: middle;"/>
+              <img id="pdf-logo-img" src="../QFA_Logo.png" alt="QFA" style="height: 22px; width: auto; background: #fff; border-radius: 4px; padding: 2px; border: 1px solid #eef1f8; display: inline-block; vertical-align: middle;"/>
               <span style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #0d2353 !important; letter-spacing: -0.01em; display: inline-block; vertical-align: middle;">Quick Freelancing Agency</span>
             </div>
             <div style="font-size: 12px; color: #7a8aaa !important; font-weight: 500; margin-left: 30px;">Professional Consulting Invoice</div>
@@ -714,10 +707,15 @@ async function downloadInvoice(invId) {
       </div>
     </div>`;
 
-  await new Promise(r => setTimeout(r, 200));
-  
+  // Wait for images and fonts to completely settle before generating canvas
+  const img = document.getElementById("pdf-logo-img");
+  if (img && !img.complete) {
+    await new Promise(res => { img.onload = res; img.onerror = res; });
+  }
+  await new Promise(r => setTimeout(r, 400));
+
   try {
-    const worker = html2pdf().set({ 
+    const opt = { 
       margin: 0, 
       filename: `${invId}.pdf`, 
       html2canvas: { 
@@ -729,14 +727,12 @@ async function downloadInvoice(invId) {
         windowWidth: 794
       }, 
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" } 
-    }).from(container);
-    await worker.save();
+    };
+    await html2pdf().set(opt).from(container).save();
   } catch(e) { 
-    console.error(e); 
+    console.error("PDF Generation Error:", e); 
   } finally {
     container.innerHTML = "";
-    container.style.cssText = "display: none;";
-    container.classList.remove("rendering");
     document.getElementById("pdf-generating-overlay").classList.remove("active");
     generatingPDF = false;
   }
