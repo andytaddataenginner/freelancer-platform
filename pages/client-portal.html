@@ -666,7 +666,8 @@ function shortMonthLabel(key){
 }
 
 function renderMonthlyCharts(periodicData){
-  const keys = Object.keys(periodicData).sort((a,b) => new Date(a) - new Date(b));
+  const allKeys = Object.keys(periodicData).sort((a,b) => new Date(a) - new Date(b));
+  const keys = allKeys.slice(-12); // cap to most recent 12 months so bars stay readable; Billing History below still shows full history
   renderPaidUnpaidChart(keys, periodicData);
   renderEntriesChart(keys, periodicData);
 }
