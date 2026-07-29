@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
-const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 
 // GET /api/timelogs
 router.get('/', requireFreelancer, async (req, res, next) => {
@@ -28,7 +27,6 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 
 // POST /api/timelogs
 router.post('/', requireFreelancer, async (req, res, next) => {
-  const client = await pool.connect();
   try {
     const { client_id, date, hours, task_description, source = 'manual' } = req.body;
     if (!client_id || !date || !hours || !task_description)
@@ -48,29 +46,12 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       amount = parseFloat(c.fixed_price);
     }
 
-    await client.query('BEGIN');
-
-    const { rows } = await client.query(`
+    const { rows } = await pool.query(`
       INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, rate_type, amount, payment_status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'unpaid') RETURNING *
     `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2)]);
-
-    // If this client already has leftover credit sitting on their account,
-    // auto-settle this new log (and any other oldest unpaid logs) against it —
-    // no separate remittance required.
-    await applyFundsToUnpaidLogs(client, client_id, 0);
-
-    await client.query('COMMIT');
-
-    // Re-fetch: payment_status may have just flipped to 'paid' above
-    const finalRes = await pool.query('SELECT * FROM time_logs WHERE id = $1', [rows[0].id]);
-    res.status(201).json(finalRes.rows[0]);
-  } catch (e) {
-    await client.query('ROLLBACK');
-    next(e);
-  } finally {
-    client.release();
-  }
+    res.status(201).json(rows[0]);
+  } catch (e) { next(e); }
 });
 
 // PATCH /api/timelogs/:id/payment
