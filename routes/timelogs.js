@@ -1,12 +1,35 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
-const { requireFreelancer } = require('../middleware/auth');
+const { requireFreelancer } = require('../middleware/auth'); // Or requireClient depending on your middleware setup
 const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 
-// GET /api/timelogs
+// GET /api/timelogs (or /api/client/timelogs depending on your mount path)
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { client_id, from, to, limit = 200, offset = 0, payment_status } = req.query;
+    
+    // If a specific client_id is requested, check if they are a fixed-rate client
+    let targetClientId = client_id || req.user.id;
+    const clientCheck = await pool.query(
+      `SELECT rate_type FROM clients WHERE user_id = $1 OR id = $1`,
+      [targetClientId]
+    );
+    const rateType = clientCheck.rows[0]?.rate_type || 'hourly';
+
+    // If fixed-rate, seamlessly pull from fixed_monthly_payments mapped to log schema structure
+    if (rateType === 'fixed') {
+      const { rows } = await pool.query(`
+        SELECT f.id, f.client_id, f.month AS date, f.amount, f.status AS payment_status, 
+               'Fixed Milestone' AS task_description, 0 AS hours, u.name AS client_name, u.company AS client_company
+        FROM fixed_monthly_payments f
+        JOIN users u ON u.id = f.client_id
+        WHERE f.freelancer_id = $1 ${client_id ? 'AND f.client_id = $2' : ''}
+        ORDER BY f.month DESC
+      `, client_id ? [req.user.id, client_id] : [req.user.id]);
+      return res.json(rows);
+    }
+
+    // Otherwise, handle regular hourly time logs
     let where = ['t.freelancer_id = $1'];
     let params = [req.user.id];
     let i = 2;
@@ -14,6 +37,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     if (from)           { where.push(`t.date >= $${i++}::date`);      params.push(from); }
     if (to)             { where.push(`t.date <= $${i++}::date`);      params.push(to); }
     if (payment_status) { where.push(`t.payment_status = $${i++}`);   params.push(payment_status); }
+    
     const { rows } = await pool.query(`
       SELECT t.*, u.name AS client_name, u.company AS client_company
       FROM time_logs t
@@ -22,6 +46,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       ORDER BY t.date DESC, t.created_at DESC
       LIMIT $${i++} OFFSET $${i++}
     `, [...params, limit, offset]);
+    
     res.json(rows);
   } catch (e) { next(e); }
 });
@@ -55,14 +80,10 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'unpaid') RETURNING *
     `, [client_id, req.user.id, date, hours, task_description, source, rate_type, amount.toFixed(2)]);
 
-    // If this client already has leftover credit sitting on their account,
-    // auto-settle this new log (and any other oldest unpaid logs) against it —
-    // no separate remittance required.
     await applyFundsToUnpaidLogs(client, client_id, 0);
 
     await client.query('COMMIT');
 
-    // Re-fetch: payment_status may have just flipped to 'paid' above
     const finalRes = await pool.query('SELECT * FROM time_logs WHERE id = $1', [rows[0].id]);
     res.status(201).json(finalRes.rows[0]);
   } catch (e) {
@@ -101,14 +122,12 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/timelogs/:id — now also updates amount
+// PUT /api/timelogs/:id
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
-
     let finalAmount = amount;
 
-    // If amount not provided, recalculate from client rate
     if (finalAmount === undefined || finalAmount === null) {
       const logRow = await pool.query('SELECT client_id FROM time_logs WHERE id=$1', [req.params.id]);
       if (logRow.rows.length) {
