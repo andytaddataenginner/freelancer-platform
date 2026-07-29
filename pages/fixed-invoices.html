@@ -189,7 +189,14 @@
     .empty-state { text-align: center; padding: 3rem 2rem; color: var(--ink3); }
     .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
 
-    #pdf-container { display: none; width: 794px; background-color: #ffffff; color: #1f2937; }
+    #pdf-container { 
+      display: none; 
+      width: 794px; 
+      min-height: 1123px;
+      background-color: #ffffff !important; 
+      color: #1f2937 !important; 
+      box-sizing: border-box;
+    }
     #pdf-container.rendering { display: block; }
     body.pdf-generating .main, body.pdf-generating .mob-bar, body.pdf-generating .overlay { display: none !important; }
 
@@ -584,7 +591,7 @@ function sendWhatsAppReminder(invId) {
 async function downloadInvoice(invId) {
   const group = lastInvoiceGroups[invId];
   if (!group) return;
-  const { clientName, type, hours, totalUnpaid, fixedMonths, start, end, phone, email } = group;
+  const { clientName, type, hours, totalUnpaid, fixedMonths, start, end } = group;
 
   if (generatingPDF) return;
   generatingPDF = true;
@@ -592,7 +599,10 @@ async function downloadInvoice(invId) {
   const freelancerEmail = auth.user()?.email || "ndy.andupa@gmail.com";
 
   document.getElementById("pdf-generating-overlay").classList.add("active");
+  
   const container = document.getElementById("pdf-container");
+  container.innerHTML = "";
+  container.style.cssText = "display: block; width: 794px; min-height: 1123px; background-color: #ffffff !important; color: #1f2937 !important; box-sizing: border-box;";
   container.classList.add("rendering");
 
   const unpaidFixedMonths = (fixedMonths || []).filter(m => m.status !== 'paid');
@@ -615,11 +625,10 @@ async function downloadInvoice(invId) {
           <td style="padding: 10px 0; border-bottom: 1px solid #eef1f8; color: #0d2353; font-weight: 600; font-size: 13px; text-align: right;">$${totalUnpaid.toFixed(2)}</td>
         </tr>`;
 
-  /* Explicit inline styles are hardcoded here to guarantee that light/dark mode states never bleed into or alter generated invoice layout outputs */
   container.innerHTML = `
-    <div style="background-color: #ffffff !important; color: #1f2937 !important; width: 794px; padding: 24px 50px 30px 50px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
+    <div style="background-color: #ffffff !important; color: #1f2937 !important; width: 794px; padding: 30px 50px 40px 50px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
       <!-- Top Accent Bar -->
-      <div style="height: 4px; border-radius: 2px; background: linear-gradient(90deg, #0d2353 0%, #1a5cff 100%); margin-bottom: 20px;"></div>
+      <div style="height: 4px; border-radius: 2px; background: linear-gradient(90deg, #0d2353 0%, #1a5cff 100%); margin-bottom: 24px;"></div>
 
       <!-- Header Section -->
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background: transparent !important;">
@@ -640,7 +649,7 @@ async function downloadInvoice(invId) {
       </table>
 
       <!-- Metadata Grid -->
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background: transparent !important;">
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; background: transparent !important;">
         <tr>
           <td style="width: 33%; vertical-align: top; padding-right: 15px; padding: 0; background: transparent !important;">
             <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a8aaa !important; font-weight: 700; margin-bottom: 4px;">Issued By</div>
@@ -665,7 +674,7 @@ async function downloadInvoice(invId) {
       </table>
 
       <!-- Line Items Table -->
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; background: transparent !important;">
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background: transparent !important;">
         <thead>
           <tr style="border-bottom: 2px solid #0d2353; background: transparent !important;">
             <th style="text-align: left; padding: 8px 0; color: #7a8aaa !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; background: transparent !important;">Description</th>
@@ -699,17 +708,19 @@ async function downloadInvoice(invId) {
       </div>
     </div>`;
 
-  await new Promise(r => setTimeout(r, 300));
+  await new Promise(r => setTimeout(r, 200));
+  
   try {
     const worker = html2pdf().set({ 
       margin: 0, 
       filename: `${invId}.pdf`, 
-      html2canvas: { scale: 2, useCORS: true }, 
+      html2canvas: { scale: 2, useCORS: true, logging: false }, 
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" } 
     }).from(container);
     await worker.save();
-  } catch(e) { console.error(e); }
-  finally {
+  } catch(e) { 
+    console.error(e); 
+  } finally {
     container.innerHTML = "";
     container.classList.remove("rendering");
     document.getElementById("pdf-generating-overlay").classList.remove("active");
