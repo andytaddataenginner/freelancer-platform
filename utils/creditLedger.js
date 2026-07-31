@@ -5,13 +5,15 @@
  *
  * Applies `cashAmount` (pass 0 if there's no fresh money, e.g. when just
  * auto-settling against existing credit) plus the client's current
- * credit_balance against their OLDEST unpaid time_logs, oldest date first.
+ * credit_balance against their unpaid time_logs, oldest date first.
  *
  * A log is only ever marked 'paid' if funds fully cover it — no partial
- * payments, and credit_balance never goes negative from this function. As
- * soon as funds can't cover the next oldest log, it stops (that log and any
- * newer ones stay 'unpaid'). Whatever funds are left over becomes the new
- * credit_balance.
+ * payments, and credit_balance never goes negative from this function.
+ * Logs are still tried oldest-first, so an older log gets first claim on
+ * limited funds — but if funds can't cover it, that log is SKIPPED (not a
+ * hard stop), so a smaller, newer log further down the list can still be
+ * settled instead of getting stuck waiting behind one big unpaid log.
+ * Whatever funds are left over becomes the new credit_balance.
  *
  * IMPORTANT: `client` must be a pg client already inside an open transaction
  * (caller has already run BEGIN). `clientUserId` is the id used in
@@ -42,9 +44,9 @@ async function applyFundsToUnpaidLogs(client, clientUserId, cashAmount = 0) {
     if (availableFunds >= logCost) {
       availableFunds -= logCost;
       paidLogIds.push(log.id);
-    } else {
-      break; // oldest-first — stop at the first log funds can't fully cover
     }
+    // else: can't cover this one right now — skip it and keep checking the
+    // rest, rather than stopping the whole pass here. It stays unpaid.
   }
 
   if (paidLogIds.length) {
