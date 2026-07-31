@@ -248,158 +248,117 @@
     }
     .card-icon svg { width: 17px; height: 17px; }
 
-     .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-      }
-
-
-      /* REPORT DASHBOARD */
-      .grid-3 {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:1.5rem;
-    width:100%;
-    margin-bottom:1.5rem;
-    align-items:start;
-}
-
-
-      .grid-3 .card {
-
-    margin-bottom:0;
-    min-width:0;
-
-    height:430px;
-
-    display:flex;
-    flex-direction:column;
-
-}
-
-
-      /* Client Chart card */
-      .grid-3 .card:nth-child(3) {
-          min-width: 0;
-      }
-
-
-      /* Tablet */
-      @media(max-width:1200px){
-
-          .grid-3 {
-              grid-template-columns: 1fr 1fr;
-          }
-
-          .grid-3 .card:nth-child(3){
-              grid-column:1 / -1;
-          }
-
-      }
-
-
-      /* Mobile */
-      @media(max-width:768px){
-
-          .grid-3 {
-              grid-template-columns:1fr;
-          }
-
-          .grid-3 .card:nth-child(3){
-              min-width:auto;
-          }
-
-      }
-    .chart-container {
-    display:flex;
-    flex-direction:column;
-    gap:0.8rem;
-    margin-top:1rem;
-    width:100%;
-     }
-
-
-    .chart-row {
-
-display:grid;
-
-grid-template-columns:
-90px
-minmax(80px,1fr)
-75px;
-
-align-items:center;
-
-gap:8px;
-
-width:100%;
-
-}
-    #revenue-chart {
-    overflow:hidden;
-    padding-bottom:5px;
-    min-height:150px;
-    width:100%;
- }
-    .chart-label {
-    font-weight:600;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    color:var(--ink2);
-    font-size:0.85rem;
-}
-
-#revenue-chart,
-#client-chart {
-
-overflow-y:auto;
-flex:1;
-
-}
-
-.chart-bar-wrapper {
-
-height:22px;
-
-background: var(--chart-bar-bg);
-
-border-radius:8px;
-
-overflow:hidden;
-
-width:100%;
-
-}
-
-
-    .chart-bar {
-
-    height:100%;
-
-    min-width:8px;
-
-    transform-origin: left center;
-
-    background:linear-gradient(
-    90deg,
-    var(--navy2),
-    var(--gold2)
-    );
-
-    border-radius:8px;
-
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
-.chart-val {
-    text-align:right;
-    font-weight:700;
-    font-size:0.85rem;
-    font-family: var(--mono);
-    color: var(--ink);
-}
+    /* REPORT DASHBOARD */
+    .grid-3 {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:1.5rem;
+      width:100%;
+      margin-bottom:1.5rem;
+      align-items:start;
+    }
+
+    .grid-3 .card {
+      margin-bottom:0;
+      min-width:0;
+      height:430px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* Client Chart card */
+    .grid-3 .card:nth-child(3) {
+      min-width: 0;
+    }
+
+    /* Tablet */
+    @media(max-width:1200px){
+      .grid-3 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .grid-3 .card:nth-child(3){
+        grid-column:1 / -1;
+      }
+    }
+
+    /* Mobile */
+    @media(max-width:768px){
+      .grid-3 {
+        grid-template-columns:1fr;
+      }
+      .grid-3 .card:nth-child(3){
+        min-width:auto;
+      }
+    }
+
+    .chart-container {
+      display:flex;
+      flex-direction:column;
+      gap:0.8rem;
+      margin-top:1rem;
+      width:100%;
+    }
+
+    .chart-row {
+      display:grid;
+      grid-template-columns: 90px minmax(80px,1fr) 75px;
+      align-items:center;
+      gap:8px;
+      width:100%;
+    }
+
+    #revenue-chart {
+      overflow:hidden;
+      padding-bottom:5px;
+      min-height:150px;
+      width:100%;
+    }
+
+    .chart-label {
+      font-weight:600;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      color:var(--ink2);
+      font-size:0.85rem;
+    }
+
+    #revenue-chart,
+    #client-chart {
+      overflow-y:auto;
+      flex:1;
+    }
+
+    .chart-bar-wrapper {
+      height:22px;
+      background: var(--chart-bar-bg);
+      border-radius:8px;
+      overflow:hidden;
+      width:100%;
+    }
+
+    .chart-bar {
+      height:100%;
+      min-width:8px;
+      transform-origin: left center;
+      background:linear-gradient(90deg, var(--navy2), var(--gold2));
+      border-radius:8px;
+    }
+
+    .chart-val {
+      text-align:right;
+      font-weight:700;
+      font-size:0.85rem;
+      font-family: var(--mono);
+      color: var(--ink);
+    }
 
     /* Financial Progress Bars Layout */
     .health-container { background: var(--health-bg); border-radius: 12px; padding: 1.15rem; border: 1px dashed var(--border-color); }
@@ -577,100 +536,78 @@ width:100%;
 
       <div class="grid-3">
 
-    <div class="card">
-      <div class="card-header">
-        <div class="card-header-text">
-          <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M8.5 21h7"/><path d="M5 7 2.5 12a2.75 2.75 0 0 0 5 0L5 7Z"/><path d="M19 7l-2.5 5a2.75 2.75 0 0 0 5 0L19 7Z"/></svg></span>Balance Sheet — Selected Month</h3>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-text">
+              <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M8.5 21h7"/><path d="M5 7 2.5 12a2.75 2.75 0 0 0 5 0L5 7Z"/><path d="M19 7l-2.5 5a2.75 2.75 0 0 0 5 0L19 7Z"/></svg></span>Balance Sheet — Selected Month</h3>
+            </div>
+          </div>
+
+          <div class="health-container" style="margin-top:0.5rem;">
+            <div class="health-metric-title" style="color:var(--green);">
+              <span>Month Paid</span>
+              <span id="health-paid-val">$0.00</span>
+            </div>
+
+            <div class="health-bar-bg">
+              <div id="health-paid-bar"
+                   class="health-bar-fill"
+                   style="background:var(--green);">
+              </div>
+            </div>
+
+            <div class="health-metric-title"
+                 style="color:var(--amber);margin-top:.5rem;">
+              <span>Month Unpaid</span>
+              <span id="health-unpaid-val">$0.00</span>
+            </div>
+
+            <div class="health-bar-bg">
+              <div id="health-unpaid-bar"
+                   class="health-bar-fill"
+                   style="background:var(--amber);">
+              </div>
+            </div>
+          </div>
+
+          <div style="
+              margin-top:1.25rem;
+              padding-top:.8rem;
+              border-top:1px solid var(--border-color);
+              display:flex;
+              justify-content:space-between;
+              align-items:center;">
+              <span style="font-size:.8rem;color:var(--ink3);">
+                Download Matrix:
+              </span>
+              <button class="btn"
+                      style="padding:.5rem 1rem;font-size:.78rem;"
+                      onclick="exportFilteredCSV()">
+                  📥 Export CSV
+              </button>
+          </div>
         </div>
+
+        <div class="card">
+            <div class="card-header">
+              <div class="card-header-text">
+                <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12V3a9 9 0 1 1-9 9h9Z"/></svg></span>Revenue by Client — Selected Month</h3>
+              </div>
+            </div>
+            <div class="chart-container" id="revenue-chart"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+              <div class="card-header-text">
+                <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M2 19h20"/></svg></span>Client Revenue Distribution</h3>
+                <p>Selected month's client revenue, as a share of all-time total</p>
+              </div>
+            </div>
+            <div id="client-chart" class="chart-container"></div>
+        </div>
+
       </div>
-
-      <div class="health-container" style="margin-top:0.5rem;">
-
-        <div class="health-metric-title" style="color:var(--green);">
-          <span>Month Paid</span>
-          <span id="health-paid-val">$0.00</span>
-        </div>
-
-        <div class="health-bar-bg">
-          <div id="health-paid-bar"
-               class="health-bar-fill"
-               style="background:var(--green);">
-          </div>
-        </div>
-
-
-        <div class="health-metric-title"
-             style="color:var(--amber);margin-top:.5rem;">
-          <span>Month Unpaid</span>
-          <span id="health-unpaid-val">$0.00</span>
-        </div>
-
-
-        <div class="health-bar-bg">
-          <div id="health-unpaid-bar"
-               class="health-bar-fill"
-               style="background:var(--amber);">
-          </div>
-        </div>
-
-      </div>
-
-
-      <div style="
-          margin-top:1.25rem;
-          padding-top:.8rem;
-          border-top:1px solid var(--border-color);
-          display:flex;
-          justify-content:space-between;
-          align-items:center;">
-
-          <span style="font-size:.8rem;color:var(--ink3);">
-            Download Matrix:
-          </span>
-
-          <button class="btn"
-                  style="padding:.5rem 1rem;font-size:.78rem;"
-                  onclick="exportFilteredCSV()">
-              📥 Export CSV
-          </button>
-
-      </div>
-
-    </div>
-
-
-
-    <div class="card">
-
-        <div class="card-header">
-          <div class="card-header-text">
-            <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12V3a9 9 0 1 1-9 9h9Z"/></svg></span>Revenue by Client — Selected Month</h3>
-          </div>
-        </div>
-
-        <div class="chart-container" id="revenue-chart"></div>
-
-    </div>
-
-
-
-    <div class="card">
-
-        <div class="card-header">
-          <div class="card-header-text">
-            <h3><span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M2 19h20"/></svg></span>Client Revenue Distribution</h3>
-            <p>Selected month's client revenue, as a share of all-time total</p>
-          </div>
-        </div>
-
-        <div id="client-chart" class="chart-container">
-
-     </div>
-
-    </div>
-
-
-</div>
 
       <div class="card">
         <div class="card-header">
@@ -778,11 +715,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadReportData();
 });
 
-// ────────────────────────────────────────────────────────────────
-// Helper: resolve a fixed_monthly_payments row into paid/unpaid split.
-// Schema only has 'paid' | 'unpaid' (no partial), and a single `amount`
-// field — so the split is just "all of it, on one side or the other".
-// ────────────────────────────────────────────────────────────────
 function splitFixedPayment(row) {
   const amt = parseFloat(row.amount || 0);
   return row.status === 'paid'
@@ -794,16 +726,6 @@ async function loadReportData() {
   const month = document.getElementById('report-month').value; // "YYYY-MM"
 
   try {
-    // fixedAllRes: every fixed-fee record for this freelancer, all clients,
-    // all months — powers the "All Time" statement. Requires the GET /
-    // (root) route on the fixed-payments router.
-    // fixedMonthRes: bulk-generate also ensures a row exists for every
-    // fixed client for the selected month (creating 'unpaid' ones that
-    // don't exist yet) and returns them already joined to client_name —
-    // so this doubles as both "ensure" and "fetch" for the month view.
-    // clientsRes: the authoritative source for "is this client fixed-fee"
-    // — clients.rate_type — so a brand-new fixed client with no
-    // fixed_monthly_payments row yet still gets excluded from hourly math.
     const [statsRes, allLogsRes, fixedAllRes, fixedMonthRes, clientsRes] = await Promise.all([
       fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() }),
       fetch(`${API}/timelogs`, { headers: auth.headers() }),
@@ -819,8 +741,6 @@ async function loadReportData() {
     const data = await statsRes.json();
     const allLogs = await allLogsRes.json();
 
-    // Logs the real reason a call came back empty (bad status, bad JSON,
-    // wrong shape) instead of silently pretending it returned nothing.
     async function safeJsonArray(res, label) {
       let body;
       try {
@@ -840,20 +760,13 @@ async function loadReportData() {
       return body;
     }
 
-    // NEW: the freelancer's whole fixed-fee ledger, all time — this is what
-    // powers the "Statement of Account · All Time" figures for fixed clients.
     const fixedAllRows = await safeJsonArray(fixedAllRes, 'GET /fixed-payments');
     const fixedMonthRows = await safeJsonArray(fixedMonthRes, 'POST /fixed-payments/bulk-generate');
     const clientsList = await safeJsonArray(clientsRes, 'GET /clients');
 
-    // client_id (users.id) -> rate_type, straight from the clients table —
-    // this is the real source of truth for billing type.
     const clientRateTypeMap = new Map(
       clientsList.map(c => [c.user_id ?? c.id, c.rate_type])
     );
-    // Fallback net: anyone who already has a fixed_monthly_payments row
-    // is fixed-rate too, in case /clients doesn't expose user_id/rate_type
-    // the way we expect above.
     const fixedClientIds = new Set(fixedAllRows.map(f => f.client_id));
 
     function isFixedRateClient(log) {
@@ -879,10 +792,6 @@ async function loadReportData() {
       const isPaid = log.payment_status === 'paid';
       const isFixedClient = isFixedRateClient(log);
 
-      // Dollar figures from timelogs only apply to HOURLY clients now.
-      // A fixed client's dollars are tallied separately from
-      // fixed_monthly_payments below, so we skip them here to avoid
-      // double-counting.
       if (!isFixedClient) {
         if (isPaid) {
           macroPaid += amt;
@@ -899,8 +808,6 @@ async function loadReportData() {
         }
       }
 
-      // Hours, client roster, and coverage period still include fixed
-      // clients — they still log hours, it's just not what they're billed on.
       if (log.client_name) {
         uniqueClients.add(log.client_name);
       }
@@ -915,7 +822,6 @@ async function loadReportData() {
       }
     });
 
-    // Fold the fixed-fee ledger into the same totals.
     fixedAllRows.forEach(f => {
       const { paid, unpaid } = splitFixedPayment(f);
       macroPaid += paid;
@@ -962,21 +868,22 @@ async function loadReportData() {
     const tfoot = document.getElementById('leaderboard-tfoot');
 
     // ── Merge fixed-fee clients into this month's breakdown ──────────
-    // data.clientBreakdown comes from /stats/freelancer and is presumed
-    // to be built off timelogs, so a fixed client's `total`/`paid` there
-    // reflect stale/irrelevant hourly math. We override those two fields
-    // with the real fixed_monthly_payments figures for the selected
-    // month, and add an entry for any fixed client that owes a fee this
-    // month but logged zero hours (the fee is still owed either way).
     let breakdown = (data.clientBreakdown || []).map(c => ({ ...c }));
 
     fixedMonthRows.forEach(f => {
       const { due, paid } = splitFixedPayment(f);
-      let row = breakdown.find(c => c.client_id === f.client_id);
+      
+      // FIX: Match by ID or Case-Insensitive Client Name to avoid duplicate client entries
+      let row = breakdown.find(c => 
+        (c.client_id && String(c.client_id) === String(f.client_id)) ||
+        (c.client_name && f.client_name && c.client_name.trim().toLowerCase() === f.client_name.trim().toLowerCase())
+      );
+
       if (row) {
         row.total = due;
         row.paid = paid;
         row.rate_type = 'fixed';
+        if (!row.client_id) row.client_id = f.client_id;
       } else {
         breakdown.push({
           client_id: f.client_id,
@@ -1091,8 +998,6 @@ async function exportFilteredCSV() {
       ].join(','));
     });
 
-    // Fixed-fee clients don't live in timelogs money-wise, so their
-    // monthly fee gets its own row(s) in the same export.
     fixedRows.forEach(f => {
       csvRows.push([
         f.id,
