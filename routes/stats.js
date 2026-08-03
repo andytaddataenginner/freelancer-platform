@@ -37,17 +37,24 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
     // client actually started — same rule enforced in fixed-payments.js's
     // generate/bulk-generate/backfill-all routes, kept in sync here too
     // since this endpoint does its own independent insert.
-    await pool.query(`
-      INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
-      SELECT u.id, c.freelancer_id, $1, c.fixed_price, 'unpaid'
-      FROM clients c
-      JOIN users u ON u.id = c.user_id
-      WHERE c.freelancer_id = $2
-        AND c.rate_type = 'fixed'
-        AND c.fixed_price IS NOT NULL
-        AND to_char(c.created_at, 'YYYY-MM') <= $1
-      ON CONFLICT (client_id, month) DO NOTHING
-    `, [currentMonth, freelancerId]);
+    // Wrapped in its own try/catch: this is a side effect, not core to
+    // computing the month's numbers, so a failure here must never blank
+    // out the rest of the dashboard (paid/unpaid/hours/etc. below).
+    try {
+      await pool.query(`
+        INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
+        SELECT u.id, c.freelancer_id, $1, c.fixed_price, 'unpaid'
+        FROM clients c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.freelancer_id = $2
+          AND c.rate_type = 'fixed'
+          AND c.fixed_price IS NOT NULL
+          AND to_char(c.created_at, 'YYYY-MM') <= $1
+        ON CONFLICT (client_id, month) DO NOTHING
+      `, [currentMonth, freelancerId]);
+    } catch (genErr) {
+      console.error('[stats/freelancer] fixed-monthly auto-generate failed (non-fatal):', genErr);
+    }
 
     // ── Hourly stats from time_logs ───────────────────────────
     const [hours, tasks, hourlyEarned, hourlyUnpaid, monthClients, bookings] = await Promise.all([
