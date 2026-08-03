@@ -48,6 +48,22 @@ router.post('/', requireFreelancer, async (req, res, next) => {
         [userRow.rows[0].id, req.user.id, notes || null, 
          rate_type || 'hourly', hourly_rate || null, fixed_price || null, phone || null]
       );
+
+      // A fixed-rate client's billing starts the month they're created —
+      // create that first month's record right now instead of waiting for
+      // Dashboard or Reports to happen to be loaded for this month first.
+      // Same eligibility rule as generate/bulk-generate/backfill-all:
+      // only fixed clients with an actual price set get a record.
+      if (rate_type === 'fixed' && fixed_price) {
+        const currentMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+        await pool.query(
+          `INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
+           VALUES ($1, $2, $3, $4, 'unpaid')
+           ON CONFLICT (client_id, month) DO NOTHING`,
+          [userRow.rows[0].id, req.user.id, currentMonth, fixed_price]
+        );
+      }
+
       await pool.query('COMMIT');
       res.status(201).json(userRow.rows[0]);
     } catch (e) {
