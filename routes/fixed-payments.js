@@ -14,23 +14,30 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/fixed-payments/generate — auto-generate monthly records
-// Call this to create a record for a specific month if it doesn't exist yet
+// POST /api/fixed-payments/generate — auto-generate a monthly record
+// Refuses to create a record for a month before the client's start date
+// (clients.created_at) — a client can't owe a fixed fee for a month
+// before they were actually a client.
 router.post('/generate', requireFreelancer, async (req, res, next) => {
   try {
     const { client_id, month } = req.body; // month = '2025-06'
     if (!client_id || !month)
       return res.status(400).json({ error: 'client_id and month required' });
 
-    // Get client's fixed price
     const clientInfo = await pool.query(
-      'SELECT fixed_price FROM clients WHERE user_id=$1 AND freelancer_id=$2',
+      `SELECT fixed_price, to_char(created_at, 'YYYY-MM') AS start_month
+       FROM clients WHERE user_id=$1 AND freelancer_id=$2`,
       [client_id, req.user.id]
     );
     if (!clientInfo.rows.length)
       return res.status(404).json({ error: 'Client not found' });
 
-    const amount = clientInfo.rows[0].fixed_price;
+    const { fixed_price: amount, start_month } = clientInfo.rows[0];
+    if (month < start_month) {
+      return res.status(400).json({
+        error: `This client's billing starts ${start_month} — can't generate a fee for ${month}.`
+      });
+    }
 
     // Insert or ignore if already exists
     const { rows } = await pool.query(`
@@ -79,22 +86,26 @@ router.patch('/:id/status', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/fixed-payments/bulk-generate — generate records for all fixed clients
-// for a given month (call from dashboard when viewing a new month)
+// POST /api/fixed-payments/bulk-generate — generate records for all fixed
+// clients for a given month. Skips any client whose created_at is later
+// than the requested month, so paging to a past month never fabricates a
+// fee for a client who didn't exist yet.
 router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
   try {
     const { month } = req.body;
     if (!month) return res.status(400).json({ error: 'month required' });
 
-    // Get all fixed clients for this freelancer
     const clients = await pool.query(`
       SELECT u.id, c.fixed_price FROM clients c
       JOIN users u ON u.id = c.user_id
-      WHERE c.freelancer_id = $1 AND c.rate_type = 'fixed' AND c.fixed_price IS NOT NULL
-    `, [req.user.id]);
+      WHERE c.freelancer_id = $1 
+        AND c.rate_type = 'fixed' 
+        AND c.fixed_price IS NOT NULL
+        AND to_char(c.created_at, 'YYYY-MM') <= $2
+    `, [req.user.id, month]);
 
-    // Generate a record for each fixed client for this month
-    const results = await Promise.all(clients.rows.map(cl =>
+    // Generate a record for each eligible fixed client for this month
+    await Promise.all(clients.rows.map(cl =>
       pool.query(`
         INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
         VALUES ($1, $2, $3, $4, 'unpaid')
@@ -125,6 +136,7 @@ router.delete('/:id', requireFreelancer, async (req, res, next) => {
     res.json({ message: 'Deleted' });
   } catch (e) { next(e); }
 });
+
 // GET /api/fixed-payments — every fixed-fee record for this freelancer,
 // across all clients and all months. Powers the "All Time" statement.
 router.get('/', requireFreelancer, async (req, res, next) => {
@@ -143,29 +155,41 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 // POST /api/fixed-payments/backfill-all
 // body: { start_month: 'YYYY-MM' }
 // One-time seed: creates an 'unpaid' row for every fixed-rate client for
-// every month from start_month through the current month. Safe to re-run —
-// ON CONFLICT DO NOTHING skips months that already have a record.
+// every month from start_month (or the client's own created_at, whichever
+// is LATER) through the current month. A client is never backfilled to a
+// month before they actually started. Safe to re-run — ON CONFLICT DO
+// NOTHING skips months that already have a record.
 router.post('/backfill-all', requireFreelancer, async (req, res, next) => {
   try {
     const { start_month } = req.body;
     if (!start_month) return res.status(400).json({ error: 'start_month required (YYYY-MM)' });
 
     const clients = await pool.query(`
-      SELECT c.user_id, c.fixed_price FROM clients c
+      SELECT c.user_id, c.fixed_price, to_char(c.created_at, 'YYYY-MM') AS start_month
+      FROM clients c
       WHERE c.freelancer_id = $1 AND c.rate_type = 'fixed' AND c.fixed_price IS NOT NULL
     `, [req.user.id]);
 
-    const months = [];
-    let [y, m] = start_month.split('-').map(Number);
     const now = new Date();
     const endY = now.getFullYear(), endM = now.getMonth() + 1;
-    while (y < endY || (y === endY && m <= endM)) {
-      months.push(`${y}-${String(m).padStart(2, '0')}`);
-      m++; if (m > 12) { m = 1; y++; }
+
+    function monthsFrom(fromMonth) {
+      const months = [];
+      let [y, m] = fromMonth.split('-').map(Number);
+      while (y < endY || (y === endY && m <= endM)) {
+        months.push(`${y}-${String(m).padStart(2, '0')}`);
+        m++; if (m > 12) { m = 1; y++; }
+      }
+      return months;
     }
 
     let created = 0;
     for (const cl of clients.rows) {
+      // Never generate a fee for a month before this client actually
+      // started — clamp the requested start_month forward to whichever
+      // is later: the requested date or the client's own created_at.
+      const effectiveStart = cl.start_month > start_month ? cl.start_month : start_month;
+      const months = monthsFrom(effectiveStart);
       for (const mo of months) {
         const r = await pool.query(`
           INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
@@ -176,7 +200,7 @@ router.post('/backfill-all', requireFreelancer, async (req, res, next) => {
         if (r.rows.length) created++;
       }
     }
-    res.json({ clients: clients.rows.length, months: months.length, created });
+    res.json({ clients: clients.rows.length, created });
   } catch (e) { next(e); }
 });
 
