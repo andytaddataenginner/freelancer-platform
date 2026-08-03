@@ -33,6 +33,10 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
     // ── Auto-generate fixed monthly records for this month ────
+    // Guarded by created_at: never fabricate a fee for a month before the
+    // client actually started — same rule enforced in fixed-payments.js's
+    // generate/bulk-generate/backfill-all routes, kept in sync here too
+    // since this endpoint does its own independent insert.
     await pool.query(`
       INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
       SELECT u.id, c.freelancer_id, $1, c.fixed_price, 'unpaid'
@@ -41,6 +45,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       WHERE c.freelancer_id = $2
         AND c.rate_type = 'fixed'
         AND c.fixed_price IS NOT NULL
+        AND to_char(c.created_at, 'YYYY-MM') <= $1
       ON CONFLICT (client_id, month) DO NOTHING
     `, [currentMonth, freelancerId]);
 
