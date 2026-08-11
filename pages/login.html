@@ -446,6 +446,16 @@ function switchMode(mode) {
   }
 }
 
+// Safe parsing helper to prevent unexpected token HTML error
+async function parseJsonResponse(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    throw new Error(`Server returned non-JSON response (${res.status}). Check backend route or server logs.`);
+  }
+}
+
 /* LOGIN FUNCTIONS */
 async function doLogin() {
   const btn      = document.getElementById('login-btn');
@@ -463,11 +473,12 @@ async function doLogin() {
   setTimeout(() => { progress.style.width = '85%'; }, 50);
 
   try {
-    const res  = await fetch(API + '/auth/login', {
+    const res = await fetch(API + '/auth/login', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const data = await res.json();
+    
+    const data = await parseJsonResponse(res);
     if (!res.ok) throw new Error(data.error || 'Invalid email or password.');
 
     progress.style.transition = 'width .2s linear';
@@ -543,7 +554,8 @@ async function startSignup() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, password, role: 'freelancer' })
     });
-    const data = await res.json();
+    
+    const data = await parseJsonResponse(res);
 
     if (res.status === 409) {
       throw new Error('This email is already registered. Try signing in instead.');
@@ -596,7 +608,10 @@ async function resendCode(channel) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ signupId, channel })
     });
-    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Could not resend code.'); }
+    
+    const d = await parseJsonResponse(res);
+    if (!res.ok) throw new Error(d.error || 'Could not resend code.');
+    
     cooldowns[channel] = RESEND_COOLDOWN;
     startCooldownTimer();
   } catch (err) {
@@ -623,7 +638,8 @@ async function verifyCodes() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ signupId, emailCode, phoneCode })
     });
-    const data = await res.json();
+    
+    const data = await parseJsonResponse(res);
     if (!res.ok) throw new Error(data.error || 'Invalid or expired code.');
 
     auth.save(data.token, data.user);
