@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign In — Quick Freelancing Agency</title>
-  
+  <title>Portal — Quick Freelancing Agency</title>
+
   <!-- PREVENT THEME FLASHING ON LOAD -->
   <script>
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -36,7 +36,7 @@
     html,body { height:100%; font-family:var(--sans); background:var(--bg); color:var(--navy); transition: background-color 0.3s ease, color 0.3s ease; }
     .page { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
 
-    /* LEFT */
+    /* LEFT PANEL */
     .left-panel {
       background: var(--navy); 
       display:flex; flex-direction:column;
@@ -48,8 +48,7 @@
     .left-panel::before { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(26,92,255,.25) 0%,transparent 70%); top:-150px; right:-150px; pointer-events:none; }
     .left-panel::after  { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle,rgba(201,149,42,.2) 0%,transparent 70%); bottom:-100px; left:-100px; pointer-events:none; }
 
-    .left-top-bar { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
-    .left-logo { display:flex; align-items:center; gap:.9rem; }
+    .left-logo { display:flex; align-items:center; gap:.9rem; position:relative; z-index:1; }
     .left-logo-img { height:52px; width:52px; background:var(--white); border-radius:12px; overflow:hidden; flex-shrink:0; padding:4px; }
     .left-logo-img img { width:100%; height:100%; object-fit:contain; }
     .left-logo-text strong { display:block; color:var(--white); font-size:1rem; font-weight:700; line-height:1.2; }
@@ -66,29 +65,23 @@
     .feature-text span   { font-size:.8rem; color:rgba(255,255,255,.45); }
     .left-footer { position:relative; z-index:1; font-size:.75rem; color:rgba(255,255,255,.25); }
 
-    /* RIGHT */
+    /* RIGHT PANEL */
     .right-panel { display:flex; flex-direction:column; justify-content:center; align-items:center; padding:3rem 2rem; background:var(--bg); position: relative; }
     
     .top-controls { position: absolute; top: 1.5rem; right: 1.5rem; }
-    
-    /* Theme Toggle Button Style */
     .theme-toggle-btn {
       background: var(--white);
       border: 1.5px solid rgba(128,128,128,0.2);
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 1rem;
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1rem;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       transition: all 0.2s;
     }
     .theme-toggle-btn:hover { border-color: var(--accent); transform: scale(1.05); }
 
-    .login-box { width:100%; max-width:420px; animation:fadeUp .6s ease both; }
+    .auth-box { width:100%; max-width:440px; animation:fadeUp .6s ease both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
 
     .mobile-header { display:none; align-items:center; gap:.8rem; margin-bottom:2.5rem; }
@@ -97,17 +90,29 @@
     .mobile-header-text strong { display:block; font-size:.95rem; font-weight:700; color:var(--navy); }
     .mobile-header-text span   { font-size:.72rem; color:var(--ink3); text-transform:uppercase; letter-spacing:.08em; }
 
-    .login-header { margin-bottom:2.2rem; }
-    .login-header h2 { font-family:var(--serif); font-size:2rem; letter-spacing:-.02em; margin-bottom:.4rem; color: var(--navy); }
-    .login-header p  { color:var(--ink3); font-size:.9rem; font-weight:300; }
+    .auth-header { margin-bottom:1.6rem; }
+    .auth-header h2 { font-family:var(--serif); font-size:2rem; letter-spacing:-.02em; margin-bottom:.4rem; color: var(--navy); }
+    .auth-header p  { color:var(--ink3); font-size:.9rem; font-weight:300; }
 
+    /* Step indicator for Sign Up */
+    .step-track { display:flex; align-items:center; gap:.5rem; margin-bottom:1.8rem; }
+    .step-dot { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:600; background:var(--white); border:1.5px solid rgba(128,128,128,.25); color:var(--ink3); transition:all .25s; }
+    .step-dot.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+    .step-dot.done { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .step-line { flex:1; height:2px; background:rgba(128,128,128,.2); }
+    .step-line.done { background:var(--accent); }
+
+    /* Alerts */
     .alert { padding:.85rem 1rem; border-radius:10px; font-size:.86rem; margin-bottom:1.2rem; display:flex; align-items:center; gap:.6rem; }
     .alert-error   { background:#fff0f0; color:#b91c1c; border:1px solid #fecaca; }
     [data-theme="dark"] .alert-error { background: #3b1111; color: #ff8b8b; border-color: #5c1c1c; }
     .alert-success { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+    [data-theme="dark"] .alert-success { background:#0f2a1a; color:#8ff0b0; border-color:#1c5c30; }
 
+    /* Forms */
     .form-group { display:flex; flex-direction:column; gap:.4rem; margin-bottom:1.1rem; }
     .form-group label { font-size:.82rem; font-weight:600; color:var(--ink2); letter-spacing:.02em; }
+    .form-hint { font-size:.75rem; color:var(--ink3); font-weight:300; }
     .input-wrap { position:relative; }
     .input-wrap input {
       width:100%; padding:.9rem 1rem .9rem 3rem;
@@ -119,27 +124,54 @@
     .input-wrap input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(26,92,255,.08); }
     .input-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); font-size:1rem; color:var(--ink3); pointer-events:none; }
 
-    .btn-login {
+    .otp-input {
+      width:100%; padding:.9rem 1rem; text-align:center;
+      font-size:1.4rem; letter-spacing:.5em; font-weight:600;
+      border:1.5px solid rgba(0,0,0,.1); border-radius:12px;
+      background:var(--white); color:var(--navy); font-family:var(--sans);
+      transition:border-color .2s,box-shadow .2s;
+    }
+    [data-theme="dark"] .otp-input { border-color: rgba(255,255,255,0.1); }
+    .otp-input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(26,92,255,.08); }
+    .otp-row { display:flex; align-items:center; justify-content:space-between; margin-top:.4rem; }
+    .otp-target { font-size:.78rem; color:var(--ink3); }
+    .otp-target strong { color:var(--ink2); font-weight:600; }
+    .resend-btn { background:none; border:none; font-family:var(--sans); font-size:.78rem; font-weight:600; color:var(--accent); cursor:pointer; padding:0; }
+    .resend-btn:disabled { color:var(--ink3); cursor:not-allowed; }
+
+    .btn-submit {
       width:100%; padding:1rem; background:var(--navy); color:var(--white);
       border:none; border-radius:12px; font-family:var(--sans); font-size:.95rem; font-weight:600;
       cursor:pointer; letter-spacing:.02em; transition:all .2s;
       display:flex; align-items:center; justify-content:center; gap:.6rem;
       margin-top:.5rem; position:relative; overflow:hidden;
     }
-    [data-theme="dark"] .btn-login { background: var(--accent); color: #fff; }
-    .btn-login:hover:not(:disabled) { background:var(--accent); transform:translateY(-1px); box-shadow:0 8px 24px rgba(26,92,255,.3); }
-    .btn-login:disabled { opacity:.7; cursor:not-allowed; }
+    [data-theme="dark"] .btn-submit { background: var(--accent); color: #fff; }
+    .btn-submit:hover:not(:disabled) { background:var(--accent); transform:translateY(-1px); box-shadow:0 8px 24px rgba(26,92,255,.3); }
+    .btn-submit:disabled { opacity:.7; cursor:not-allowed; }
     .btn-progress { position:absolute; bottom:0; left:0; height:3px; background:var(--gold2); width:0; transition:width 2s linear; }
-    .btn-login.loading .btn-progress { width:85%; }
+    .btn-submit.loading .btn-progress { width:85%; }
     .spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:spin .7s linear infinite; display:none; }
-    .btn-login.loading .spinner { display:block; }
-    .btn-login.loading .btn-text  { opacity:.7; }
+    .btn-submit.loading .spinner { display:block; }
+    .btn-submit.loading .btn-text  { opacity:.7; }
     @keyframes spin { to{transform:rotate(360deg)} }
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
 
     .session-note { text-align:center; margin-top:1rem; font-size:.78rem; color:var(--ink3); background:var(--white); border-radius:8px; padding:.6rem; border: 1px solid rgba(128,128,128,0.1); }
-    .back-link { text-align:center; margin-top:1.2rem; font-size:.85rem; color:var(--ink3); }
-    .back-link a { color:var(--accent); font-weight:600; text-decoration:none; }
+    .switch-mode { text-align:center; margin-top:1.2rem; font-size:.85rem; color:var(--ink3); }
+    .switch-mode a { color:var(--accent); font-weight:600; text-decoration:none; cursor:pointer; }
+
+    .btn-text-link {
+      width:100%; text-align:center; background:none; border:none;
+      font-family:var(--sans); font-size:.83rem; color:var(--ink3); cursor:pointer; margin-top:1rem;
+    }
+    .btn-text-link:hover { color:var(--accent); }
+
+    .panel-view { display:none; }
+    .panel-view.active { display:block; }
+
+    .success-icon { width:64px; height:64px; border-radius:50%; background:rgba(26,92,255,.1); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 1.2rem; }
+    .success-center { text-align:center; }
 
     @media(max-width:768px) {
       .page { grid-template-columns:1fr; }
@@ -153,6 +185,7 @@
 <body>
 <div class="page">
 
+  <!-- Dynamic Left Panel -->
   <div class="left-panel">
     <div class="left-logo">
       <div class="left-logo-img"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -161,7 +194,9 @@
         <span>Data &amp; Analytics</span>
       </div>
     </div>
-    <div class="left-content">
+
+    <!-- Content for Login -->
+    <div class="left-content" id="left-login-content">
       <h1>Your Data,<br/><em>Your Portal.</em></h1>
       <p>Sign in to access your project dashboard, track hours, view invoices, and schedule sessions with our team.</p>
       <div class="features">
@@ -170,11 +205,23 @@
         <div class="feature"><div class="feature-icon">📅</div><div class="feature-text"><strong>Session Booking</strong><span>Schedule meetings and working sessions</span></div></div>
       </div>
     </div>
+
+    <!-- Content for Signup -->
+    <div class="left-content" id="left-signup-content" style="display: none;">
+      <h1>Join as a<br/><em>Freelancer.</em></h1>
+      <p>Create your account to manage your own clients, log hours, send invoices, and run your working sessions — all from one portal.</p>
+      <div class="features">
+        <div class="feature"><div class="feature-icon">👥</div><div class="feature-text"><strong>Add Your Own Clients</strong><span>Bring your clients into your dashboard</span></div></div>
+        <div class="feature"><div class="feature-icon">⏱</div><div class="feature-text"><strong>Real-time Time Tracking</strong><span>Log hours against every project</span></div></div>
+        <div class="feature"><div class="feature-icon">💰</div><div class="feature-text"><strong>Invoicing Built In</strong><span>Bill clients straight from your account</span></div></div>
+      </div>
+    </div>
+
     <div class="left-footer">© 2026 Quick Freelancing Agency · ndy.andupa@gmail.com</div>
   </div>
 
+  <!-- Right Panel -->
   <div class="right-panel">
-    <!-- Top Right Theme Toggle Button -->
     <div class="top-controls">
       <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">🌙</button>
     </div>
@@ -184,38 +231,149 @@
       <div class="mobile-header-text"><strong>Quick Freelancing Agency</strong><span>Data &amp; Analytics</span></div>
     </div>
 
-    <div class="login-box">
-      <div class="login-header">
-        <h2>Welcome back</h2>
-        <p>Sign in to your QFA portal</p>
-      </div>
-
+    <div class="auth-box">
+      
       <div id="alert-box" class="alert alert-error" style="display:none"></div>
 
-      <div class="form-group">
-        <label>Email address</label>
-        <div class="input-wrap">
-          <span class="input-icon">✉️</span>
-          <input type="email" id="email" placeholder="you@example.com" required autocomplete="email"/>
+      <!-- ================= LOGIN MODULE ================= -->
+      <div class="panel-view active" id="view-login">
+        <div class="auth-header">
+          <h2>Welcome back</h2>
+          <p>Sign in to your QFA portal</p>
+        </div>
+
+        <div class="form-group">
+          <label>Email address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          </div>
+        </div>
+
+        <button class="btn-submit" id="login-btn" onclick="doLogin()">
+          <div class="btn-progress" id="login-progress"></div>
+          <div class="spinner"></div>
+          <span class="btn-text" id="login-text">Sign in →</span>
+        </button>
+
+        <div class="session-note">🔒 Sessions expire after 1 hours for your security</div>
+        <div class="switch-mode">New freelancer? <a onclick="switchMode('signup')">Create an account</a></div>
+        <div class="switch-mode" style="margin-top: .5rem;"><a href="../index.html">← Back to QFA website</a></div>
+      </div>
+
+      <!-- ================= FREELANCER SIGNUP MODULE ================= -->
+      <div class="panel-view" id="view-signup">
+        <div class="step-track">
+          <div class="step-dot active" id="dot-1">1</div>
+          <div class="step-line" id="line-1"></div>
+          <div class="step-dot" id="dot-2">2</div>
+        </div>
+
+        <!-- STEP 1: SIGNUP DETAILS -->
+        <div class="panel-view active" id="signup-step-1">
+          <div class="auth-header">
+            <h2>Create your account</h2>
+            <p>Sign up as a freelancer on QFA</p>
+          </div>
+
+          <div class="form-group">
+            <label>Full name</label>
+            <div class="input-wrap">
+              <span class="input-icon">👤</span>
+              <input type="text" id="signup-name" placeholder="Jane Doe" autocomplete="name"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email address</label>
+            <div class="input-wrap">
+              <span class="input-icon">✉️</span>
+              <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Phone number</label>
+            <div class="input-wrap">
+              <span class="input-icon">📱</span>
+              <input type="tel" id="signup-phone" placeholder="+1 555 123 4567" autocomplete="tel"/>
+            </div>
+            <span class="form-hint">Include your country code — we'll text a verification code here.</span>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="signup-password" placeholder="••••••••" autocomplete="new-password"/>
+            </div>
+            <span class="form-hint">At least 8 characters, with a number.</span>
+          </div>
+          <div class="form-group">
+            <label>Confirm password</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="signup-password2" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')startSignup()"/>
+            </div>
+          </div>
+
+          <button class="btn-submit" id="step1-btn" onclick="startSignup()">
+            <div class="btn-progress" id="step1-progress"></div>
+            <div class="spinner"></div>
+            <span class="btn-text" id="step1-text">Create account →</span>
+          </button>
+
+          <div class="switch-mode">Already have an account? <a onclick="switchMode('login')">Sign in</a></div>
+        </div>
+
+        <!-- STEP 2: VERIFY CODE -->
+        <div class="panel-view" id="signup-step-2">
+          <div class="auth-header">
+            <h2>Verify it's you</h2>
+            <p>Enter the codes we just sent</p>
+          </div>
+
+          <div class="form-group">
+            <label>Email code</label>
+            <input type="text" class="otp-input" id="email-code" maxlength="6" inputmode="numeric" placeholder="······"/>
+            <div class="otp-row">
+              <span class="otp-target">Sent to <strong id="email-target"></strong></span>
+              <button class="resend-btn" id="resend-email" onclick="resendCode('email')">Resend</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Phone code</label>
+            <input type="text" class="otp-input" id="phone-code" maxlength="6" inputmode="numeric" placeholder="······"/>
+            <div class="otp-row">
+              <span class="otp-target">Sent to <strong id="phone-target"></strong></span>
+              <button class="resend-btn" id="resend-phone" onclick="resendCode('phone')">Resend</button>
+            </div>
+          </div>
+
+          <button class="btn-submit" id="step2-btn" onclick="verifyCodes()">
+            <div class="btn-progress" id="step2-progress"></div>
+            <div class="spinner"></div>
+            <span class="btn-text" id="step2-text">Verify &amp; continue →</span>
+          </button>
+
+          <button class="btn-text-link" onclick="goToSignupStep(1)">← Edit my details</button>
+        </div>
+
+        <!-- STEP 3: SUCCESS -->
+        <div class="panel-view success-center" id="signup-step-3">
+          <div class="success-icon">✓</div>
+          <div class="auth-header">
+            <h2>You're all set</h2>
+            <p>Taking you to your dashboard…</p>
+          </div>
         </div>
       </div>
-      <div class="form-group">
-        <label>Password</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
-        </div>
-      </div>
 
-      <button class="btn-login" id="login-btn" onclick="doLogin()">
-        <div class="btn-progress" id="btn-progress"></div>
-        <div class="spinner"></div>
-        <span class="btn-text" id="btn-text">Sign in →</span>
-      </button>
-
-      <div class="session-note">🔒 Sessions expire after 1 hours for your security</div>
-
-      <div class="back-link"><a href="../index.html">← Back to QFA website</a></div>
     </div>
   </div>
 </div>
@@ -223,26 +381,22 @@
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const SESSION_HOURS = 1;
+const RESEND_COOLDOWN = 60;
 
 // Theme Toggle Script Integration
 const themeToggleBtn = document.getElementById('theme-toggle');
-
-function updateToggleIcon(theme) {
-  themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-}
-
-// Initialize icon state on load
+function updateToggleIcon(theme) { themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙'; }
 updateToggleIcon(localStorage.getItem('theme') || 'light');
 
 themeToggleBtn.addEventListener('click', () => {
   const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  
   document.documentElement.setAttribute('data-theme', newTheme);
   localStorage.setItem('theme', newTheme);
   updateToggleIcon(newTheme);
 });
 
+// Authentication helpers
 const auth = {
   save: (t, u) => {
     localStorage.setItem('token', t);
@@ -260,31 +414,52 @@ const auth = {
   }
 };
 
-// Safe implementation wrap for layout checks
 document.addEventListener('DOMContentLoaded', () => {
   if (auth.isLoggedIn()) {
     const u = auth.user();
-    if (u) {
-      window.location.href = u.role === 'client' ? 'client-portal.html' : 'dashboard.html';
-    }
+    if (u) { window.location.href = u.role === 'client' ? 'client-portal.html' : 'dashboard.html'; }
   }
 });
 
+/* Helper UI functions */
+function showAlert(msg, type = 'error') {
+  const box = document.getElementById('alert-box');
+  box.className = 'alert alert-' + type;
+  box.textContent = (type === 'error' ? '✕ ' : '✓ ') + msg;
+  box.style.display = 'flex';
+}
+function hideAlert() { document.getElementById('alert-box').style.display = 'none'; }
+
+function switchMode(mode) {
+  hideAlert();
+  document.querySelectorAll('.panel-view').forEach(p => p.classList.remove('active'));
+  
+  if (mode === 'login') {
+    document.getElementById('view-login').classList.add('active');
+    document.getElementById('left-login-content').style.display = 'block';
+    document.getElementById('left-signup-content').style.display = 'none';
+  } else {
+    document.getElementById('view-signup').classList.add('active');
+    document.getElementById('left-login-content').style.display = 'none';
+    document.getElementById('left-signup-content').style.display = 'block';
+    goToSignupStep(1);
+  }
+}
+
+/* LOGIN FUNCTIONS */
 async function doLogin() {
   const btn      = document.getElementById('login-btn');
-  const alertBox = document.getElementById('alert-box');
-  const btnText  = document.getElementById('btn-text');
-  const progress = document.getElementById('btn-progress');
-  const email    = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
+  const btnText  = document.getElementById('login-text');
+  const progress = document.getElementById('login-progress');
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
 
   if (!email || !password) {
-    alertBox.textContent = '⚠ Please enter your email and password.';
-    alertBox.style.display = 'flex'; return;
+    showAlert('Please enter your email and password.'); return;
   }
 
   btn.disabled = true; btn.classList.add('loading');
-  btnText.textContent = 'Signing in…'; alertBox.style.display = 'none';
+  btnText.textContent = 'Signing in…'; hideAlert();
   setTimeout(() => { progress.style.width = '85%'; }, 50);
 
   try {
@@ -299,7 +474,6 @@ async function doLogin() {
     progress.style.width = '100%';
     btnText.textContent = '✓ Success! Redirecting…';
     
-    // Save token data safely
     auth.save(data.token, data.user);
     
     setTimeout(() => {
@@ -310,12 +484,157 @@ async function doLogin() {
     btn.disabled = false; btn.classList.remove('loading');
     btnText.textContent = 'Sign in →';
     progress.style.transition = 'none'; progress.style.width = '0';
-    alertBox.className = 'alert alert-error';
-    alertBox.textContent = '✕ ' + (err.message || 'Invalid email or password.');
-    alertBox.style.display = 'flex';
-    const box = document.querySelector('.login-box');
+    showAlert(err.message || 'Invalid email or password.');
+    
+    const box = document.querySelector('.auth-box');
     box.style.animation = 'none';
     setTimeout(() => { box.style.animation = 'shake .4s ease'; }, 10);
+  }
+}
+
+/* FREELANCER SIGNUP FUNCTIONS */
+let signupId = null;
+let cooldowns = { email: 0, phone: 0 };
+let cooldownTimer = null;
+
+function goToSignupStep(n) {
+  document.querySelectorAll('#view-signup .panel-view').forEach(p => p.classList.remove('active'));
+  document.getElementById('signup-step-' + n).classList.add('active');
+  document.getElementById('dot-1').className = 'step-dot ' + (n >= 1 ? (n > 1 ? 'done' : 'active') : '');
+  document.getElementById('dot-2').className = 'step-dot ' + (n === 2 ? 'active' : (n > 2 ? 'done' : ''));
+  document.getElementById('line-1').className = 'step-line ' + (n > 1 ? 'done' : '');
+  hideAlert();
+}
+
+function setLoading(btnId, textId, isLoading, label) {
+  const btn = document.getElementById(btnId);
+  const text = document.getElementById(textId);
+  btn.disabled = isLoading;
+  btn.classList.toggle('loading', isLoading);
+  text.textContent = isLoading ? label : text.dataset.default;
+}
+
+function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function isValidPhone(v) { return /^\+?[0-9\s\-()]{7,20}$/.test(v); }
+
+async function startSignup() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const phone = document.getElementById('signup-phone').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const password2 = document.getElementById('signup-password2').value;
+
+  if (!name || !email || !phone || !password || !password2) {
+    showAlert('Please fill in every field.'); return;
+  }
+  if (!isValidEmail(email)) { showAlert('Enter a valid email address.'); return; }
+  if (!isValidPhone(phone)) { showAlert('Enter a valid phone number, with country code.'); return; }
+  if (password.length < 8 || !/\d/.test(password)) { showAlert('Password needs at least 8 characters and a number.'); return; }
+  if (password !== password2) { showAlert('Passwords don\'t match.'); return; }
+
+  hideAlert();
+  const text = document.getElementById('step1-text');
+  text.dataset.default = text.textContent;
+  setLoading('step1-btn', 'step1-text', true, 'Creating account…');
+  document.getElementById('step1-progress').style.width = '85%';
+
+  try {
+    const res = await fetch(API + '/auth/signup/initiate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password, role: 'freelancer' })
+    });
+    const data = await res.json();
+
+    if (res.status === 409) {
+      throw new Error('This email is already registered. Try signing in instead.');
+    }
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+
+    signupId = data.signupId;
+    document.getElementById('email-target').textContent = email;
+    document.getElementById('phone-target').textContent = phone;
+    cooldowns = { email: RESEND_COOLDOWN, phone: RESEND_COOLDOWN };
+    startCooldownTimer();
+    goToSignupStep(2);
+
+  } catch (err) {
+    setLoading('step1-btn', 'step1-text', false);
+    document.getElementById('step1-progress').style.width = '0';
+    showAlert(err.message || 'Something went wrong. Please try again.');
+    const box = document.querySelector('.auth-box');
+    box.style.animation = 'none';
+    setTimeout(() => { box.style.animation = 'shake .4s ease'; }, 10);
+  }
+}
+
+function startCooldownTimer() {
+  updateResendButtons();
+  clearInterval(cooldownTimer);
+  cooldownTimer = setInterval(() => {
+    let stillCounting = false;
+    for (const k of ['email', 'phone']) {
+      if (cooldowns[k] > 0) { cooldowns[k]--; stillCounting = true; }
+    }
+    updateResendButtons();
+    if (!stillCounting) clearInterval(cooldownTimer);
+  }, 1000);
+}
+
+function updateResendButtons() {
+  const e = document.getElementById('resend-email');
+  const p = document.getElementById('resend-phone');
+  e.disabled = cooldowns.email > 0;
+  e.textContent = cooldowns.email > 0 ? `Resend (${cooldowns.email}s)` : 'Resend';
+  p.disabled = cooldowns.phone > 0;
+  p.textContent = cooldowns.phone > 0 ? `Resend (${cooldowns.phone}s)` : 'Resend';
+}
+
+async function resendCode(channel) {
+  if (cooldowns[channel] > 0 || !signupId) return;
+  try {
+    const res = await fetch(API + '/auth/signup/resend-otp', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signupId, channel })
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Could not resend code.'); }
+    cooldowns[channel] = RESEND_COOLDOWN;
+    startCooldownTimer();
+  } catch (err) {
+    showAlert(err.message || 'Could not resend code.');
+  }
+}
+
+async function verifyCodes() {
+  const emailCode = document.getElementById('email-code').value.trim();
+  const phoneCode = document.getElementById('phone-code').value.trim();
+
+  if (emailCode.length !== 6 || phoneCode.length !== 6) {
+    showAlert('Enter both 6-digit codes.'); return;
+  }
+
+  hideAlert();
+  const text = document.getElementById('step2-text');
+  text.dataset.default = text.textContent;
+  setLoading('step2-btn', 'step2-text', true, 'Verifying…');
+  document.getElementById('step2-progress').style.width = '85%';
+
+  try {
+    const res = await fetch(API + '/auth/signup/verify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signupId, emailCode, phoneCode })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Invalid or expired code.');
+
+    auth.save(data.token, data.user);
+
+    goToSignupStep(3);
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);
+
+  } catch (err) {
+    setLoading('step2-btn', 'step2-text', false);
+    document.getElementById('step2-progress').style.width = '0';
+    showAlert(err.message || 'Invalid or expired code.');
   }
 }
 </script>
