@@ -185,7 +185,7 @@
 <body>
 <div class="page">
 
-  <!-- Dynamic Left Panel -->
+  <!-- Left Panel -->
   <div class="left-panel">
     <div class="left-logo">
       <div class="left-logo-img"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -195,7 +195,6 @@
       </div>
     </div>
 
-    <!-- Content for Login -->
     <div class="left-content" id="left-login-content">
       <h1>Your Data,<br/><em>Your Portal.</em></h1>
       <p>Sign in to access your project dashboard, track hours, view invoices, and schedule sessions with our team.</p>
@@ -206,7 +205,6 @@
       </div>
     </div>
 
-    <!-- Content for Signup -->
     <div class="left-content" id="left-signup-content" style="display: none;">
       <h1>Join as a<br/><em>Freelancer.</em></h1>
       <p>Create your account to manage your own clients, log hours, send invoices, and run your working sessions — all from one portal.</p>
@@ -235,7 +233,7 @@
       
       <div id="alert-box" class="alert alert-error" style="display:none"></div>
 
-      <!-- ================= LOGIN MODULE ================= -->
+      <!-- LOGIN MODULE -->
       <div class="panel-view active" id="view-login">
         <div class="auth-header">
           <h2>Welcome back</h2>
@@ -268,7 +266,7 @@
         <div class="switch-mode" style="margin-top: .5rem;"><a href="../index.html">← Back to QFA website</a></div>
       </div>
 
-      <!-- ================= FREELANCER SIGNUP MODULE ================= -->
+      <!-- FREELANCER SIGNUP MODULE -->
       <div class="panel-view" id="view-signup">
         <div class="step-track">
           <div class="step-dot active" id="dot-1">1</div>
@@ -276,7 +274,7 @@
           <div class="step-dot" id="dot-2">2</div>
         </div>
 
-        <!-- STEP 1: SIGNUP DETAILS -->
+        <!-- STEP 1: DETAILS -->
         <div class="panel-view active" id="signup-step-1">
           <div class="auth-header">
             <h2>Create your account</h2>
@@ -296,14 +294,14 @@
               <span class="input-icon">✉️</span>
               <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
             </div>
+            <span class="form-hint">We will send your 6-digit verification code here.</span>
           </div>
           <div class="form-group">
-            <label>Phone number</label>
+            <label>Phone number (Optional)</label>
             <div class="input-wrap">
               <span class="input-icon">📱</span>
               <input type="tel" id="signup-phone" placeholder="+1 555 123 4567" autocomplete="tel"/>
             </div>
-            <span class="form-hint">Include your country code — we'll text a verification code here.</span>
           </div>
           <div class="form-group">
             <label>Password</label>
@@ -330,28 +328,19 @@
           <div class="switch-mode">Already have an account? <a onclick="switchMode('login')">Sign in</a></div>
         </div>
 
-        <!-- STEP 2: VERIFY CODE -->
+        <!-- STEP 2: VERIFY EMAIL -->
         <div class="panel-view" id="signup-step-2">
           <div class="auth-header">
-            <h2>Verify it's you</h2>
-            <p>Enter the codes we just sent</p>
+            <h2>Verify your email</h2>
+            <p>Enter the 6-digit code sent to your email</p>
           </div>
 
           <div class="form-group">
-            <label>Email code</label>
+            <label>Verification code</label>
             <input type="text" class="otp-input" id="email-code" maxlength="6" inputmode="numeric" placeholder="······"/>
             <div class="otp-row">
               <span class="otp-target">Sent to <strong id="email-target"></strong></span>
-              <button class="resend-btn" id="resend-email" onclick="resendCode('email')">Resend</button>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Phone code</label>
-            <input type="text" class="otp-input" id="phone-code" maxlength="6" inputmode="numeric" placeholder="······"/>
-            <div class="otp-row">
-              <span class="otp-target">Sent to <strong id="phone-target"></strong></span>
-              <button class="resend-btn" id="resend-phone" onclick="resendCode('phone')">Resend</button>
+              <button class="resend-btn" id="resend-email" onclick="resendCode()">Resend Code</button>
             </div>
           </div>
 
@@ -383,7 +372,6 @@ const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const SESSION_HOURS = 1;
 const RESEND_COOLDOWN = 60;
 
-// Theme Toggle Script Integration
 const themeToggleBtn = document.getElementById('theme-toggle');
 function updateToggleIcon(theme) { themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙'; }
 updateToggleIcon(localStorage.getItem('theme') || 'light');
@@ -396,7 +384,6 @@ themeToggleBtn.addEventListener('click', () => {
   updateToggleIcon(newTheme);
 });
 
-// Authentication helpers
 const auth = {
   save: (t, u) => {
     localStorage.setItem('token', t);
@@ -421,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* Helper UI functions */
 function showAlert(msg, type = 'error') {
   const box = document.getElementById('alert-box');
   box.className = 'alert alert-' + type;
@@ -446,7 +432,6 @@ function switchMode(mode) {
   }
 }
 
-// Safe parsing helper to prevent unexpected token HTML error
 async function parseJsonResponse(res) {
   const text = await res.text();
   try {
@@ -456,7 +441,6 @@ async function parseJsonResponse(res) {
   }
 }
 
-/* LOGIN FUNCTIONS */
 async function doLogin() {
   const btn      = document.getElementById('login-btn');
   const btnText  = document.getElementById('login-text');
@@ -503,9 +487,8 @@ async function doLogin() {
   }
 }
 
-/* FREELANCER SIGNUP FUNCTIONS */
 let signupId = null;
-let cooldowns = { email: 0, phone: 0 };
+let cooldown = 0;
 let cooldownTimer = null;
 
 function goToSignupStep(n) {
@@ -526,7 +509,6 @@ function setLoading(btnId, textId, isLoading, label) {
 }
 
 function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-function isValidPhone(v) { return /^\+?[0-9\s\-()]{7,20}$/.test(v); }
 
 async function startSignup() {
   const name = document.getElementById('signup-name').value.trim();
@@ -535,11 +517,10 @@ async function startSignup() {
   const password = document.getElementById('signup-password').value;
   const password2 = document.getElementById('signup-password2').value;
 
-  if (!name || !email || !phone || !password || !password2) {
-    showAlert('Please fill in every field.'); return;
+  if (!name || !email || !password || !password2) {
+    showAlert('Please fill in name, email, and password.'); return;
   }
   if (!isValidEmail(email)) { showAlert('Enter a valid email address.'); return; }
-  if (!isValidPhone(phone)) { showAlert('Enter a valid phone number, with country code.'); return; }
   if (password.length < 8 || !/\d/.test(password)) { showAlert('Password needs at least 8 characters and a number.'); return; }
   if (password !== password2) { showAlert('Passwords don\'t match.'); return; }
 
@@ -564,8 +545,7 @@ async function startSignup() {
 
     signupId = data.signupId;
     document.getElementById('email-target').textContent = email;
-    document.getElementById('phone-target').textContent = phone;
-    cooldowns = { email: RESEND_COOLDOWN, phone: RESEND_COOLDOWN };
+    cooldown = RESEND_COOLDOWN;
     startCooldownTimer();
     goToSignupStep(2);
 
@@ -580,39 +560,37 @@ async function startSignup() {
 }
 
 function startCooldownTimer() {
-  updateResendButtons();
+  updateResendButton();
   clearInterval(cooldownTimer);
   cooldownTimer = setInterval(() => {
-    let stillCounting = false;
-    for (const k of ['email', 'phone']) {
-      if (cooldowns[k] > 0) { cooldowns[k]--; stillCounting = true; }
+    if (cooldown > 0) {
+      cooldown--;
+      updateResendButton();
+    } else {
+      clearInterval(cooldownTimer);
     }
-    updateResendButtons();
-    if (!stillCounting) clearInterval(cooldownTimer);
   }, 1000);
 }
 
-function updateResendButtons() {
+function updateResendButton() {
   const e = document.getElementById('resend-email');
-  const p = document.getElementById('resend-phone');
-  e.disabled = cooldowns.email > 0;
-  e.textContent = cooldowns.email > 0 ? `Resend (${cooldowns.email}s)` : 'Resend';
-  p.disabled = cooldowns.phone > 0;
-  p.textContent = cooldowns.phone > 0 ? `Resend (${cooldowns.phone}s)` : 'Resend';
+  e.disabled = cooldown > 0;
+  e.textContent = cooldown > 0 ? `Resend (${cooldown}s)` : 'Resend Code';
 }
 
-async function resendCode(channel) {
-  if (cooldowns[channel] > 0 || !signupId) return;
+async function resendCode() {
+  if (cooldown > 0 || !signupId) return;
   try {
     const res = await fetch(API + '/auth/signup/resend-otp', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signupId, channel })
+      body: JSON.stringify({ signupId })
     });
     
     const d = await parseJsonResponse(res);
     if (!res.ok) throw new Error(d.error || 'Could not resend code.');
     
-    cooldowns[channel] = RESEND_COOLDOWN;
+    showAlert('Verification code resent to your email.', 'success');
+    cooldown = RESEND_COOLDOWN;
     startCooldownTimer();
   } catch (err) {
     showAlert(err.message || 'Could not resend code.');
@@ -621,10 +599,9 @@ async function resendCode(channel) {
 
 async function verifyCodes() {
   const emailCode = document.getElementById('email-code').value.trim();
-  const phoneCode = document.getElementById('phone-code').value.trim();
 
-  if (emailCode.length !== 6 || phoneCode.length !== 6) {
-    showAlert('Enter both 6-digit codes.'); return;
+  if (emailCode.length !== 6) {
+    showAlert('Enter the 6-digit code.'); return;
   }
 
   hideAlert();
@@ -636,7 +613,7 @@ async function verifyCodes() {
   try {
     const res = await fetch(API + '/auth/signup/verify', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signupId, emailCode, phoneCode })
+      body: JSON.stringify({ signupId, emailCode })
     });
     
     const data = await parseJsonResponse(res);
