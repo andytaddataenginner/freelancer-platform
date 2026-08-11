@@ -1,64 +1,100 @@
 const router  = require('express').Router();
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const pool    = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
 
-// Temporary in-memory store for pending signups (or use a DB table/Redis if preferred)
+// Temporary in-memory store for pending signups (expires after 15 mins)
 const pendingSignups = new Map();
 
 // Helper to generate a 6-digit OTP code
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+// Nodemailer Transporter Configuration
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || 'gmail', // e.g. 'gmail', 'SendGrid', etc.
+  auth: {
+    user: process.env.EMAIL_USER, // Your sender email
+    pass: process.env.EMAIL_PASS  // Your email app password
+  }
+});
+
+// Helper function to send email
+async function sendOTPEmail(toEmail, code) {
+  // If email credentials aren't set in environment variables, print to console for development
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log(`\n========================================`);
+    console.log(`[DEV OTP EMAIL] Sent to: ${toEmail}`);
+    console.log(`[DEV OTP CODE]  Your Code is: ${code}`);
+    console.log(`========================================\n`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"Quick Freelancing Agency" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: 'Your QFA Verification Code',
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #0d2353;">Verify Your Email</h2>
+        <p>Thank you for registering with Quick Freelancing Agency. Use the following 6-digit code to complete your signup:</p>
+        <div style="background: #f4f6fb; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #1a5cff; border-radius: 8px; margin: 20px 0;">
+          ${code}
+        </div>
+        <p style="font-size: 12px; color: #7a8aaa;">This code will expire in 15 minutes. If you did not request this, please ignore this email.</p>
+      </div>
+    `
+  });
+}
+
 // =========================================================================
-// SIGNUP ROUTES (Fixes the 404 Error)
+// SIGNUP ROUTES (Email Verification Only)
 // =========================================================================
 
 // POST /api/auth/signup/initiate
 router.post('/signup/initiate', async (req, res, next) => {
   try {
     const { name, email, phone, password, role } = req.body;
-    if (!name || !email || !phone || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // Check if user already exists in DB
+    // Check if user already exists
     const { rows } = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
     if (rows.length > 0) {
       return res.status(409).json({ error: 'This email is already registered' });
     }
 
-    // Hash password & generate verification codes
+    // Hash password & generate code
     const password_hash = await bcrypt.hash(password, 10);
     const emailCode = generateOTP();
-    const phoneCode = generateOTP();
     const signupId = 'signup_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 
-    // Save pending signup data in memory with expiration (15 mins)
+    // Save pending session
     pendingSignups.set(signupId, {
       name,
       email: cleanEmail,
-      phone,
+      phone: phone || null,
       password_hash,
       role: role || 'freelancer',
       emailCode,
-      phoneCode,
       createdAt: Date.now()
     });
 
-    // TODO: Send emailCode via your Email Service & phoneCode via Twilio/SMS Service
-    console.log(`[DEMO CODES] Email Code: ${emailCode} | Phone Code: ${phoneCode}`);
+    // Send the OTP Email
+    await sendOTPEmail(cleanEmail, emailCode);
 
-    res.json({ signupId, message: 'Verification codes sent' });
+    res.json({ signupId, message: 'Verification code sent to email' });
   } catch (e) { next(e); }
 });
 
 // POST /api/auth/signup/resend-otp
 router.post('/signup/resend-otp', async (req, res, next) => {
   try {
-    const { signupId, channel } = req.body;
+    const { signupId } = req.body;
     const signupData = pendingSignups.get(signupId);
 
     if (!signupData) {
@@ -66,32 +102,30 @@ router.post('/signup/resend-otp', async (req, res, next) => {
     }
 
     const newCode = generateOTP();
-    if (channel === 'email') signupData.emailCode = newCode;
-    if (channel === 'phone') signupData.phoneCode = newCode;
+    signupData.emailCode = newCode;
 
-    // TODO: Re-send SMS or Email here
-    console.log(`[RESEND OTP] Channel: ${channel} | New Code: ${newCode}`);
+    await sendOTPEmail(signupData.email, newCode);
 
-    res.json({ message: `New ${channel} code sent` });
+    res.json({ message: 'New verification code sent to email' });
   } catch (e) { next(e); }
 });
 
 // POST /api/auth/signup/verify
 router.post('/signup/verify', async (req, res, next) => {
   try {
-    const { signupId, emailCode, phoneCode } = req.body;
+    const { signupId, emailCode } = req.body;
     const signupData = pendingSignups.get(signupId);
 
     if (!signupData) {
       return res.status(400).json({ error: 'Signup session expired. Please start again.' });
     }
 
-    // Verify OTP codes
-    if (signupData.emailCode !== emailCode.trim() || signupData.phoneCode !== phoneCode.trim()) {
-      return res.status(400).json({ error: 'Invalid email or phone verification code.' });
+    // Verify OTP code
+    if (signupData.emailCode !== emailCode.trim()) {
+      return res.status(400).json({ error: 'Invalid or expired email verification code.' });
     }
 
-    // Insert new user into the database
+    // Insert new user into DB
     const { rows } = await pool.query(
       `INSERT INTO users (name, email, phone, password_hash, role, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
@@ -101,10 +135,10 @@ router.post('/signup/verify', async (req, res, next) => {
 
     const newUser = rows[0];
 
-    // Remove from pending store
+    // Clean up memory
     pendingSignups.delete(signupId);
 
-    // Generate Auth Token
+    // Generate JWT Token
     const token = jwt.sign(
       { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET,
@@ -116,7 +150,7 @@ router.post('/signup/verify', async (req, res, next) => {
 });
 
 // =========================================================================
-// EXISTING ROUTES
+// EXISTING AUTH ROUTES
 // =========================================================================
 
 // POST /api/auth/login
