@@ -457,8 +457,8 @@ async function startSignup() {
   document.getElementById('step1-progress').style.width = '85%';
 
   try {
-    // Calling the direct signup endpoint instead of initiation
-    const res = await fetch(API + '/auth/signup', {
+    // Reverted back to /auth/signup/initiate to prevent 404 errors on existing backend routes
+    const res = await fetch(API + '/auth/signup/initiate', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, password, role: 'freelancer' })
     });
@@ -470,15 +470,18 @@ async function startSignup() {
     }
     if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
 
-    // Save token and user directly upon response
-    auth.save(data.token, data.user);
+    // If backend returns session token/user directly, save it
+    if (data.token && data.user) {
+      auth.save(data.token, data.user);
+    }
 
-    // Show success view and redirect
+    // Show success view and redirect immediately without requiring email OTP verification
     document.getElementById('signup-step-1').classList.remove('active');
     document.getElementById('signup-step-3').classList.add('active');
     
     setTimeout(() => { 
-      window.location.href = data.user.role === 'client' ? 'client-portal.html' : 'dashboard.html'; 
+      const currentUser = auth.user();
+      window.location.href = (currentUser && currentUser.role === 'client') ? 'client-portal.html' : 'dashboard.html'; 
     }, 900);
 
   } catch (err) {
