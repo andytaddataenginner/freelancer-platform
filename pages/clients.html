@@ -394,10 +394,7 @@ async function loadClients() {
         ? `<span class="badge badge-blue">Fixed</span> <strong>$${parseFloat(c.fixed_price||0).toFixed(2)}</strong>`
         : `<span class="badge badge-green">Hourly</span> <strong>$${parseFloat(c.hourly_rate||0).toFixed(2)}/hr</strong>`;
 
-      const fixedPayBtn = isFixed ? `
-        <div style="margin:0.8rem 0;padding:0.8rem;background:${isPaid?'#dcfce7':'#fef3c7'};border-radius:8px;display:flex;align-items:center;justify-content:space-between">
-          
-        </div>` : '';
+      const fixedPayBtn = '';
 
       return `
         <div class="card" style="margin-bottom:0">
