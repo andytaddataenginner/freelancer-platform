@@ -94,14 +94,6 @@
     .auth-header h2 { font-family:var(--serif); font-size:2rem; letter-spacing:-.02em; margin-bottom:.4rem; color: var(--navy); }
     .auth-header p  { color:var(--ink3); font-size:.9rem; font-weight:300; }
 
-    /* Step indicator for Sign Up */
-    .step-track { display:flex; align-items:center; gap:.5rem; margin-bottom:1.8rem; }
-    .step-dot { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:600; background:var(--white); border:1.5px solid rgba(128,128,128,.25); color:var(--ink3); transition:all .25s; }
-    .step-dot.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
-    .step-dot.done { background:var(--accent); border-color:var(--accent); color:#fff; }
-    .step-line { flex:1; height:2px; background:rgba(128,128,128,.2); }
-    .step-line.done { background:var(--accent); }
-
     /* Alerts */
     .alert { padding:.85rem 1rem; border-radius:10px; font-size:.86rem; margin-bottom:1.2rem; display:flex; align-items:center; gap:.6rem; }
     .alert-error   { background:#fff0f0; color:#b91c1c; border:1px solid #fecaca; }
@@ -124,21 +116,6 @@
     .input-wrap input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(26,92,255,.08); }
     .input-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); font-size:1rem; color:var(--ink3); pointer-events:none; }
 
-    .otp-input {
-      width:100%; padding:.9rem 1rem; text-align:center;
-      font-size:1.4rem; letter-spacing:.5em; font-weight:600;
-      border:1.5px solid rgba(0,0,0,.1); border-radius:12px;
-      background:var(--white); color:var(--navy); font-family:var(--sans);
-      transition:border-color .2s,box-shadow .2s;
-    }
-    [data-theme="dark"] .otp-input { border-color: rgba(255,255,255,0.1); }
-    .otp-input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(26,92,255,.08); }
-    .otp-row { display:flex; align-items:center; justify-content:space-between; margin-top:.4rem; }
-    .otp-target { font-size:.78rem; color:var(--ink3); }
-    .otp-target strong { color:var(--ink2); font-weight:600; }
-    .resend-btn { background:none; border:none; font-family:var(--sans); font-size:.78rem; font-weight:600; color:var(--accent); cursor:pointer; padding:0; }
-    .resend-btn:disabled { color:var(--ink3); cursor:not-allowed; }
-
     .btn-submit {
       width:100%; padding:1rem; background:var(--navy); color:var(--white);
       border:none; border-radius:12px; font-family:var(--sans); font-size:.95rem; font-weight:600;
@@ -160,12 +137,6 @@
     .session-note { text-align:center; margin-top:1rem; font-size:.78rem; color:var(--ink3); background:var(--white); border-radius:8px; padding:.6rem; border: 1px solid rgba(128,128,128,0.1); }
     .switch-mode { text-align:center; margin-top:1.2rem; font-size:.85rem; color:var(--ink3); }
     .switch-mode a { color:var(--accent); font-weight:600; text-decoration:none; cursor:pointer; }
-
-    .btn-text-link {
-      width:100%; text-align:center; background:none; border:none;
-      font-family:var(--sans); font-size:.83rem; color:var(--ink3); cursor:pointer; margin-top:1rem;
-    }
-    .btn-text-link:hover { color:var(--accent); }
 
     .panel-view { display:none; }
     .panel-view.active { display:block; }
@@ -261,20 +232,15 @@
           <span class="btn-text" id="login-text">Sign in →</span>
         </button>
 
-        <div class="session-note">🔒 Sessions expire after 1 hours for your security</div>
+        <div class="session-note">🔒 Sessions expire after 1 hour for your security</div>
         <div class="switch-mode">New freelancer? <a onclick="switchMode('signup')">Create an account</a></div>
         <div class="switch-mode" style="margin-top: .5rem;"><a href="../index.html">← Back to QFA website</a></div>
       </div>
 
       <!-- FREELANCER SIGNUP MODULE -->
       <div class="panel-view" id="view-signup">
-        <div class="step-track">
-          <div class="step-dot active" id="dot-1">1</div>
-          <div class="step-line" id="line-1"></div>
-          <div class="step-dot" id="dot-2">2</div>
-        </div>
-
-        <!-- STEP 1: DETAILS -->
+        
+        <!-- SIGNUP FORM -->
         <div class="panel-view active" id="signup-step-1">
           <div class="auth-header">
             <h2>Create your account</h2>
@@ -294,7 +260,6 @@
               <span class="input-icon">✉️</span>
               <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
             </div>
-            <span class="form-hint">We will send your 6-digit verification code here.</span>
           </div>
           <div class="form-group">
             <label>Phone number (Optional)</label>
@@ -328,32 +293,7 @@
           <div class="switch-mode">Already have an account? <a onclick="switchMode('login')">Sign in</a></div>
         </div>
 
-        <!-- STEP 2: VERIFY EMAIL -->
-        <div class="panel-view" id="signup-step-2">
-          <div class="auth-header">
-            <h2>Verify your email</h2>
-            <p>Enter the 6-digit code sent to your email</p>
-          </div>
-
-          <div class="form-group">
-            <label>Verification code</label>
-            <input type="text" class="otp-input" id="email-code" maxlength="6" inputmode="numeric" placeholder="······"/>
-            <div class="otp-row">
-              <span class="otp-target">Sent to <strong id="email-target"></strong></span>
-              <button class="resend-btn" id="resend-email" onclick="resendCode()">Resend Code</button>
-            </div>
-          </div>
-
-          <button class="btn-submit" id="step2-btn" onclick="verifyCodes()">
-            <div class="btn-progress" id="step2-progress"></div>
-            <div class="spinner"></div>
-            <span class="btn-text" id="step2-text">Verify &amp; continue →</span>
-          </button>
-
-          <button class="btn-text-link" onclick="goToSignupStep(1)">← Edit my details</button>
-        </div>
-
-        <!-- STEP 3: SUCCESS -->
+        <!-- SUCCESS VIEW -->
         <div class="panel-view success-center" id="signup-step-3">
           <div class="success-icon">✓</div>
           <div class="auth-header">
@@ -370,7 +310,6 @@
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const SESSION_HOURS = 1;
-const RESEND_COOLDOWN = 60;
 
 const themeToggleBtn = document.getElementById('theme-toggle');
 function updateToggleIcon(theme) { themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙'; }
@@ -426,9 +365,9 @@ function switchMode(mode) {
     document.getElementById('left-signup-content').style.display = 'none';
   } else {
     document.getElementById('view-signup').classList.add('active');
+    document.getElementById('signup-step-1').classList.add('active');
     document.getElementById('left-login-content').style.display = 'none';
     document.getElementById('left-signup-content').style.display = 'block';
-    goToSignupStep(1);
   }
 }
 
@@ -487,19 +426,6 @@ async function doLogin() {
   }
 }
 
-let signupId = null;
-let cooldown = 0;
-let cooldownTimer = null;
-
-function goToSignupStep(n) {
-  document.querySelectorAll('#view-signup .panel-view').forEach(p => p.classList.remove('active'));
-  document.getElementById('signup-step-' + n).classList.add('active');
-  document.getElementById('dot-1').className = 'step-dot ' + (n >= 1 ? (n > 1 ? 'done' : 'active') : '');
-  document.getElementById('dot-2').className = 'step-dot ' + (n === 2 ? 'active' : (n > 2 ? 'done' : ''));
-  document.getElementById('line-1').className = 'step-line ' + (n > 1 ? 'done' : '');
-  hideAlert();
-}
-
 function setLoading(btnId, textId, isLoading, label) {
   const btn = document.getElementById(btnId);
   const text = document.getElementById(textId);
@@ -531,7 +457,8 @@ async function startSignup() {
   document.getElementById('step1-progress').style.width = '85%';
 
   try {
-    const res = await fetch(API + '/auth/signup/initiate', {
+    // Calling the direct signup endpoint instead of initiation
+    const res = await fetch(API + '/auth/signup', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, password, role: 'freelancer' })
     });
@@ -543,11 +470,16 @@ async function startSignup() {
     }
     if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
 
-    signupId = data.signupId;
-    document.getElementById('email-target').textContent = email;
-    cooldown = RESEND_COOLDOWN;
-    startCooldownTimer();
-    goToSignupStep(2);
+    // Save token and user directly upon response
+    auth.save(data.token, data.user);
+
+    // Show success view and redirect
+    document.getElementById('signup-step-1').classList.remove('active');
+    document.getElementById('signup-step-3').classList.add('active');
+    
+    setTimeout(() => { 
+      window.location.href = data.user.role === 'client' ? 'client-portal.html' : 'dashboard.html'; 
+    }, 900);
 
   } catch (err) {
     setLoading('step1-btn', 'step1-text', false);
@@ -556,78 +488,6 @@ async function startSignup() {
     const box = document.querySelector('.auth-box');
     box.style.animation = 'none';
     setTimeout(() => { box.style.animation = 'shake .4s ease'; }, 10);
-  }
-}
-
-function startCooldownTimer() {
-  updateResendButton();
-  clearInterval(cooldownTimer);
-  cooldownTimer = setInterval(() => {
-    if (cooldown > 0) {
-      cooldown--;
-      updateResendButton();
-    } else {
-      clearInterval(cooldownTimer);
-    }
-  }, 1000);
-}
-
-function updateResendButton() {
-  const e = document.getElementById('resend-email');
-  e.disabled = cooldown > 0;
-  e.textContent = cooldown > 0 ? `Resend (${cooldown}s)` : 'Resend Code';
-}
-
-async function resendCode() {
-  if (cooldown > 0 || !signupId) return;
-  try {
-    const res = await fetch(API + '/auth/signup/resend-otp', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signupId })
-    });
-    
-    const d = await parseJsonResponse(res);
-    if (!res.ok) throw new Error(d.error || 'Could not resend code.');
-    
-    showAlert('Verification code resent to your email.', 'success');
-    cooldown = RESEND_COOLDOWN;
-    startCooldownTimer();
-  } catch (err) {
-    showAlert(err.message || 'Could not resend code.');
-  }
-}
-
-async function verifyCodes() {
-  const emailCode = document.getElementById('email-code').value.trim();
-
-  if (emailCode.length !== 6) {
-    showAlert('Enter the 6-digit code.'); return;
-  }
-
-  hideAlert();
-  const text = document.getElementById('step2-text');
-  text.dataset.default = text.textContent;
-  setLoading('step2-btn', 'step2-text', true, 'Verifying…');
-  document.getElementById('step2-progress').style.width = '85%';
-
-  try {
-    const res = await fetch(API + '/auth/signup/verify', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signupId, emailCode })
-    });
-    
-    const data = await parseJsonResponse(res);
-    if (!res.ok) throw new Error(data.error || 'Invalid or expired code.');
-
-    auth.save(data.token, data.user);
-
-    goToSignupStep(3);
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);
-
-  } catch (err) {
-    setLoading('step2-btn', 'step2-text', false);
-    document.getElementById('step2-progress').style.width = '0';
-    showAlert(err.message || 'Invalid or expired code.');
   }
 }
 </script>
