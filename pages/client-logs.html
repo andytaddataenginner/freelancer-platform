@@ -5,232 +5,142 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Work Logs — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
+    /* ══════════════════════════════════════════════════════════
+       QFA CLIENT LEDGER — design tokens
+       Palette: ink navy + brass gold, warm-white ledger panels
+       Type: Playfair Display (display) / Outfit (ui) / IBM Plex Mono (figures)
+       Signature: folder-style "ledger tabs" + tabular mono figures
+       + dashed rubber-stamp badge for settled/paid entries
+       ══════════════════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root{
-      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
-      --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
-      --bg:#f4f6fb;--bg2:#eef1f8;--card-bg:#ffffff;
-      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;--red:#b91c1c;--rbg:#fee2e2;
-      --info:#4338ca;--info-bg:#e0e7ff;
-      --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
-      --r:10px;--sh:0 1px 3px rgba(0,0,0,.05);
+      --navy-950:#081431; --navy-900:#0d2353; --navy-700:#1a3a7a; --accent:#2f6fed;
+      --gold-600:#a8781f; --gold-500:#c9952a; --gold-300:#f0c34a;
+      --ink:#0d2353; --ink-2:#48557a; --ink-3:#8592b3;
+      --bg:#eef1f7; --bg2:#e4e9f4; --panel:#ffffff;
+      --green:#146c43; --gbg:#dcf3e6; --amber:#92400e; --abg:#fdecc8; --red:#b91c1c; --rbg:#fde3e3;
+      --line: rgba(13,35,83,.10);
+      --serif:'Playfair Display',serif; --sans:'Outfit',sans-serif; --mono:'IBM Plex Mono',monospace;
+      --radius:12px; --radius-lg:16px;
+      --shadow:0 3px 18px rgba(13,35,83,.07);
       --table-hover:var(--bg);
     }
     [data-theme="dark"]{
-      --navy:#1e293b;--navy2:#334155;--accent:#3b82f6;--gold:#d97706;--gold2:#fbbf24;
-      --ink:#f8fafc;--ink2:#cbd5e1;--ink3:#94a3b8;
-      --bg:#090d16;--bg2:#1e293b;--card-bg:#111827;
-      --green:#4ade80;--gbg:rgba(22,101,52,.4);--amber:#fbbf24;--abg:rgba(146,64,14,.4);--red:#f87171;--rbg:rgba(185,28,28,.4);
-      --info:#a5b4fc;--info-bg:rgba(67,56,202,.35);
-      --sh:0 2px 20px rgba(0,0,0,.4);
-      --table-hover:#1f2937;
+      --navy-950:#05070d; --navy-900:#101c38; --navy-700:#1c2f57; --accent:#5b8dff;
+      --gold-600:#c9952a; --gold-500:#e0ac35; --gold-300:#f5c842;
+      --ink:#eef1f8; --ink-2:#aab6d6; --ink-3:#6d7ba3;
+      --bg:#080c17; --bg2:#111a2e; --panel:#0e1526;
+      --green:#4fd394; --gbg:rgba(20,108,67,.32); --amber:#f2b84a; --abg:rgba(146,64,14,.32); --red:#ff8080; --rbg:rgba(185,28,28,.30);
+      --line: rgba(255,255,255,.09);
+      --shadow:0 3px 22px rgba(0,0,0,.45);
+      --table-hover:#141f38;
     }
 
-    .dashboard { display: flex; min-height: 100vh; background: var(--bg); font-family: var(--sans); color:var(--ink); transition:background .3s ease,color .3s ease; }
+    html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);transition:background .3s ease,color .3s ease;}
+    .mono{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:.01ms !important;transition-duration:.01ms !important;} html{scroll-behavior:auto} }
 
-    /* ── FIXED DESKTOP SIDEBAR ── */
+    .dashboard { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
     .sidebar {
-      width: 240px !important;
-      background: var(--navy) !important;
-      position: fixed !important;
-      top: 0 !important; left: 0 !important; height: 100vh !important;
+      width: 232px !important; background: var(--navy-950) !important;
+      position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important;
       display: flex !important; flex-direction: column !important;
-      z-index: 150 !important;
-      transform: translateX(0);
+      z-index: 150 !important; transform: translateX(0);
       transition: transform 0.3s ease-in-out, background .3s ease !important;
+      border-right: 1px solid rgba(255,255,255,.05);
     }
     .sidebar-brand {
-      padding: 1.2rem 1.5rem !important;
-      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      padding: 1.2rem 1.4rem !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;
       display: flex !important; align-items: center !important; gap: 0.7rem !important;
-      flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
     }
-    .sidebar-nav {
-      flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
-      display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
-    }
+    .sidebar-nav { flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 0.15rem !important; }
     .sidebar-nav a {
       display: flex !important; align-items: center !important; gap: 0.7rem !important;
-      padding: 0.8rem 1.5rem !important; font-size: 0.88rem !important; font-weight: 500 !important;
-      color: rgba(255,255,255,0.65) !important; text-decoration: none !important;
-      transition: all 0.2s; border-right: 4px solid transparent !important;
-      width: 100% !important; box-sizing: border-box !important;
-      justify-content: flex-start !important;
+      padding: 0.75rem 1.4rem !important; font-size: 0.85rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.6) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 3px solid transparent !important;
     }
-    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
-    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: var(--gold2) !important; }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.05) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(201,149,42,0.12) !important; border-right-color: var(--gold-500) !important; }
+    .sidebar-user { padding: 1.1rem 1.4rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; }
 
-    .sidebar-user {
-      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important;
-      font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
-    }
-
-    /* ── MOBILE HEADER BAR ── */
-    .mobile-header {
-      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: var(--navy); padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
-    }
+    /* ── MOBILE HEADER ── */
+    .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--navy-950); padding: 0.75rem 1rem; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(13,35,83,0.2); }
     .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
-    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
-    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
-    .hamburger-btn {
-      background: rgba(255,255,255,0.1); border: none; color: white;
-      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-
+    .mobile-logo img { height: 30px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.83rem; font-weight: 700; }
+    .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    /* ── RESPONSIVE MAIN CONTAINER ── */
-    .main-content { margin-left: 240px; flex: 1; padding: 2.5rem 2rem; position: relative; }
+    .main-content { margin-left: 232px; flex: 1; padding: 1.6rem 2rem 2.5rem; position: relative; max-width: 1180px; }
 
-    /* ── THEME TOGGLE ── */
-    .theme-toggle{
-      background:var(--bg2); border:1px solid rgba(13,35,83,.1);
-      color:var(--ink); width:38px; height:38px; border-radius:50%;
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
-      font-size:1.05rem; transition:all .2s; flex-shrink:0;
-    }
-    .theme-toggle:hover{ background:var(--accent); color:#fff; }
-    .mobile-header .theme-toggle{ background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.2); color:#fff; }
-    .mobile-header .theme-toggle:hover{ background:rgba(255,255,255,.25); }
+    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; flex-shrink:0; }
+    .theme-toggle:hover{ background:rgba(255,255,255,.22); }
 
-    /* ── HEADER ── */
-    .header-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 2rem;
-      border-bottom: 1px solid var(--bg2);
-      padding-bottom: 1.5rem;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    .title-group h2 {
-      font-family: var(--serif);
-      font-size: 2.1rem;
-      color: var(--ink);
-      font-weight: 700;
-      line-height: 1.1;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .title-group p { color: var(--ink3); font-size: 0.95rem; margin-top: 0.4rem; }
+    /* ── HERO (compact ledger letterhead) ── */
+    .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius-lg); padding: 1.5rem 1.8rem; color: white; margin-bottom: 1.1rem; box-shadow: 0 6px 24px rgba(13,35,83,0.18); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+    .eyebrow{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
+    .hero h1{ margin: .3rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.7rem; font-weight: 700; line-height: 1.15; }
+    .hero-rule{ width:58px; height:0; border-top:2.5px solid var(--gold-500); position:relative; margin:.55rem 0 .6rem; }
+    .hero-rule::after{ content:''; position:absolute; top:4px; left:0; width:32px; border-top:1px solid var(--gold-500); opacity:.55; }
+    .hero-sub{ color: rgba(255,255,255,0.68); font-size: 0.85rem; max-width: 32em; }
+    .hero-actions{ display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; }
+    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.45rem; }
 
-    .badge-pill{
-      font-family: var(--sans); font-size: 0.8rem; font-weight: 700;
-      padding: 0.25rem 0.75rem; border-radius: 9999px;
-      display: inline-block; vertical-align: middle; margin-left: 0.75rem;
-      transition: background .2s ease, color .2s ease;
+    /* ── LEDGER SUMMARY STRIP ── */
+    .ledger-strip{ display:flex; flex-wrap:wrap; background:var(--panel); border-radius:var(--radius-lg); box-shadow:var(--shadow); border:1px solid var(--line); overflow:hidden; margin-bottom:1.3rem; }
+    .lstat{ flex:1 1 20%; min-width:120px; padding:.85rem 1.1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:.28rem; }
+    .lstat:last-child{ border-right:none; }
+    .lstat-value{ font-size:1.28rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lstat-label{ font-size:.63rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
+    @media (max-width: 860px){
+      .ledger-strip{ border-bottom:none; }
+      .lstat{ flex:1 1 50%; border-right:1px solid var(--line); }
+      .lstat:nth-child(2n){ border-right:none; }
+      .lstat:last-child{ border-bottom:none; }
     }
-    .badge-pill.info{ background: var(--info-bg); color: var(--info); }
-    .badge-pill.neutral{ background: var(--bg2); color: var(--ink3); }
 
-    /* ── UTILITY CONTROLS BAR ── */
-    .controls-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .fancy-dropdown-box {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--card-bg);
-      padding: 0.5rem 1rem;
-      border: 1px solid rgba(13,35,83,.15);
-      border-radius: 8px;
-      box-shadow: var(--sh);
-      transition: background .3s ease;
-    }
-    .fancy-dropdown-box label {
-      font-size: 0.8rem; font-weight: 700; color: var(--ink2);
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .fancy-select {
-      border: 1px solid rgba(13,35,83,.12);
-      background: var(--bg);
-      padding: 0.4rem 2rem 0.4rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.88rem; font-weight: 500; color: var(--ink);
-      cursor: pointer; outline: none; appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d2353' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 1em;
-      min-width: 180px; transition: border-color 0.2s;
-    }
-    [data-theme="dark"] .fancy-select{
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    }
-    .fancy-select:focus { border-color: var(--accent); }
+    /* ── MAIN CONTENT CONTAINER PANEL ── */
+    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; margin-bottom:1.4rem; padding:1.3rem 1.4rem 1.5rem; }
+    .panel-heading{ font-size:.68rem; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:.9rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
 
-    /* ── TAB BUTTONS ── */
-    .tab-btn{
-      background:transparent; color:var(--ink2); border:1.5px solid rgba(13,35,83,.15);
-      border-radius:6px; padding:.5rem 1.2rem; cursor:pointer; font-weight:600;
-      font-family:var(--sans); font-size:.85rem; transition:all .15s;
-    }
-    .tab-btn.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+    /* ── CARDS / CONTROLS ── */
+    .subcard{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; margin-bottom:1.1rem; }
+    table{width:100%;border-collapse:collapse;font-size:.85rem}
+    th{padding:.65rem .85rem;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.75rem .85rem;border-bottom:1px solid var(--bg2);color:var(--ink-2);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--table-hover)}
+    .row-unpaid td{background:rgba(245,158,11,.06)}
+    
+    .badge{display:inline-block;padding:.2rem .65rem;border-radius:100px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+    .bg-g{background:var(--gbg);color:var(--green)}
+    .bg-a{background:var(--abg);color:var(--amber)}
+    .badge-stamp{ display:inline-flex; align-items:center; gap:.28rem; padding:.22rem .6rem; border:1.5px dashed var(--green); border-radius:4px; color:var(--green); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.11em; transform:rotate(-3deg); background:rgba(20,108,67,.05); }
 
-    /* ── STAT CARDS ── */
-    .stats-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:1.5rem; }
-    .stat-card{
-      background:var(--card-bg); padding:1.2rem 1.3rem; border-radius:var(--r);
-      box-shadow:var(--sh); border:1px solid rgba(13,35,83,.05);
-      transition:transform .2s ease, background .3s ease;
-    }
-    .stat-card:hover{ transform:translateY(-2px); }
-    .stat-num{ display:block; font-size:1.6rem; font-weight:700; font-family:var(--serif); }
-    .stat-label{ color:var(--ink3); font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; font-weight:600; display:block; margin-top:.3rem; }
+    .fg{display:flex;flex-direction:column;gap:.35rem}
+    .fg label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+    select{width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);font-family:var(--sans);font-size:.87rem;color:var(--ink);transition:border-color .2s}
+    select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
 
-    /* ── CARD / TABLE ── */
-    .card{ background:var(--card-bg); border-radius:var(--r); box-shadow:var(--sh); overflow:hidden; border:1px solid rgba(13,35,83,.08); transition:background .3s ease; }
-    .card-header{ padding:1.2rem; border-bottom:1px solid var(--bg2); background:var(--bg); transition:background .3s ease; }
-    .card-header h3{ color:var(--ink); font-size:1rem; font-weight:700; }
-    table{ width:100%; border-collapse:collapse; font-size:.85rem; }
-    th{ padding:.75rem .9rem; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink3); border-bottom:2px solid var(--bg2); font-weight:700; text-align:left; white-space:nowrap; }
-    td{ padding:.85rem .9rem; border-bottom:1px solid var(--bg2); color:var(--ink2); vertical-align:middle; }
-    tr:last-child td{ border-bottom:none; }
-    tr:hover td{ background:var(--table-hover); }
-    .row-unpaid td{ background:rgba(245,158,11,.06); }
-    #table-footer{ padding:1rem; font-size:.85rem; color:var(--ink2); border-top:1px solid var(--bg2); background:var(--bg); transition:background .3s ease; }
+    .tab-btn{padding:.45rem 1.1rem;border-radius:6px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.82rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+    .tab-btn.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900)}
 
-    .badge{ display:inline-block; padding:.2rem .6rem; border-radius:100px; font-size:.75rem; font-weight:700; }
-    .bg-g{ background:var(--gbg); color:var(--green); }
-    .bg-a{ background:var(--abg); color:var(--amber); }
-
-    /* ── FIXED-RATE COMPACT BANNER ── */
-    #fixed-compact-banner{
-      background:var(--card-bg); border:1px solid rgba(13,35,83,.12); border-left:4px solid var(--gold2);
-      padding:.8rem 1.2rem; border-radius:var(--r); margin-bottom:1.5rem;
-      align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;
-      transition:background .3s ease;
-    }
-    #fixed-contract-name, #fixed-contract-amount{ color:var(--ink); }
-
-    /* ── MOBILE MEDIA QUERIES ── */
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
+      .sidebar { transform: translateX(-100%) !important; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 86px !important; }
+      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 74px !important; }
       .mobile-header { display: flex !important; }
-      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
-      .controls-wrapper { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
-      .header-container { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-      .badge-pill { margin-left: 0; margin-top: 0.5rem; display: block; width: max-content; }
-    }
-    @media (max-width: 480px) {
-      .stats-row { grid-template-columns: 1fr !important; }
+      .hero h1{ font-size:1.4rem; }
     }
   </style>
 </head>
@@ -243,7 +153,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:.6rem">
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-    <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+    <button class="hamburger-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
   </div>
 </div>
 
@@ -252,12 +162,12 @@
 <div class="dashboard">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+      <div style="width:36px;height:36px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
         <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
       </div>
       <div style="line-height:1.2">
-        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
-        <div style="color:var(--gold2);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+        <div style="color:white;font-size:0.78rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:var(--gold-300);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -268,85 +178,73 @@
     </nav>
     <div class="sidebar-user">
       <strong id="user-name" style="color:white; display:block;">Loading…</strong>
-      <a href="#" onclick="logout()" style="color:var(--gold2);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.78rem;color:rgba(255,255,255,0.4)"></span>
+      <a href="#" onclick="logout()" style="color:var(--gold-300);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
     </div>
   </aside>
 
   <main class="main-content">
 
-    <div class="header-container">
-      <div class="title-group">
-        <h2 id="page-main-title">⏱ My Work Logs <span class="badge-pill neutral" id="header-badge">Loading Month…</span></h2>
-        <p id="page-subtitle">Track project items, monitor accumulated totals, and verify status payments context scopes.</p>
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Client Workspace</span>
+        <h1 id="page-main-title">My Work Logs</h1>
+        <div class="hero-rule"></div>
+        <p class="hero-sub" id="page-subtitle">Track project activity, monitor accumulated totals, and verify billing payment statuses.</p>
       </div>
-      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" id="page-theme-btn">🌙</button>
-    </div>
-
-    <!-- Small compact display badge for Fixed Rate clients -->
-    <div id="fixed-compact-banner" style="display:none;">
-      <div style="display:flex; align-items:center; gap:0.8rem;">
-        <span class="badge bg-a" style="text-transform:uppercase;">Fixed-Rate Contract</span>
-        <span style="font-size:0.95rem; font-weight:700;" id="fixed-contract-name">Milestone Agreement</span>
-      </div>
-      <div style="font-size:0.95rem; font-weight:700;" id="fixed-contract-amount">$0.00</div>
-    </div>
-
-    <div class="controls-wrapper">
-      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
-        <button class="tab-btn active" id="tab-all"    onclick="switchTab('all')">All Items</button>
-        <button class="tab-btn"        id="tab-unpaid" onclick="switchTab('unpaid')">⚠ Unpaid</button>
-        <button class="tab-btn"        id="tab-paid"   onclick="switchTab('paid')">✓ Paid</button>
-      </div>
-
-      <div class="fancy-dropdown-box">
-        <label for="month-dropdown">Statement Period:</label>
-        <select class="fancy-select" id="month-dropdown" onchange="applyFilters()">
-          <option value="">Show All History</option>
-        </select>
+      <div class="hero-actions">
+        <span id="engagement-badge-container">
+          <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
+        </span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
       </div>
     </div>
 
-    <div class="stats-row">
-      <div class="stat-card" style="border-left:4px solid #22c55e">
-        <span class="stat-num" id="s-paid" style="color:var(--green)">$--</span>
-        <span class="stat-label" id="lbl-paid">Total paid</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #f59e0b">
-        <span class="stat-num" id="s-unpaid" style="color:var(--amber)">$--</span>
-        <span class="stat-label" id="lbl-unpaid">Outstanding balance</span>
-      </div>
-      <div class="stat-card" id="card-hours-container" style="border-left:4px solid #3b82f6">
-        <span class="stat-num" id="s-hours" style="color:var(--accent)">—</span>
-        <span class="stat-label" id="lbl-hours">Total hours</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #94a3b8">
-        <span class="stat-num" id="s-entries" style="color:var(--ink)">—</span>
-        <span class="stat-label" id="lbl-entries">Log entries</span>
-      </div>
+    <!-- Ledger summary strip -->
+    <div class="ledger-strip">
+      <div class="lstat"><span class="lstat-value mono" id="s-paid" style="color:var(--green)">$0.00</span><span class="lstat-label" id="lbl-paid">Total paid</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-unpaid" style="color:var(--amber)">$0.00</span><span class="lstat-label" id="lbl-unpaid">Outstanding</span></div>
+      <div class="lstat" id="stat-hours-col"><span class="lstat-value mono" id="s-hours" style="color:var(--accent)">0.0h</span><span class="lstat-label" id="lbl-hours">Total hours</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-entries">0</span><span class="lstat-label" id="lbl-entries">Log entries</span></div>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <h3 id="table-title">All Work Logs</h3>
+    <div class="ledger-panel-wrap">
+      <div class="subcard">
+        <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end;justify-content:space-between">
+          <div style="display:flex;gap:0.55rem;flex-wrap:wrap">
+            <button id="tab-all"    class="tab-btn active" onclick="switchTab('all')">All</button>
+            <button id="tab-unpaid" class="tab-btn" onclick="switchTab('unpaid')">⚠ Unpaid</button>
+            <button id="tab-paid"   class="tab-btn" onclick="switchTab('paid')">✓ Paid</button>
+          </div>
+          <div class="fg" style="min-width:200px">
+            <label for="month-dropdown">Statement Period</label>
+            <select id="month-dropdown" onchange="applyFilters()">
+              <option value="">Show All History</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+
+      <div class="panel-heading" id="table-title" style="margin-bottom:.6rem">Work Logs</div>
+      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px">
         <table>
           <thead>
             <tr id="table-header-row">
               <th>Date</th>
               <th>Hours</th>
               <th>Amount</th>
-              <th>Payment Status</th>
+              <th>Status</th>
               <th>Task Description</th>
             </tr>
           </thead>
           <tbody id="logs-table">
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink-3)">Loading…</td></tr>
           </tbody>
         </table>
       </div>
-      <div id="table-footer"></div>
+      <div id="table-footer" class="mono" style="padding:.9rem .2rem 0;font-size:0.83rem;color:var(--ink-2)"></div>
     </div>
+
   </main>
 </div>
 
@@ -391,6 +289,7 @@ async function apiFetch(path, options = {}) {
   const u = auth.user();
   if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
   document.getElementById('user-name').textContent = u ? u.name : '';
+  if (u && u.company) document.getElementById('user-company').textContent = u.company;
 })();
 
 function logout() { auth.clear(); window.location.href = '../index.html'; }
@@ -401,6 +300,8 @@ let isFixedClient = false;
 let currentTab = 'all';
 
 async function loadLogs() {
+  const badgeContainer = document.getElementById('engagement-badge-container');
+
   try {
     const [stats, logs] = await Promise.all([
       apiFetch('/client/stats'),
@@ -412,32 +313,32 @@ async function loadLogs() {
     allLogs = logs || [];
 
     if (isFixedClient) {
+      badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(240,195,74,0.15); border-color:rgba(240,195,74,0.32); color:var(--gold-300);">📦 Fixed-Rate Contract</span>`;
       document.getElementById('sidebar-logs-link').textContent = '📋 My Milestones';
-      document.getElementById('page-main-title').innerHTML = `📋 My Project Milestones <span class="badge-pill neutral" id="header-badge">Loading Month…</span>`;
-      document.getElementById('page-subtitle').textContent = 'Track milestone phases, verify contract milestones, and review periodic payments.';
+      document.getElementById('page-main-title').textContent = 'My Project Milestones';
+      document.getElementById('page-subtitle').textContent = 'Track milestone phases, verify contract status, and review deliverables.';
       document.getElementById('table-title').textContent = 'All Milestone Deliverables';
 
       document.getElementById('table-header-row').innerHTML = `
         <th>Date</th>
         <th>Milestone / Phase</th>
         <th>Amount</th>
-        <th>Payment Status</th>
+        <th>Status</th>
         <th>Description</th>
       `;
 
-      document.getElementById('card-hours-container').style.display = 'none';
-
-      const banner = document.getElementById('fixed-compact-banner');
-      banner.style.display = 'flex';
-      document.getElementById('fixed-contract-name').textContent = clientStats.projectName || clientStats.company || 'Fixed Price Agreement';
-      document.getElementById('fixed-contract-amount').textContent = '$' + parseFloat(clientStats.fixedPrice || 0).toFixed(2);
+      document.getElementById('stat-hours-col').style.display = 'none';
+    } else {
+      const rate = parseFloat(clientStats.hourlyRate || 0);
+      badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.32); color:#4ade80;"><span style="width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${rate.toFixed(2)}/hr)</span>`;
     }
 
     buildDropdownOptions();
     applyFilters();
   } catch(e) {
     console.error(e);
-    document.getElementById('logs-table').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--red)">Failed to load system log items.</td></tr>`;
+    badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load.</span>`;
+    document.getElementById('logs-table').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--red)">Failed to load log items.</td></tr>`;
   }
 }
 
@@ -477,14 +378,11 @@ function buildDropdownOptions() {
 function applyFilters() {
   const dropdown = document.getElementById('month-dropdown');
   const selectedMonth = dropdown.value;
-  const badge = document.getElementById('header-badge');
 
   let targetLogs = allLogs;
 
   if (selectedMonth) {
     const localizedMonth = dropdown.options[dropdown.selectedIndex].text;
-    badge.textContent = localizedMonth;
-    badge.classList.remove('neutral'); badge.classList.add('info');
 
     targetLogs = allLogs.filter(l => {
       const dStr = l.date || l.createdAt || '';
@@ -496,11 +394,8 @@ function applyFilters() {
     if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Hours (' + localizedMonth + ')';
     document.getElementById('lbl-entries').textContent = (isFixedClient ? 'Milestones (' : 'Entries (') + localizedMonth + ')';
   } else {
-    badge.textContent = 'All Historical Logs';
-    badge.classList.remove('info'); badge.classList.add('neutral');
-
     document.getElementById('lbl-paid').textContent = 'Total paid';
-    document.getElementById('lbl-unpaid').textContent = 'Outstanding balance';
+    document.getElementById('lbl-unpaid').textContent = 'Outstanding';
     if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Total hours';
     document.getElementById('lbl-entries').textContent = isFixedClient ? 'Total milestones' : 'Log entries';
   }
@@ -535,7 +430,7 @@ function switchTab(tab) {
 
   const titles = isFixedClient ?
     { all: 'All Milestone Deliverables', unpaid: '⚠ Unpaid Milestones', paid: '✓ Paid Milestones' } :
-    { all: 'All Work Logs', unpaid: '⚠ Unpaid Logs', paid: '✓ Paid Logs' };
+    { all: 'Work Logs', unpaid: '⚠ Unpaid Logs', paid: '✓ Paid Logs' };
 
   document.getElementById('table-title').textContent = titles[tab];
   applyFilters();
@@ -550,27 +445,27 @@ function renderLogs(logs) {
     if (isFixedClient) {
       const contractAmt = parseFloat(clientStats.fixedPrice || 0);
       const isPaid = (clientStats.totalPaid || 0) >= contractAmt;
-      const badge = isPaid ? '<span class="badge bg-g">✓ Paid</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
+      const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
       const dateVal = clientStats.createdAt ? new Date(clientStats.createdAt).toLocaleDateString() : 'Current Period';
 
       tbody.innerHTML = `
         <tr class="${!isPaid?'row-unpaid':''}">
           <td>${dateVal}</td>
           <td><strong>Fixed Price Contract Agreement</strong></td>
-          <td><strong>$${contractAmt.toFixed(2)}</strong></td>
+          <td class="mono"><strong>$${contractAmt.toFixed(2)}</strong></td>
           <td>${badge}</td>
           <td>Full project scope milestone delivery.</td>
         </tr>`;
-      footer.innerHTML = `Showing <strong>1</strong> active agreement &nbsp;·&nbsp; <strong>$${contractAmt.toFixed(2)}</strong> total contract value`;
+      footer.innerHTML = `Showing <strong>1</strong> active agreement &nbsp;·&nbsp; <strong>$${contractAmt.toFixed(2)}</strong> total value`;
       return;
     }
 
     let msg = 'No records found matching criteria.';
-    if (currentTab === 'unpaid') msg = 'No unpaid logs — all settled! ✓';
-    else if (currentTab === 'paid') msg = 'No paid logs found.';
-    else if (isFiltered) msg = 'No work entry logs tracked during this selected statement period.';
+    if (currentTab === 'unpaid') msg = 'No unpaid logs in this range — all settled! ✓';
+    else if (currentTab === 'paid') msg = 'No paid logs in this range.';
+    else if (isFiltered) msg = 'No work logs recorded during this statement period.';
 
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">${msg}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink-3)">${msg}</td></tr>`;
     footer.textContent = '';
     return;
   }
@@ -583,7 +478,7 @@ function renderLogs(logs) {
     sumHours  += hrs;
     sumAmount += amount;
 
-    const badge = isPaid ? '<span class="badge bg-g">✓ Paid</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
+    const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
     const dateStr = l.date || l.createdAt;
     const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString() : '—';
     const desc = l.task_description || l.title || l.description || 'Milestone deliverable item';
@@ -594,7 +489,7 @@ function renderLogs(logs) {
         <tr class="${rowClass}">
           <td>${formattedDate}</td>
           <td><strong>${l.title || 'Milestone Phase'}</strong></td>
-          <td>${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
+          <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
           <td>${badge}</td>
           <td>${desc}</td>
         </tr>`;
@@ -602,8 +497,8 @@ function renderLogs(logs) {
       return `
         <tr class="${rowClass}">
           <td>${formattedDate}</td>
-          <td><strong>${hrs}h</strong></td>
-          <td>${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
+          <td class="mono"><strong>${hrs}h</strong></td>
+          <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
           <td>${badge}</td>
           <td>${desc}</td>
         </tr>`;
@@ -617,20 +512,18 @@ function renderLogs(logs) {
   }
 }
 
-loadLogs();
-</script>
-
-<script>
 function openSidebar() {
   document.getElementById('sidebar').classList.add('is-open');
   document.getElementById('sidebar-overlay').classList.add('visible');
   document.body.style.overflow = 'hidden';
 }
+
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('is-open');
   document.getElementById('sidebar-overlay').classList.remove('visible');
   document.body.style.overflow = '';
 }
+
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
     a.addEventListener('click', function() {
@@ -638,6 +531,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+
+loadLogs();
 </script>
 </body>
 </html>
