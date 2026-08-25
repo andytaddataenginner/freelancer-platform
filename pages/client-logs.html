@@ -85,7 +85,7 @@
     .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; flex-shrink:0; }
     .theme-toggle:hover{ background:rgba(255,255,255,.22); }
 
-    /* ── HERO (compact ledger letterhead) ── */
+    /* ── HERO ── */
     .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius-lg); padding: 1.5rem 1.8rem; color: white; margin-bottom: 1.1rem; box-shadow: 0 6px 24px rgba(13,35,83,0.18); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
     .eyebrow{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
     .hero h1{ margin: .3rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.7rem; font-weight: 700; line-height: 1.15; }
@@ -351,9 +351,9 @@ function buildDropdownOptions() {
     if (dateStr && dateStr.length >= 7) monthsSet.add(dateStr.slice(0, 7));
   });
 
-  if (monthsSet.size === 0 && isFixedClient && (clientStats.createdAt || clientStats.updatedAt)) {
-    const dStr = clientStats.updatedAt || clientStats.createdAt;
-    monthsSet.add(dStr.slice(0, 7));
+  if (isFixedClient) {
+    if (clientStats.createdAt) monthsSet.add(clientStats.createdAt.slice(0, 7));
+    if (clientStats.updatedAt) monthsSet.add(clientStats.updatedAt.slice(0, 7));
   }
 
   const sortedMonths = Array.from(monthsSet).sort().reverse();
@@ -442,22 +442,24 @@ function renderLogs(logs) {
   const isFiltered = !!document.getElementById('month-dropdown').value;
 
   if (!logs.length) {
-    if (isFixedClient) {
+    if (isFixedClient && !isFiltered) {
       const contractAmt = parseFloat(clientStats.fixedPrice || 0);
-      const isPaid = (clientStats.totalPaid || 0) >= contractAmt;
+      const isPaid = (clientStats.totalPaid || 0) >= contractAmt && contractAmt > 0;
       const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
       const dateVal = clientStats.createdAt ? new Date(clientStats.createdAt).toLocaleDateString() : 'Current Period';
 
-      tbody.innerHTML = `
-        <tr class="${!isPaid?'row-unpaid':''}">
-          <td>${dateVal}</td>
-          <td><strong>Fixed Price Contract Agreement</strong></td>
-          <td class="mono"><strong>$${contractAmt.toFixed(2)}</strong></td>
-          <td>${badge}</td>
-          <td>Full project scope milestone delivery.</td>
-        </tr>`;
-      footer.innerHTML = `Showing <strong>1</strong> active agreement &nbsp;·&nbsp; <strong>$${contractAmt.toFixed(2)}</strong> total value`;
-      return;
+      if (currentTab === 'all' || (currentTab === 'paid' && isPaid) || (currentTab === 'unpaid' && !isPaid)) {
+        tbody.innerHTML = `
+          <tr class="${!isPaid ? 'row-unpaid' : ''}">
+            <td>${dateVal}</td>
+            <td><strong>Fixed Price Contract Agreement</strong></td>
+            <td class="mono"><strong>$${contractAmt.toFixed(2)}</strong></td>
+            <td>${badge}</td>
+            <td>Full project scope milestone delivery.</td>
+          </tr>`;
+        footer.innerHTML = `Showing <strong>1</strong> active agreement &nbsp;·&nbsp; <strong>$${contractAmt.toFixed(2)}</strong> total value`;
+        return;
+      }
     }
 
     let msg = 'No records found matching criteria.';
