@@ -401,7 +401,7 @@ function applyFilters() {
     if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Total hours';
     document.getElementById('lbl-entries').textContent = isFixedClient ? 'Total milestones' : 'Log entries';
 
-    if (isFixedClient && allLogs.length === 0) {
+    if (isFixedClient) {
       monthPaid = parseFloat(clientStats.totalPaid || 0);
       monthUnpaid = parseFloat(clientStats.totalUnpaid || 0);
     } else {
@@ -411,17 +411,18 @@ function applyFilters() {
         monthHours += hrs;
         if (l.payment_status === 'paid') monthPaid += amt; else monthUnpaid += amt;
       });
-      if (isFixedClient && allLogs.length > 0) {
-        monthPaid = parseFloat(clientStats.totalPaid || monthPaid);
-        monthUnpaid = parseFloat(clientStats.totalUnpaid || monthUnpaid);
-      }
     }
   }
 
   document.getElementById('s-paid').textContent = '$' + monthPaid.toFixed(2);
   document.getElementById('s-unpaid').textContent = '$' + monthUnpaid.toFixed(2);
   if (!isFixedClient) document.getElementById('s-hours').textContent = monthHours.toFixed(1) + 'h';
-  document.getElementById('s-entries').textContent = targetLogs.length > 0 ? targetLogs.length : (isFixedClient ? 1 : 0);
+  
+  let entryCount = targetLogs.length;
+  if (isFixedClient && entryCount === 0) {
+    entryCount = (monthPaid > 0 ? 1 : 0) + (monthUnpaid > 0 ? 1 : 0);
+  }
+  document.getElementById('s-entries').textContent = entryCount;
 
   const filteredByTab = currentTab === 'all' ? targetLogs : targetLogs.filter(l => l.payment_status === currentTab);
   renderLogs(filteredByTab);
@@ -449,22 +450,41 @@ function renderLogs(logs) {
   if (!logs.length) {
     if (isFixedClient && !isFiltered) {
       const unpaidAmt = parseFloat(clientStats.totalUnpaid || 0);
-      const paidAmt = parseFloat(clientStats.totalPaid || 0);
-      const isPaid = unpaidAmt <= 0;
-      const displayAmt = isPaid ? paidAmt : unpaidAmt;
-      const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
-      const dateVal = clientStats.createdAt ? new Date(clientStats.createdAt).toLocaleDateString() : 'Current Period';
+      const paidAmt   = parseFloat(clientStats.totalPaid || 0);
+      const dateVal   = clientStats.createdAt ? new Date(clientStats.createdAt).toLocaleDateString() : 'Current Period';
+      let rowsHtml = '';
+      let activeCount = 0;
+      let totalVal = 0;
 
-      if (currentTab === 'all' || (currentTab === 'paid' && isPaid) || (currentTab === 'unpaid' && !isPaid)) {
-        tbody.innerHTML = `
-          <tr class="${!isPaid ? 'row-unpaid' : ''}">
+      if ((currentTab === 'all' || currentTab === 'paid') && paidAmt > 0) {
+        rowsHtml += `
+          <tr>
             <td>${dateVal}</td>
-            <td><strong>Fixed Price Contract Agreement</strong></td>
-            <td class="mono"><strong>$${displayAmt.toFixed(2)}</strong></td>
-            <td>${badge}</td>
-            <td>Full project scope milestone delivery.</td>
+            <td><strong>Fixed Price Contract (Settled Portion)</strong></td>
+            <td class="mono"><strong>$${paidAmt.toFixed(2)}</strong></td>
+            <td><span class="badge-stamp">✓ Settled</span></td>
+            <td>Completed milestone deliverables and settled payments.</td>
           </tr>`;
-        footer.innerHTML = `Showing <strong>1</strong> active agreement &nbsp;·&nbsp; <strong>$${displayAmt.toFixed(2)}</strong> value`;
+        activeCount++;
+        totalVal += paidAmt;
+      }
+
+      if ((currentTab === 'all' || currentTab === 'unpaid') && unpaidAmt > 0) {
+        rowsHtml += `
+          <tr class="row-unpaid">
+            <td>${dateVal}</td>
+            <td><strong>Fixed Price Contract (Outstanding Balance)</strong></td>
+            <td class="mono"><strong>$${unpaidAmt.toFixed(2)}</strong></td>
+            <td><span class="badge bg-a">⚠ Unpaid</span></td>
+            <td>Pending contract balance awaiting payment.</td>
+          </tr>`;
+        activeCount++;
+        totalVal += unpaidAmt;
+      }
+
+      if (rowsHtml !== '') {
+        tbody.innerHTML = rowsHtml;
+        footer.innerHTML = `Showing <strong>${activeCount}</strong> milestone items &nbsp;·&nbsp; <strong>$${totalVal.toFixed(2)}</strong> total value`;
         return;
       }
     }
