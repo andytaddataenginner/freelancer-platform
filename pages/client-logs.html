@@ -357,9 +357,6 @@ function buildDropdownOptions() {
   }
 
   const sortedMonths = Array.from(monthsSet).sort().reverse();
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
-  let initialSelection = '';
-
   sortedMonths.forEach(m => {
     const dateObj = new Date(m + '-02');
     const label = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -367,12 +364,9 @@ function buildDropdownOptions() {
     option.value = m;
     option.textContent = label;
     dropdown.appendChild(option);
-    if (m === currentMonthStr) initialSelection = m;
   });
 
-  if (initialSelection) dropdown.value = initialSelection;
-  else if (sortedMonths.length > 0) dropdown.value = sortedMonths[0];
-  else dropdown.value = '';
+  dropdown.value = '';
 }
 
 function applyFilters() {
@@ -380,6 +374,7 @@ function applyFilters() {
   const selectedMonth = dropdown.value;
 
   let targetLogs = allLogs;
+  let monthPaid = 0, monthUnpaid = 0, monthHours = 0;
 
   if (selectedMonth) {
     const localizedMonth = dropdown.options[dropdown.selectedIndex].text;
@@ -393,24 +388,34 @@ function applyFilters() {
     document.getElementById('lbl-unpaid').textContent = 'Outstanding (' + localizedMonth + ')';
     if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Hours (' + localizedMonth + ')';
     document.getElementById('lbl-entries').textContent = (isFixedClient ? 'Milestones (' : 'Entries (') + localizedMonth + ')';
+
+    targetLogs.forEach(l => {
+      const amt = parseFloat(l.amount || 0);
+      const hrs = parseFloat(l.hours || 0);
+      monthHours += hrs;
+      if (l.payment_status === 'paid') monthPaid += amt; else monthUnpaid += amt;
+    });
   } else {
     document.getElementById('lbl-paid').textContent = 'Total paid';
     document.getElementById('lbl-unpaid').textContent = 'Outstanding';
     if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Total hours';
     document.getElementById('lbl-entries').textContent = isFixedClient ? 'Total milestones' : 'Log entries';
-  }
 
-  let monthPaid = 0, monthUnpaid = 0, monthHours = 0;
-  targetLogs.forEach(l => {
-    const amt = parseFloat(l.amount || 0);
-    const hrs = parseFloat(l.hours || 0);
-    monthHours += hrs;
-    if (l.payment_status === 'paid') monthPaid += amt; else monthUnpaid += amt;
-  });
-
-  if (isFixedClient && targetLogs.length === 0 && !selectedMonth) {
-    monthPaid = parseFloat(clientStats.totalPaid || 0);
-    monthUnpaid = parseFloat(clientStats.totalUnpaid || 0);
+    if (isFixedClient && allLogs.length === 0) {
+      monthPaid = parseFloat(clientStats.totalPaid || 0);
+      monthUnpaid = parseFloat(clientStats.totalUnpaid || 0);
+    } else {
+      allLogs.forEach(l => {
+        const amt = parseFloat(l.amount || 0);
+        const hrs = parseFloat(l.hours || 0);
+        monthHours += hrs;
+        if (l.payment_status === 'paid') monthPaid += amt; else monthUnpaid += amt;
+      });
+      if (isFixedClient && allLogs.length > 0) {
+        monthPaid = parseFloat(clientStats.totalPaid || monthPaid);
+        monthUnpaid = parseFloat(clientStats.totalUnpaid || monthUnpaid);
+      }
+    }
   }
 
   document.getElementById('s-paid').textContent = '$' + monthPaid.toFixed(2);
@@ -443,8 +448,10 @@ function renderLogs(logs) {
 
   if (!logs.length) {
     if (isFixedClient && !isFiltered) {
-      const contractAmt = parseFloat(clientStats.fixedPrice || 0);
-      const isPaid = (clientStats.totalPaid || 0) >= contractAmt && contractAmt > 0;
+      const unpaidAmt = parseFloat(clientStats.totalUnpaid || 0);
+      const paidAmt = parseFloat(clientStats.totalPaid || 0);
+      const isPaid = unpaidAmt <= 0;
+      const displayAmt = isPaid ? paidAmt : unpaidAmt;
       const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
       const dateVal = clientStats.createdAt ? new Date(clientStats.createdAt).toLocaleDateString() : 'Current Period';
 
@@ -453,11 +460,11 @@ function renderLogs(logs) {
           <tr class="${!isPaid ? 'row-unpaid' : ''}">
             <td>${dateVal}</td>
             <td><strong>Fixed Price Contract Agreement</strong></td>
-            <td class="mono"><strong>$${contractAmt.toFixed(2)}</strong></td>
+            <td class="mono"><strong>$${displayAmt.toFixed(2)}</strong></td>
             <td>${badge}</td>
             <td>Full project scope milestone delivery.</td>
           </tr>`;
-        footer.innerHTML = `Showing <strong>1</strong> active agreement &nbsp;·&nbsp; <strong>$${contractAmt.toFixed(2)}</strong> total value`;
+        footer.innerHTML = `Showing <strong>1</strong> active agreement &nbsp;·&nbsp; <strong>$${displayAmt.toFixed(2)}</strong> value`;
         return;
       }
     }
