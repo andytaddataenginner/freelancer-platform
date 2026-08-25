@@ -5,157 +5,174 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Portal — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
-    /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
+    /* ══════════════════════════════════════════════════════════
+       QFA CLIENT LEDGER — design tokens
+       Palette: ink navy + brass gold, warm-white ledger panels
+       Type: Playfair Display (display) / Outfit (ui) / IBM Plex Mono (figures)
+       Signature: folder-style "ledger tabs" + tabular mono figures
+       + dashed rubber-stamp badge for settled/paid entries
+       ══════════════════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root{
-      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
-      --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
-      --bg:#f4f6fb;--bg2:#eef1f8;--card-bg:#ffffff;
-      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;--red:#b91c1c;--rbg:#fee2e2;
-      --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
-      --r:14px;--sh:0 2px 20px rgba(13,35,83,.08);
+      --navy-950:#081431; --navy-900:#0d2353; --navy-700:#1a3a7a; --accent:#2f6fed;
+      --gold-600:#a8781f; --gold-500:#c9952a; --gold-300:#f0c34a;
+      --ink:#0d2353; --ink-2:#48557a; --ink-3:#8592b3;
+      --bg:#eef1f7; --bg2:#e4e9f4; --panel:#ffffff;
+      --green:#146c43; --gbg:#dcf3e6; --amber:#92400e; --abg:#fdecc8; --red:#b91c1c; --rbg:#fde3e3;
+      --line: rgba(13,35,83,.10);
+      --serif:'Playfair Display',serif; --sans:'Outfit',sans-serif; --mono:'IBM Plex Mono',monospace;
+      --radius:12px; --radius-lg:16px;
+      --shadow:0 3px 18px rgba(13,35,83,.07);
       --table-hover:var(--bg);
     }
     [data-theme="dark"]{
-      --navy:#1e293b;--navy2:#334155;--accent:#3b82f6;--gold:#d97706;--gold2:#fbbf24;
-      --ink:#f8fafc;--ink2:#cbd5e1;--ink3:#94a3b8;
-      --bg:#090d16;--bg2:#1e293b;--card-bg:#111827;
-      --green:#4ade80;--gbg:rgba(22,101,52,.4);--amber:#fbbf24;--abg:rgba(146,64,14,.4);--red:#f87171;--rbg:rgba(185,28,28,.4);
-      --sh:0 2px 20px rgba(0,0,0,.4);
-      --table-hover:#1f2937;
+      --navy-950:#05070d; --navy-900:#101c38; --navy-700:#1c2f57; --accent:#5b8dff;
+      --gold-600:#c9952a; --gold-500:#e0ac35; --gold-300:#f5c842;
+      --ink:#eef1f8; --ink-2:#aab6d6; --ink-3:#6d7ba3;
+      --bg:#080c17; --bg2:#111a2e; --panel:#0e1526;
+      --green:#4fd394; --gbg:rgba(20,108,67,.32); --amber:#f2b84a; --abg:rgba(146,64,14,.32); --red:#ff8080; --rbg:rgba(185,28,28,.30);
+      --line: rgba(255,255,255,.09);
+      --shadow:0 3px 22px rgba(0,0,0,.45);
+      --table-hover:#141f38;
     }
 
+    html{scroll-behavior:smooth}
     body{font-family:var(--sans);background:var(--bg);color:var(--ink);transition:background .3s ease,color .3s ease;}
+    .mono{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:.01ms !important;transition-duration:.01ms !important;} html{scroll-behavior:auto} }
+
     .dashboard { display: flex; min-height: 100vh; }
 
-    /* ── FIXED DESKTOP SIDEBAR ── */
+    /* ── SIDEBAR ── */
     .sidebar {
-      width: 240px !important;
-      background: var(--navy) !important;
-      position: fixed !important;
-      top: 0 !important; left: 0 !important; height: 100vh !important;
+      width: 232px !important; background: var(--navy-950) !important;
+      position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important;
       display: flex !important; flex-direction: column !important;
-      z-index: 150 !important;
-      transform: translateX(0);
+      z-index: 150 !important; transform: translateX(0);
       transition: transform 0.3s ease-in-out, background .3s ease !important;
+      border-right: 1px solid rgba(255,255,255,.05);
     }
     .sidebar-brand {
-      padding: 1.2rem 1.5rem !important;
-      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      padding: 1.2rem 1.4rem !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;
       display: flex !important; align-items: center !important; gap: 0.7rem !important;
-      flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
     }
-    .sidebar-nav {
-      flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
-      display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
-    }
+    .sidebar-nav { flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 0.15rem !important; }
     .sidebar-nav a {
       display: flex !important; align-items: center !important; gap: 0.7rem !important;
-      padding: 0.8rem 1.5rem !important; font-size: 0.88rem !important; font-weight: 500 !important;
-      color: rgba(255,255,255,0.65) !important; text-decoration: none !important;
-      transition: all 0.2s; border-right: 4px solid transparent !important;
-      width: 100% !important; box-sizing: border-box !important;
-      justify-content: flex-start !important;
+      padding: 0.75rem 1.4rem !important; font-size: 0.85rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.6) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 3px solid transparent !important;
     }
-    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
-    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: var(--gold2) !important; }
-    .sidebar-user {
-      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important;
-      font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
-    }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.05) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(201,149,42,0.12) !important; border-right-color: var(--gold-500) !important; }
+    .sidebar-user { padding: 1.1rem 1.4rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; }
 
-    /* ── MOBILE HEADER BAR ── */
-    .mobile-header {
-      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: var(--navy); padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
-    }
+    /* ── MOBILE HEADER ── */
+    .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--navy-950); padding: 0.75rem 1rem; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(13,35,83,0.2); }
     .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
-    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
-    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
-    .hamburger-btn {
-      background: rgba(255,255,255,0.1); border: none; color: white;
-      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-
+    .mobile-logo img { height: 30px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.83rem; font-weight: 700; }
+    .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    /* ── RESPONSIVE MAIN CONTAINER ── */
-    .main-content { margin-left: 240px; flex: 1; padding: 2rem; position: relative; }
+    .main-content { margin-left: 232px; flex: 1; padding: 1.6rem 2rem 2.5rem; position: relative; max-width: 1180px; }
     .booking-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-    /* ── THEME TOGGLE ── */
-    .theme-toggle{
-      background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
-      color:#fff; width:38px; height:38px; border-radius:50%;
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
-      font-size:1.05rem; transition:all .2s; flex-shrink:0;
-    }
-    .theme-toggle:hover{ background:rgba(255,255,255,.25); }
+    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; flex-shrink:0; }
+    .theme-toggle:hover{ background:rgba(255,255,255,.22); }
 
-    /* ── CARD / TABLE SYSTEM ── */
-    .card{background:var(--card-bg);border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);margin-bottom:1.2rem;transition:background .3s ease;}
-    .card-header{padding:1rem 1.4rem;border-bottom:1px solid var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-    .card-header h3{font-size:.9rem;font-weight:700;color:var(--ink)}
-    .cb{padding:1.2rem 1.4rem}
+    /* ── HERO (compact ledger letterhead) ── */
+    .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius-lg); padding: 1.5rem 1.8rem; color: white; margin-bottom: 1.1rem; box-shadow: 0 6px 24px rgba(13,35,83,0.18); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+    .eyebrow{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
+    .hero h1{ margin: .3rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.7rem; font-weight: 700; line-height: 1.15; }
+    .hero-rule{ width:58px; height:0; border-top:2.5px solid var(--gold-500); position:relative; margin:.55rem 0 .6rem; }
+    .hero-rule::after{ content:''; position:absolute; top:4px; left:0; width:32px; border-top:1px solid var(--gold-500); opacity:.55; }
+    .hero-sub{ color: rgba(255,255,255,0.68); font-size: 0.85rem; max-width: 30em; }
+    .hero-actions{ display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; }
+    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.45rem; }
+
+    /* ── LEDGER SUMMARY STRIP (signature stat bar) ── */
+    .ledger-strip{ display:flex; flex-wrap:wrap; background:var(--panel); border-radius:var(--radius-lg); box-shadow:var(--shadow); border:1px solid var(--line); overflow:hidden; margin-bottom:1.3rem; }
+    .lstat{ flex:1 1 19%; min-width:120px; padding:.85rem 1.1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:.28rem; }
+    .lstat:last-child{ border-right:none; }
+    .lstat-value{ font-size:1.28rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lstat-label{ font-size:.63rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
+    @media (max-width: 860px){
+      .ledger-strip{ border-bottom:none; }
+      .lstat{ flex:1 1 50%; border-right:1px solid var(--line); }
+      .lstat:nth-child(2n){ border-right:none; }
+      .lstat:last-child{ border-bottom:none; }
+    }
+
+    /* ── LEDGER TABS (signature folder-tab nav) ── */
+    .ledger-tabs{ display:flex; gap:.3rem; padding:0 0 0 .15rem; overflow-x:auto; }
+    .ledger-tab{ appearance:none; border:1px solid var(--line); border-bottom:none; background:var(--bg2); color:var(--ink-2); font-family:var(--sans); font-size:.82rem; font-weight:600; padding:.62rem 1.05rem .58rem; border-radius:10px 10px 0 0; cursor:pointer; display:flex; align-items:center; gap:.45rem; position:relative; top:1px; white-space:nowrap; transition:background .15s ease, color .15s ease; }
+    .ledger-tab:hover{ color:var(--ink); }
+    .ledger-tab.active{ background:var(--panel); color:var(--ink); }
+    .ledger-tab.active::after{ content:''; position:absolute; left:0; right:0; bottom:-1px; height:3px; background:var(--gold-500); border-radius:2px 2px 0 0; }
+    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:0 var(--radius-lg) var(--radius-lg) var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; margin-bottom:1.4rem; }
+    .view-panel{ display:none; padding:1.3rem 1.4rem 1.5rem; }
+    .view-panel.active{ display:block; animation:panelIn .3s ease; }
+    @keyframes panelIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+    .panel-heading{ font-size:.68rem; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:.9rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
+
+    /* ── CARDS / SUBSECTIONS WITHIN PANELS ── */
+    .subcard{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; margin-bottom:1.1rem; }
+    .subcard:last-child{ margin-bottom:0; }
     table{width:100%;border-collapse:collapse;font-size:.85rem}
-    th{padding:.7rem .9rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
-    td{padding:.8rem .9rem;border-bottom:1px solid var(--bg2);color:var(--ink2);vertical-align:middle}
+    th{padding:.65rem .85rem;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.75rem .85rem;border-bottom:1px solid var(--bg2);color:var(--ink-2);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:var(--table-hover)}
     .row-unpaid td{background:rgba(245,158,11,.06)}
-    .badge{display:inline-block;padding:.2rem .65rem;border-radius:100px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+    .badge{display:inline-block;padding:.2rem .65rem;border-radius:100px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
     .bg-g{background:var(--gbg);color:var(--green)}
     .bg-a{background:var(--abg);color:var(--amber)}
-    .bg-gray{background:var(--bg2);color:var(--ink3)}
+    .bg-gray{background:var(--bg2);color:var(--ink-3)}
+    /* signature "settled" stamp — only for entries actually paid */
+    .badge-stamp{ display:inline-flex; align-items:center; gap:.28rem; padding:.22rem .6rem; border:1.5px dashed var(--green); border-radius:4px; color:var(--green); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.11em; transform:rotate(-3deg); background:rgba(20,108,67,.05); }
 
-    /* ── STAT CARDS ── */
-    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
-    .stat-card{background:var(--card-bg);border-radius:var(--r);padding:1.1rem 1.3rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);transition:transform .2s ease,background .3s ease;position:relative;overflow:hidden}
-    .stat-card:hover{transform:translateY(-2px)}
-    .stat-num{font-family:var(--serif);font-size:1.5rem;font-weight:700;display:block;color:var(--ink);line-height:1}
-    .stat-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-top:.4rem;display:block}
+    .stat-mini-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.8rem; margin-bottom:1.1rem; }
+    .stat-mini{ background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:.8rem .95rem; }
+    .stat-mini .v{ font-size:1.05rem; font-weight:600; color:var(--ink); }
+    .stat-mini .l{ font-size:.62rem; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:600; margin-top:.15rem; display:block; }
 
-    /* ── BUTTONS / FORMS ── */
     .btn{padding:.6rem 1.2rem;border-radius:8px;font-family:var(--sans);font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
-    .btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--accent)}
+    .btn-p{background:var(--navy-900);color:#fff}.btn-p:hover{background:var(--accent)}
     .btn-p:disabled{opacity:.6;cursor:default}
     .fg{display:flex;flex-direction:column;gap:.35rem}
-    .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
-    input,select,textarea{width:100%;padding:.65rem .85rem;border:1.5px solid rgba(13,35,83,.12);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--ink);transition:border-color .2s}
-    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,92,255,.08)}
+    .fg label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+    input,select,textarea{width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);font-family:var(--sans);font-size:.87rem;color:var(--ink);transition:border-color .2s}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
     .fs{font-size:.8rem}
     .fs.ok{color:var(--green)}.fs.er{color:var(--red)}
 
-    /* ── FILTER CHIPS / TABS ── */
-    .chip{padding:.4rem .95rem;border-radius:100px;border:1.5px solid rgba(13,35,83,.15);background:transparent;color:var(--ink2);font-family:var(--sans);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
-    .chip:hover{border-color:var(--navy)}
-    .chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-    .tab-btn{padding:.5rem 1.2rem;border-radius:6px;border:1.5px solid rgba(13,35,83,.15);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.85rem;font-weight:600;color:var(--ink2);transition:all .15s}
-    .tab-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .chip{padding:.38rem .9rem;border-radius:100px;border:1.5px solid var(--line);background:transparent;color:var(--ink-2);font-family:var(--sans);font-size:.76rem;font-weight:600;cursor:pointer;transition:all .15s}
+    .chip:hover{border-color:var(--navy-900)}
+    .chip.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900)}
+    .tab-btn{padding:.45rem 1.1rem;border-radius:6px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.82rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+    .tab-btn.active{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 
-    /* ── PERIODIC BREAKDOWN CARDS ── */
-    .period-card{background:var(--bg);border:1px solid rgba(13,35,83,.08);border-radius:10px;padding:1rem}
-    .period-card .ph{font-weight:600;font-size:.9rem;color:var(--ink);border-bottom:1px solid var(--bg2);padding-bottom:.4rem;margin-bottom:.6rem;display:flex;justify-content:space-between;align-items:center}
-    .period-row{display:flex;justify-content:space-between;font-size:.82rem;padding:.1rem 0}
+    .period-card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:1rem}
+    .period-card .ph{font-weight:600;font-size:.88rem;color:var(--ink);border-bottom:1px solid var(--bg2);padding-bottom:.4rem;margin-bottom:.6rem;display:flex;justify-content:space-between;align-items:center}
+    .period-row{display:flex;justify-content:space-between;font-size:.8rem;padding:.12rem 0}
+    .period-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:1rem; }
 
-    /* ── MOBILE MEDIA QUERIES ── */
+    .empty-note{ color:var(--ink-3); font-size:.85rem; padding:1rem 0; }
+
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%) !important; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 76px !important; }
+      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 74px !important; }
       .mobile-header { display: flex !important; }
-      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
       .booking-form-grid { grid-template-columns: 1fr !important; }
-    }
-    @media (max-width: 480px) {
-      .stats-row { grid-template-columns: 1fr !important; }
+      .hero h1{ font-size:1.4rem; }
     }
   </style>
 </head>
@@ -168,7 +185,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:.6rem">
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-    <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+    <button class="hamburger-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
   </div>
 </div>
 
@@ -177,12 +194,12 @@
 <div class="dashboard">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+      <div style="width:36px;height:36px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
         <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
       </div>
       <div style="line-height:1.2">
-        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
-        <div style="color:var(--gold2);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+        <div style="color:white;font-size:0.78rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:var(--gold-300);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -193,195 +210,156 @@
     </nav>
     <div class="sidebar-user">
       <strong id="user-name" style="color:white; display:block;">Loading…</strong>
-      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
-      <a href="#" onclick="logout()" style="color:var(--gold2);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.78rem;color:rgba(255,255,255,0.4)"></span>
+      <a href="#" onclick="logout()" style="color:var(--gold-300);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
     </div>
   </aside>
 
   <main class="main-content">
 
-    <div style="background: linear-gradient(135deg, #0d2353, #1e3c72); border-radius: 16px; padding: 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(13,35,83,0.15); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+    <div class="hero">
       <div>
-        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold2); font-weight: 700; display: block; margin-bottom: 0.4rem;">Client Management Workspace</span>
-        <h2 style="margin:0; font-family:'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; line-height: 1.2;">My Project Portal</h2>
-        <p style="margin: 0.4rem 0 0 0; color: rgba(255,255,255,0.7); font-size: 0.95rem;">Track real-time deliverables, active balance updates, and book direct working sessions.</p>
+        <span class="eyebrow">Client Workspace</span>
+        <h1>My Project Ledger</h1>
+        <div class="hero-rule"></div>
+        <p class="hero-sub">Everything about your engagement — balances, activity, and scheduling — kept in one place.</p>
       </div>
-      <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
-        <div id="engagement-badge-container">
-          <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
-            <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Syncing Profile…
-          </span>
-        </div>
+      <div class="hero-actions">
+        <span id="engagement-badge-container">
+          <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
+        </span>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" id="hero-theme-btn">🌙</button>
       </div>
     </div>
 
-    <!-- Compact Notice Box for Fixed-Rate Clients -->
-    <div id="fixed-notice" style="display:none; margin-bottom:1.5rem;">
-      <div style="background: linear-gradient(135deg, #0d2353, #1a3a7a); border-radius: 12px; padding: 1.2rem 1.5rem; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-left: 4px solid var(--gold2);">
-        <div>
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold2); font-weight:700; margin-bottom:0.1rem;">Fixed Price Contract</div>
-          <div style="font-size:1.3rem; font-weight:700; font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
-        </div>
-        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); text-align: right;">
-          Milestone structured agreement.<br/>Billed according to agreed schedule.
-        </div>
-      </div>
+    <!-- Ledger summary strip -->
+    <div class="ledger-strip">
+      <div class="lstat"><span class="lstat-value mono" id="s-paid">$0.00</span><span class="lstat-label">Total paid</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-unpaid">$0.00</span><span class="lstat-label">Outstanding</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-credit">$0.00</span><span class="lstat-label">Account credit</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-hours">0.0h</span><span class="lstat-label" id="s-hours-label">Hours logged</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-bookings">0</span><span class="lstat-label">Upcoming sessions</span></div>
     </div>
 
-    <div class="stats-row">
-      <div class="stat-card" style="border-left:4px solid #22c55e">
-        <span class="stat-num" id="s-paid">$0.00</span>
-        <span class="stat-label">Total paid</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #f59e0b">
-        <span class="stat-num" id="s-unpaid">$0.00</span>
-        <span class="stat-label">Outstanding balance</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #3b82f6">
-        <span class="stat-num" id="s-credit">$0.00</span>
-        <span class="stat-label">Available account credit</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid transparent">
-        <span class="stat-num" id="s-hours">0.0h</span>
-        <span class="stat-label">Total hours logged</span>
-      </div>
-      <div class="stat-card" style="border-left:4px solid transparent">
-        <span class="stat-num" id="s-bookings">0</span>
-        <span class="stat-label">Upcoming sessions</span>
-      </div>
+    <!-- Ledger tabs -->
+    <div class="ledger-tabs">
+      <button class="ledger-tab active" data-view="overview" onclick="switchView('overview')">🗂 Overview</button>
+      <button class="ledger-tab" data-view="logs" id="tab-view-logs" onclick="switchView('logs')">⏱ Time &amp; Logs</button>
+      <button class="ledger-tab" data-view="billing" onclick="switchView('billing')">🧾 Billing History</button>
+      <button class="ledger-tab" data-view="book" onclick="switchView('book')">📅 Book a Session</button>
     </div>
 
-    <div id="hourly-section">
+    <div class="ledger-panel-wrap">
 
-      <div class="card">
-        <div class="cb">
-          <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
+      <!-- OVERVIEW -->
+      <section class="view-panel active" id="panel-overview">
+        <div id="overview-hourly">
+          <div class="panel-heading">Paid vs unpaid by month</div>
+          <div id="chart-paid-unpaid" style="margin-bottom:1.5rem"></div>
+          <div class="panel-heading">Log entries by month</div>
+          <div id="chart-entries"></div>
+        </div>
+        <div id="overview-fixed" style="display:none">
+          <div class="subcard" style="border-left:3px solid var(--gold-500)">
+            <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gold-600);font-weight:700;margin-bottom:.3rem">Fixed Price Contract</div>
+            <div class="mono" style="font-size:1.5rem;font-weight:600;color:var(--ink)" id="fixed-price-display">$0.00</div>
+            <p style="font-size:.85rem;color:var(--ink-2);margin-top:.5rem">Milestone-structured agreement, billed according to the agreed schedule. See the Billing History tab for a month-by-month breakdown.</p>
+          </div>
+        </div>
+        <div class="subcard" id="overview-upcoming-teaser" style="margin-top:1.1rem">
+          <p style="font-size:.85rem;color:var(--ink-2)">
+            <span id="overview-upcoming-text">Loading upcoming sessions…</span>
+            &nbsp;<a href="#" onclick="switchView('book');return false;" style="color:var(--accent);font-weight:600;text-decoration:none">View in Book a Session →</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- TIME & LOGS -->
+      <section class="view-panel" id="panel-logs">
+        <div class="subcard">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem">
             <button class="chip" id="chip-recent" onclick="setDatePreset('recent')">Last 30 days</button>
             <button class="chip" id="chip-month" onclick="setDatePreset('month')">This month</button>
             <button class="chip" id="chip-all" onclick="setDatePreset('all')">All time</button>
           </div>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end">
-            <div class="fg" style="flex:1;min-width:150px"><label>From</label><input type="date" id="filter-from" onchange="onCustomDateChange()"/></div>
-            <div class="fg" style="flex:1;min-width:150px"><label>To</label><input type="date" id="filter-to" onchange="onCustomDateChange()"/></div>
+            <div class="fg" style="flex:1;min-width:140px"><label>From</label><input type="date" id="filter-from" onchange="onCustomDateChange()"/></div>
+            <div class="fg" style="flex:1;min-width:140px"><label>To</label><input type="date" id="filter-to" onchange="onCustomDateChange()"/></div>
           </div>
         </div>
-      </div>
 
-      <div style="display:flex;gap:0.6rem;margin-bottom:1rem;flex-wrap:wrap">
-        <button id="tab-all"    class="tab-btn active" onclick="switchTab('all')">All</button>
-        <button id="tab-unpaid" class="tab-btn" onclick="switchTab('unpaid')">⚠ Unpaid</button>
-        <button id="tab-paid"   class="tab-btn" onclick="switchTab('paid')">✓ Paid</button>
-      </div>
+        <div style="display:flex;gap:0.55rem;margin-bottom:.9rem;flex-wrap:wrap">
+          <button id="tab-all"    class="tab-btn active" onclick="switchTab('all')">All</button>
+          <button id="tab-unpaid" class="tab-btn" onclick="switchTab('unpaid')">⚠ Unpaid</button>
+          <button id="tab-paid"   class="tab-btn" onclick="switchTab('paid')">✓ Paid</button>
+        </div>
 
-      <div class="card">
-        <div class="card-header"><h3 id="logs-title">Work Logs</h3></div>
-        <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <div class="panel-heading" id="logs-title" style="margin-bottom:.4rem">Work Logs</div>
+        <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px">
           <table>
-            <thead>
-              <tr><th>Date</th><th>Hours</th><th>Amount</th><th>Status</th><th>Task</th></tr>
-            </thead>
-            <tbody id="logs-table">
-              <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
-            </tbody>
+            <thead><tr><th>Date</th><th>Hours</th><th>Amount</th><th>Status</th><th>Task</th></tr></thead>
+            <tbody id="logs-table"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink-3)">Loading…</td></tr></tbody>
           </table>
         </div>
-        <div id="logs-footer" style="padding:1rem;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--bg2)"></div>
-      </div>
+        <div id="logs-footer" class="mono" style="padding:.9rem .2rem 0;font-size:0.83rem;color:var(--ink-2)"></div>
+      </section>
 
-      <div class="card">
-        <div class="card-header">
-          <h3 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">📊 Monthly Overview</h3>
-        </div>
-        <div class="cb">
-          <div style="margin-bottom:1.8rem">
-            <div style="font-size:.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.7rem">Paid vs Unpaid by Month</div>
-            <div id="chart-paid-unpaid"></div>
-          </div>
-          <div>
-            <div style="font-size:.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.7rem">Log Entries by Month</div>
-            <div id="chart-entries"></div>
+      <!-- BILLING HISTORY -->
+      <section class="view-panel" id="panel-billing">
+        <div id="billing-hourly">
+          <div class="panel-heading">Volume by month & year</div>
+          <div id="periodic-breakdown-container" class="period-grid">
+            <p class="empty-note">Awaiting entry analysis…</p>
           </div>
         </div>
-      </div>
+        <div id="billing-fixed" style="display:none">
+          <div class="panel-heading">Milestones by month & year</div>
+          <div id="fixed-periodic-breakdown-container" class="period-grid">
+            <p class="empty-note">Awaiting schedule analysis…</p>
+          </div>
+        </div>
+      </section>
 
-      <div class="card">
-        <div class="card-header">
-          <h3 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Billing History (By Month & Year)</h3>
-        </div>
-        <div id="periodic-breakdown-container" style="padding: 1.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
-          <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting entry analysis...</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="fixed-section" style="display:none">
-      <div class="card">
-        <div class="card-header">
-          <h3 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2);">🗓 Milestone & Contract Billing Breakdown (By Month & Year)</h3>
-        </div>
-        <div id="fixed-periodic-breakdown-container" style="padding: 1.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;">
-          <p style="color: var(--ink3); font-size: 0.85rem;">Awaiting schedule analysis...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><h3>📅 Book a Session</h3></div>
-      <div class="cb">
-        <p style="color:var(--ink2);font-size:0.9rem;margin-bottom:1.4rem">Request a meeting or working session. I'll confirm within 24 hours.</p>
+      <!-- BOOK A SESSION -->
+      <section class="view-panel" id="panel-book">
+        <div class="panel-heading">Request a session</div>
+        <p style="color:var(--ink-2);font-size:0.88rem;margin:-.4rem 0 1.1rem">Request a meeting or working session. I'll confirm within 24 hours.</p>
         <form onsubmit="bookSession(event)" class="booking-form-grid">
-          <div class="fg">
-            <label>Preferred date</label>
-            <input type="date" name="date" id="book-date" required/>
-          </div>
+          <div class="fg"><label>Preferred date</label><input type="date" name="date" id="book-date" required/></div>
           <div class="fg">
             <label>Preferred time</label>
             <select name="time" required>
               <option value="">Select time…</option>
-              <option value="09:00">9:00 AM</option>
-              <option value="10:00">10:00 AM</option>
-              <option value="11:00">11:00 AM</option>
-              <option value="13:00">1:00 PM</option>
-              <option value="14:00">2:00 PM</option>
-              <option value="15:00">3:00 PM</option>
-              <option value="16:00">4:00 PM</option>
+              <option value="09:00">9:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option>
+              <option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option><option value="16:00">4:00 PM</option>
             </select>
           </div>
           <div class="fg">
             <label>Session type</label>
             <select name="type" required>
               <option value="">Select…</option>
-              <option value="call">Video call</option>
-              <option value="review">Project review</option>
-              <option value="workshop">Working session</option>
-              <option value="other">Other</option>
+              <option value="call">Video call</option><option value="review">Project review</option>
+              <option value="workshop">Working session</option><option value="other">Other</option>
             </select>
           </div>
           <div class="fg">
             <label>Duration</label>
             <select name="duration">
-              <option value="0.5">30 minutes</option>
-              <option value="1" selected>1 hour</option>
-              <option value="1.5">1.5 hours</option>
-              <option value="2">2 hours</option>
+              <option value="0.5">30 minutes</option><option value="1" selected>1 hour</option>
+              <option value="1.5">1.5 hours</option><option value="2">2 hours</option>
             </select>
           </div>
-          <div class="fg" style="grid-column:1/-1">
-            <label>Message / agenda</label>
-            <textarea name="message" rows="2" placeholder="What would you like to discuss?"></textarea>
-          </div>
+          <div class="fg" style="grid-column:1/-1"><label>Message / agenda</label><textarea name="message" rows="2" placeholder="What would you like to discuss?"></textarea></div>
           <div style="grid-column:1/-1">
             <button type="submit" class="btn btn-p">Request session →</button>
             <div id="book-status" class="fs" style="margin-top:0.5rem"></div>
           </div>
         </form>
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card-header"><h3>Upcoming Sessions</h3></div>
-      <div id="upcoming-sessions" style="padding:1rem"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
+        <div class="panel-heading" style="margin-top:1.6rem">Upcoming sessions</div>
+        <div id="upcoming-sessions"><p style="color:var(--ink-3);font-size:0.88rem">Loading…</p></div>
+      </section>
+
     </div>
   </main>
 </div>
@@ -440,6 +418,15 @@ let currentTab = 'all';
 let currentHourlyRate = 20;
 let currentCreditBalance = 0;
 let filtersInitialized = false;
+let isFixedContract = false;
+
+/* ── Ledger tab switching (top-level view) ── */
+function switchView(view){
+  if (view === 'logs' && isFixedContract) view = 'overview'; // logs unavailable on fixed contracts
+  document.querySelectorAll('.ledger-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + view).classList.add('active');
+}
 
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
@@ -457,13 +444,14 @@ async function loadPortal() {
         }
 
         const isFixed = stats.rateType === 'fixed';
+        isFixedContract = isFixed;
         currentHourlyRate = parseFloat(stats.hourlyRate || 0);
         currentCreditBalance = parseFloat(stats.creditBalance || 0);
 
         if (isFixed) {
-            badgeContainer.innerHTML = `<span style="background:rgba(245,200,66,0.15); border: 1px solid rgba(245,200,66,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #f5c842; display: inline-flex; align-items: center; gap: 0.5rem;">📦 Fixed-Rate Contract</span>`;
+            badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(240,195,74,0.15); border-color:rgba(240,195,74,0.32); color:var(--gold-300);">📦 Fixed-Rate Contract</span>`;
         } else {
-            badgeContainer.innerHTML = `<span style="background:rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); padding: 0.6rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; color: #4ade80; display: inline-flex; align-items: center; gap: 0.5rem;"><span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate.toFixed(2)}/hr)</span>`;
+            badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.32); color:#4ade80;"><span style="width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate.toFixed(2)}/hr)</span>`;
         }
 
         const todayStr = new Date().toISOString().slice(0,10);
@@ -472,24 +460,31 @@ async function loadPortal() {
             return bDate >= todayStr && b.status !== 'cancelled';
         });
         document.getElementById('s-bookings').textContent = futureBookings.length;
+        document.getElementById('overview-upcoming-text').textContent =
+            futureBookings.length ? `You have ${futureBookings.length} upcoming session${futureBookings.length===1?'':'s'}.` : 'No upcoming sessions booked yet.';
+
+        // Toggle logs tab + overview/billing sub-views for contract type
+        document.getElementById('tab-view-logs').style.display = isFixed ? 'none' : '';
+        document.getElementById('overview-hourly').style.display = isFixed ? 'none' : 'block';
+        document.getElementById('overview-fixed').style.display  = isFixed ? 'block' : 'none';
+        document.getElementById('billing-hourly').style.display  = isFixed ? 'none' : 'block';
+        document.getElementById('billing-fixed').style.display   = isFixed ? 'block' : 'none';
 
         if (isFixed) {
-            document.getElementById('fixed-notice').style.display = 'block';
-            document.getElementById('fixed-section').style.display = 'block';
-            document.getElementById('hourly-section').style.display = 'none';
             document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
-            document.getElementById('s-paid').textContent  = '$' + parseFloat(stats.totalPaid ||0).toFixed(2);
+            document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid ||0).toFixed(2);
             document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid ||0).toFixed(2);
             document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
-            document.getElementById('s-hours').textContent  = '—';
+            document.getElementById('s-hours').textContent  = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
+            document.getElementById('s-hours-label').textContent = 'Contract value';
             renderFixedPeriodicBreakdown(stats, logs);
+            // if the user was sitting on the logs tab, bounce them back to overview
+            if (document.getElementById('tab-view-logs').classList.contains('active')) switchView('overview');
         } else {
-            document.getElementById('fixed-notice').style.display = 'none';
-            document.getElementById('fixed-section').style.display = 'none';
-            document.getElementById('hourly-section').style.display = 'block';
+            document.getElementById('s-hours-label').textContent = 'Hours logged';
             allLogs = logs;
 
-            // Top stat cards + monthly breakdown always reflect TRUE all-time
+            // Top ledger strip + monthly breakdown always reflect TRUE all-time
             // totals, independent of whatever the table filters below are set to.
             renderOverallStats(allLogs);
 
@@ -503,18 +498,18 @@ async function loadPortal() {
 
         const upcoming = document.getElementById('upcoming-sessions');
         if (!futureBookings.length) {
-            upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions.</p>';
+            upcoming.innerHTML = '<p style="color:var(--ink-3);font-size:0.9rem">No upcoming sessions.</p>';
         } else {
             upcoming.innerHTML = futureBookings.map(b => {
                 let formattedDate = b.date;
                 try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
                 const statusClass = b.status==='confirmed'?'bg-g':b.status==='pending'?'bg-a':'bg-gray';
                 return `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--bg2)">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 0;border-bottom:1px solid var(--bg2)">
                   <div>
-                    <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
-                    <div style="color:var(--ink2);font-size:0.82rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
-                    ${b.message?`<div style="color:var(--ink3);font-size:0.8rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
+                    <div style="font-weight:600;font-size:0.9rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
+                    <div style="color:var(--ink-2);font-size:0.8rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
+                    ${b.message?`<div style="color:var(--ink-3);font-size:0.78rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
                   </div>
                   <span class="badge ${statusClass}">${b.status}</span>
                 </div>`;
@@ -572,11 +567,11 @@ function renderFixedPeriodicBreakdown(stats, logs) {
             <div class="period-card">
               <div class="ph">
                 <span>📅 ${period}</span>
-                <span style="font-size:0.75rem; background:rgba(245,200,66,0.15); padding:0.15rem 0.5rem; border-radius:4px; color:#b45309">Fixed Milestone</span>
+                <span style="font-size:0.72rem; background:rgba(201,149,42,0.15); padding:0.15rem 0.5rem; border-radius:4px; color:var(--gold-600)">Fixed Milestone</span>
               </div>
-              <div class="period-row"><span style="color:var(--ink3)">Total Milestone Value:</span><strong style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
-              <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
-              <div class="period-row"><span style="color:var(--amber)">Outstanding Balance:</span><span style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
+              <div class="period-row"><span style="color:var(--ink-3)">Total Milestone Value:</span><strong class="mono" style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
+              <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span class="mono" style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
+              <div class="period-row"><span style="color:var(--amber)">Outstanding Balance:</span><span class="mono" style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
             </div>
         `;
     }).join('');
@@ -625,7 +620,7 @@ function renderPeriodicBreakdown(periodicData){
   const periods = Object.keys(periodicData);
 
   if (!periods.length) {
-    container.innerHTML = `<p style="color:var(--ink3);font-size:.85rem;padding:.5rem">No billing history yet.</p>`;
+    container.innerHTML = `<p class="empty-note">No billing history yet.</p>`;
     return;
   }
   container.innerHTML = periods.map(period => {
@@ -634,11 +629,11 @@ function renderPeriodicBreakdown(periodicData){
       <div class="period-card">
         <div class="ph">
           <span>📅 ${period}</span>
-          <span style="font-size:.75rem;background:rgba(13,35,83,.06);padding:.15rem .5rem;border-radius:4px;color:var(--ink2)">${data.hours.toFixed(1)}h</span>
+          <span style="font-size:.72rem;background:rgba(13,35,83,.06);padding:.15rem .5rem;border-radius:4px;color:var(--ink-2)">${data.hours.toFixed(1)}h</span>
         </div>
-        <div class="period-row"><span style="color:var(--ink3)">Total Volume:</span><strong style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
-        <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
-        <div class="period-row"><span style="color:var(--amber)">Outstanding:</span><span style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
+        <div class="period-row"><span style="color:var(--ink-3)">Total Volume:</span><strong class="mono" style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
+        <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span class="mono" style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
+        <div class="period-row"><span style="color:var(--amber)">Outstanding:</span><span class="mono" style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
       </div>
     `;
   }).join('');
@@ -657,7 +652,7 @@ function niceCeil(val){
   return niceResidual * magnitude;
 }
 function chartEmptyMsg(){
-  return `<p style="color:var(--ink3);font-size:.85rem;padding:.5rem 0">No data yet to chart.</p>`;
+  return `<p class="empty-note">No data yet to chart.</p>`;
 }
 function shortMonthLabel(key){
   const d = new Date(key);
@@ -667,7 +662,7 @@ function shortMonthLabel(key){
 
 function renderMonthlyCharts(periodicData){
   const allKeys = Object.keys(periodicData).sort((a,b) => new Date(a) - new Date(b));
-  const keys = allKeys.slice(-12); // cap to most recent 12 months so bars stay readable; Billing History below still shows full history
+  const keys = allKeys.slice(-12); // cap to most recent 12 months so bars stay readable; Billing History tab still shows full history
   renderPaidUnpaidChart(keys, periodicData);
   renderEntriesChart(keys, periodicData);
 }
@@ -689,7 +684,7 @@ function renderPaidUnpaidChart(keys, data){
     const y=padT+chartH-(chartH*i/steps);
     const val=niceMax*i/steps;
     grid+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" style="stroke:var(--bg2);stroke-width:1"/>`;
-    grid+=`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" style="fill:var(--ink3)">$${Math.round(val)}</text>`;
+    grid+=`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" style="fill:var(--ink-3)">$${Math.round(val)}</text>`;
   }
   keys.forEach((k,i)=>{
     const cx=padL+groupW*i+groupW/2;
@@ -703,14 +698,14 @@ function renderPaidUnpaidChart(keys, data){
       <rect x="${x}" y="${yPaidTop}" width="${barW}" height="${Math.max(paidH,0)}" rx="2" style="fill:var(--green)"/>
       <rect x="${x}" y="${yUnpaidTop}" width="${barW}" height="${Math.max(unpaidH,0)}" rx="2" style="fill:var(--amber)"/>
     </g>`;
-    labels+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" style="fill:var(--ink3)">${shortMonthLabel(k)}</text>`;
+    labels+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" style="fill:var(--ink-3)">${shortMonthLabel(k)}</text>`;
   });
 
   container.innerHTML = `
     <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:var(--sans)">
       ${grid}${bars}${labels}
     </svg>
-    <div style="display:flex;gap:1.2rem;margin-top:.5rem;font-size:.75rem;color:var(--ink2)">
+    <div style="display:flex;gap:1.2rem;margin-top:.5rem;font-size:.75rem;color:var(--ink-2)">
       <span style="display:inline-flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></span>Paid</span>
       <span style="display:inline-flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:2px;background:var(--amber);display:inline-block"></span>Unpaid</span>
     </div>
@@ -734,7 +729,7 @@ function renderEntriesChart(keys, data){
     const y=padT+chartH-(chartH*i/steps);
     const val=Math.round(niceMax*i/steps);
     grid+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" style="stroke:var(--bg2);stroke-width:1"/>`;
-    grid+=`<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="10" style="fill:var(--ink3)">${val}</text>`;
+    grid+=`<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="10" style="fill:var(--ink-3)">${val}</text>`;
   }
   keys.forEach((k,i)=>{
     const cx=padL+groupW*i+groupW/2;
@@ -742,7 +737,7 @@ function renderEntriesChart(keys, data){
     const barH=(count/niceMax)*chartH;
     const x=cx-barW/2, y=padT+chartH-barH;
     bars+=`<g><title>${k} — ${count} ${count===1?'entry':'entries'}</title><rect x="${x}" y="${y}" width="${barW}" height="${Math.max(barH,0)}" rx="2" style="fill:var(--accent)"/></g>`;
-    labels+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" style="fill:var(--ink3)">${shortMonthLabel(k)}</text>`;
+    labels+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" style="fill:var(--ink-3)">${shortMonthLabel(k)}</text>`;
   });
 
   container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:var(--sans)">${grid}${bars}${labels}</svg>`;
@@ -805,7 +800,7 @@ function renderLogs(logs) {
   const tbody  = document.getElementById('logs-table');
   const footer = document.getElementById('logs-footer');
   if (!logs.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">${
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink-3)">${
       currentTab==='unpaid' ? 'No unpaid logs in this range — all settled! ✓' : currentTab==='paid' ? 'No paid logs in this range.' : 'No logs in this range.'
     }</td></tr>`;
     footer.textContent = '';
@@ -821,12 +816,12 @@ function renderLogs(logs) {
 
     sumHours  += hours;
     sumAmount += amount;
-    const badge = isPaid ? '<span class="badge bg-g">✓ Paid</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
+    const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
     return `
       <tr class="${!isPaid?'row-unpaid':''}">
         <td>${new Date(l.date).toLocaleDateString()}</td>
-        <td><strong>${hours}h</strong></td>
-        <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+        <td class="mono"><strong>${hours}h</strong></td>
+        <td class="mono">${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
         <td>${badge}</td>
         <td>${l.task_description || ''}</td>
       </tr>`;
