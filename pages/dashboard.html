@@ -4,211 +4,211 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — QFA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{overflow-y:scroll}
     :root{
-      --navy:#0c1a3d;--navy2:#1d3a75;--accent:#2f5fe0;--gold:#a9782e;--gold2:#dcab5c;
-      --white:#fff;--bg:#f2f4fa;--bg2:#eaedf6;
-      --ink:#0f1a37;--ink2:#4a5573;--ink3:#8890a8;
-      --green:#1f7a4d;--gbg:#e2f3e8;--amber:#a15b12;--abg:#faedd9;
-      --red:#a3312f;--rbg:#f8e1e0;
-      --serif:'Fraunces',serif;--sans:'Outfit',sans-serif;
-      --r:16px;--r-sm:10px;
-      --sh:0 18px 44px rgba(12,26,61,.14);--sh-sm:0 6px 18px rgba(12,26,61,.10);
-      --card-bg:#ffffff;--table-hover:var(--bg);
-      --hairline:rgba(12,26,61,.10);
+      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
+      --white:#fff;--bg:#f4f6fb;--bg2:#eef1f8;
+      --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
+      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;
+      --red:#b91c1c;--rbg:#fee2e2;
+      --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
+      --r:14px;--sh:0 2px 20px rgba(13,35,83,.08);
+      --card-bg: #ffffff;
+      --table-hover: var(--bg);
     }
 
-    [data-theme="dark"]{
-      --navy:#131c33;--navy2:#26355c;--accent:#7ea0ff;--gold:#d7a860;--gold2:#f0c98a;
-      --white:#0a0e1a;--bg:#0a0e1a;--bg2:#131c33;
-      --ink:#eef1fb;--ink2:#b7bfda;--ink3:#7c88ab;
-      --green:#5fd08c;--gbg:rgba(31,122,77,.28);--amber:#e2ac5c;--abg:rgba(161,91,18,.30);
-      --red:#e2827f;--rbg:rgba(163,49,47,.30);
-      --sh:0 18px 44px rgba(0,0,0,.45);--sh-sm:0 6px 18px rgba(0,0,0,.35);
-      --card-bg:#111a30;--table-hover:#182140;
-      --hairline:rgba(255,255,255,.09);
+    [data-theme="dark"] {
+      --navy: #1e293b; --navy2: #334155; --accent: #3b82f6; --gold: #d97706; --gold2: #fbbf24;
+      --white: #0f172a; --bg: #090d16; --bg2: #1e293b;
+      --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #94a3b8;
+      --green: #4ade80; --gbg: rgba(22, 101, 52, 0.4); --amber: #fbbf24; --abg: rgba(146, 64, 14, 0.4);
+      --red: #f87171; --rbg: rgba(185, 28, 28, 0.4);
+      --sh: 0 2px 20px rgba(0,0,0,0.4);
+      --card-bg: #111827;
+      --table-hover: #1f2937;
     }
 
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
-
-    body{font-family:var(--sans);background:var(--bg);color:var(--ink);transition:background .3s ease,color .3s ease;-webkit-font-smoothing:antialiased}
-    :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-    .mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:54px;background:var(--navy);z-index:200;align-items:center;justify-content:space-between;padding:0 1rem}
-    .mob-brand{display:flex;align-items:center;gap:.55rem}
-    .mob-brand img{height:26px;background:#fff;border-radius:6px;padding:2px}
-    .mob-brand span{color:#fff;font-size:.78rem;font-weight:600;letter-spacing:.01em}
-    .mob-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#fff;width:36px;height:36px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-    .mob-btn svg{width:18px;height:18px}
-    .overlay{display:none;position:fixed;inset:0;background:rgba(8,14,32,.6);z-index:149;backdrop-filter:blur(2px)}
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);transition:background 0.3s ease, color 0.3s ease;}
+    .mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy);z-index:200;align-items:center;justify-content:space-between;padding:0 1rem;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+    .mob-brand{display:flex;align-items:center;gap:.5rem}
+    .mob-brand img{height:28px;background:#fff;border-radius:6px;padding:2px}
+    .mob-brand span{color:#fff;font-size:.82rem;font-weight:700}
+    .mob-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149}
     .overlay.on{display:block}
-
-    /* ── SIDEBAR — ledger spine ── */
-    .sidebar{width:236px;background:var(--navy);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;transition:background .3s ease;overflow:hidden}
-    .sidebar::before{content:'Q';position:absolute;font-family:var(--serif);font-weight:700;font-size:19rem;line-height:1;color:rgba(220,171,92,.05);right:-4.6rem;bottom:-3rem;pointer-events:none;user-select:none}
-    .sb-brand{position:relative;padding:1.35rem 1.3rem 1.2rem;display:flex;align-items:center;gap:.7rem}
-    .sb-logo{width:34px;height:34px;background:#fff;border-radius:9px;overflow:hidden;padding:3px;flex-shrink:0}
+    .sidebar{width:240px;background:var(--navy);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;transition: background 0.3s ease;}
+    .sb-brand{padding:1.1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.7rem}
+    .sb-logo{width:36px;height:36px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0}
     .sb-logo img{width:100%;height:100%;object-fit:contain}
-    .sb-text{display:flex;flex-direction:column}
-    .sb-text strong{font-family:var(--serif);font-weight:600;color:#fff;font-size:.92rem;letter-spacing:-.01em}
-    .sb-text span{font-size:.68rem;color:var(--gold2);margin-top:.1rem}
-    .sb-rule{position:relative;height:1px;margin:0 1.3rem;background:linear-gradient(90deg,rgba(220,171,92,.4),rgba(220,171,92,0))}
-    .sb-nav{position:relative;flex:1;padding:.9rem .7rem;overflow-y:auto;display:flex;flex-direction:column;gap:.1rem}
-    .sb-nav a{display:flex;align-items:center;gap:.75rem;padding:.62rem .7rem;font-size:.83rem;font-weight:500;color:rgba(255,255,255,.56);text-decoration:none;border-radius:9px;transition:background .15s,color .15s}
-    .sb-nav a svg{width:17px;height:17px;flex-shrink:0;opacity:.85}
+    .sb-text strong{display:block;color:#fff;font-size:.8rem;font-weight:700}
+    .sb-text span{font-size:.62rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em}
+    .sb-nav{flex:1;padding:.8rem 0;overflow-y:auto}
+    .sb-nav a{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;font-size:.85rem;font-weight:500;color:rgba(255,255,255,.55);text-decoration:none;transition:all .2s;border-right:3px solid transparent}
     .sb-nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
-    .sb-nav a.active{color:#fff;background:rgba(220,171,92,.14)}
-    .sb-nav a.active svg{opacity:1;color:var(--gold2)}
-    .sb-user{position:relative;padding:1rem 1.3rem 1.15rem;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:.15rem}
-    .sb-user strong{color:#fff;font-size:.86rem;font-weight:600}
-    .sb-user span{font-size:.72rem;color:rgba(255,255,255,.42)}
-    .sb-user a{display:inline-flex;align-items:center;gap:.35rem;margin-top:.55rem;font-size:.76rem;color:var(--gold2);text-decoration:none}
-    .sb-user a svg{width:13px;height:13px}
-    .sb-user a:hover{color:#fff}
+    .sb-nav a.active{color:#fff;background:rgba(26,92,255,.2);border-right-color:var(--gold2)}
+    .sb-user{padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.08)}
+    .sb-user strong{display:block;color:#fff;font-size:.88rem}
+    .sb-user span{font-size:.72rem;color:rgba(255,255,255,.4)}
+    .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none}
+    .main{margin-left:240px;min-height:100vh;overflow-x:hidden}
 
-    .main{margin-left:236px;min-height:100vh;overflow-x:hidden}
+    .topbar{background:var(--card-bg);border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;transition: background 0.3s ease;}
+    .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em;color:var(--ink)}
+    .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.1rem}
+    .topbar-right{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+    .mpick{display:flex;align-items:center;gap:.5rem}
+    .mpick label{font-size:.78rem;font-weight:700;color:var(--ink2)}
+    .mpick input{padding:.4rem .8rem;border:1.5px solid rgba(13,35,83,.1);border-radius:8px;font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--bg)}
 
-    /* ── TOPBAR — statement header ── */
-    .topbar{background:var(--card-bg);border-bottom:1px solid var(--hairline);padding:1.15rem 1.6rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.9rem;transition:background .3s ease}
-    .topbar h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;letter-spacing:-.01em;color:var(--ink)}
-    .topbar p{font-size:.82rem;color:var(--ink3);margin-top:.15rem;font-style:italic}
-    .topbar-right{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
-    .mpick{display:flex;align-items:center;gap:.55rem;background:var(--bg);border:1px solid var(--hairline);border-radius:999px;padding:.25rem .3rem .25rem .95rem}
-    .mpick label{font-size:.72rem;font-weight:600;color:var(--ink3)}
-    .mpick input{width:auto;padding:.32rem .7rem;border:none;border-radius:999px;font-family:var(--sans);font-size:.8rem;color:var(--ink);background:var(--card-bg)}
-    .mpick input:focus{box-shadow:none;outline:2px solid var(--accent)}
+    /* Theme Toggle Button */
+    .theme-toggle {
+      background: var(--bg2); border: 1px solid rgba(13,35,83,0.1);
+      color: var(--ink); width: 36px; height: 36px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; transition: all 0.2s;
+    }
+    .theme-toggle:hover { background: var(--accent); color: white; }
 
-    .theme-toggle{background:var(--bg2);border:1px solid var(--hairline);color:var(--ink);width:38px;height:38px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.05rem;transition:all .2s}
-    .theme-toggle:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+    .content{padding:1.5rem}
 
-    .content{padding:1.6rem}
-
-    /* ── LEDGER STRIP — one bordered grid instead of six loose cards ── */
-    .stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hairline);border:1px solid var(--hairline);border-radius:var(--r);overflow:hidden;margin-bottom:1.4rem}
-    .sc{background:var(--card-bg);padding:1.05rem 1.2rem 1rem;position:relative;transition:background .3s ease}
-    .sc::before{content:'';position:absolute;left:1.2rem;top:1.05rem;width:6px;height:6px;border-radius:50%}
-    .sc.green::before{background:var(--green)}
-    .sc.amber::before{background:var(--amber)}
-    .sc.blue::before{background:var(--accent)}
-    .sc.navy::before{background:var(--navy2)}
-    .sc.gold::before{background:var(--gold)}
-    .sc-label{font-size:.7rem;font-weight:500;color:var(--ink3);margin:0 0 .55rem 1rem}
-    .sc-num{font-family:var(--serif);font-size:1.5rem;font-weight:600;line-height:1;display:block;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-    .sc-sub{font-size:.68rem;color:var(--ink3);margin-top:.35rem}
-
-    .card{background:var(--card-bg);border-radius:var(--r);border:1px solid var(--hairline);margin-bottom:1.25rem;transition:background .3s ease}
-    .ch{padding:1.05rem 1.4rem;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-    .ch h3{font-family:var(--serif);font-size:1.02rem;font-weight:600;color:var(--ink);letter-spacing:-.005em}
-    .ch a{font-size:.79rem;color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1px solid transparent}
-    .ch a:hover{border-bottom-color:var(--accent)}
+     .stats-row{
+      display:grid;
+      grid-template-columns:repeat(6, 1fr);
+      gap:0.8rem;
+      margin-bottom:1.5rem;
+  }
+    .sc{background:var(--card-bg);border-radius:var(--r);padding:1rem 1.4rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);position:relative;overflow:hidden;transition:transform .2s, background 0.3s ease;}
+    .sc:hover{transform:translateY(-2px)}
+    .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .sc.green::before{background:linear-gradient(90deg,#22c55e,#86efac)}
+    .sc.amber::before{background:linear-gradient(90deg,#f59e0b,#fcd34d)}
+    .sc.blue::before{background:linear-gradient(90deg,var(--accent),#60a5fa)}
+    .sc.navy::before{background:linear-gradient(90deg,var(--navy),var(--navy2))}
+    .sc.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+    .sc-icon{position:absolute;top:1rem;right:1rem;font-size:1.4rem;opacity:.12}
+    .sc-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:.5rem}
+    .sc-num{font-family:var(--serif);font-size:1.4rem;font-weight:700;line-height:1;display:block;color:var(--ink)}
+    .sc-sub{font-size:.62rem;color:var(--ink3);margin-top:.3rem}
+    .card{background:var(--card-bg);border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);margin-bottom:1.2rem;transition: background 0.3s ease;}
+    .ch{padding:1rem 1.4rem;border-bottom:1px solid var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+    .ch h3{font-size:.9rem;font-weight:700;color:var(--ink)}
     .cb{padding:1.4rem}
-
-    .entry-clients-row{display:grid;grid-template-columns:1.3fr 1fr;gap:1.25rem;align-items:stretch}
+    .two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:1.2rem;align-items:start}
+    .log-form-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:.9rem;align-items:start}
+    @media(max-width:700px){.log-form-row{grid-template-columns:1fr}}
+    .entry-clients-row{display:grid;grid-template-columns:1.4fr 1fr;gap:1.2rem;align-items:stretch}
     @media(max-width:900px){.entry-clients-row{grid-template-columns:1fr}}
-    .entry-clients-row>.card{display:flex;flex-direction:column;margin-bottom:0}
+    .entry-clients-row>.card{display:flex;flex-direction:column}
     .entry-clients-row>.card>.cb{flex:1}
-
     .ac-list{flex:1;overflow-y:auto}
-    .ac-row{display:flex;align-items:center;gap:.75rem;padding:.7rem 1.4rem;border-bottom:1px solid var(--hairline);cursor:pointer;transition:background .15s}
+    .ac-row{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.4rem;border-bottom:1px solid var(--bg2);cursor:pointer;transition:background .15s}
     .ac-row:last-child{border-bottom:none}
     .ac-row:hover{background:var(--table-hover)}
-    .ac-avatar{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.66rem;font-weight:600;flex-shrink:0;font-family:var(--serif)}
+    .ac-avatar{width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
     .ac-info{min-width:0;flex:1}
-    .ac-info strong{display:block;font-size:.85rem;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ac-info strong{display:block;font-size:.85rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .ac-info span{font-size:.7rem;color:var(--ink3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .ac-meta{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:.25rem;align-items:flex-end;flex-shrink:0}
-    .ac-meta .badge{font-size:.62rem}
-    .ac-credit{font-size:.7rem;font-weight:600;color:var(--accent)}
-
-    .fg{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.9rem}
-    .fg label{font-size:.76rem;font-weight:500;color:var(--ink2)}
-    input,textarea,select{width:100%;padding:.65rem .85rem;border:1.5px solid var(--hairline);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.87rem;color:var(--ink);transition:border-color .2s,box-shadow .2s}
-    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,95,224,.12)}
-    .hint{font-size:.71rem;color:var(--ink3);margin-top:.25rem}
-    .fs{font-size:.8rem;margin-top:.4rem;font-weight:500}
+    .ac-meta .badge{font-size:.6rem}
+    .ac-credit{font-size:.7rem;font-weight:700;color:var(--accent)}
+    .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem}
+    .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+    input,textarea,select{width:100%;padding:.7rem .9rem;border:1.5px solid rgba(13,35,83,.1);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--ink);transition:border-color .2s}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,92,255,.08)}
+    .hint{font-size:.7rem;color:var(--ink3);margin-top:.2rem}
+    .fs{font-size:.8rem;margin-top:.3rem}
     .fs.ok{color:var(--green)}.fs.er{color:var(--red)}
-
-    .btn{padding:.6rem 1.15rem;border-radius:var(--r-sm);font-family:var(--sans);font-size:.82rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
-    .btn svg{width:14px;height:14px}
-    .btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--navy2)}
+    .btn{padding:.55rem 1.2rem;border-radius:8px;font-family:var(--sans);font-size:.82rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+    .btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--accent)}
     .btn-g{background:var(--gbg);color:var(--green)}.btn-g:hover{background:var(--green);color:#fff}
     .btn-r{background:var(--rbg);color:var(--red)}.btn-r:hover{background:var(--red);color:#fff}
-    .btn-o{background:transparent;border:1.5px solid var(--hairline);color:var(--ink2)}.btn-o:hover{border-color:var(--navy);color:var(--ink)}
+    .btn-o{background:transparent;border:1.5px solid rgba(13,35,83,.15);color:var(--ink2)}.btn-o:hover{border-color:var(--navy);color:var(--ink)}
     .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff}
-    .btn-gold:hover{filter:brightness(1.06)}
-    .btn-sm{padding:.4rem .78rem;font-size:.75rem}
+    .btn-sm{padding:.38rem .8rem;font-size:.75rem}
 
-    /* ── TIMER display/status shared by the floating panel ── */
-    .timer-disp{font-family:var(--serif);font-size:2.3rem;font-weight:500;text-align:center;padding:.65rem;background:var(--bg);border-radius:var(--r-sm);margin:.6rem 0;letter-spacing:.03em;transition:color .3s;font-variant-numeric:tabular-nums}
+    /* ── TIMER (shared display/status styles used inside the floating panel) ── */
+    .timer-disp{font-family:var(--serif);font-size:2.4rem;text-align:center;padding:.7rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.04em;transition:color .3s}
     .timer-disp.running{color:var(--green)}
     .timer-disp.paused{color:var(--amber)}
-    .timer-disp.idle{color:var(--ink3)}
-    .timer-status{text-align:center;font-size:.72rem;font-weight:500;margin-bottom:.35rem;height:1rem}
+    .timer-disp.idle{color:var(--navy)}
+    .timer-status{text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;height:1rem}
     .timer-btns{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap}
 
-    /* ── FLOATING DRAGGABLE TIMER ── */
-    .float-timer{position:fixed;bottom:20px;right:20px;width:280px;background:var(--card-bg);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--hairline);z-index:250;overflow:hidden;transition:background .3s ease,box-shadow .2s ease,width .2s ease;user-select:none}
-    .float-timer.dragging{box-shadow:0 24px 60px rgba(12,26,61,.4)}
-    .float-timer-handle{background:var(--navy);color:#fff;padding:.65rem .95rem;cursor:grab;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.79rem;font-weight:500}
-    .float-timer-handle:active{cursor:grabbing}
-    .float-timer-handle-title{display:flex;align-items:center;gap:.45rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .float-timer-handle-title svg{width:14px;height:14px;color:var(--gold2);flex-shrink:0}
-    .float-timer-mini-time{display:none;font-family:var(--serif);font-size:.84rem;opacity:.9;font-variant-numeric:tabular-nums}
-    .float-timer.collapsed .float-timer-mini-time{display:inline}
-    .float-timer-min{background:rgba(255,255,255,.14);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:.95rem;line-height:1;flex-shrink:0}
-    .float-timer-min:hover{background:rgba(255,255,255,.28)}
-    .float-timer-body{padding:.9rem 1rem 1rem}
-    .float-timer.collapsed{width:206px}
-    .float-timer.collapsed .float-timer-body{display:none}
-    @media(max-width:480px){.float-timer{width:calc(100vw - 24px) !important}}
+    /* ── FLOATING DRAGGABLE TIMER WIDGET ── */
+    .float-timer{
+      position:fixed; bottom:20px; right:20px; width:280px;
+      background:var(--card-bg); border-radius:var(--r);
+      box-shadow:0 12px 40px rgba(13,35,83,.22);
+      border:1px solid rgba(13,35,83,.08); z-index:250; overflow:hidden;
+      transition:background .3s ease, box-shadow .2s ease, width .2s ease;
+      user-select:none;
+    }
+    .float-timer.dragging{ box-shadow:0 20px 60px rgba(13,35,83,.35); }
+    .float-timer-handle{
+      background:var(--navy); color:#fff; padding:.6rem .9rem; cursor:grab;
+      display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+      font-size:.8rem; font-weight:700;
+    }
+    .float-timer-handle:active{ cursor:grabbing; }
+    .float-timer-handle-title{ display:flex; align-items:center; gap:.4rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .float-timer-mini-time{ display:none; font-family:var(--serif); font-size:.85rem; opacity:.9; }
+    .float-timer.collapsed .float-timer-mini-time{ display:inline; }
+    .float-timer-min{ background:rgba(255,255,255,.15); border:none; color:#fff; width:22px;height:22px;border-radius:5px; cursor:pointer; font-size:.95rem; line-height:1; flex-shrink:0; }
+    .float-timer-min:hover{ background:rgba(255,255,255,.3); }
+    .float-timer-body{ padding:.9rem 1rem 1rem; }
+    .float-timer.collapsed{ width:210px; }
+    .float-timer.collapsed .float-timer-body{ display:none; }
+    @media(max-width:480px){ .float-timer{ width:calc(100vw - 24px) !important; } }
 
-    /* ── TABLE — statement rows, numbers right-aligned ── */
+    /* ── TABLE ── */
     .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    table{width:100%;border-collapse:collapse;font-size:.84rem;min-width:600px}
-    th{padding:.65rem .9rem;font-size:.72rem;color:var(--ink3);font-weight:500;border-bottom:1px solid var(--hairline);text-align:left;white-space:nowrap}
-    td{padding:.8rem .9rem;border-bottom:1px solid var(--hairline);color:var(--ink2);vertical-align:middle}
+    table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
+    th{padding:.6rem .9rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.8rem .9rem;border-bottom:1px solid var(--bg2);color:var(--ink2);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:var(--table-hover)}
-    .tbl-breakdown th:nth-child(3),.tbl-breakdown td:nth-child(3),
-    .tbl-breakdown th:nth-child(4),.tbl-breakdown td:nth-child(4),
-    .tbl-breakdown th:nth-child(5),.tbl-breakdown td:nth-child(5),
-    .tbl-breakdown th:nth-child(6),.tbl-breakdown td:nth-child(6){text-align:right;font-variant-numeric:tabular-nums}
-    .tbl-logs th:nth-child(3),.tbl-logs td:nth-child(3),
-    .tbl-logs th:nth-child(4),.tbl-logs td:nth-child(4){text-align:right;font-variant-numeric:tabular-nums}
-
-    .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .68rem;border-radius:999px;font-size:.71rem;font-weight:600;white-space:nowrap}
-    .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+    .badge{display:inline-block;padding:.18rem .65rem;border-radius:100px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
     .bg-g{background:var(--gbg);color:var(--green)}
     .bg-a{background:var(--abg);color:var(--amber)}
-    .bg-b{background:#e3ecff;color:#2544a0}
-
-    .modal-ov{position:fixed;inset:0;background:rgba(10,20,45,.55);display:none;align-items:center;justify-content:center;z-index:300;padding:1rem;backdrop-filter:blur(4px)}
+    .bg-b{background:#dbeafe;color:#1e40af}
+    .modal-ov{position:fixed;inset:0;background:rgba(13,35,83,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:1rem;backdrop-filter:blur(4px)}
     .modal-ov.on{display:flex}
-    .modal{background:var(--card-bg);color:var(--ink);border-radius:20px;padding:1.9rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh);animation:mIn .25s ease}
-    @keyframes mIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+    .modal{background:var(--card-bg);color:var(--ink);border-radius:18px;padding:1.8rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(13,35,83,.2);animation:mIn .25s ease}
+    @keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
     .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
-    .mh h3{font-family:var(--serif);font-weight:600;font-size:1.2rem;color:var(--ink)}
+    .mh h3{font-family:var(--serif);font-size:1.2rem;color:var(--ink)}
     .mc{background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;color:var(--ink3);display:flex;align-items:center;justify-content:center}
     .mc:hover{background:var(--rbg);color:var(--red)}
 
-    @media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
 
     @media(max-width:768px){
       .mob-bar{display:flex}
       .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:150}
       .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
-      .main{margin-left:0;padding-top:54px}
-      .topbar{position:relative;top:0;padding:1rem;border-bottom:1px solid var(--hairline)}
-      .stats-row{grid-template-columns:1fr 1fr}
+
+      .main{
+        margin-left:0;
+        padding-top:52px !important;
+      }
+
+      .topbar{
+        position: relative !important;
+        top: 0 !important;
+        padding: 1rem !important;
+        border-bottom: 1px solid rgba(13,35,83,.08);
+      }
+
+      .stats-row{grid-template-columns:1fr 1fr !important;gap:.8rem}
+      .two-col{grid-template-columns:1fr}
       .content{padding:1rem}
-      .sc-num{font-size:1.3rem}
+      .sc-num{font-size:1.4rem}
       .topbar-right{width:100%}
     }
-    @media(max-width:420px){.sc-num{font-size:1.15rem}.content{padding:.8rem}}
+    @media(max-width:420px){.stats-row{grid-template-columns:1fr 1fr !important;gap:.6rem}.sc-num{font-size:1.2rem}.content{padding:.8rem}}
   </style>
 </head>
 <body>
@@ -218,30 +218,29 @@
     <img src="../QFA_Logo.png" alt="QFA"/>
     <span>Quick Freelancing Agency</span>
   </div>
-  <button class="mob-btn" onclick="sbOpen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
 </div>
 <div class="overlay" id="overlay" onclick="sbClose()"></div>
 
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
     <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
-    <div class="sb-text"><strong>Quick Freelancing</strong><span>Freelancer ledger</span></div>
+    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency · Dashboard</span></div>
   </div>
-  <div class="sb-rule"></div>
   <nav class="sb-nav">
-    <a href="dashboard.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M12 20V4M20 20v-8"/></svg>Overview</a>
-    <a href="time-logs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.5V12l3 2"/></svg>Time logs</a>
-    <a href="clients.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="9" r="3"/><path d="M2.5 20c0-3.3 2.7-5.3 6-5.3s6 2 6 5.3"/><circle cx="17" cy="8.3" r="2.3"/><path d="M15.3 12c2.5.3 4.2 2 4.2 4.4"/></svg>Clients</a>
-    <a href="schedule.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="5" width="17.6" height="15.5" rx="2.2"/><path d="M3.2 10h17.6M8 3.2v3.6M16 3.2v3.6"/></svg>Schedule</a>
-    <a href="reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5l5.5-5.5 3.5 3.5L20.5 6"/><path d="M14.5 6h6v6"/></svg>Reports</a>
-    <a href="fixed-invoices.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 3h8l4.6 4.6V21H6.2z"/><path d="M14.2 3v4.6h4.6M9 12.5h6M9 16h6M9 9h2.5"/></svg>Invoices</a>
-    <a href="portfolio-admin.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="4.3" width="17.6" height="15.4" rx="2.2"/><circle cx="9" cy="10" r="1.6"/><path d="M20.4 15.6l-5.6-4.7-3.8 3.6-1.9-1.7-5.6 4.5"/></svg>Portfolio</a>
-    <a href="../index.html" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"/><path d="M3.7 12h16.6M12 3.7c2.4 2.3 3.7 5.2 3.7 8.3s-1.3 6-3.7 8.3c-2.4-2.3-3.7-5.2-3.7-8.3S9.6 6 12 3.7z"/></svg>Public site</a>
+    <a href="dashboard.html" class="active">📊 Overview</a>
+    <a href="time-logs.html">⏱ Time Logs</a>
+    <a href="clients.html">👥 Clients</a>
+    <a href="schedule.html">📅 Schedule</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="fixed-invoices.html">📄 Invoices</a>
+    <a href="portfolio-admin.html">🖼 Portfolio</a>
+    <a href="../index.html" target="_blank">🌐 Public Site</a>
   </nav>
   <div class="sb-user">
     <strong id="uname">Loading…</strong>
-    <span>Freelancer, QFA</span>
-    <a href="#" onclick="logout()">Sign out<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5.5a1 1 0 00-1 1v14a1 1 0 001 1H9"/><path d="M14 8.2l3.8 3.8-3.8 3.8M17.6 12H9.5"/></svg></a>
+    <span>Freelancer · QFA</span>
+    <a href="#" onclick="logout()">Sign out →</a>
   </div>
 </aside>
 
@@ -253,31 +252,31 @@
     </div>
     <div class="topbar-right">
       <div class="mpick">
-        <label for="mpicker">Month</label>
+        <label>Month</label>
         <input type="month" id="mpicker" onchange="load()"/>
       </div>
       <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-      <button class="btn btn-gold btn-sm" onclick="show('modal-client')">+ Add client</button>
+      <button class="btn btn-gold btn-sm" onclick="show('modal-client')">+ Add Client</button>
     </div>
   </div>
 
   <div class="content">
     <div class="stats-row">
-      <div class="sc green"><div class="sc-label">Paid this month</div><span class="sc-num" id="s-paid">$0</span><div class="sc-sub">Received</div></div>
-      <div class="sc amber"><div class="sc-label">Unpaid this month</div><span class="sc-num" id="s-unpaid">$0</span><div class="sc-sub">Outstanding</div></div>
-      <div class="sc blue"><div class="sc-label">Total expected</div><span class="sc-num" id="s-exp">$0</span><div class="sc-sub">Hourly + fixed</div></div>
-      <div class="sc navy"><div class="sc-label">Clients this month</div><span class="sc-num" id="s-clients">0</span><div class="sc-sub">Active</div></div>
-      <div class="sc gold"><div class="sc-label">Hours this month</div><span class="sc-num" id="s-hours">0h</span><div class="sc-sub">Logged</div></div>
-      <div class="sc navy"><div class="sc-label">Upcoming</div><span class="sc-num" id="s-book">0</span><div class="sc-sub">Bookings</div></div>
+      <div class="sc green"><div class="sc-icon">✅</div><div class="sc-label">Paid this month</div><span class="sc-num" id="s-paid">$0</span><div class="sc-sub">Received</div></div>
+      <div class="sc amber"><div class="sc-icon">⏳</div><div class="sc-label">Unpaid this month</div><span class="sc-num" id="s-unpaid">$0</span><div class="sc-sub">Outstanding</div></div>
+      <div class="sc blue"><div class="sc-icon">💰</div><div class="sc-label">Total expected</div><span class="sc-num" id="s-exp">$0</span><div class="sc-sub">Hourly + Fixed</div></div>
+      <div class="sc navy"><div class="sc-icon">👥</div><div class="sc-label">Clients this month</div><span class="sc-num" id="s-clients">0</span><div class="sc-sub">Active</div></div>
+      <div class="sc gold"><div class="sc-icon">⏱</div><div class="sc-label">Hours this month</div><span class="sc-num" id="s-hours">0h</span><div class="sc-sub">Logged</div></div>
+      <div class="sc navy"><div class="sc-icon">📅</div><div class="sc-label">Upcoming</div><span class="sc-num" id="s-book">0</span><div class="sc-sub">Bookings</div></div>
     </div>
 
     <div class="card">
       <div class="ch">
-        <h3>Payment breakdown for <span id="bmonth"></span></h3>
-        <a href="time-logs.html">View all logs</a>
+        <h3>💰 Payment Breakdown — <span id="bmonth"></span></h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all logs →</a>
       </div>
       <div class="tw">
-        <table class="tbl-breakdown">
+        <table>
           <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
         </table>
@@ -286,7 +285,7 @@
 
     <div class="entry-clients-row">
       <div class="card">
-        <div class="ch"><h3>Log time manually</h3></div>
+        <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
         <div class="cb">
           <form onsubmit="submitLog(event)">
             <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
@@ -295,11 +294,11 @@
               <div class="fg">
                 <label>Hours (any value)</label>
                 <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
-                <div class="hint">20min = 0.33 · 1h20m = 1.33</div>
+                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
               </div>
             </div>
             <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
-            <button type="submit" class="btn btn-p" style="width:100%">Add log entry</button>
+            <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
             <div id="ls" class="fs"></div>
           </form>
         </div>
@@ -307,8 +306,8 @@
 
       <div class="card">
         <div class="ch">
-          <h3>Active in <span id="acmonth"></span></h3>
-          <span style="font-size:.74rem;color:var(--ink3)" id="ac-count"></span>
+          <h3>👥 Active Clients — <span id="acmonth"></span></h3>
+          <span style="font-size:.72rem;color:var(--ink3)" id="ac-count"></span>
         </div>
         <div class="ac-list" id="active-clients-list">
           <div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">Loading…</div>
@@ -318,18 +317,18 @@
 
     <div class="card">
       <div class="ch">
-        <h3>Recent entries</h3>
-        <a href="time-logs.html">View all</a>
+        <h3>Recent Logs</h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
       </div>
       <div class="tw">
-        <table class="tbl-logs">
+        <table>
           <thead><tr><th>Client</th><th>Date</th><th>Hours</th><th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th></tr></thead>
           <tbody id="rtable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <button class="btn btn-p" onclick="show('modal-client')">+ Add new client</button>
+    <button class="btn btn-p" onclick="show('modal-client')">+ Add New Client</button>
   </div>
 </div>
 
@@ -337,8 +336,7 @@
 <div class="float-timer" id="float-timer">
   <div class="float-timer-handle" id="float-timer-handle">
     <div class="float-timer-handle-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.5V12l3 2"/></svg>
-      <span>Live timer</span>
+      <span>⏱ Live Timer</span>
       <span class="float-timer-mini-time" id="float-timer-mini-time">00:00:00</span>
     </div>
     <button class="float-timer-min" id="float-timer-min-btn" onclick="toggleMinimize()" title="Minimize">–</button>
@@ -349,24 +347,24 @@
     <div class="timer-status" id="t-status" style="color:var(--ink3)">Ready</div>
     <div class="timer-disp idle" id="tdisp">00:00:00</div>
     <div class="timer-btns">
-      <button class="btn btn-g" id="t-start" onclick="timerStart()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5l13 7.5-13 7.5V4.5z"/></svg>Start</button>
-      <button class="btn" id="t-pause" onclick="timerPause()" style="display:none;background:var(--abg);color:var(--amber)"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4.5" width="4" height="15"/><rect x="14" y="4.5" width="4" height="15"/></svg>Pause</button>
-      <button class="btn btn-g" id="t-resume" onclick="timerResume()" style="display:none"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5l13 7.5-13 7.5V4.5z"/></svg>Resume</button>
-      <button class="btn btn-r" id="t-stop" onclick="timerStop()" style="display:none"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="5.5" y="5.5" width="13" height="13" rx="2"/></svg>Stop &amp; save</button>
-      <button class="btn btn-o btn-sm" onclick="timerReset()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12a7.5 7.5 0 1 1 2.3 5.4"/><path d="M4.5 17v-5h5"/></svg>Reset</button>
+      <button class="btn btn-g" id="t-start" onclick="timerStart()">▶ Start</button>
+      <button class="btn" id="t-pause" onclick="timerPause()" style="display:none;background:var(--abg);color:var(--amber)">⏸ Pause</button>
+      <button class="btn btn-g" id="t-resume" onclick="timerResume()" style="display:none">▶ Resume</button>
+      <button class="btn btn-r" id="t-stop" onclick="timerStop()" style="display:none">■ Stop & Save</button>
+      <button class="btn btn-o btn-sm" onclick="timerReset()">↺ Reset</button>
     </div>
   </div>
 </div>
 
 <div class="modal-ov" id="modal-client">
   <div class="modal">
-    <div class="mh"><h3>Add new client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
+    <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
     <form onsubmit="addClient(event)">
       <div class="fg"><label>Full name</label><input type="text" name="name" required/></div>
       <div class="fg"><label>Email</label><input type="email" name="email" required/></div>
       <div class="fg"><label>Company (optional)</label><input type="text" name="company"/></div>
       <div class="fg"><label>Temporary password</label><input type="text" name="password" required/></div>
-      <div style="border-top:1px solid var(--hairline);padding-top:1rem;margin-top:.5rem">
+      <div style="border-top:1px solid var(--bg2);padding-top:1rem;margin-top:.5rem">
         <div class="fg"><label>Rate type</label>
           <select name="rate_type" id="art" onchange="toggleRate()">
             <option value="hourly">Hourly rate</option>
@@ -384,22 +382,23 @@
 
 <div class="modal-ov" id="modal-edit">
   <div class="modal">
-    <div class="mh"><h3>Edit log entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
-    <div id="einfo" style="background:var(--bg);border-radius:var(--r-sm);padding:.7rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--ink2)"></div>
+    <div class="mh"><h3>Edit Log Entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
+    <div id="einfo" style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--ink2)"></div>
     <input type="hidden" id="eid"/>
     <input type="hidden" id="ehr"/>
     <div class="fg"><label>Date</label><input type="date" id="edate" required/></div>
     <div class="fg">
       <label>Hours</label>
       <input type="number" id="ehours" min="0.01" max="24" step="any" required oninput="previewAmt()"/>
-      <div class="hint">20min = 0.33 · 45min = 0.75 · 1h20m = 1.33</div>
+      <div class="hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</div>
     </div>
-    <div id="aprev" style="background:#e3ecff;border-radius:var(--r-sm);padding:.6rem 1rem;margin-bottom:.8rem;font-size:.84rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div id="aprev" style="background:#e8f0ff;border-radius:8px;padding:.6rem 1rem;margin-bottom:.8rem;font-size:.84rem;color:var(--accent);font-weight:600;display:none"></div>
     <div class="fg"><label>Task description</label><textarea id="etask" rows="3" required></textarea></div>
     <button class="btn btn-p" style="width:100%;padding:.8rem" onclick="saveEdit()">Save changes</button>
     <div id="es" class="fs"></div>
   </div>
 </div>
+
 <script>
 const API='https://freelancer-platform-9jut.onrender.com/api';
 const SH=8;
