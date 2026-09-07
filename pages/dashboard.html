@@ -434,10 +434,23 @@ function updateThemeButton(theme) {
 }
 initTheme();
 
+/*
 async function api(path,opts={}){
   const r=await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
   if(r.status===401){auth.clear();go('login.html');return;}
   if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Failed');}
+  return r.json();
+}*/
+
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, { ...opts, headers: { ...auth.hdrs(), ...(opts.headers || {}) } });
+  if (r.status === 401) {
+    const e = await r.json().catch(() => ({}));
+    auth.clear();
+    go('login.html?reason=' + (e.error === 'SESSION_REVOKED' ? 'revoked' : 'expired'));
+    return;
+  }
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Failed'); }
   return r.json();
 }
 document.addEventListener('DOMContentLoaded',()=>{
