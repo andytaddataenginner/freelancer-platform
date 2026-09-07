@@ -11,6 +11,17 @@ const { requireAuth } = require('../middleware/auth');
 /**
  * Handles account creation directly in PostgreSQL and issues a JWT session token.
  */
+const crypto = require('crypto'); // add this import
+
+function issueToken(user) {
+  const sessionId = crypto.randomUUID();
+  const token = jwt.sign(
+    { id: user.id, name: user.name, email: user.email, role: user.role, sid: sessionId },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+  return { token, sessionId };
+}
 async function handleSignup(req, res, next) {
   try {
     const { name, email, phone, password, role } = req.body;
@@ -45,11 +56,17 @@ async function handleSignup(req, res, next) {
     const newUser = newRows[0];
 
     // 3. Issue 30-day JWT Token
+    /*
     const token = jwt.sign(
       { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
-    );
+    );*/
+    // 3. Issue token & record this as the user's active session
+    const { token, sessionId } = issueToken(newUser);
+    await pool.query('UPDATE users SET session_id = $1 WHERE id = $2', [sessionId, newUser.id]);
+    
+    return res.status(201).json({ token, user: newUser });
 
     // 4. Return token & user payload directly to frontend
     return res.status(201).json({ token, user: newUser });
@@ -86,12 +103,22 @@ router.post('/login', async (req, res, next) => {
 
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
-
+ /*
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
+
+    */
+ const { token, sessionId } = issueToken(user);
+await pool.query('UPDATE users SET session_id = $1 WHERE id = $2', [sessionId, user.id]);
+
+res.json({
+  token,
+  user: { id: user.id, name: user.name, email: user.email, role: user.role, company: user.company }
+});
+    
 
     res.json({
       token,
