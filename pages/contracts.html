@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contracts — QFA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;--bg:#f0f2f8;--card:#fff;--border:rgba(13,35,83,.08);--ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;--green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;--red:#b91c1c;--rbg:#fee2e2;--sans:'Outfit',sans-serif;--serif:'Playfair Display',serif;--sh:0 2px 16px rgba(13,35,83,.07);--r:12px}
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);display:flex;min-height:100vh}
+    .sidebar{width:220px;background:var(--navy);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;transition:transform .28s}
+    .sb-brand{padding:1rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.65rem}
+    .sb-logo{width:34px;height:34px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0}
+    .sb-logo img{width:100%;height:100%;object-fit:contain}
+    .sb-text strong{display:block;color:#fff;font-size:.78rem;font-weight:700}
+    .sb-text span{font-size:.6rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em}
+    .sb-nav{flex:1;padding:.6rem 0;overflow-y:auto}
+    .sb-nav a{display:flex;align-items:center;gap:.65rem;padding:.65rem 1.1rem;font-size:.82rem;font-weight:500;color:rgba(255,255,255,.5);text-decoration:none;transition:all .2s;border-right:3px solid transparent}
+    .sb-nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
+    .sb-nav a.active{color:#fff;background:rgba(26,92,255,.2);border-right-color:var(--gold2)}
+    .sb-nav .nav-section{font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.2);padding:.8rem 1.1rem .3rem;font-weight:700}
+    .sb-user{padding:.9rem 1.1rem;border-top:1px solid rgba(255,255,255,.08)}
+    .sb-user strong{display:block;color:#fff;font-size:.84rem}
+    .sb-user span{font-size:.7rem;color:rgba(255,255,255,.35)}
+    .sb-user a{display:block;margin-top:.35rem;font-size:.72rem;color:var(--gold2);text-decoration:none}
+    .mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy);z-index:200;align-items:center;justify-content:space-between;padding:0 1rem;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+    .mob-brand{display:flex;align-items:center;gap:.5rem}
+    .mob-brand img{height:28px;background:#fff;border-radius:6px;padding:2px}
+    .mob-brand span{color:#fff;font-size:.8rem;font-weight:700}
+    .mob-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:1.1rem;cursor:pointer}
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149}.overlay.on{display:block}
+    .main{margin-left:220px;flex:1;padding:1.5rem}
+    .topbar{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:1rem 1.4rem;margin-bottom:1.3rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
+    .topbar h2{font-family:var(--serif);font-size:1.3rem;color:var(--ink);letter-spacing:-.02em}
+    .topbar p{font-size:.78rem;color:var(--ink3);margin-top:.1rem}
+
+    /* Client selector bar */
+    .client-bar{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:1rem 1.4rem;margin-bottom:1.3rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+    .client-bar label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink2);flex-shrink:0}
+    .client-bar select{padding:.5rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:.88rem;color:var(--ink);background:var(--bg);flex:1;max-width:280px}
+    .client-bar select:focus{outline:none;border-color:var(--accent)}
+
+    /* Current contract hero */
+    .contract-hero{border-radius:var(--r);padding:1.4rem 1.6rem;margin-bottom:1.3rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+    .contract-hero.active{background:linear-gradient(135deg,#0d2353,#1a3a7a)}
+    .contract-hero.paused{background:linear-gradient(135deg,#78350f,#92400e)}
+    .contract-hero.terminated{background:linear-gradient(135deg,#1f2937,#374151)}
+    .contract-hero.none{background:var(--card);border:2px dashed var(--border)}
+    .hero-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:.4rem}
+    .active .hero-label{color:var(--gold2)}.paused .hero-label{color:#fcd34d}.terminated .hero-label{color:#9ca3af}.none .hero-label{color:var(--ink3)}
+    .hero-name{font-family:var(--serif);font-size:1.5rem;font-weight:700}
+    .active .hero-name,.paused .hero-name,.terminated .hero-name{color:#fff}.none .hero-name{color:var(--ink)}
+    .hero-rate{font-size:.85rem;margin-top:.25rem}
+    .active .hero-rate{color:rgba(255,255,255,.6)}.paused .hero-rate{color:rgba(255,255,255,.5)}.terminated .hero-rate{color:rgba(255,255,255,.4)}.none .hero-rate{color:var(--ink3)}
+    .hero-badge{padding:.5rem 1.1rem;border-radius:8px;font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:.4rem}
+    .badge-active{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);color:#86efac}
+    .badge-paused{background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.4);color:#fde68a}
+    .badge-terminated{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5}
+    .badge-none{background:var(--bg);border:1px solid var(--border);color:var(--ink3)}
+    .hero-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+
+    /* Buttons */
+    .btn{padding:.5rem 1rem;border-radius:8px;font-family:var(--sans);font-size:.8rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap}
+    .btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--accent)}
+    .btn-g{background:var(--gbg);color:var(--green)}.btn-g:hover{background:var(--green);color:#fff}
+    .btn-r{background:var(--rbg);color:var(--red)}.btn-r:hover{background:var(--red);color:#fff}
+    .btn-a{background:var(--abg);color:var(--amber)}.btn-a:hover{background:var(--amber);color:#fff}
+    .btn-o{background:transparent;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8)}.btn-o:hover{border-color:#fff;color:#fff}
+    .btn-sm{padding:.35rem .75rem;font-size:.73rem}
+
+    /* Timeline */
+    .timeline{position:relative;padding-left:2rem}
+    .timeline::before{content:'';position:absolute;left:.7rem;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--accent),var(--gold))}
+    .t-item{position:relative;margin-bottom:1.2rem;padding:.9rem 1rem;background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border)}
+    .t-item::before{content:'';position:absolute;left:-1.65rem;top:1rem;width:10px;height:10px;border-radius:50%;border:2px solid var(--card)}
+    .t-item.active::before{background:var(--green)}.t-item.paused::before{background:var(--amber)}.t-item.terminated::before{background:var(--red)}.t-item.change::before{background:var(--accent)}
+    .t-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem}
+    .t-type{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+    .t-active .t-type{color:var(--green)}.t-paused .t-type{color:var(--amber)}.t-terminated .t-type{color:var(--red)}.t-change .t-type{color:var(--accent)}
+    .t-dates{font-size:.72rem;color:var(--ink3)}
+    .t-rate{font-size:.85rem;font-weight:600;color:var(--ink);margin-bottom:.25rem}
+    .t-note{font-size:.78rem;color:var(--ink3);font-style:italic}
+
+    /* Card */
+    .card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);margin-bottom:1rem;overflow:hidden}
+    .ch{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+    .ch h3{font-size:.85rem;font-weight:700;color:var(--ink)}
+
+    /* Badge */
+    .badge{display:inline-block;padding:.16rem .6rem;border-radius:100px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .bg-g{background:var(--gbg);color:var(--green)}.bg-a{background:var(--abg);color:var(--amber)}.bg-r{background:var(--rbg);color:var(--red)}.bg-b{background:#dbeafe;color:#1e40af}
+
+    /* Modal */
+    .modal-ov{position:fixed;inset:0;background:rgba(13,35,83,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:1rem;backdrop-filter:blur(4px)}
+    .modal-ov.on{display:flex}
+    .modal{background:var(--card);border-radius:16px;padding:1.6rem;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(13,35,83,.2);animation:mIn .25s ease}
+    @keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+    .mh h3{font-family:var(--serif);font-size:1.1rem;color:var(--ink)}
+    .mc{background:var(--bg);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;color:var(--ink3);display:flex;align-items:center;justify-content:center}
+    .mc:hover{background:var(--rbg);color:var(--red)}
+    .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.85rem}
+    .fg label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+    input,select,textarea{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font-family:var(--sans);font-size:.86rem;color:var(--ink);transition:border-color .2s}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,92,255,.08)}
+    .fs{font-size:.78rem;margin-top:.3rem}.fs.ok{color:var(--green)}.fs.er{color:var(--red)}
+    .warn-box{background:var(--rbg);border:1px solid rgba(185,28,28,.2);border-radius:8px;padding:.8rem 1rem;font-size:.82rem;color:var(--red);margin-bottom:1rem;line-height:1.5}
+
+    @media(max-width:768px){
+      .mob-bar{display:flex}.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0;padding:1rem;padding-top:68px}
+      .contract-hero{flex-direction:column;align-items:flex-start}.hero-actions{width:100%}
+    }
+  </style>
+</head>
+<body>
+
+<div class="mob-bar">
+  <div class="mob-brand"><img src="../QFA_Logo.png" alt="QFA"/><span>Quick Freelancing Agency</span></div>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
+</div>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-section">Workspace</div>
+    <a href="dashboard.html">📊 Overview</a>
+    <a href="time-logs.html">⏱ Time Logs</a>
+    <a href="clients.html">👥 Clients</a>
+    <a href="contracts.html" class="active">📋 Contracts</a>
+    <a href="schedule.html">📅 Schedule</a>
+    <div class="nav-section">Content</div>
+    <a href="portfolio-admin.html">🖼 Portfolio</a>
+    <a href="../index.html" target="_blank">🌐 Public Site</a>
+  </nav>
+  <div class="sb-user">
+    <strong id="uname">Loading…</strong>
+    <span>Freelancer · QFA</span>
+    <a href="#" onclick="logout()">Sign out →</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2>📋 Client Contracts</h2>
+      <p>Manage rate changes, pauses, and terminations without affecting historical logs</p>
+    </div>
+  </div>
+
+  <!-- Client selector -->
+  <div class="client-bar">
+    <label>Select client</label>
+    <select id="client-select" onchange="loadClient()">
+      <option value="">Choose a client…</option>
+    </select>
+    <span id="client-status-pill"></span>
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state" style="text-align:center;padding:4rem;color:var(--ink3)">
+    <div style="font-size:3rem;margin-bottom:1rem">📋</div>
+    <div style="font-weight:600;font-size:1rem;margin-bottom:.4rem">Select a client to manage their contract</div>
+    <div style="font-size:.85rem">View history, change rates, pause or terminate engagements</div>
+  </div>
+
+  <!-- Contract detail (hidden until client selected) -->
+  <div id="contract-detail" style="display:none">
+
+    <!-- Current contract hero -->
+    <div id="hero-card" class="contract-hero none">
+      <div>
+        <div class="hero-label">Current Contract Status</div>
+        <div class="hero-name" id="hero-name">—</div>
+        <div class="hero-rate" id="hero-rate">No active contract</div>
+      </div>
+      <div>
+        <div id="hero-badge" class="hero-badge badge-none">No contract</div>
+        <div class="hero-actions" id="hero-actions" style="margin-top:.8rem"></div>
+      </div>
+    </div>
+
+    <!-- Action cards row -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.3rem" id="action-cards">
+      <!-- rendered by JS -->
+    </div>
+
+    <!-- History timeline -->
+    <div class="card">
+      <div class="ch"><h3>📜 Contract History</h3><span id="history-count" style="font-size:.75rem;color:var(--ink3)"></span></div>
+      <div style="padding:1.2rem">
+        <div class="timeline" id="timeline">
+          <p style="color:var(--ink3);font-size:.85rem">No history yet.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: Change rate -->
+<div class="modal-ov" id="modal-change">
+  <div class="modal">
+    <div class="mh"><h3>Change Rate</h3><button class="mc" onclick="closeModal('modal-change')">✕</button></div>
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:1.2rem">Previous logs are unaffected. New rate applies from the date you choose.</p>
+    <div class="fg"><label>New rate type</label>
+      <select id="ch-rate-type" onchange="toggleChangeRate()">
+        <option value="hourly">Hourly rate</option>
+        <option value="fixed">Fixed price</option>
+      </select>
+    </div>
+    <div class="fg" id="ch-hourly">
+      <label>New hourly rate ($)</label>
+      <input type="number" id="ch-hourly-rate" min="1" step="0.5" placeholder="e.g. 30"/>
+    </div>
+    <div class="fg" id="ch-fixed" style="display:none">
+      <label>New fixed price ($)</label>
+      <input type="number" id="ch-fixed-price" min="1" step="1" placeholder="e.g. 600"/>
+    </div>
+    <div class="fg"><label>Effective from</label><input type="date" id="ch-from"/></div>
+    <div class="fg"><label>Reason / note</label><input type="text" id="ch-note" placeholder="e.g. Rate review after project completion"/></div>
+    <button class="btn btn-p" style="width:100%" onclick="submitChange()">Save new rate</button>
+    <div id="ch-status" class="fs"></div>
+  </div>
+</div>
+
+<!-- Modal: Pause -->
+<div class="modal-ov" id="modal-pause">
+  <div class="modal">
+    <div class="mh"><h3>Pause Contract</h3><button class="mc" onclick="closeModal('modal-pause')">✕</button></div>
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:1.2rem">The client relationship is put on hold. You can resume it at any time. All historical logs remain intact.</p>
+    <div class="fg"><label>Pause from</label><input type="date" id="pause-from"/></div>
+    <div class="fg"><label>Reason (optional)</label><input type="text" id="pause-note" placeholder="e.g. Client on leave, project on hold"/></div>
+    <button class="btn btn-a" style="width:100%" onclick="submitPause()">⏸ Pause contract</button>
+    <div id="pause-status" class="fs"></div>
+  </div>
+</div>
+
+<!-- Modal: Resume -->
+<div class="modal-ov" id="modal-resume">
+  <div class="modal">
+    <div class="mh"><h3>Resume Contract</h3><button class="mc" onclick="closeModal('modal-resume')">✕</button></div>
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:1.2rem">Resume the client engagement with their existing rate. You can change the rate separately after resuming.</p>
+    <div class="fg"><label>Resume from</label><input type="date" id="resume-from"/></div>
+    <div class="fg"><label>Note (optional)</label><input type="text" id="resume-note" placeholder="e.g. Project restarted"/></div>
+    <button class="btn btn-g" style="width:100%" onclick="submitResume()">▶ Resume contract</button>
+    <div id="resume-status" class="fs"></div>
+  </div>
+</div>
+
+<!-- Modal: Terminate -->
+<div class="modal-ov" id="modal-terminate">
+  <div class="modal">
+    <div class="mh"><h3>Terminate Contract</h3><button class="mc" onclick="closeModal('modal-terminate')">✕</button></div>
+    <div class="warn-box">⚠ This permanently ends the client engagement. All historical logs and payment records remain intact and accessible.</div>
+    <div class="fg"><label>Effective date</label><input type="date" id="term-from"/></div>
+    <div class="fg"><label>Reason</label><input type="text" id="term-note" placeholder="e.g. Project completed, client requested end"/></div>
+    <button class="btn btn-r" style="width:100%" onclick="submitTerminate()">🔴 Terminate contract</button>
+    <div id="term-status" class="fs"></div>
+  </div>
+</div>
+
+<script>
+const API='https://freelancer-platform-9jut.onrender.com/api';
+const SH=8;
+const auth={
+  token:()=>localStorage.getItem('token'),
+  user:()=>{try{return JSON.parse(localStorage.getItem('user'))}catch{return null}},
+  clear:()=>['token','user','login_time'].forEach(k=>localStorage.removeItem(k)),
+  ok:()=>{if(!localStorage.getItem('token'))return false;if((Date.now()-parseInt(localStorage.getItem('login_time')||0))/3600000>SH){auth.clear();return false;}return true;},
+  hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')})
+};
+async function api(path,opts={}){
+  const r=await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
+  if(r.status===401){auth.clear();go('login.html');return;}
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Failed');}
+  return r.json();
+}
+function go(p){window.location.href=p;}
+function logout(){auth.clear();go('login.html');}
+function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
+function sbClose(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
+function openModal(id){document.getElementById(id).classList.add('on');}
+function closeModal(id){document.getElementById(id).classList.remove('on');}
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtDate(d){if(!d)return 'Present';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});}catch{return d;}}
+
+let currentClientId=null, currentContract=null;
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(!auth.ok()){go('login.html');return;}
+  const u=auth.user();
+  if(u&&u.role!=='freelancer'){go('client-portal.html');return;}
+  document.getElementById('uname').textContent=u?u.name:'';
+  // Set today on all date fields
+  ['ch-from','pause-from','resume-from','term-from'].forEach(id=>{document.getElementById(id).value=today();});
+  // Load client list
+  const clients=await api('/clients');
+  const sel=document.getElementById('client-select');
+  clients.forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.id;
+    o.textContent=c.name+(c.company?' — '+c.company:'');
+    sel.appendChild(o);
+  });
+});
+
+async function loadClient(){
+  const id=document.getElementById('client-select').value;
+  if(!id){document.getElementById('empty-state').style.display='block';document.getElementById('contract-detail').style.display='none';return;}
+  currentClientId=id;
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('contract-detail').style.display='block';
+  try{
+    const history=await api('/contracts/'+id);
+    currentContract=history.find(h=>!h.effective_to)||history[0]||null;
+    renderHero(currentContract, document.getElementById('client-select').selectedOptions[0].text.split(' — ')[0]);
+    renderTimeline(history);
+    renderActionCards(currentContract);
+  }catch(e){console.error(e);}
+}
+
+function renderHero(contract, clientName){
+  const hero=document.getElementById('hero-card');
+  const heroName=document.getElementById('hero-name');
+  const heroRate=document.getElementById('hero-rate');
+  const heroBadge=document.getElementById('hero-badge');
+  const heroActions=document.getElementById('hero-actions');
+  heroName.textContent=clientName;
+
+  if(!contract){
+    hero.className='contract-hero none';
+    heroRate.textContent='No contract history';
+    heroBadge.className='hero-badge badge-none';heroBadge.textContent='No contract';
+    heroActions.innerHTML='';return;
+  }
+
+  const status=contract.status;
+  hero.className='contract-hero '+status;
+  const rateLabel=contract.rate_type==='fixed'?`Fixed $${parseFloat(contract.fixed_price||0).toFixed(2)}/project`:`$${parseFloat(contract.hourly_rate||0).toFixed(2)}/hr`;
+  heroRate.textContent=rateLabel+(contract.effective_from?` · Since ${fmtDate(contract.effective_from)}`:'');
+
+  const badges={active:{cls:'badge-active',label:'● Active'},paused:{cls:'badge-paused',label:'⏸ Paused'},terminated:{cls:'badge-terminated',label:'🔴 Terminated'}};
+  const b=badges[status]||{cls:'badge-none',label:status};
+  heroBadge.className='hero-badge '+b.cls;heroBadge.textContent=b.label;
+
+  // Action buttons based on status
+  if(status==='active'){
+    heroActions.innerHTML=`
+      <button class="btn btn-o btn-sm" onclick="openModal('modal-change')">💱 Change rate</button>
+      <button class="btn btn-o btn-sm" onclick="openModal('modal-pause')">⏸ Pause</button>
+      <button class="btn" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5;padding:.35rem .75rem;font-size:.73rem" onclick="openModal('modal-terminate')">🔴 Terminate</button>`;
+  } else if(status==='paused'){
+    heroActions.innerHTML=`
+      <button class="btn btn-o btn-sm" onclick="openModal('modal-resume')">▶ Resume</button>
+      <button class="btn" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5;padding:.35rem .75rem;font-size:.73rem" onclick="openModal('modal-terminate')">🔴 Terminate</button>`;
+  } else if(status==='terminated'){
+    heroActions.innerHTML=`<span style="font-size:.78rem;color:rgba(255,255,255,.4);font-style:italic">This contract has ended</span>`;
+  }
+}
+
+function renderActionCards(contract){
+  const wrap=document.getElementById('action-cards');
+  if(!contract||contract.status==='terminated'){wrap.innerHTML='';return;}
+
+  const cards=[];
+  if(contract.status==='active'){
+    cards.push({icon:'💱',title:'Change Rate',desc:'Switch from hourly to fixed (or vice versa), or update the amount. Takes effect from a date you choose.',btnClass:'btn-p',btnLabel:'Change rate',modal:'modal-change'});
+    cards.push({icon:'⏸',title:'Pause Contract',desc:'Temporarily suspend the engagement. Resume at any time. Historical logs stay untouched.',btnClass:'btn-a',btnLabel:'Pause contract',modal:'modal-pause'});
+    cards.push({icon:'🔴',title:'Terminate',desc:'Permanently end the client engagement. All history and payments remain accessible.',btnClass:'btn-r',btnLabel:'Terminate',modal:'modal-terminate'});
+  } else if(contract.status==='paused'){
+    cards.push({icon:'▶',title:'Resume Contract',desc:'Restart the engagement with the same rate as before. You can change the rate after resuming.',btnClass:'btn-g',btnLabel:'Resume',modal:'modal-resume'});
+    cards.push({icon:'🔴',title:'Terminate',desc:'Permanently end the engagement. All history remains accessible.',btnClass:'btn-r',btnLabel:'Terminate',modal:'modal-terminate'});
+  }
+
+  wrap.innerHTML=cards.map(c=>`
+    <div style="background:var(--card);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);padding:1.2rem">
+      <div style="font-size:1.6rem;margin-bottom:.6rem">${c.icon}</div>
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:.4rem;color:var(--ink)">${c.title}</div>
+      <div style="font-size:.78rem;color:var(--ink3);line-height:1.5;margin-bottom:.9rem">${c.desc}</div>
+      <button class="btn ${c.btnClass} btn-sm" onclick="openModal('${c.modal}')">${c.btnLabel}</button>
+    </div>`).join('');
+}
+
+function renderTimeline(history){
+  const tl=document.getElementById('timeline');
+  document.getElementById('history-count').textContent=history.length+' records';
+  if(!history.length){tl.innerHTML='<p style="color:var(--ink3);font-size:.85rem">No history yet.</p>';return;}
+
+  const statusMap={
+    active:{cls:'t-active',label:'Active'},
+    paused:{cls:'t-paused',label:'⏸ Paused'},
+    terminated:{cls:'t-terminated',label:'🔴 Terminated'},
+    change:{cls:'t-change',label:'Rate changed'}
+  };
+
+  tl.innerHTML=history.map(h=>{
+    const s=statusMap[h.status]||{cls:'',label:h.status};
+    const rLabel=h.rate_type==='fixed'?`Fixed — $${parseFloat(h.fixed_price||0).toFixed(2)}/project`:`Hourly — $${parseFloat(h.hourly_rate||0).toFixed(2)}/hr`;
+    const dateRange=`${fmtDate(h.effective_from)} → ${h.effective_to?fmtDate(h.effective_to):'Present'}`;
+    const badgeCls=h.status==='active'?'bg-g':h.status==='paused'?'bg-a':h.status==='terminated'?'bg-r':'bg-b';
+    return`<div class="t-item ${h.status} ${s.cls}">
+      <div class="t-head">
+        <span class="t-type ${s.cls}">${s.label}</span>
+        <span class="badge ${badgeCls}">${h.status}</span>
+      </div>
+      <div class="t-rate">${rLabel}</div>
+      <div class="t-dates">📅 ${dateRange}</div>
+      ${h.note?`<div class="t-note">💬 ${h.note}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function toggleChangeRate(){
+  const t=document.getElementById('ch-rate-type').value;
+  document.getElementById('ch-hourly').style.display=t==='hourly'?'flex':'none';
+  document.getElementById('ch-fixed').style.display=t==='fixed'?'flex':'none';
+}
+
+async function submitChange(){
+  const st=document.getElementById('ch-status');
+  const rt=document.getElementById('ch-rate-type').value;
+  const hr=document.getElementById('ch-hourly-rate').value;
+  const fp=document.getElementById('ch-fixed-price').value;
+  const from=document.getElementById('ch-from').value;
+  const note=document.getElementById('ch-note').value;
+  if(!from){st.className='fs er';st.textContent='Please enter the effective date.';return;}
+  if(rt==='hourly'&&!hr){st.className='fs er';st.textContent='Enter the new hourly rate.';return;}
+  if(rt==='fixed'&&!fp){st.className='fs er';st.textContent='Enter the new fixed price.';return;}
+  try{
+    await api('/contracts/'+currentClientId+'/change',{method:'POST',body:JSON.stringify({rate_type:rt,hourly_rate:hr||null,fixed_price:fp||null,effective_from:from,note})});
+    st.className='fs ok';st.textContent='✓ Rate updated!';
+    setTimeout(()=>{closeModal('modal-change');st.textContent='';loadClient();},900);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+
+async function submitPause(){
+  const st=document.getElementById('pause-status');
+  const from=document.getElementById('pause-from').value;
+  const note=document.getElementById('pause-note').value;
+  try{
+    await api('/contracts/'+currentClientId+'/pause',{method:'POST',body:JSON.stringify({effective_from:from,note:note||'Contract paused'})});
+    st.className='fs ok';st.textContent='✓ Contract paused.';
+    setTimeout(()=>{closeModal('modal-pause');st.textContent='';loadClient();},900);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+
+async function submitResume(){
+  const st=document.getElementById('resume-status');
+  const from=document.getElementById('resume-from').value;
+  const note=document.getElementById('resume-note').value;
+  try{
+    await api('/contracts/'+currentClientId+'/resume',{method:'POST',body:JSON.stringify({effective_from:from,note:note||'Contract resumed'})});
+    st.className='fs ok';st.textContent='✓ Contract resumed!';
+    setTimeout(()=>{closeModal('modal-resume');st.textContent='';loadClient();},900);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+
+async function submitTerminate(){
+  const st=document.getElementById('term-status');
+  const from=document.getElementById('term-from').value;
+  const note=document.getElementById('term-note').value;
+  if(!note){st.className='fs er';st.textContent='Please enter a reason for termination.';return;}
+  if(!confirm('Are you sure? This will terminate the contract permanently.'))return;
+  try{
+    await api('/contracts/'+currentClientId+'/terminate',{method:'POST',body:JSON.stringify({effective_from:from,note})});
+    st.className='fs ok';st.textContent='✓ Contract terminated.';
+    setTimeout(()=>{closeModal('modal-terminate');st.textContent='';loadClient();},900);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+</script>
+</body>
+</html>
