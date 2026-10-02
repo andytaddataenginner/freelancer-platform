@@ -298,6 +298,7 @@
       </div>
     </div>
 
+    <a href="contracts.html">📜 Contracts</a>
     <a href="schedule.html">📅 Schedule</a>
     <a href="reports.html">📈 Reports</a>
     <a href="fixed-invoices.html">📄 Invoices</a>
@@ -501,14 +502,6 @@ function updateThemeButton(theme) {
 }
 initTheme();
 
-/*
-async function api(path,opts={}){
-  const r=await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
-  if(r.status===401){auth.clear();go('login.html');return;}
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Failed');}
-  return r.json();
-}*/
-
 async function api(path, opts = {}) {
   const r = await fetch(API + path, { ...opts, headers: { ...auth.hdrs(), ...(opts.headers || {}) } });
   if (r.status === 401) {
@@ -572,10 +565,6 @@ function renderActiveClients(clients, breakdown){
   const list=document.getElementById('active-clients-list');
   const count=document.getElementById('ac-count');
 
-  // "Active this month" = appears in this month's breakdown (same data
-  // driving the Payment Breakdown table and the Clients-this-month KPI),
-  // not just "exists in the clients table". Matched by name+company since
-  // the breakdown rows don't carry a client id.
   const breakdownByKey = new Map();
   (breakdown||[]).forEach(b => breakdownByKey.set((b.client_name||'')+'|'+(b.company||''), b));
 
@@ -665,8 +654,6 @@ async function load(){
     document.getElementById('acmonth').textContent=ml;
     renderActiveClients(cl, st.clientBreakdown);
 
-    // Restore the timer's selected client/task from a persisted session, now
-    // that the client dropdown options actually exist to select among.
     const savedTimer=JSON.parse(localStorage.getItem('qfa_timer_v2')||'null');
     if(savedTimer){
       if(savedTimer.clientId) document.getElementById('tc').value=savedTimer.clientId;
@@ -705,7 +692,7 @@ function previewAmt(){
   const h=parseFloat(document.getElementById('ehours').value||0);
   const hr=parseFloat(document.getElementById('ehr').value||0);
   const p=document.getElementById('aprev');
-  if(h>0&&hr>0){p.textContent='💰 New amount: $'+(h*hr).toFixed(2)+' ('+fmtH(h)+' × $'+hr+'/hr)';p.style.display='block';}
+  if(h>0&&hr>0){p.textContent='💰 New amount: $'+(h*hr).toFixed(2)+' ('+fmtH(h)+' ×$'+hr+'/hr)';p.style.display='block';}
   else p.style.display='none';
 }
 async function saveEdit(){
@@ -726,9 +713,9 @@ async function saveEdit(){
    floating panel (position remembered via localStorage).
    ──────────────────────────────────────────────────────────────────────── */
 let tiv=null;
-let timerState='idle';       // 'idle' | 'running' | 'paused'
-let startTimestamp=null;     // ms epoch when the current running segment began
-let accumulatedMs=0;         // ms banked from previous running segments
+let timerState='idle';
+let startTimestamp=null;
+let accumulatedMs=0;
 
 function persistTimerState(){
   localStorage.setItem('qfa_timer_v2', JSON.stringify({
@@ -816,7 +803,7 @@ async function timerStop(){
 
   if(!cid){
     alert('Please select a client before saving.');
-    if(wasRunning){ tiv=setInterval(tDisp,1000); } // resume ticking, nothing was committed
+    if(wasRunning){ tiv=setInterval(tDisp,1000); }
     return;
   }
   if(hours<0.01){ alert('Timer too short to log.'); timerReset(); return; }
@@ -872,7 +859,6 @@ function initFloatingTimer(){
   }
   tDisp();
 
-  // Keep persisted client/task selections in sync while a session is active
   document.getElementById('tc').addEventListener('change', ()=>{ if(timerState!=='idle') persistTimerState(); });
   document.getElementById('tt').addEventListener('input', ()=>{ if(timerState!=='idle') persistTimerState(); });
 
