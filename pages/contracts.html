@@ -307,6 +307,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
     o.textContent=c.name+(c.company?' — '+c.company:'');
     sel.appendChild(o);
   });
+  // Deep link: contracts.html?client=ID (e.g. from the "Contract" button on Clients)
+  const preselect=new URLSearchParams(location.search).get('client');
+  if(preselect && [...sel.options].some(o=>o.value===preselect)){
+    sel.value=preselect;
+    loadClient();
+  }
 });
 
 async function loadClient(){
