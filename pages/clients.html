@@ -205,6 +205,7 @@
       <a href="dashboard.html">📊 Overview</a>
       <a href="time-logs.html">⏱ Time Logs</a>
       <a href="clients.html" class="active">👥 Clients</a>
+      <a href="contracts.html">📜 Contracts</a>
       <a href="schedule.html">📅 Schedule</a>
        <a href="reports.html">📈 Reports</a>
       <a href="fixed-invoices.html">📄 Invoices</a>
@@ -414,6 +415,7 @@ async function loadClients() {
           ${fixedPayBtn}
           <div style="display:flex;gap:0.6rem;margin-top:0.5rem">
             <button class="btn-sm btn-outline" onclick='openEdit(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Edit</button>
+            <button class="btn-sm btn-outline" onclick="location.href='contracts.html?client=${c.id}'">📜 Contract</button>
             <button class="btn-sm btn-red" onclick="deleteClient(${c.id}, '${c.name}')">Remove</button>
           </div>
         </div>`;
@@ -431,6 +433,8 @@ async function toggleFixedPayment(clientId, newStatus) {
   } catch(e) { alert('Failed: ' + e.message); }
 }
 
+let editOriginalRate = null;
+
 function openEdit(c) {
   document.getElementById('edit-id').value          = c.id;
   document.getElementById('edit-name').value        = c.name;
@@ -441,6 +445,14 @@ function openEdit(c) {
   document.getElementById('edit-hourly-rate').value = c.hourly_rate || '';
   document.getElementById('edit-fixed-price').value = c.fixed_price || '';
   toggleRateFields('edit');
+  // Remember the rate as it stood when the modal opened, so saveClient()
+  // can tell whether the billing rate actually changed and needs to be
+  // logged as a new tracked contract record (rather than a silent overwrite).
+  editOriginalRate = {
+    rate_type:   c.rate_type || 'hourly',
+    hourly_rate: c.hourly_rate != null ? String(c.hourly_rate) : '',
+    fixed_price: c.fixed_price != null ? String(c.fixed_price) : ''
+  };
   document.getElementById('modal-edit').classList.add('open');
 }
 
@@ -461,8 +473,33 @@ async function saveClient(e) {
   e.preventDefault();
   const status = document.getElementById('edit-status');
   const data = Object.fromEntries(new FormData(e.target));
+
+  // Did the billing rate actually change? If so it needs to be logged as a
+  // new contract record (effective today) instead of silently overwritten —
+  // that's what keeps the Contracts history and the clients table in sync.
+  const rateChanged = editOriginalRate && (
+    data.rate_type !== editOriginalRate.rate_type ||
+    (data.hourly_rate || '') !== editOriginalRate.hourly_rate ||
+    (data.fixed_price || '') !== editOriginalRate.fixed_price
+  );
+
   try {
-    await apiFetch('/clients/' + data.id, { method: 'PUT', body: JSON.stringify(data) });
+    if (rateChanged) {
+      await apiFetch('/contracts/' + data.id + '/change', {
+        method: 'POST',
+        body: JSON.stringify({
+          rate_type:      data.rate_type,
+          hourly_rate:    data.hourly_rate || null,
+          fixed_price:    data.fixed_price || null,
+          effective_from: new Date().toISOString().slice(0, 10),
+          note: 'Updated from Edit Client'
+        })
+      });
+    }
+    // rate_type/hourly_rate/fixed_price are handled above (if changed) —
+    // the plain client update only carries profile fields now.
+    const { rate_type, hourly_rate, fixed_price, ...profileData } = data;
+    await apiFetch('/clients/' + data.id, { method: 'PUT', body: JSON.stringify(profileData) });
     status.className = 'form-status success'; status.textContent = '✓ Saved!';
     setTimeout(() => { document.getElementById('modal-edit').classList.remove('open'); status.textContent=''; }, 1000);
     loadClients();
