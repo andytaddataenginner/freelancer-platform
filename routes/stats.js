@@ -32,7 +32,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
-    // ── Auto-generate fixed monthly payments for ACTIVE contracts only ──
+    // ── Auto-generate fixed monthly payments for ACTIVE FIXED contracts only ──
     try {
       await pool.query(`
         INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
@@ -113,17 +113,18 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       pool.query(`SELECT COUNT(*)::int AS cnt FROM bookings WHERE freelancer_id=$1 AND date>=NOW()::date AND status!='cancelled'`, [freelancerId]),
     ]);
 
-    // ── Fixed monthly payments for THIS month (Filtered by Active Contract) ──
+    // ── Fixed monthly payments for THIS month (Filtered by Active FIXED Contract) ──
     const fixedMonthly = await pool.query(`
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_monthly_payments f
       JOIN users u ON u.id = f.client_id
-      LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
+      JOIN client_contracts cc ON cc.client_id = f.client_id 
         AND cc.freelancer_id = f.freelancer_id
         AND cc.effective_from <= ($2 || '-01')::date
         AND (cc.effective_to IS NULL OR cc.effective_to >= ($2 || '-01')::date)
       WHERE f.freelancer_id = $1 AND f.month = $2
-        AND (cc.status IS NULL OR cc.status = 'active')
+        AND cc.status = 'active'
+        AND cc.rate_type = 'fixed'
       ORDER BY u.name
     `, [freelancerId, currentMonth]);
 
@@ -176,17 +177,17 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       .sort((a, b) => b.total - a.total);
 
     res.json({
-      month:            currentMonth,
-      hoursThisMonth:   hours.rows[0].h,
-      tasksThisMonth:   tasks.rows[0].cnt,
-      totalEarned:      totalEarned.toFixed(2),
-      totalUnpaid:      totalUnpaid.toFixed(2),
+      month:                currentMonth,
+      hoursThisMonth:       hours.rows[0].h,
+      tasksThisMonth:       tasks.rows[0].cnt,
+      totalEarned:          totalEarned.toFixed(2),
+      totalUnpaid:          totalUnpaid.toFixed(2),
       totalExpected,
-      activeClients:    allClients.rows[0].cnt,
-      clientsThisMonth: clientsCount,
-      upcomingBookings: bookings.rows[0].cnt,
+      activeClients:        allClients.rows[0].cnt,
+      clientsThisMonth:     clientsCount,
+      upcomingBookings:     bookings.rows[0].cnt,
       clientBreakdown,
-      fixedMonthlyRecords: fixedMonthly.rows
+      fixedMonthlyRecords:  fixedMonthly.rows
     });
 
   } catch (e) { console.error('Stats error:', e); next(e); }
