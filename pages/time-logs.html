@@ -247,6 +247,7 @@
       <a href="dashboard.html">📊 Overview</a>
       <a href="time-logs.html" class="active">⏱ Time Logs</a>
       <a href="clients.html">👥 Clients</a>
+      <a href="contracts.html">📜 Contracts</a>
       <a href="schedule.html">📅 Schedule</a>
       <a href="reports.html">📈 Reports</a>
       <a href="fixed-invoices.html">📄 Invoices</a>
@@ -675,11 +676,6 @@ function fmtHours(h) {
   return `${hrs}h ${mins}min`;
 }
 
-/**
- * Handles payment remittance submission.
- * Validates target client and amount, submits request, updates client list, 
- * and auto-selects the remitted client in the filter to instantly show updated credit balance.
- */
 async function handleRecordPayment(event) {
   event.preventDefault();
   const clientId = document.getElementById('payment-client').value;
