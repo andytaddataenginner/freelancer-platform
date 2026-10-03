@@ -63,7 +63,7 @@
     .mob-btn:hover{background:rgba(255,255,255,.24)}
     .overlay{display:none;position:fixed;inset:0;background:rgba(6,12,28,.6);backdrop-filter:blur(2px);z-index:149}
     .overlay.on{display:block}
-    .sidebar{width:240px;background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 140%);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;box-shadow:4px 0 24px rgba(0,0,0,.12);transition: background 0.3s ease;}
+    .sidebar{width:240px;background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 140%);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;box-shadow:4px 0 24px rgba(0,0,0,.12);transition: background 0.3s ease, transform 0.28s cubic-bezier(.4,0,.2,1);}
     .sb-brand{padding:1.1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.7rem}
     .sb-logo{width:36px;height:36px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
     .sb-logo img{width:100%;height:100%;object-fit:contain}
@@ -233,7 +233,7 @@
 
     @media(max-width:768px){
       .mob-bar{display:flex}
-      .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:150}
+      .sidebar{transform:translateX(-100%);z-index:150}
       .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
 
       .main{
@@ -346,7 +346,7 @@
       <div class="tw">
         <table>
           <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+          <tbody id="btable"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -631,7 +631,7 @@ async function load(){
 
     const bt=document.getElementById('btable');
     if(!st.clientBreakdown||!st.clientBreakdown.length){
-      bt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
+      bt.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
     }else{
       bt.innerHTML=st.clientBreakdown.map(c=>{
         const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
