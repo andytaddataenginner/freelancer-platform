@@ -32,46 +32,98 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
-    // ── Auto-generate fixed monthly records for this month ────
-    // Guarded by created_at: never fabricate a fee for a month before the
-    // client actually started — same rule enforced in fixed-payments.js's
-    // generate/bulk-generate/backfill-all routes, kept in sync here too
-    // since this endpoint does its own independent insert.
-    // Wrapped in its own try/catch: this is a side effect, not core to
-    // computing the month's numbers, so a failure here must never blank
-    // out the rest of the dashboard (paid/unpaid/hours/etc. below).
+    // ── Auto-generate fixed monthly payments for ACTIVE contracts only ──
     try {
       await pool.query(`
         INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
-        SELECT u.id, c.freelancer_id, $1, c.fixed_price, 'unpaid'
+        SELECT u.id, c.freelancer_id, $1, COALESCE(cc.fixed_price, c.fixed_price), 'unpaid'
         FROM clients c
         JOIN users u ON u.id = c.user_id
+        JOIN client_contracts cc ON cc.client_id = c.user_id AND cc.freelancer_id = c.freelancer_id
         WHERE c.freelancer_id = $2
-          AND c.rate_type = 'fixed'
-          AND c.fixed_price IS NOT NULL
-          AND to_char(c.created_at, 'YYYY-MM') <= $1
+          AND cc.status = 'active'
+          AND cc.rate_type = 'fixed'
+          AND COALESCE(cc.fixed_price, c.fixed_price) IS NOT NULL
+          AND cc.effective_from <= $3::date
+          AND (cc.effective_to IS NULL OR cc.effective_to >= $3::date)
         ON CONFLICT (client_id, month) DO NOTHING
-      `, [currentMonth, freelancerId]);
+      `, [currentMonth, freelancerId, firstOfMonth]);
     } catch (genErr) {
       console.error('[stats/freelancer] fixed-monthly auto-generate failed (non-fatal):', genErr);
     }
 
-    // ── Hourly stats from time_logs ───────────────────────────
+    // ── Hourly stats from time_logs (Filter out logs during paused/terminated contracts) ────
     const [hours, tasks, hourlyEarned, hourlyUnpaid, monthClients, bookings] = await Promise.all([
-      pool.query(`SELECT COALESCE(SUM(hours),0)::float AS h FROM time_logs WHERE freelancer_id=$1 AND date>=$2::date AND date<=$3::date`, [freelancerId, firstOfMonth, lastOfMonth]),
-      pool.query(`SELECT COUNT(*)::int AS cnt FROM time_logs WHERE freelancer_id=$1 AND date>=$2::date AND date<=$3::date`, [freelancerId, firstOfMonth, lastOfMonth]),
-      pool.query(`SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs WHERE freelancer_id=$1 AND date>=$2::date AND date<=$3::date AND payment_status='paid'`, [freelancerId, firstOfMonth, lastOfMonth]),
-      pool.query(`SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs WHERE freelancer_id=$1 AND date>=$2::date AND date<=$3::date AND (payment_status='unpaid' OR payment_status IS NULL)`, [freelancerId, firstOfMonth, lastOfMonth]),
-      pool.query(`SELECT COUNT(DISTINCT client_id)::int AS cnt FROM time_logs WHERE freelancer_id=$1 AND date>=$2::date AND date<=$3::date`, [freelancerId, firstOfMonth, lastOfMonth]),
+      pool.query(`
+        SELECT COALESCE(SUM(t.hours),0)::float AS h 
+        FROM time_logs t
+        LEFT JOIN client_contracts cc ON cc.client_id = t.client_id 
+          AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date
+          AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date
+          AND (cc.status IS NULL OR cc.status = 'active')
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
+
+      pool.query(`
+        SELECT COUNT(*)::int AS cnt 
+        FROM time_logs t
+        LEFT JOIN client_contracts cc ON cc.client_id = t.client_id 
+          AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date
+          AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date
+          AND (cc.status IS NULL OR cc.status = 'active')
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
+
+      pool.query(`
+        SELECT COALESCE(SUM(t.amount),0)::float AS total 
+        FROM time_logs t
+        LEFT JOIN client_contracts cc ON cc.client_id = t.client_id 
+          AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date
+          AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date AND t.payment_status='paid'
+          AND (cc.status IS NULL OR cc.status = 'active')
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
+
+      pool.query(`
+        SELECT COALESCE(SUM(t.amount),0)::float AS total 
+        FROM time_logs t
+        LEFT JOIN client_contracts cc ON cc.client_id = t.client_id 
+          AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date
+          AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date 
+          AND (t.payment_status='unpaid' OR t.payment_status IS NULL)
+          AND (cc.status IS NULL OR cc.status = 'active')
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
+
+      pool.query(`
+        SELECT COUNT(DISTINCT t.client_id)::int AS cnt 
+        FROM time_logs t
+        LEFT JOIN client_contracts cc ON cc.client_id = t.client_id 
+          AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date
+          AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date
+          AND (cc.status IS NULL OR cc.status = 'active')
+      `, [freelancerId, firstOfMonth, lastOfMonth]),
+
       pool.query(`SELECT COUNT(*)::int AS cnt FROM bookings WHERE freelancer_id=$1 AND date>=NOW()::date AND status!='cancelled'`, [freelancerId]),
     ]);
 
-    // ── Fixed monthly payments for THIS month ─────────────────
+    // ── Fixed monthly payments for THIS month (Filtered by Active Contract) ──
     const fixedMonthly = await pool.query(`
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_monthly_payments f
       JOIN users u ON u.id = f.client_id
+      LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
+        AND cc.freelancer_id = f.freelancer_id
+        AND cc.effective_from <= ($2 || '-01')::date
+        AND (cc.effective_to IS NULL OR cc.effective_to >= ($2 || '-01')::date)
       WHERE f.freelancer_id = $1 AND f.month = $2
+        AND (cc.status IS NULL OR cc.status = 'active')
       ORDER BY u.name
     `, [freelancerId, currentMonth]);
 
@@ -95,12 +147,16 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
              COALESCE(SUM(t.amount),0)::float AS total
       FROM time_logs t
       JOIN users u ON u.id = t.client_id
+      LEFT JOIN client_contracts cc ON cc.client_id = t.client_id 
+        AND cc.freelancer_id = t.freelancer_id
+        AND cc.effective_from <= t.date
+        AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
       WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date
+        AND (cc.status IS NULL OR cc.status = 'active')
       GROUP BY u.name, u.company
       ORDER BY total DESC
     `, [freelancerId, firstOfMonth, lastOfMonth]);
 
-    // Fixed breakdown — one row per fixed client this month
     const fixedBreakdown = fixedMonthly.rows.map(r => ({
       client_name: r.client_name,
       company:     r.client_company,
@@ -130,7 +186,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       clientsThisMonth: clientsCount,
       upcomingBookings: bookings.rows[0].cnt,
       clientBreakdown,
-      fixedMonthlyRecords: fixedMonthly.rows  // raw fixed records for UI
+      fixedMonthlyRecords: fixedMonthly.rows
     });
 
   } catch (e) { console.error('Stats error:', e); next(e); }
