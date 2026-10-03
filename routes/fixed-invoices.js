@@ -2,7 +2,7 @@ const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/fixed-invoices - Retrieve records with flexible filtering
+// GET /api/fixed-invoices — Retrieve records with flexible filtering
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { client_id, payment_status, year, month } = req.query;
@@ -19,7 +19,12 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_invoices f
       JOIN users u ON u.id = f.client_id
+      LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
+        AND cc.freelancer_id = f.freelancer_id
+        AND cc.effective_from <= (f.billing_year || '-' || LPAD(f.billing_month::text, 2, '0') || '-01')::date
+        AND (cc.effective_to IS NULL OR cc.effective_to >= (f.billing_year || '-' || LPAD(f.billing_month::text, 2, '0') || '-01')::date)
       WHERE ${where.join(' AND ')}
+        AND (cc.status IS NULL OR cc.status = 'active')
       ORDER BY f.billing_year DESC, f.billing_month DESC
     `, params);
     
@@ -27,7 +32,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/fixed-invoices - Log a specific month/year cycle amount snapshot
+// POST /api/fixed-invoices — Log invoice cycle for active contract
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { client_id, billing_month, billing_year } = req.body;
@@ -35,16 +40,21 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       return res.status(400).json({ error: 'client_id, billing_month, and billing_year are required' });
     }
 
-    // Capture the client's current base fixed rate setup parameter
-    const clientInfo = await pool.query(
-      "SELECT fixed_price FROM clients WHERE user_id = $1 AND rate_type = 'fixed'",
-      [client_id]
-    );
-    if (!clientInfo.rows.length) {
-      return res.status(400).json({ error: 'Selected user is not configured as a fixed-rate client.' });
+    const checkDate = `${billing_year}-${String(billing_month).padStart(2, '0')}-01`;
+
+    const contractInfo = await pool.query(`
+      SELECT fixed_price FROM client_contracts 
+      WHERE client_id = $1 AND freelancer_id = $2 AND status = 'active' AND rate_type = 'fixed'
+        AND effective_from <= $3::date
+        AND (effective_to IS NULL OR effective_to >= $3::date)
+      ORDER BY effective_from DESC, id DESC LIMIT 1
+    `, [client_id, req.user.id, checkDate]);
+
+    if (!contractInfo.rows.length) {
+      return res.status(400).json({ error: 'Selected client does not have an active fixed-rate contract for this cycle.' });
     }
 
-    const amount = parseFloat(clientInfo.rows[0].fixed_price || 0);
+    const amount = parseFloat(contractInfo.rows[0].fixed_price || 0);
 
     const { rows } = await pool.query(`
       INSERT INTO fixed_invoices (client_id, freelancer_id, billing_month, billing_year, amount, payment_status)
@@ -58,7 +68,7 @@ router.post('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PATCH /api/fixed-invoices/:id/payment - Update workflow status flag transitions
+// PATCH /api/fixed-invoices/:id/payment — Update status
 router.patch('/:id/payment', requireFreelancer, async (req, res, next) => {
   try {
     const { payment_status } = req.body;
