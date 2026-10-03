@@ -41,6 +41,7 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
 
     const clientId     = parseInt(req.params.clientId);
     const freelancerId = req.user.id;
+    const effectiveMonth = effective_from.substring(0, 7); // YYYY-MM format
 
     await pool.query('BEGIN');
     try {
@@ -69,6 +70,17 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
         WHERE user_id=$4 AND freelancer_id=$5
       `, [rate_type, hourly_rate || null, fixed_price || null, clientId, freelancerId]);
 
+      // 4. CLEANUP: If shifting to HOURLY, remove any unpaid fixed payments from effective month onwards
+      if (rate_type === 'hourly') {
+        await pool.query(`
+          DELETE FROM fixed_monthly_payments
+          WHERE client_id = $1 
+            AND freelancer_id = $2
+            AND month >= $3
+            AND status = 'unpaid'
+        `, [clientId, freelancerId, effectiveMonth]);
+      }
+
       await pool.query('COMMIT');
       res.status(201).json(rows[0]);
     } catch (e) {
@@ -85,6 +97,7 @@ router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
     const clientId     = parseInt(req.params.clientId);
     const freelancerId = req.user.id;
     const from = effective_from || new Date().toISOString().slice(0, 10);
+    const effectiveMonth = from.substring(0, 7);
 
     await pool.query('BEGIN');
     try {
@@ -116,6 +129,15 @@ router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
       `, [clientId, freelancerId, current.rate_type,
           current.hourly_rate, current.fixed_price, from,
           note || 'Contract paused']);
+
+      // CLEANUP: Remove unpaid fixed monthly payments starting from the pause month
+      await pool.query(`
+        DELETE FROM fixed_monthly_payments
+        WHERE client_id = $1 
+          AND freelancer_id = $2
+          AND month >= $3
+          AND status = 'unpaid'
+      `, [clientId, freelancerId, effectiveMonth]);
 
       await pool.query('COMMIT');
       res.status(201).json(rows[0]);
@@ -177,6 +199,7 @@ router.post('/:clientId/terminate', requireFreelancer, async (req, res, next) =>
     const clientId     = parseInt(req.params.clientId);
     const freelancerId = req.user.id;
     const from = effective_from || new Date().toISOString().slice(0, 10);
+    const effectiveMonth = from.substring(0, 7);
 
     await pool.query('BEGIN');
     try {
@@ -204,6 +227,15 @@ router.post('/:clientId/terminate', requireFreelancer, async (req, res, next) =>
       `, [clientId, freelancerId, cur.rows[0].rate_type,
           cur.rows[0].hourly_rate, cur.rows[0].fixed_price,
           from, note || 'Contract terminated']);
+
+      // CLEANUP: Remove unpaid fixed monthly payments starting from the termination month
+      await pool.query(`
+        DELETE FROM fixed_monthly_payments
+        WHERE client_id = $1 
+          AND freelancer_id = $2
+          AND month >= $3
+          AND status = 'unpaid'
+      `, [clientId, freelancerId, effectiveMonth]);
 
       await pool.query('COMMIT');
       res.status(201).json(rows[0]);
