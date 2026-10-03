@@ -667,7 +667,7 @@ function toggleSidebar() {
 }
 
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  const savedTheme = localStorage.getItem('qfa_theme') || localStorage.getItem('theme') || 'light';
   if (savedTheme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.getElementById('theme-toggle-btn').innerHTML = '☀️ Light Mode';
@@ -679,10 +679,12 @@ function toggleTheme() {
   const btn = document.getElementById('theme-toggle-btn');
   if (currentTheme === 'dark') {
     document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('qfa_theme', 'light');
     localStorage.setItem('theme', 'light');
     btn.innerHTML = '🌙 Dark Mode';
   } else {
     document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('qfa_theme', 'dark');
     localStorage.setItem('theme', 'dark');
     btn.innerHTML = '☀️ Light Mode';
   }
