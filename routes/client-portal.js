@@ -7,32 +7,53 @@ const { requireClient } = require('../middleware/auth');
 router.get('/stats', requireClient, async (req, res, next) => {
   try {
     const clientId = req.user.id;
+
+    // 1. Fetch client base details & current contract state from client_contracts
     const clientRes = await pool.query(
-      `SELECT rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance
-       FROM clients WHERE user_id = $1`, [clientId]
+      `SELECT c.credit_balance, 
+              COALESCE(cc.rate_type, c.rate_type, 'hourly') AS rate_type,
+              COALESCE(cc.hourly_rate, c.hourly_rate, 0) AS hourly_rate,
+              COALESCE(cc.fixed_price, c.fixed_price, 0) AS fixed_price,
+              COALESCE(cc.status, CASE WHEN c.is_active THEN 'active' ELSE 'terminated' END) AS contract_status,
+              c.fixed_payment_status
+       FROM clients c
+       LEFT JOIN client_contracts cc ON cc.client_id = c.user_id 
+         AND cc.freelancer_id = c.freelancer_id 
+         AND cc.effective_to IS NULL
+       WHERE c.user_id = $1
+       ORDER BY cc.effective_from DESC, cc.id DESC
+       LIMIT 1`, 
+      [clientId]
     );
+
     if (clientRes.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
     const profile = clientRes.rows[0];
+    const contractStatus = profile.contract_status; // 'active', 'paused', 'terminated'
 
     let totalPaid = 0;
     let totalUnpaid = 0;
 
     if (profile.rate_type === 'fixed') {
-      // Fixed-rate billing lives in fixed_monthly_payments (one row per
-      // client per month), not time_logs — querying time_logs here was
-      // always returning zero rows for fixed clients.
+      // Aggregate paid and unpaid records from fixed_monthly_payments
       const fixedRes = await pool.query(
         `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
         [clientId]
       );
+
       fixedRes.rows.forEach(r => {
         const amt = parseFloat(r.amount || 0);
-        if (r.status === 'paid') totalPaid += amt;
-        else totalUnpaid += amt;
+        if (r.status === 'paid') {
+          totalPaid += amt;
+        } else if (contractStatus === 'active') {
+          // Unpaid amounts are only added to outstanding KPIs if the contract is active
+          totalUnpaid += amt;
+        }
       });
     } else {
+      // Hourly contract totals
       const logsRes = await pool.query(
-        `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`, [clientId]
+        `SELECT hours, amount, payment_status FROM time_logs WHERE client_id = $1`, 
+        [clientId]
       );
       const rate = parseFloat(profile.hourly_rate || 0);
       logsRes.rows.forEach(log => {
@@ -45,8 +66,9 @@ router.get('/stats', requireClient, async (req, res, next) => {
 
     res.json({
       rateType: profile.rate_type,
-      hourlyRate: profile.hourly_rate,
-      fixedPrice: profile.fixed_price,
+      contractStatus: contractStatus,
+      hourlyRate: parseFloat(profile.hourly_rate || 0),
+      fixedPrice: parseFloat(profile.fixed_price || 0),
       fixedStatus: profile.fixed_payment_status,
       creditBalance: parseFloat(profile.credit_balance || 0),
       totalPaid,
