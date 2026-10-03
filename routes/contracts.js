@@ -12,20 +12,20 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
       FROM client_contracts cc
       JOIN users u ON u.id = cc.client_id
       WHERE cc.client_id = $1 AND cc.freelancer_id = $2
-      ORDER BY cc.effective_from DESC
+      ORDER BY cc.effective_from DESC, cc.id DESC
     `, [req.params.clientId, req.user.id]);
     res.json(rows);
   } catch (e) { next(e); }
 });
 
-// ── GET /api/contracts/:clientId/current — active contract ────
+// ── GET /api/contracts/:clientId/current — active/current contract ────
 router.get('/:clientId/current', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT * FROM client_contracts
       WHERE client_id = $1 AND freelancer_id = $2
         AND effective_to IS NULL
-      ORDER BY effective_from DESC
+      ORDER BY effective_from DESC, id DESC
       LIMIT 1
     `, [req.params.clientId, req.user.id]);
     res.json(rows[0] || null);
@@ -33,7 +33,6 @@ router.get('/:clientId/current', requireFreelancer, async (req, res, next) => {
 });
 
 // ── POST /api/contracts/:clientId/change — log a rate change ─
-// Changes rate type and/or amount effective from a given date
 router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
   try {
     const { rate_type, hourly_rate, fixed_price, effective_from, note } = req.body;
@@ -45,16 +44,15 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
 
     await pool.query('BEGIN');
     try {
-      // 1. Close the current active contract on effective_from - 1 day
+      // 1. Close current open contract
       await pool.query(`
         UPDATE client_contracts
         SET effective_to = $1::date - INTERVAL '1 day'
         WHERE client_id = $2 AND freelancer_id = $3
           AND effective_to IS NULL
-          AND status != 'terminated'
       `, [effective_from, clientId, freelancerId]);
 
-      // 2. Create new contract with new rate
+      // 2. Insert new active contract
       const { rows } = await pool.query(`
         INSERT INTO client_contracts
           (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
@@ -64,12 +62,12 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
           hourly_rate || null, fixed_price || null,
           effective_from, note || null]);
 
-      // 3. Update the clients table so existing logic still works
+      // 3. Keep base clients table synced
       await pool.query(`
         UPDATE clients
         SET rate_type=$1, hourly_rate=$2, fixed_price=$3
-        WHERE user_id=$4
-      `, [rate_type, hourly_rate || null, fixed_price || null, clientId]);
+        WHERE user_id=$4 AND freelancer_id=$5
+      `, [rate_type, hourly_rate || null, fixed_price || null, clientId, freelancerId]);
 
       await pool.query('COMMIT');
       res.status(201).json(rows[0]);
@@ -80,7 +78,7 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ── POST /api/contracts/:clientId/pause — temporarily pause ──
+// ── POST /api/contracts/:clientId/pause — pause contract ──
 router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
   try {
     const { effective_from, note } = req.body;
@@ -90,11 +88,10 @@ router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
 
     await pool.query('BEGIN');
     try {
-      // Get current contract to preserve rate info
       const cur = await pool.query(`
         SELECT * FROM client_contracts
         WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
-        ORDER BY effective_from DESC LIMIT 1
+        ORDER BY effective_from DESC, id DESC LIMIT 1
       `, [clientId, freelancerId]);
 
       if (!cur.rows.length) {
@@ -107,13 +104,11 @@ router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
         return res.status(400).json({ error: `Contract is already ${current.status}` });
       }
 
-      // Close current
       await pool.query(`
         UPDATE client_contracts SET effective_to = $1::date - INTERVAL '1 day'
         WHERE id = $2
       `, [from, current.id]);
 
-      // Add paused record
       const { rows } = await pool.query(`
         INSERT INTO client_contracts
           (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
@@ -131,7 +126,7 @@ router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ── POST /api/contracts/:clientId/resume — resume a paused ───
+// ── POST /api/contracts/:clientId/resume — resume contract ───
 router.post('/:clientId/resume', requireFreelancer, async (req, res, next) => {
   try {
     const { effective_from, note } = req.body;
@@ -141,11 +136,10 @@ router.post('/:clientId/resume', requireFreelancer, async (req, res, next) => {
 
     await pool.query('BEGIN');
     try {
-      // Get the paused contract
       const cur = await pool.query(`
         SELECT * FROM client_contracts
         WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
-        ORDER BY effective_from DESC LIMIT 1
+        ORDER BY effective_from DESC, id DESC LIMIT 1
       `, [clientId, freelancerId]);
 
       if (!cur.rows.length || cur.rows[0].status !== 'paused') {
@@ -154,13 +148,11 @@ router.post('/:clientId/resume', requireFreelancer, async (req, res, next) => {
       }
       const current = cur.rows[0];
 
-      // Close pause record
       await pool.query(`
         UPDATE client_contracts SET effective_to = $1::date - INTERVAL '1 day'
         WHERE id = $2
       `, [from, current.id]);
 
-      // New active contract with same rates
       const { rows } = await pool.query(`
         INSERT INTO client_contracts
           (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
@@ -178,7 +170,7 @@ router.post('/:clientId/resume', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ── POST /api/contracts/:clientId/terminate — end permanently ─
+// ── POST /api/contracts/:clientId/terminate — terminate contract ─
 router.post('/:clientId/terminate', requireFreelancer, async (req, res, next) => {
   try {
     const { effective_from, note } = req.body;
@@ -191,26 +183,24 @@ router.post('/:clientId/terminate', requireFreelancer, async (req, res, next) =>
       const cur = await pool.query(`
         SELECT * FROM client_contracts
         WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
-        ORDER BY effective_from DESC LIMIT 1
+        ORDER BY effective_from DESC, id DESC LIMIT 1
       `, [clientId, freelancerId]);
 
       if (!cur.rows.length) {
         await pool.query('ROLLBACK');
-        return res.status(404).json({ error: 'No active contract' });
+        return res.status(404).json({ error: 'No open contract to terminate' });
       }
 
-      // Close current
       await pool.query(`
         UPDATE client_contracts SET effective_to = $1::date - INTERVAL '1 day'
         WHERE id = $2
       `, [from, cur.rows[0].id]);
 
-      // Add terminated record
       const { rows } = await pool.query(`
         INSERT INTO client_contracts
           (client_id, freelancer_id, rate_type, hourly_rate, fixed_price,
-           status, effective_from, effective_to, note)
-        VALUES ($1,$2,$3,$4,$5,'terminated',$6,$6,$7) RETURNING *
+           status, effective_from, note)
+        VALUES ($1,$2,$3,$4,$5,'terminated',$6,$7) RETURNING *
       `, [clientId, freelancerId, cur.rows[0].rate_type,
           cur.rows[0].hourly_rate, cur.rows[0].fixed_price,
           from, note || 'Contract terminated']);
