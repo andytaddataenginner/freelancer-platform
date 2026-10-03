@@ -444,7 +444,7 @@ const auth = {
 
 // Theme Management Logic
 function initTheme() {
-  const savedTheme = localStorage.getItem('qfa_theme') || 'light';
+  const savedTheme = localStorage.getItem('qfa_theme') || localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeButton(savedTheme);
 }
@@ -453,6 +453,7 @@ function toggleTheme() {
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('qfa_theme', next);
+  localStorage.setItem('theme', next);
   updateThemeButton(next);
 }
 function updateThemeButton(theme) {
