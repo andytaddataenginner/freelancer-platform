@@ -3,31 +3,38 @@ const bcrypt = require('bcryptjs');
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/clients — only returns THIS freelancer's clients
+// GET /api/clients — returns THIS freelancer's clients with current contract status
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT u.id, u.name, u.email, u.company,
-             c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
-             c.fixed_payment_status, c.phone,
+             c.is_active, c.notes, c.phone,
+             COALESCE(cc.rate_type, c.rate_type, 'hourly') AS rate_type,
+             COALESCE(cc.hourly_rate, c.hourly_rate, 0)::float AS hourly_rate,
+             COALESCE(cc.fixed_price, c.fixed_price, 0)::float AS fixed_price,
+             COALESCE(cc.status, CASE WHEN c.is_active THEN 'active' ELSE 'terminated' END) AS contract_status,
+             c.fixed_payment_status,
              COALESCE(c.credit_balance, 0)::float AS credit_balance,
              COUNT(t.id)::int AS log_count,
              COALESCE(SUM(t.hours),0)::float AS total_hours
       FROM users u
       JOIN clients c ON c.user_id = u.id
+      LEFT JOIN client_contracts cc ON cc.client_id = c.user_id 
+        AND cc.freelancer_id = c.freelancer_id 
+        AND cc.effective_to IS NULL
       LEFT JOIN time_logs t ON t.client_id = u.id AND t.freelancer_id = $1
       WHERE u.role = 'client'
         AND c.freelancer_id = $1
       GROUP BY u.id, u.name, u.email, u.company,
-               c.is_active, c.notes, c.rate_type, c.hourly_rate, 
-               c.fixed_price, c.fixed_payment_status, c.phone, c.credit_balance
+               c.is_active, c.notes, c.phone, c.fixed_payment_status, c.credit_balance,
+               cc.rate_type, c.rate_type, cc.hourly_rate, c.hourly_rate, cc.fixed_price, c.fixed_price, cc.status
       ORDER BY u.name
     `, [req.user.id]);
     res.json(rows);
   } catch (e) { next(e); }
 });
 
-// POST /api/clients — creates client and links to THIS freelancer
+// POST /api/clients — creates client and active contract link
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price, phone } = req.body;
@@ -42,25 +49,30 @@ router.post('/', requireFreelancer, async (req, res, next) => {
          VALUES ($1,$2,$3,'client',$4) RETURNING id, name, email, company`,
         [name, email.toLowerCase().trim(), hash, company || null]
       );
+
+      const clientId = userRow.rows[0].id;
+
       await pool.query(
         `INSERT INTO clients (user_id, freelancer_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status, credit_balance, phone)
          VALUES ($1,$2,$3,$4,$5,$6,'unpaid', 0, $7)`,
-        [userRow.rows[0].id, req.user.id, notes || null, 
+        [clientId, req.user.id, notes || null, 
          rate_type || 'hourly', hourly_rate || null, fixed_price || null, phone || null]
       );
 
-      // A fixed-rate client's billing starts the month they're created —
-      // create that first month's record right now instead of waiting for
-      // Dashboard or Reports to happen to be loaded for this month first.
-      // Same eligibility rule as generate/bulk-generate/backfill-all:
-      // only fixed clients with an actual price set get a record.
+      // Insert corresponding client_contracts entry with active status
+      await pool.query(
+        `INSERT INTO client_contracts (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from)
+         VALUES ($1, $2, $3, $4, $5, 'active', CURRENT_DATE)`,
+        [clientId, req.user.id, rate_type || 'hourly', hourly_rate || null, fixed_price || null]
+      );
+
       if (rate_type === 'fixed' && fixed_price) {
-        const currentMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+        const currentMonth = new Date().toISOString().slice(0, 7);
         await pool.query(
           `INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
            VALUES ($1, $2, $3, $4, 'unpaid')
            ON CONFLICT (client_id, month) DO NOTHING`,
-          [userRow.rows[0].id, req.user.id, currentMonth, fixed_price]
+          [clientId, req.user.id, currentMonth, fixed_price]
         );
       }
 
@@ -74,15 +86,19 @@ router.post('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/clients/:id — only update if belongs to this freelancer
+// PUT /api/clients/:id — update user details and sync contract changes
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
-    const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price, phone } = req.body;
+    const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price, phone, status } = req.body;
+    
+    await pool.query('BEGIN');
+
     await pool.query(
       `UPDATE users SET name=$1, company=$2, updated_at=NOW()
        WHERE id=$3 AND role='client'`,
       [name, company, req.params.id]
     );
+
     await pool.query(
       `UPDATE clients 
        SET notes=$1, is_active=$2, rate_type=$3, hourly_rate=$4, fixed_price=$5, phone=$6
@@ -90,8 +106,22 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
       [notes, is_active ?? true, rate_type || 'hourly', 
        hourly_rate || null, fixed_price || null, phone || null, req.params.id, req.user.id]
     );
+
+    // Sync contract status updates in client_contracts
+    const contractStatus = status || (is_active === false ? 'terminated' : 'active');
+    await pool.query(
+      `UPDATE client_contracts 
+       SET rate_type=$1, hourly_rate=$2, fixed_price=$3, status=$4
+       WHERE client_id=$5 AND freelancer_id=$6 AND effective_to IS NULL`,
+      [rate_type || 'hourly', hourly_rate || null, fixed_price || null, contractStatus, req.params.id, req.user.id]
+    );
+
+    await pool.query('COMMIT');
     res.json({ message: 'Updated' });
-  } catch (e) { next(e); }
+  } catch (e) { 
+    await pool.query('ROLLBACK');
+    next(e); 
+  }
 });
 
 // PATCH /api/clients/:id/fixed-payment
@@ -112,7 +142,6 @@ router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => 
 // DELETE /api/clients/:id
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
-    // Only delete if this client belongs to this freelancer
     const check = await pool.query(
       'SELECT id FROM clients WHERE user_id=$1 AND freelancer_id=$2',
       [req.params.id, req.user.id]
