@@ -7,8 +7,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;--bg:#f0f2f8;--card:#fff;--border:rgba(13,35,83,.08);--ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;--green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;--red:#b91c1c;--rbg:#fee2e2;--sans:'Outfit',sans-serif;--serif:'Playfair Display',serif;--sh:0 2px 16px rgba(13,35,83,.07);--r:12px}
-    body{font-family:var(--sans);background:var(--bg);color:var(--ink);display:flex;min-height:100vh}
+    :root{
+      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
+      --bg:#f0f2f8;--card:#fff;--border:rgba(13,35,83,.08);--ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
+      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;--red:#b91c1c;--rbg:#fee2e2;
+      --sans:'Outfit',sans-serif;--serif:'Playfair Display',serif;--sh:0 2px 16px rgba(13,35,83,.07);--r:12px
+    }
+
+    /* Dark Mode Overrides */
+    :root[data-theme="dark"] {
+      --bg:#0f172a;--card:#1e293b;--border:rgba(255,255,255,.1);--ink:#f8fafc;--ink2:#cbd5e1;--ink3:#94a3b8;
+      --sh:0 4px 20px rgba(0,0,0,.3);--gbg:rgba(22,101,52,.3);--abg:rgba(146,64,14,.3);--rbg:rgba(185,28,28,.3);
+      --green:#4ade80;--amber:#fcd34d;--red:#fca5a5;
+    }
+
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);display:flex;min-height:100vh;transition:background .25s,color .25s}
     .sidebar{width:220px;background:var(--navy);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;transition:transform .28s}
     .sb-brand{padding:1rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.65rem}
     .sb-logo{width:34px;height:34px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0}
@@ -68,6 +81,10 @@
     .btn-a{background:var(--abg);color:var(--amber)}.btn-a:hover{background:var(--amber);color:#fff}
     .btn-o{background:transparent;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8)}.btn-o:hover{border-color:#fff;color:#fff}
     .btn-sm{padding:.35rem .75rem;font-size:.73rem}
+
+    /* Dark mode toggle button */
+    .theme-toggle{background:var(--bg);border:1.5px solid var(--border);color:var(--ink);padding:.4rem .8rem;border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:.8rem;display:inline-flex;align-items:center;gap:.4rem;font-weight:600}
+    .theme-toggle:hover{border-color:var(--accent)}
 
     /* Timeline */
     .timeline{position:relative;padding-left:2rem}
@@ -150,6 +167,7 @@
       <h2>📋 Client Contracts</h2>
       <p>Manage rate changes, pauses, and terminations without affecting historical logs</p>
     </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
   </div>
 
   <!-- Client selector -->
@@ -274,6 +292,7 @@ const auth={
   ok:()=>{if(!localStorage.getItem('token'))return false;if((Date.now()-parseInt(localStorage.getItem('login_time')||0))/3600000>SH){auth.clear();return false;}return true;},
   hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')})
 };
+
 async function api(path,opts={}){
   const r=await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
   if(r.status===401){auth.clear();go('login.html');return;}
@@ -287,31 +306,78 @@ function sbClose(){document.getElementById('sidebar').classList.remove('open');d
 function openModal(id){document.getElementById(id).classList.add('on');}
 function closeModal(id){document.getElementById(id).classList.remove('on');}
 function today(){return new Date().toISOString().slice(0,10);}
-function fmtDate(d){if(!d)return 'Present';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});}catch{return d;}}
+
+// Robust date formatting fix for Invalid Date errors
+function fmtDate(d){
+  if(!d) return 'Present';
+  try {
+    const raw = String(d).split('T')[0];
+    const parts = raw.split('-');
+    if(parts.length === 3) {
+      const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      if(!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+      }
+    }
+    return raw;
+  } catch(e) {
+    return d;
+  }
+}
+
+// Dark mode toggle functionality
+function initTheme(){
+  const saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeBtn(saved);
+}
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeBtn(next);
+}
+
+function updateThemeBtn(theme){
+  const btn = document.getElementById('theme-btn');
+  if(btn){
+    btn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+  }
+}
 
 let currentClientId=null, currentContract=null;
 
 document.addEventListener('DOMContentLoaded',async()=>{
+  initTheme();
   if(!auth.ok()){go('login.html');return;}
   const u=auth.user();
   if(u&&u.role!=='freelancer'){go('client-portal.html');return;}
   document.getElementById('uname').textContent=u?u.name:'';
+  
   // Set today on all date fields
   ['ch-from','pause-from','resume-from','term-from'].forEach(id=>{document.getElementById(id).value=today();});
+  
   // Load client list
-  const clients=await api('/clients');
-  const sel=document.getElementById('client-select');
-  clients.forEach(c=>{
-    const o=document.createElement('option');
-    o.value=c.id;
-    o.textContent=c.name+(c.company?' — '+c.company:'');
-    sel.appendChild(o);
-  });
-  // Deep link: contracts.html?client=ID (e.g. from the "Contract" button on Clients)
-  const preselect=new URLSearchParams(location.search).get('client');
-  if(preselect && [...sel.options].some(o=>o.value===preselect)){
-    sel.value=preselect;
-    loadClient();
+  try {
+    const clients=await api('/clients');
+    const sel=document.getElementById('client-select');
+    clients.forEach(c=>{
+      const o=document.createElement('option');
+      o.value=c.id;
+      o.textContent=c.name+(c.company?' — '+c.company:'');
+      sel.appendChild(o);
+    });
+    
+    // Deep link: contracts.html?client=ID
+    const preselect=new URLSearchParams(location.search).get('client');
+    if(preselect && [...sel.options].some(o=>o.value===preselect)){
+      sel.value=preselect;
+      loadClient();
+    }
+  } catch(e) {
+    console.error('Failed to load clients:', e);
   }
 });
 
@@ -348,7 +414,10 @@ function renderHero(contract, clientName){
   const status=contract.status;
   hero.className='contract-hero '+status;
   const rateLabel=contract.rate_type==='fixed'?`Fixed $${parseFloat(contract.fixed_price||0).toFixed(2)}/project`:`$${parseFloat(contract.hourly_rate||0).toFixed(2)}/hr`;
-  heroRate.textContent=rateLabel+(contract.effective_from?` · Since ${fmtDate(contract.effective_from)}`:'');
+  
+  // Safely extract effective_from / start_date
+  const startDate = contract.effective_from || contract.start_date || contract.created_at;
+  heroRate.textContent=rateLabel+(startDate?` · Since ${fmtDate(startDate)}`:'');
 
   const badges={active:{cls:'badge-active',label:'● Active'},paused:{cls:'badge-paused',label:'⏸ Paused'},terminated:{cls:'badge-terminated',label:'🔴 Terminated'}};
   const b=badges[status]||{cls:'badge-none',label:status};
@@ -407,7 +476,8 @@ function renderTimeline(history){
   tl.innerHTML=history.map(h=>{
     const s=statusMap[h.status]||{cls:'',label:h.status};
     const rLabel=h.rate_type==='fixed'?`Fixed — $${parseFloat(h.fixed_price||0).toFixed(2)}/project`:`Hourly — $${parseFloat(h.hourly_rate||0).toFixed(2)}/hr`;
-    const dateRange=`${fmtDate(h.effective_from)} → ${h.effective_to?fmtDate(h.effective_to):'Present'}`;
+    const startDate = h.effective_from || h.start_date || h.created_at;
+    const dateRange=`${fmtDate(startDate)} → ${h.effective_to?fmtDate(h.effective_to):'Present'}`;
     const badgeCls=h.status==='active'?'bg-g':h.status==='paused'?'bg-a':h.status==='terminated'?'bg-r':'bg-b';
     return`<div class="t-item ${h.status} ${s.cls}">
       <div class="t-head">
