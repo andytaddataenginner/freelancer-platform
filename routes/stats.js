@@ -32,7 +32,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
-    // ── Auto-generate fixed monthly payments for ACTIVE FIXED contracts only ──
+    // ── Auto-generate fixed monthly payments for ACTIVE FIXED contracts only (Safeguarded against pre-creation months) ──
     try {
       await pool.query(`
         INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
@@ -46,6 +46,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
           AND COALESCE(cc.fixed_price, c.fixed_price) IS NOT NULL
           AND cc.effective_from <= $3::date
           AND (cc.effective_to IS NULL OR cc.effective_to >= $3::date)
+          AND $1 >= to_char(u.created_at, 'YYYY-MM')
         ON CONFLICT (client_id, month) DO NOTHING
       `, [currentMonth, freelancerId, firstOfMonth]);
     } catch (genErr) {
@@ -113,7 +114,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       pool.query(`SELECT COUNT(*)::int AS cnt FROM bookings WHERE freelancer_id=$1 AND date>=NOW()::date AND status!='cancelled'`, [freelancerId]),
     ]);
 
-    // ── Fixed monthly payments for THIS month (Filtered by Active FIXED Contract) ──
+    // ── Fixed monthly payments for THIS month (Filtered by Active FIXED Contract and creation date) ──
     const fixedMonthly = await pool.query(`
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_monthly_payments f
@@ -125,6 +126,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       WHERE f.freelancer_id = $1 AND f.month = $2
         AND cc.status = 'active'
         AND cc.rate_type = 'fixed'
+        AND $2 >= to_char(u.created_at, 'YYYY-MM')
       ORDER BY u.name
     `, [freelancerId, currentMonth]);
 
