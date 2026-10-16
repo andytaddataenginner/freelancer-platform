@@ -422,7 +422,7 @@ async function apiFetch(path, options = {}) {
   if (res.status === 401) { 
     const e = await res.json().catch(() => ({}));
     
-    // Prevent redirecting to login when an incorrect current password is typed
+    // Prevent logging out client when entering wrong current password
     if (path.includes('change-password')) {
       throw new Error(e.error || 'Current password is incorrect');
     }
@@ -560,7 +560,7 @@ async function loadPortal() {
         document.getElementById('overview-hourly').style.display = isFixed ? 'none' : 'block';
         document.getElementById('overview-fixed').style.display  = isFixed ? 'block' : 'none';
         document.getElementById('billing-hourly').style.display  = isFixed ? 'none' : 'block';
-        document.getElementById('billing-fixed').style.display   = isFixed ? 'block' : 'none';
+        document.getElementById('billing-fixed').style.display   = isFixed ? 'none' : 'none';
 
         if (isFixed) {
             const cardElem = document.getElementById('fixed-contract-card');
