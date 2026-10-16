@@ -107,12 +107,12 @@
 
     .content{padding:1.5rem}
 
-     .stats-row{
+    .stats-row{
       display:grid;
       grid-template-columns:repeat(6, 1fr);
       gap:0.8rem;
       margin-bottom:1.5rem;
-  }
+    }
     .sc{background:linear-gradient(160deg,var(--card-bg) 0%,var(--card-bg) 55%,var(--bg2) 170%);border-radius:var(--r);padding:1.1rem 1.4rem;box-shadow:var(--sh-md);border:1px solid var(--hairline);position:relative;overflow:hidden;transition:transform .25s ease, box-shadow .25s ease, background 0.3s ease;}
     .sc:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)}
     .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -171,7 +171,7 @@
     .btn-gold:hover{filter:brightness(1.06)}
     .btn-sm{padding:.38rem .8rem;font-size:.75rem}
 
-    /* ── TIMER (shared display/status styles used inside the floating panel) ── */
+    /* ── TIMER ── */
     .timer-disp{font-family:var(--serif);font-size:2.5rem;text-align:center;padding:.7rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.05em;font-variant-numeric:tabular-nums;transition:color .3s}
     .timer-disp.running{color:var(--green)}
     .timer-disp.paused{color:var(--amber)}
@@ -256,7 +256,6 @@
     }
     @media(max-width:420px){.stats-row{grid-template-columns:1fr 1fr !important;gap:.6rem}.sc-num{font-size:1.2rem}.content{padding:.8rem}}
 
-    /* ── Polish: scrollbars, focus states, motion ── */
     ::-webkit-scrollbar{width:10px;height:10px}
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:10px}
@@ -393,6 +392,32 @@
           <thead><tr><th>Client</th><th>Date</th><th>Hours</th><th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th></tr></thead>
           <tbody id="rtable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODULE CARD -->
+    <div class="card">
+      <div class="ch">
+        <h3>🔒 Security & Password</h3>
+      </div>
+      <div class="cb" style="max-width: 500px;">
+        <form onsubmit="changePassword(event)">
+          <div class="fg">
+            <label>Current Password</label>
+            <input type="password" name="currentPassword" required placeholder="••••••••"/>
+          </div>
+          <div class="fg">
+            <label>New Password</label>
+            <input type="password" name="newPassword" required placeholder="••••••••" minlength="8"/>
+            <span class="hint">Must be at least 8 characters and include a number.</span>
+          </div>
+          <div class="fg">
+            <label>Confirm New Password</label>
+            <input type="password" name="confirmPassword" required placeholder="••••••••"/>
+          </div>
+          <button type="submit" class="btn btn-p" style="margin-top:0.5rem">Update Password</button>
+          <div id="pwd-status" class="fs"></div>
+        </form>
       </div>
     </div>
 
@@ -561,6 +586,44 @@ function initials(name){
   return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
 }
 
+async function changePassword(e) {
+  e.preventDefault();
+  const statusEl = document.getElementById('pwd-status');
+  const formData = new FormData(e.target);
+  const currentPassword = formData.get('currentPassword');
+  const newPassword = formData.get('newPassword');
+  const confirmPassword = formData.get('confirmPassword');
+
+  if (newPassword !== confirmPassword) {
+    statusEl.className = 'fs er';
+    statusEl.textContent = 'New passwords do not match.';
+    return;
+  }
+  if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+    statusEl.className = 'fs er';
+    statusEl.textContent = 'New password must be at least 8 characters and include a number.';
+    return;
+  }
+
+  try {
+    statusEl.className = 'fs';
+    statusEl.textContent = 'Updating password…';
+    
+    await api('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+
+    statusEl.className = 'fs ok';
+    statusEl.textContent = '✓ Password updated successfully!';
+    e.target.reset();
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  } catch (err) {
+    statusEl.className = 'fs er';
+    statusEl.textContent = err.message || 'Failed to update password.';
+  }
+}
+
 function renderActiveClients(clients, breakdown){
   const list=document.getElementById('active-clients-list');
   const count=document.getElementById('ac-count');
@@ -708,10 +771,6 @@ async function saveEdit(){
   }catch(e){s.className='fs er';s.textContent=e.message;}
 }
 
-/* ────────────────────────────────────────────────────────────────────────
-   LIVE TIMER — timestamp-based (survives refresh/navigation) + draggable
-   floating panel (position remembered via localStorage).
-   ──────────────────────────────────────────────────────────────────────── */
 let tiv=null;
 let timerState='idle';
 let startTimestamp=null;
@@ -866,7 +925,6 @@ function initFloatingTimer(){
   initTimerCollapse();
 }
 
-/* ── Dragging ── */
 function initTimerDrag(){
   const panel=document.getElementById('float-timer');
   const handle=document.getElementById('float-timer-handle');
@@ -915,7 +973,6 @@ function initTimerDrag(){
   window.addEventListener('touchend', endDrag);
 }
 
-/* ── Minimize/collapse ── */
 function initTimerCollapse(){
   const collapsed=localStorage.getItem('qfa_timer_collapsed')==='1';
   if(collapsed){
