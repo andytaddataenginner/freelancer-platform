@@ -261,9 +261,6 @@
     ::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:10px}
     ::-webkit-scrollbar-thumb:hover{background:var(--ink3)}
     :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-    @media(prefers-reduced-motion:reduce){
-      *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
-    }
   </style>
 </head>
 <body>
@@ -400,6 +397,39 @@
   </div>
 </div>
 
+<!-- ── CHANGE PASSWORD MODAL WITH SHOW/HIDE TOGGLES ── -->
+<div class="modal-ov" id="modal-password">
+  <div class="modal">
+    <div class="mh"><h3>Change Password</h3><button class="mc" onclick="hide('modal-password')">✕</button></div>
+    <form onsubmit="changePasswordModal(event)">
+      <div class="fg">
+        <label>Current password</label>
+        <div style="position:relative;">
+          <input type="password" name="currentPassword" id="curr-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('curr-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>New password</label>
+        <div style="position:relative;">
+          <input type="password" name="newPassword" id="new-pwd" required placeholder="••••••••" minlength="8" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('new-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+        <span class="hint">At least 8 characters with a number.</span>
+      </div>
+      <div class="fg">
+        <label>Confirm new password</label>
+        <div style="position:relative;">
+          <input type="password" name="confirmPassword" id="conf-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('conf-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-p" style="width:100%; margin-top:.5rem">Update password</button>
+      <div id="pwd-status" class="fs"></div>
+    </form>
+  </div>
+</div>
+
 <!-- ── Floating draggable Live Timer widget ── -->
 <div class="float-timer" id="float-timer">
   <div class="float-timer-handle" id="float-timer-handle">
@@ -424,7 +454,6 @@
   </div>
 </div>
 
-<!-- ADD CLIENT MODAL -->
 <div class="modal-ov" id="modal-client">
   <div class="modal">
     <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
@@ -445,39 +474,6 @@
       </div>
       <button type="submit" class="btn btn-p" style="width:100%">Create client</button>
       <div id="cs" class="fs"></div>
-    </form>
-  </div>
-</div>
-
-<!-- CHANGE PASSWORD MODAL (WITH SHOW/HIDE TOGGLES) -->
-<div class="modal-ov" id="modal-password">
-  <div class="modal">
-    <div class="mh"><h3>Change Password</h3><button class="mc" onclick="hide('modal-password')">✕</button></div>
-    <form onsubmit="changePasswordModal(event)">
-      <div class="fg">
-        <label>Current password</label>
-        <div style="position:relative;">
-          <input type="password" name="currentPassword" id="curr-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
-          <button type="button" onclick="toggleModalPassword('curr-pwd', this)" aria-label="Toggle password visibility" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
-        </div>
-      </div>
-      <div class="fg">
-        <label>New password</label>
-        <div style="position:relative;">
-          <input type="password" name="newPassword" id="new-pwd" required placeholder="••••••••" minlength="8" style="padding-right:2.8rem;"/>
-          <button type="button" onclick="toggleModalPassword('new-pwd', this)" aria-label="Toggle password visibility" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
-        </div>
-        <span class="hint">At least 8 characters with a number.</span>
-      </div>
-      <div class="fg">
-        <label>Confirm new password</label>
-        <div style="position:relative;">
-          <input type="password" name="confirmPassword" id="conf-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
-          <button type="button" onclick="toggleModalPassword('conf-pwd', this)" aria-label="Toggle password visibility" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
-        </div>
-      </div>
-      <button type="submit" class="btn btn-p" style="width:100%; margin-top:.5rem">Update password</button>
-      <div id="pwd-status" class="fs"></div>
     </form>
   </div>
 </div>
@@ -547,6 +543,7 @@ async function api(path, opts = {}) {
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Failed'); }
   return r.json();
 }
+
 document.addEventListener('DOMContentLoaded',()=>{
   if(!auth.ok()){go('login.html');return;}
   const u=auth.user();
@@ -584,17 +581,7 @@ function toggleSubmenu(e,groupId){
 function toggleRate(){const t=document.getElementById('art').value;document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';document.getElementById('afp').style.display=t==='fixed'?'flex':'none';}
 function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
 
-async function toggleFixed(recordId, newStatus){
-  try{
-    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
-    load();
-  }catch(e){alert('Failed: '+e.message);}
-}
-
-function initials(name){
-  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-}
-
+// ── Password Visibility & Change Modal Handlers ──
 function toggleModalPassword(fieldId, btnEl) {
   const input = document.getElementById(fieldId);
   if (input.type === 'password') {
@@ -629,19 +616,30 @@ async function changePasswordModal(e) {
     statusEl.className = 'fs';
     statusEl.textContent = 'Updating password…';
     
-    await api('/auth/change-password', {
+    const resData = await api('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword })
     });
 
     statusEl.className = 'fs ok';
-    statusEl.textContent = '✓ Password updated successfully!';
+    statusEl.textContent = '✓ ' + (resData.message || 'Password updated successfully!');
     e.target.reset();
-    setTimeout(() => { hide('modal-password'); statusEl.textContent = ''; }, 1200);
+    setTimeout(() => { hide('modal-password'); statusEl.textContent = ''; }, 1500);
   } catch (err) {
     statusEl.className = 'fs er';
     statusEl.textContent = err.message || 'Failed to update password.';
   }
+}
+
+async function toggleFixed(recordId, newStatus){
+  try{
+    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
+    load();
+  }catch(e){alert('Failed: '+e.message);}
+}
+
+function initials(name){
+  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
 }
 
 function renderActiveClients(clients, breakdown){
@@ -791,6 +789,8 @@ async function saveEdit(){
   }catch(e){s.className='fs er';s.textContent=e.message;}
 }
 
+/* ────────────────────────────────────────────────────────────────────────
+   LIVE TIMER ──────────────────────────────────────────────────────────── */
 let tiv=null;
 let timerState='idle';
 let startTimestamp=null;
