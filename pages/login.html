@@ -107,7 +107,7 @@
     .form-hint { font-size:.75rem; color:var(--ink3); font-weight:300; }
     .input-wrap { position:relative; }
     .input-wrap input {
-      width:100%; padding:.9rem 1rem .9rem 3rem;
+      width:100%; padding:.9rem 2.8rem .9rem 3rem;
       border:1.5px solid rgba(0,0,0,.1); border-radius:12px;
       background:var(--white); font-family:var(--sans); font-size:.95rem; color:var(--navy);
       transition:border-color .2s,box-shadow .2s, background-color 0.3s ease, color 0.3s ease;
@@ -223,6 +223,7 @@
           <div class="input-wrap">
             <span class="input-icon">🔒</span>
             <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+            <button type="button" id="toggle-pwd-btn" onclick="togglePasswordVisibility()" aria-label="Toggle password visibility" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; color:var(--ink3);">👁️</button>
           </div>
         </div>
 
@@ -322,6 +323,18 @@ themeToggleBtn.addEventListener('click', () => {
   localStorage.setItem('theme', newTheme);
   updateToggleIcon(newTheme);
 });
+
+function togglePasswordVisibility() {
+  const pwdInput = document.getElementById('login-password');
+  const toggleBtn = document.getElementById('toggle-pwd-btn');
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    toggleBtn.textContent = '🙈';
+  } else {
+    pwdInput.type = 'password';
+    toggleBtn.textContent = '👁️';
+  }
+}
 
 const auth = {
   save: (t, u) => {
@@ -457,7 +470,6 @@ async function startSignup() {
   document.getElementById('step1-progress').style.width = '85%';
 
   try {
-    // Reverted back to /auth/signup/initiate to prevent 404 errors on existing backend routes
     const res = await fetch(API + '/auth/signup/initiate', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, password, role: 'freelancer' })
@@ -470,12 +482,10 @@ async function startSignup() {
     }
     if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
 
-    // If backend returns session token/user directly, save it
     if (data.token && data.user) {
       auth.save(data.token, data.user);
     }
 
-    // Show success view and redirect immediately without requiring email OTP verification
     document.getElementById('signup-step-1').classList.remove('active');
     document.getElementById('signup-step-3').classList.add('active');
     
