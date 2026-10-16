@@ -233,6 +233,7 @@
       <button class="ledger-tab" data-view="logs" id="tab-view-logs" onclick="switchView('logs')">⏱ Time &amp; Logs</button>
       <button class="ledger-tab" data-view="billing" onclick="switchView('billing')">🧾 Billing History</button>
       <button class="ledger-tab" data-view="book" onclick="switchView('book')">📅 Book a Session</button>
+      <button class="ledger-tab" data-view="security" onclick="switchView('security')">🔒 Security</button>
     </div>
 
     <div class="ledger-panel-wrap">
@@ -346,6 +347,21 @@
         <div id="upcoming-sessions"><p style="color:var(--ink-3);font-size:0.88rem">Loading…</p></div>
       </section>
 
+      <!-- SECURITY & PASSWORD -->
+      <section class="view-panel" id="panel-security">
+        <div class="panel-heading">Change Password</div>
+        <p style="color:var(--ink-2);font-size:0.88rem;margin:-.4rem 0 1.1rem">Update your account password securely.</p>
+        <form onsubmit="clientChangePassword(event)" style="max-width: 440px;">
+          <div class="fg" style="margin-bottom:0.9rem"><label>Current password</label><input type="password" name="currentPassword" required placeholder="••••••••"/></div>
+          <div class="fg" style="margin-bottom:0.9rem"><label>New password</label><input type="password" name="newPassword" required placeholder="••••••••" minlength="8"/></div>
+          <div class="fg" style="margin-bottom:1.1rem"><label>Confirm new password</label><input type="password" name="confirmPassword" required placeholder="••••••••"/></div>
+          <div>
+            <button type="submit" class="btn btn-p">Update password →</button>
+            <div id="client-pwd-status" class="fs" style="margin-top:0.5rem"></div>
+          </div>
+        </form>
+      </section>
+
     </div>
   </main>
 </div>
@@ -423,6 +439,47 @@ function switchView(view){
   document.getElementById('panel-' + view).classList.add('active');
 }
 
+async function clientChangePassword(e) {
+  e.preventDefault();
+  const status = document.getElementById('client-pwd-status');
+  const btn = e.target.querySelector('button[type=submit]');
+  const formData = new FormData(e.target);
+  const currentPassword = formData.get('currentPassword');
+  const newPassword = formData.get('newPassword');
+  const confirmPassword = formData.get('confirmPassword');
+
+  if (newPassword !== confirmPassword) {
+    status.className = 'fs er';
+    status.textContent = 'New passwords do not match.';
+    return;
+  }
+  if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+    status.className = 'fs er';
+    status.textContent = 'New password must be at least 8 characters and include a number.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+
+  try {
+    await apiFetch('/client/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    status.className = 'fs ok';
+    status.textContent = '✓ Password updated successfully!';
+    e.target.reset();
+    setTimeout(() => { status.textContent = ''; }, 4000);
+  } catch (err) {
+    status.className = 'fs er';
+    status.textContent = err.message || 'Failed to update password.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Update password →';
+  }
+}
+
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
 
@@ -439,12 +496,11 @@ async function loadPortal() {
         }
 
         const isFixed = stats.rateType === 'fixed';
-        const contractStatus = stats.contractStatus || 'active'; // 'active', 'paused', 'terminated'
+        const contractStatus = stats.contractStatus || 'active';
         isFixedContract = isFixed;
         currentHourlyRate = parseFloat(stats.hourlyRate || 0);
         currentCreditBalance = parseFloat(stats.creditBalance || 0);
 
-        // Update Pill Badge based on contract status
         if (contractStatus === 'paused') {
           badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
         } else if (contractStatus === 'terminated') {
