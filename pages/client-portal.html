@@ -352,9 +352,27 @@
         <div class="panel-heading">Change Password</div>
         <p style="color:var(--ink-2);font-size:0.88rem;margin:-.4rem 0 1.1rem">Update your account password securely.</p>
         <form onsubmit="clientChangePassword(event)" style="max-width: 440px;">
-          <div class="fg" style="margin-bottom:0.9rem"><label>Current password</label><input type="password" name="currentPassword" required placeholder="••••••••"/></div>
-          <div class="fg" style="margin-bottom:0.9rem"><label>New password</label><input type="password" name="newPassword" required placeholder="••••••••" minlength="8"/></div>
-          <div class="fg" style="margin-bottom:1.1rem"><label>Confirm new password</label><input type="password" name="confirmPassword" required placeholder="••••••••"/></div>
+          <div class="fg" style="margin-bottom:0.9rem">
+            <label>Current password</label>
+            <div style="position:relative;">
+              <input type="password" name="currentPassword" id="client-curr-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+              <button type="button" onclick="toggleClientPassword('client-curr-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink-3);">👁️</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:0.9rem">
+            <label>New password</label>
+            <div style="position:relative;">
+              <input type="password" name="newPassword" id="client-new-pwd" required placeholder="••••••••" minlength="8" style="padding-right:2.8rem;"/>
+              <button type="button" onclick="toggleClientPassword('client-new-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink-3);">👁️</button>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:1.1rem">
+            <label>Confirm new password</label>
+            <div style="position:relative;">
+              <input type="password" name="confirmPassword" id="client-conf-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+              <button type="button" onclick="toggleClientPassword('client-conf-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink-3);">👁️</button>
+            </div>
+          </div>
           <div>
             <button type="submit" class="btn btn-p">Update password →</button>
             <div id="client-pwd-status" class="fs" style="margin-top:0.5rem"></div>
@@ -403,6 +421,12 @@ async function apiFetch(path, options = {}) {
   });
   if (res.status === 401) { 
     const e = await res.json().catch(() => ({}));
+    
+    // Prevent redirecting to login when an incorrect current password is typed
+    if (path.includes('change-password')) {
+      throw new Error(e.error || 'Current password is incorrect');
+    }
+
     auth.clear(); 
     window.location.href = 'login.html?reason=' + (e.error === 'SESSION_REVOKED' ? 'revoked' : 'expired'); 
     return; 
@@ -439,6 +463,18 @@ function switchView(view){
   document.getElementById('panel-' + view).classList.add('active');
 }
 
+// Show/Hide password toggle function
+function toggleClientPassword(fieldId, btnEl) {
+  const input = document.getElementById(fieldId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btnEl.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btnEl.textContent = '👁️';
+  }
+}
+
 async function clientChangePassword(e) {
   e.preventDefault();
   const status = document.getElementById('client-pwd-status');
@@ -463,12 +499,12 @@ async function clientChangePassword(e) {
   btn.textContent = 'Updating…';
 
   try {
-    await apiFetch('/client/change-password', {
+    const resData = await apiFetch('/client/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword })
     });
     status.className = 'fs ok';
-    status.textContent = '✓ Password updated successfully!';
+    status.textContent = '✓ ' + (resData.message || 'Password updated successfully!');
     e.target.reset();
     setTimeout(() => { status.textContent = ''; }, 4000);
   } catch (err) {
