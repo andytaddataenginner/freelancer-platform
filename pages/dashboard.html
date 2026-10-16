@@ -538,8 +538,8 @@ async function api(path, opts = {}) {
   if (r.status === 401) {
     const e = await r.json().catch(() => ({}));
     
-    // Prevent logging out when entering wrong current password in modal
-    if (path.includes('/change-password')) {
+    // Check if the route is related to changing passwords
+    if (path.includes('change-password')) {
       throw new Error(e.error || 'Current password is incorrect');
     }
 
