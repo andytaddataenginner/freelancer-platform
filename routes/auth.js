@@ -3,15 +3,7 @@ const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const pool    = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
-
-// =========================================================================
-// SIGNUP ROUTE (Direct Registration & Instant Token Generation)
-// =========================================================================
-
-/**
- * Handles account creation directly in PostgreSQL and issues a JWT session token.
- */
-const crypto = require('crypto'); // add this import
+const crypto  = require('crypto');
 
 function issueToken(user) {
   const sessionId = crypto.randomUUID();
@@ -22,6 +14,7 @@ function issueToken(user) {
   );
   return { token, sessionId };
 }
+
 async function handleSignup(req, res, next) {
   try {
     const { name, email, phone, password, role } = req.body;
@@ -32,7 +25,6 @@ async function handleSignup(req, res, next) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // 1. Check if user already exists
     const { rows: existingRows } = await pool.query(
       'SELECT id FROM users WHERE email = $1', 
       [cleanEmail]
@@ -42,7 +34,6 @@ async function handleSignup(req, res, next) {
       return res.status(409).json({ error: 'This email is already registered' });
     }
 
-    // 2. Hash password & insert into PostgreSQL
     const password_hash = await bcrypt.hash(password, 10);
     const userRole = role || 'freelancer';
 
@@ -54,36 +45,17 @@ async function handleSignup(req, res, next) {
     );
 
     const newUser = newRows[0];
-
-    // 3. Issue 30-day JWT Token
-    /*
-    const token = jwt.sign(
-      { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );*/
-    // 3. Issue token & record this as the user's active session
     const { token, sessionId } = issueToken(newUser);
     await pool.query('UPDATE users SET session_id = $1 WHERE id = $2', [sessionId, newUser.id]);
     
     return res.status(201).json({ token, user: newUser });
-
-    // 4. Return token & user payload directly to frontend
-    return res.status(201).json({ token, user: newUser });
-
   } catch (e) {
     next(e);
   }
 }
 
-// Route handlers for direct signup and frontend route aliases
 router.post('/signup', handleSignup);
 router.post('/signup/initiate', handleSignup);
-
-
-// =========================================================================
-// EXISTING AUTH ROUTES
-// =========================================================================
 
 // POST /api/auth/login
 router.post('/login', async (req, res, next) => {
@@ -103,22 +75,9 @@ router.post('/login', async (req, res, next) => {
 
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
- /*
-    const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );
 
-    */
- const { token, sessionId } = issueToken(user);
-await pool.query('UPDATE users SET session_id = $1 WHERE id = $2', [sessionId, user.id]);
-
-res.json({
-  token,
-  user: { id: user.id, name: user.name, email: user.email, role: user.role, company: user.company }
-});
-    
+    const { token, sessionId } = issueToken(user);
+    await pool.query('UPDATE users SET session_id = $1 WHERE id = $2', [sessionId, user.id]);
 
     res.json({
       token,
@@ -145,18 +104,27 @@ router.get('/me', requireAuth, async (req, res, next) => {
 // POST /api/auth/change-password
 router.post('/change-password', requireAuth, async (req, res, next) => {
   try {
-    const { current, newPassword } = req.body;
+    const currentPassword = req.body.current || req.body.currentPassword;
+    const { newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
     const { rows } = await pool.query('SELECT password_hash FROM users WHERE id=$1', [req.user.id]);
-    
     if (!rows[0]) return res.status(404).json({ error: 'User not found' });
 
-    const ok = await bcrypt.compare(current, rows[0].password_hash);
-    if (!ok) return res.status(401).json({ error: 'Current password is wrong' });
+    const ok = await bcrypt.compare(currentPassword, rows[0].password_hash);
+    if (!ok) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters and include a number' });
+    }
 
     const hash = await bcrypt.hash(newPassword, 10);
     await pool.query('UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2', [hash, req.user.id]);
     
-    res.json({ message: 'Password changed' });
+    res.json({ message: 'Password updated successfully' });
   } catch (e) { 
     next(e); 
   }
