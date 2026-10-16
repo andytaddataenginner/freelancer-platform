@@ -449,14 +449,33 @@
   </div>
 </div>
 
-<!-- CHANGE PASSWORD MODAL -->
+<!-- CHANGE PASSWORD MODAL (WITH SHOW/HIDE TOGGLES) -->
 <div class="modal-ov" id="modal-password">
   <div class="modal">
     <div class="mh"><h3>Change Password</h3><button class="mc" onclick="hide('modal-password')">✕</button></div>
     <form onsubmit="changePasswordModal(event)">
-      <div class="fg"><label>Current password</label><input type="password" name="currentPassword" required placeholder="••••••••"/></div>
-      <div class="fg"><label>New password</label><input type="password" name="newPassword" required placeholder="••••••••" minlength="8"/><span class="hint">At least 8 characters with a number.</span></div>
-      <div class="fg"><label>Confirm new password</label><input type="password" name="confirmPassword" required placeholder="••••••••"/></div>
+      <div class="fg">
+        <label>Current password</label>
+        <div style="position:relative;">
+          <input type="password" name="currentPassword" id="curr-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('curr-pwd', this)" aria-label="Toggle password visibility" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>New password</label>
+        <div style="position:relative;">
+          <input type="password" name="newPassword" id="new-pwd" required placeholder="••••••••" minlength="8" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('new-pwd', this)" aria-label="Toggle password visibility" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+        <span class="hint">At least 8 characters with a number.</span>
+      </div>
+      <div class="fg">
+        <label>Confirm new password</label>
+        <div style="position:relative;">
+          <input type="password" name="confirmPassword" id="conf-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('conf-pwd', this)" aria-label="Toggle password visibility" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+      </div>
       <button type="submit" class="btn btn-p" style="width:100%; margin-top:.5rem">Update password</button>
       <div id="pwd-status" class="fs"></div>
     </form>
@@ -574,6 +593,17 @@ async function toggleFixed(recordId, newStatus){
 
 function initials(name){
   return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+}
+
+function toggleModalPassword(fieldId, btnEl) {
+  const input = document.getElementById(fieldId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btnEl.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btnEl.textContent = '👁️';
+  }
 }
 
 async function changePasswordModal(e) {
