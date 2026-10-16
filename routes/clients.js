@@ -3,7 +3,48 @@ const bcrypt = require('bcryptjs');
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/clients — returns THIS freelancer's clients with current contract status
+// ── UNIVERSAL CHANGE PASSWORD ROUTE ────────────────────────
+// Handles password changes securely via token identification and current password validation
+router.post('/change-password', async (req, res, next) => {
+  try {
+    const userId = req.user ? req.user.id : null;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized session.' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required.' });
+    }
+
+    if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters and include a number.' });
+    }
+
+    const userResult = await pool.query('SELECT id, password_hash FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Safely validates current password (prevents "Illegal arguments: undefined, string" crash)
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Current password is incorrect.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    await pool.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [hashedNewPassword, userId]);
+
+    res.json({ message: 'Password updated successfully.' });
+  } catch (e) { next(e); }
+});
+
+// GET /api/clients — returns THIS freelancer's clients with current contract status[cite: 2]
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
@@ -34,7 +75,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/clients — creates client and active contract link
+// POST /api/clients — creates client and active contract link[cite: 2]
 router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price, phone } = req.body;
@@ -59,7 +100,6 @@ router.post('/', requireFreelancer, async (req, res, next) => {
          rate_type || 'hourly', hourly_rate || null, fixed_price || null, phone || null]
       );
 
-      // Insert corresponding client_contracts entry with active status
       await pool.query(
         `INSERT INTO client_contracts (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from)
          VALUES ($1, $2, $3, $4, $5, 'active', CURRENT_DATE)`,
@@ -86,7 +126,7 @@ router.post('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/clients/:id — update user details and sync contract changes
+// PUT /api/clients/:id — update user details and sync contract changes[cite: 2]
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price, phone, status } = req.body;
@@ -107,7 +147,6 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
        hourly_rate || null, fixed_price || null, phone || null, req.params.id, req.user.id]
     );
 
-    // Sync contract status updates in client_contracts
     const contractStatus = status || (is_active === false ? 'terminated' : 'active');
     await pool.query(
       `UPDATE client_contracts 
@@ -124,7 +163,7 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
   }
 });
 
-// PATCH /api/clients/:id/fixed-payment
+// PATCH /api/clients/:id/fixed-payment[cite: 2]
 router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => {
   try {
     const { fixed_payment_status } = req.body;
@@ -139,7 +178,7 @@ router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => 
   } catch (e) { next(e); }
 });
 
-// DELETE /api/clients/:id
+// DELETE /api/clients/:id[cite: 2]
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const check = await pool.query(
