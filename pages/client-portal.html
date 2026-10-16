@@ -457,7 +457,6 @@ let filtersInitialized = false;
 let isFixedContract = false;
 
 function switchView(view){
-  if (view === 'logs' && isFixedContract) view = 'overview';
   document.querySelectorAll('.ledger-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + view).classList.add('active');
@@ -559,8 +558,12 @@ async function loadPortal() {
         document.getElementById('tab-view-logs').style.display = isFixed ? 'none' : '';
         document.getElementById('overview-hourly').style.display = isFixed ? 'none' : 'block';
         document.getElementById('overview-fixed').style.display  = isFixed ? 'block' : 'none';
-        document.getElementById('billing-hourly').style.display  = isFixed ? 'none' : 'block';
-        document.getElementById('billing-fixed').style.display   = isFixed ? 'none' : 'none';
+        
+        // Correctly toggle visibility for billing sub-sections
+        const billingHourly = document.getElementById('billing-hourly');
+        const billingFixed = document.getElementById('billing-fixed');
+        if (billingHourly) billingHourly.style.display = isFixed ? 'none' : 'block';
+        if (billingFixed) billingFixed.style.display = isFixed ? 'block' : 'none';
 
         if (isFixed) {
             const cardElem = document.getElementById('fixed-contract-card');
@@ -591,7 +594,6 @@ async function loadPortal() {
             document.getElementById('s-hours').textContent  = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
             document.getElementById('s-hours-label').textContent = 'Contract value';
             renderFixedPeriodicBreakdown(stats, logs);
-            if (document.getElementById('tab-view-logs').classList.contains('active')) switchView('overview');
         } else {
             document.getElementById('s-hours-label').textContent = 'Hours logged';
             allLogs = logs;
