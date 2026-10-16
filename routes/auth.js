@@ -101,8 +101,37 @@ router.get('/me', requireAuth, async (req, res, next) => {
   }
 });
 
-// POST /api/auth/change-password
+// POST /api/auth/change-password (Freelancer dashboard endpoint)
 router.post('/change-password', requireAuth, async (req, res, next) => {
+  try {
+    const currentPassword = req.body.current || req.body.currentPassword;
+    const { newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    const { rows } = await pool.query('SELECT password_hash FROM users WHERE id=$1', [req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    const ok = await bcrypt.compare(currentPassword, rows[0].password_hash);
+    if (!ok) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters and include a number' });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2', [hash, req.user.id]);
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (e) { 
+    next(e); 
+  }
+});
+
+// POST /api/auth/client/change-password (Client portal endpoint)
+router.post('/client/change-password', requireAuth, async (req, res, next) => {
   try {
     const currentPassword = req.body.current || req.body.currentPassword;
     const { newPassword } = req.body;
