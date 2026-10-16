@@ -499,7 +499,7 @@ async function clientChangePassword(e) {
   btn.textContent = 'Updating…';
 
   try {
-    const resData = await apiFetch('/client/change-password', {
+    const resData = await apiFetch('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword })
     });
