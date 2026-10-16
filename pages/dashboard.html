@@ -323,6 +323,7 @@
         <input type="month" id="mpicker" onchange="load()"/>
       </div>
       <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+      <button class="btn btn-o btn-sm" onclick="show('modal-password')">🔒 Change Password</button>
       <button class="btn btn-gold btn-sm" onclick="show('modal-client')">+ Add Client</button>
     </div>
   </div>
@@ -395,32 +396,6 @@
       </div>
     </div>
 
-    <!-- CHANGE PASSWORD MODULE CARD -->
-    <div class="card">
-      <div class="ch">
-        <h3>🔒 Security & Password</h3>
-      </div>
-      <div class="cb" style="max-width: 500px;">
-        <form onsubmit="changePassword(event)">
-          <div class="fg">
-            <label>Current Password</label>
-            <input type="password" name="currentPassword" required placeholder="••••••••"/>
-          </div>
-          <div class="fg">
-            <label>New Password</label>
-            <input type="password" name="newPassword" required placeholder="••••••••" minlength="8"/>
-            <span class="hint">Must be at least 8 characters and include a number.</span>
-          </div>
-          <div class="fg">
-            <label>Confirm New Password</label>
-            <input type="password" name="confirmPassword" required placeholder="••••••••"/>
-          </div>
-          <button type="submit" class="btn btn-p" style="margin-top:0.5rem">Update Password</button>
-          <div id="pwd-status" class="fs"></div>
-        </form>
-      </div>
-    </div>
-
     <button class="btn btn-p" onclick="show('modal-client')">+ Add New Client</button>
   </div>
 </div>
@@ -449,6 +424,7 @@
   </div>
 </div>
 
+<!-- ADD CLIENT MODAL -->
 <div class="modal-ov" id="modal-client">
   <div class="modal">
     <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
@@ -469,6 +445,20 @@
       </div>
       <button type="submit" class="btn btn-p" style="width:100%">Create client</button>
       <div id="cs" class="fs"></div>
+    </form>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-ov" id="modal-password">
+  <div class="modal">
+    <div class="mh"><h3>Change Password</h3><button class="mc" onclick="hide('modal-password')">✕</button></div>
+    <form onsubmit="changePasswordModal(event)">
+      <div class="fg"><label>Current password</label><input type="password" name="currentPassword" required placeholder="••••••••"/></div>
+      <div class="fg"><label>New password</label><input type="password" name="newPassword" required placeholder="••••••••" minlength="8"/><span class="hint">At least 8 characters with a number.</span></div>
+      <div class="fg"><label>Confirm new password</label><input type="password" name="confirmPassword" required placeholder="••••••••"/></div>
+      <button type="submit" class="btn btn-p" style="width:100%; margin-top:.5rem">Update password</button>
+      <div id="pwd-status" class="fs"></div>
     </form>
   </div>
 </div>
@@ -586,7 +576,7 @@ function initials(name){
   return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
 }
 
-async function changePassword(e) {
+async function changePasswordModal(e) {
   e.preventDefault();
   const statusEl = document.getElementById('pwd-status');
   const formData = new FormData(e.target);
@@ -617,7 +607,7 @@ async function changePassword(e) {
     statusEl.className = 'fs ok';
     statusEl.textContent = '✓ Password updated successfully!';
     e.target.reset();
-    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    setTimeout(() => { hide('modal-password'); statusEl.textContent = ''; }, 1200);
   } catch (err) {
     statusEl.className = 'fs er';
     statusEl.textContent = err.message || 'Failed to update password.';
