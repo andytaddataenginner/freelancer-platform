@@ -2,18 +2,20 @@ const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/fixed-payments/:clientId — get records filtered by active contract status
+// GET /api/fixed-payments/:clientId — get records filtered by active contract status and client creation date
 router.get('/:clientId', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT f.* 
       FROM fixed_monthly_payments f
+      JOIN users u ON u.id = f.client_id
       LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
         AND cc.freelancer_id = f.freelancer_id
         AND cc.effective_from <= (f.month || '-01')::date
         AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
       WHERE f.client_id = $1 AND f.freelancer_id = $2
         AND (cc.status IS NULL OR cc.status = 'active')
+        AND f.month >= to_char(u.created_at, 'YYYY-MM')
       ORDER BY f.month DESC
     `, [req.params.clientId, req.user.id]);
     res.json(rows);
@@ -29,19 +31,21 @@ router.post('/generate', requireFreelancer, async (req, res, next) => {
 
     const firstOfMonth = `${month}-01`;
 
-    // Verify client has an active fixed-rate contract for this month
+    // Verify client has an active fixed-rate contract for this month and month >= client creation month
     const contractCheck = await pool.query(`
       SELECT cc.fixed_price, cc.status, to_char(c.created_at, 'YYYY-MM') AS start_month
       FROM client_contracts cc
       JOIN clients c ON c.user_id = cc.client_id AND c.freelancer_id = cc.freelancer_id
+      JOIN users u ON u.id = c.user_id
       WHERE cc.client_id = $1 AND cc.freelancer_id = $2
         AND cc.effective_from <= $3::date
         AND (cc.effective_to IS NULL OR cc.effective_to >= $3::date)
+        AND $3::text >= to_char(u.created_at, 'YYYY-MM')
       ORDER BY cc.effective_from DESC, cc.id DESC LIMIT 1
     `, [client_id, req.user.id, firstOfMonth]);
 
     if (!contractCheck.rows.length || contractCheck.rows[0].status !== 'active') {
-      return res.status(400).json({ error: 'Client contract is not active for the selected month.' });
+      return res.status(400).json({ error: 'Client contract is not active for the selected month or month precedes client creation.' });
     }
 
     const amount = contractCheck.rows[0].fixed_price;
@@ -91,7 +95,7 @@ router.patch('/:id/status', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/fixed-payments/bulk-generate — bulk generation (skips non-active contracts)
+// POST /api/fixed-payments/bulk-generate — bulk generation (skips non-active contracts & pre-creation months)
 router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
   try {
     const { month } = req.body;
@@ -101,13 +105,15 @@ router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
     const clients = await pool.query(`
       SELECT DISTINCT cc.client_id AS id, cc.fixed_price
       FROM client_contracts cc
+      JOIN users u ON u.id = cc.client_id
       WHERE cc.freelancer_id = $1 
         AND cc.rate_type = 'fixed' 
         AND cc.status = 'active'
         AND cc.fixed_price IS NOT NULL
         AND cc.effective_from <= $2::date
         AND (cc.effective_to IS NULL OR cc.effective_to >= $2::date)
-    `, [req.user.id, firstOfMonth]);
+        AND $2 >= to_char(u.created_at, 'YYYY-MM')
+    `, [req.user.id, month]);
 
     await Promise.all(clients.rows.map(cl =>
       pool.query(`
@@ -127,6 +133,7 @@ router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= ($2 || '-01')::date)
       WHERE f.freelancer_id = $1 AND f.month = $2
         AND (cc.status IS NULL OR cc.status = 'active')
+        AND f.month >= to_char(u.created_at, 'YYYY-MM')
       ORDER BY u.name
     `, [req.user.id, month]);
 
@@ -145,7 +152,7 @@ router.delete('/:id', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// GET /api/fixed-payments — fetch all active contract fixed payments
+// GET /api/fixed-payments — fetch all active contract fixed payments (filtered by creation date)
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
@@ -158,6 +165,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
       WHERE f.freelancer_id = $1
         AND (cc.status IS NULL OR cc.status = 'active')
+        AND f.month >= to_char(u.created_at, 'YYYY-MM')
       ORDER BY f.month DESC, u.name
     `, [req.user.id]);
     res.json(rows);
@@ -171,8 +179,11 @@ router.post('/backfill-all', requireFreelancer, async (req, res, next) => {
     if (!start_month) return res.status(400).json({ error: 'start_month required (YYYY-MM)' });
 
     const contracts = await pool.query(`
-      SELECT cc.client_id, cc.fixed_price, to_char(cc.effective_from, 'YYYY-MM') AS start_month
+      SELECT cc.client_id, cc.fixed_price, 
+             to_char(cc.effective_from, 'YYYY-MM') AS start_month,
+             to_char(u.created_at, 'YYYY-MM') AS client_created_month
       FROM client_contracts cc
+      JOIN users u ON u.id = cc.client_id
       WHERE cc.freelancer_id = $1 AND cc.rate_type = 'fixed' AND cc.status = 'active' AND cc.fixed_price IS NOT NULL
     `, [req.user.id]);
 
@@ -191,7 +202,10 @@ router.post('/backfill-all', requireFreelancer, async (req, res, next) => {
 
     let created = 0;
     for (const cl of contracts.rows) {
-      const effectiveStart = cl.start_month > start_month ? cl.start_month : start_month;
+      let effectiveStart = cl.start_month > start_month ? cl.start_month : start_month;
+      if (effectiveStart < cl.client_created_month) {
+        effectiveStart = cl.client_created_month;
+      }
       const months = monthsFrom(effectiveStart);
       for (const mo of months) {
         const r = await pool.query(`
