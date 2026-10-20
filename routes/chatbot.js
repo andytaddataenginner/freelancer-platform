@@ -1,10 +1,6 @@
 const router = require('express').Router();
 const pool = require('../db/pool');
 const jwt = require('jsonwebtoken');
-const { GoogleGenAI } = require('@google/genai');
-
-// Initialize Gemini SDK (Ensure GEMINI_API_KEY is in your Render environment variables)
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const verifyUserToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -33,9 +29,15 @@ router.post('/', verifyUserToken, async (req, res, next) => {
     const lowerMsg = message.toLowerCase().trim();
 
     if (userRole === 'freelancer') {
+      // 🛡️ ADMIN (Anduamlak) — Contract & Table-Aware Queries
+
       // 1. Total Number of Active Clients
       if (lowerMsg.includes('total number of clients') || lowerMsg.includes('how many clients') || lowerMsg.includes('total clients')) {
-        const resDb = await pool.query(`SELECT COUNT(DISTINCT c.user_id)::int AS count FROM clients c WHERE c.freelancer_id = $1 AND c.is_active = true`, [userId]);
+        const resDb = await pool.query(`
+          SELECT COUNT(DISTINCT c.user_id)::int AS count 
+          FROM clients c 
+          WHERE c.freelancer_id = $1 AND c.is_active = true
+        `, [userId]);
         reply = `👥 **Total Active Clients**: You have **${resDb.rows[0].count}** active clients in your agency.`;
 
       } 
@@ -44,9 +46,12 @@ router.post('/', verifyUserToken, async (req, res, next) => {
         const resDb = await pool.query(`
           SELECT COALESCE(SUM(f.amount::numeric), 0)::float AS total 
           FROM fixed_monthly_payments f
-          LEFT JOIN client_contracts cc ON cc.client_id = f.client_id AND cc.freelancer_id = f.freelancer_id
-            AND cc.effective_from <= (f.month || '-01')::date AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
-          WHERE f.freelancer_id = $1 AND f.status = 'unpaid' AND (cc.status IS NULL OR cc.status = 'active')
+          LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
+            AND cc.freelancer_id = f.freelancer_id
+            AND cc.effective_from <= (f.month || '-01')::date
+            AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+          WHERE f.freelancer_id = $1 AND f.status = 'unpaid'
+            AND (cc.status IS NULL OR cc.status = 'active')
         `, [userId]);
         reply = `⏳ **Total Due from Fixed Contracts**: **$${resDb.rows[0].total.toFixed(2)}** is currently unpaid across active fixed monthly records.`;
 
@@ -56,9 +61,12 @@ router.post('/', verifyUserToken, async (req, res, next) => {
         const resDb = await pool.query(`
           SELECT COALESCE(SUM(t.amount::numeric), 0)::float AS total 
           FROM time_logs t
-          LEFT JOIN client_contracts cc ON cc.client_id = t.client_id AND cc.freelancer_id = t.freelancer_id
-            AND cc.effective_from <= t.date AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
-          WHERE t.freelancer_id = $1 AND t.payment_status = 'unpaid' AND (cc.status IS NULL OR cc.status = 'active')
+          LEFT JOIN client_contracts cc ON cc.client_id = t.client_id 
+            AND cc.freelancer_id = t.freelancer_id
+            AND cc.effective_from <= t.date
+            AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+          WHERE t.freelancer_id = $1 AND t.payment_status = 'unpaid'
+            AND (cc.status IS NULL OR cc.status = 'active')
         `, [userId]);
         reply = `⏱️ **Total Due from Hourly Logs**: **$${resDb.rows[0].total.toFixed(2)}** is currently pending from active hourly work.`;
 
@@ -71,9 +79,11 @@ router.post('/', verifyUserToken, async (req, res, next) => {
               COALESCE((SELECT SUM(t.amount::numeric) FROM time_logs t WHERE t.client_id = u.id AND t.payment_status = 'unpaid'), 0) +
               COALESCE((SELECT SUM(f.amount::numeric) FROM fixed_monthly_payments f WHERE f.client_id = u.id AND f.status = 'unpaid'), 0)
             )::float AS total_due
-          FROM clients c JOIN users u ON u.id = c.user_id
+          FROM clients c
+          JOIN users u ON u.id = c.user_id
           WHERE c.freelancer_id = $1 AND c.is_active = true
-          ORDER BY total_due DESC LIMIT 1
+          ORDER BY total_due DESC
+          LIMIT 1
         `, [userId]);
 
         if (resDb.rows.length > 0 && resDb.rows[0].total_due > 0) {
@@ -89,10 +99,19 @@ router.post('/', verifyUserToken, async (req, res, next) => {
         const resDb = await pool.query(`
           SELECT month_str AS month, SUM(amount_num)::float AS total_earned
           FROM (
-            SELECT TO_CHAR(t.date, 'YYYY-MM')::text AS month_str, t.amount::numeric AS amount_num FROM time_logs t WHERE t.freelancer_id = $1 AND LOWER(t.payment_status) = 'paid'
+            SELECT TO_CHAR(t.date, 'YYYY-MM')::text AS month_str, t.amount::numeric AS amount_num 
+            FROM time_logs t
+            WHERE t.freelancer_id = $1 AND LOWER(t.payment_status) = 'paid'
+            
             UNION ALL
-            SELECT f.month::text AS month_str, f.amount::numeric AS amount_num FROM fixed_monthly_payments f WHERE f.freelancer_id = $1 AND LOWER(f.status) = 'paid'
-          ) combined GROUP BY month_str ORDER BY total_earned DESC LIMIT 1
+            
+            SELECT f.month::text AS month_str, f.amount::numeric AS amount_num 
+            FROM fixed_monthly_payments f
+            WHERE f.freelancer_id = $1 AND LOWER(f.status) = 'paid'
+          ) combined
+          GROUP BY month_str
+          ORDER BY total_earned DESC
+          LIMIT 1
         `, [userId]);
 
         if (resDb.rows.length > 0) {
@@ -113,28 +132,19 @@ router.post('/', verifyUserToken, async (req, res, next) => {
         reply = `💰 **Total Paid Earnings**: **$${grandTotal.toFixed(2)}** received across hourly logs and fixed payments.`;
 
       } 
-      // 🤖 FALLBACK TO GEMINI AI FOR UNMATCHED QUERIES
+      // Default Helpful Fallback
       else {
-        // Gather quick stats context for the AI
-        const [clientCount, totalEarned] = await Promise.all([
-          pool.query(`SELECT COUNT(*)::int AS cnt FROM clients WHERE freelancer_id = $1 AND is_active = true`, [userId]),
-          pool.query(`SELECT COALESCE(SUM(amount::numeric), 0)::float AS total FROM time_logs WHERE freelancer_id = $1 AND LOWER(payment_status) = 'paid'`, [userId])
-        ]);
-
-        const systemPrompt = `You are QFA Assistant, an AI built into Anduamlak's Quick Freelancing Agency dashboard. 
-        Context: Active Clients: ${clientCount.rows[0].cnt}, Total Paid: $${totalEarned.rows[0].total}.
-        Respond professionally, helpfully, and concisely to the user's custom question.`;
-
-        const aiResponse = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: [systemPrompt, message]
-        });
-
-        reply = aiResponse.text || `Hello ${userName}! I am your QFA assistant. For specific financial queries, try asking about "total clients", "total due from fixed", "total due from hourly", or "most overdue client".`;
+        reply = `Hello ${userName}! I am your QFA database assistant. You can ask me statistical queries such as:\n` +
+                `• "Total due from fixed"\n` +
+                `• "Total due from hourly"\n` +
+                `• "Which client has the most overdue"\n` +
+                `• "Which month did I earn the most"\n` +
+                `• "Total number of clients"\n` +
+                `• "Total paid"`;
       }
 
     } else {
-      // 🔒 CLIENT ISOLATION FALLBACK
+      // 🔒 CLIENT ISOLATION
       const [clientLogs, clientInvoices] = await Promise.all([
         pool.query(`SELECT COALESCE(SUM(amount::numeric), 0)::float AS total FROM time_logs WHERE client_id = $1 AND LOWER(payment_status) = 'unpaid'`, [userId]),
         pool.query(`SELECT COALESCE(SUM(amount::numeric), 0)::float AS total FROM fixed_monthly_payments WHERE client_id = $1 AND LOWER(status) = 'unpaid'`, [userId])
@@ -144,13 +154,9 @@ router.post('/', verifyUserToken, async (req, res, next) => {
       const unpaidFixed = clientInvoices.rows[0].total || 0;
 
       if (lowerMsg.includes('due') || lowerMsg.includes('unpaid') || lowerMsg.includes('invoice')) {
-        reply = `⏳ Hello ${userName}! Your total outstanding due is **$${(unpaidHourly + unpaidFixed).toFixed(2)}**.`;
+        reply = `⏳ Hello ${userName}! Your total outstanding due is **$${(unpaidHourly + unpaidFixed).toFixed(2)}** (Hourly unpaid: $${unpaidHourly.toFixed(2)}, Fixed unpaid: $${unpaidFixed.toFixed(2)}).`;
       } else {
-        const clientAiResponse = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: [`You are QFA Client Portal Assistant. Client Name: ${userName}, Unpaid Due: $${(unpaidHourly + unpaidFixed).toFixed(2)}. Answer their question professionally.` , message]
-        });
-        reply = clientAiResponse.text || `Hello ${userName}! You can ask me about your account status or outstanding invoices.`;
+        reply = `Hello ${userName}! You can ask me about your account status, such as "Total due" or "My invoices".`;
       }
     }
 
