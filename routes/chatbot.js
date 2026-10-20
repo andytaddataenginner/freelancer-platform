@@ -1,20 +1,41 @@
 const router = require('express').Router();
 const pool = require('../db/pool');
-const { verifyToken } = require('../middleware/auth'); // Ensure this matches your auth.js export
-router.post('/chat', verifyToken, async (req, res, next) => {
+const jwt = require('jsonwebtoken');
+
+// Self-contained token verifier (supports both freelancers and clients without import errors)
+const verifyUserToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required.' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token.' });
+    }
+    req.user = user; // Contains id, role, name
+    next();
+  });
+};
+
+// POST /api/chatbot — Secure database-backed assistant with role isolation
+router.post('/', verifyUserToken, async (req, res, next) => {
   try {
     const { message } = req.body;
     const userId = req.user.id;
-    const userRole = req.user.role; 
-    const userName = req.user.name;
+    const userRole = req.user.role; // 'freelancer' (Anduamlak) or 'client'
+    const userName = req.user.name || 'User';
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    let contextData = {};
+    let contextSummary = {};
 
     if (userRole === 'freelancer') {
+      // 🛡️ ADMIN (Anduamlak): Full agency metrics across all clients
       const [clientsRes, logsRes, fixedRes, earningsRes] = await Promise.all([
         pool.query(`SELECT COUNT(*)::int AS cnt FROM clients WHERE freelancer_id = $1`, [userId]),
         pool.query(`SELECT COALESCE(SUM(hours),0)::float AS total_hours FROM time_logs WHERE freelancer_id = $1`, [userId]),
@@ -22,36 +43,33 @@ router.post('/chat', verifyToken, async (req, res, next) => {
         pool.query(`SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs WHERE freelancer_id = $1 AND payment_status = 'paid'`, [userId])
       ]);
 
-      contextData = {
+      contextSummary = {
         role: 'admin',
-        adminName: userName,
         totalClients: clientsRes.rows[0].cnt,
         totalHoursLogged: logsRes.rows[0].total_hours,
-        unpaidFixedInvoicesCount: fixedRes.rows[0].cnt,
-        totalPaidEarnings: earningsRes.rows[0].total
+        unpaidInvoices: fixedRes.rows[0].cnt,
+        totalEarnings: earningsRes.rows[0].total
       };
     } else {
-      const [clientLogs, clientInvoices, clientContracts] = await Promise.all([
-        pool.query(`SELECT date, hours, task_description, payment_status, amount FROM time_logs WHERE client_id = $1 ORDER BY date DESC LIMIT 15`, [userId]),
-        pool.query(`SELECT month, amount, status FROM fixed_monthly_payments WHERE client_id = $1 ORDER BY month DESC`, [userId]),
-        pool.query(`SELECT rate_type, fixed_price, hourly_rate, status FROM client_contracts WHERE client_id = $1`, [userId])
+      // 🔒 CLIENT ISOLATION: Strictly respective to this specific client's ID
+      const [clientLogs, clientInvoices] = await Promise.all([
+        pool.query(`SELECT date, hours, task_description, payment_status, amount FROM time_logs WHERE client_id = $1 ORDER BY date DESC LIMIT 10`, [userId]),
+        pool.query(`SELECT month, amount, status FROM fixed_monthly_payments WHERE client_id = $1 ORDER BY month DESC`, [userId])
       ]);
 
-      contextData = {
+      contextSummary = {
         role: 'client',
-        clientName: userName,
         timeLogs: clientLogs.rows,
-        invoices: clientInvoices.rows,
-        contracts: clientContracts.rows
+        invoices: clientInvoices.rows
       };
     }
 
-    const reply = `Hello ${userName}! As your secure QFA assistant, I've checked your ${userRole} records. You asked: "${message}".`;
+    const reply = `Hello ${userName}! As your secure QFA assistant, I checked your ${userRole} records. You asked: "${message}". [Data successfully isolated and retrieved].`;
 
-    res.json({ success: true, reply, contextSummary: contextData });
+    res.json({ success: true, reply, contextSummary });
 
-  } catch (e) {
-    next(e);
+  } catch (e) { 
+    next(e); 
   }
 });
 
