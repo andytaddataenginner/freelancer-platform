@@ -29,32 +29,36 @@ router.post('/', verifyUserToken, async (req, res, next) => {
     const lowerMsg = message.toLowerCase().trim();
 
     if (userRole === 'freelancer') {
-      // 🛡️ ADMIN (Anduamlak) — Precise Table Queries
+      // 🛡️ ADMIN (Anduamlak) — Type-Casted Precise Table Queries
 
       // 1. Total Number of Clients
       if (lowerMsg.includes('total number of clients') || lowerMsg.includes('how many clients') || lowerMsg.includes('total clients')) {
-        const resDb = await pool.query(`SELECT COUNT(*)::int AS count FROM clients WHERE freelancer_id = $1`, [userId]);
+        const resDb = await pool.query(`
+          SELECT COUNT(*)::int AS count 
+          FROM clients 
+          WHERE freelancer_id::text = $1::text
+        `, [userId]);
         reply = `👥 **Total Clients**: You have **${resDb.rows[0].count}** registered clients in your agency.`;
 
       } 
-      // 2. Total Due from Fixed (fixed_monthly_payments table where status = 'unpaid')
+      // 2. Total Due from Fixed (fixed_monthly_payments)
       else if (lowerMsg.includes('total due from fixed') || lowerMsg.includes('fixed unpaid') || lowerMsg.includes('fixed due')) {
         const resDb = await pool.query(`
-          SELECT COALESCE(SUM(amount), 0)::float AS total 
+          SELECT COALESCE(SUM(fmp.amount::numeric), 0)::float AS total 
           FROM fixed_monthly_payments fmp
-          JOIN clients c ON c.id = fmp.client_id
-          WHERE c.freelancer_id = $1 AND fmp.status = 'unpaid'
+          JOIN clients c ON c.id::text = fmp.client_id::text
+          WHERE c.freelancer_id::text = $1::text AND LOWER(fmp.status) = 'unpaid'
         `, [userId]);
         reply = `⏳ **Total Due from Fixed Clients**: **$${resDb.rows[0].total.toFixed(2)}** is currently unpaid across fixed monthly records.`;
 
       } 
-      // 3. Total Due from Hourly (time_logs table where payment_status = 'unpaid')
+      // 3. Total Due from Hourly (time_logs)
       else if (lowerMsg.includes('total due from hourly') || lowerMsg.includes('hourly unpaid') || lowerMsg.includes('hourly due')) {
         const resDb = await pool.query(`
-          SELECT COALESCE(SUM(tl.amount), 0)::float AS total 
+          SELECT COALESCE(SUM(tl.amount::numeric), 0)::float AS total 
           FROM time_logs tl
-          JOIN clients c ON c.id = tl.client_id
-          WHERE c.freelancer_id = $1 AND tl.payment_status = 'unpaid'
+          JOIN clients c ON c.id::text = tl.client_id::text
+          WHERE c.freelancer_id::text = $1::text AND LOWER(tl.payment_status) = 'unpaid'
         `, [userId]);
         reply = `⏱️ **Total Due from Hourly Logs**: **$${resDb.rows[0].total.toFixed(2)}** is currently pending from hourly work.`;
 
@@ -64,11 +68,11 @@ router.post('/', verifyUserToken, async (req, res, next) => {
         const resDb = await pool.query(`
           SELECT c.name, c.company,
             (
-              COALESCE((SELECT SUM(tl.amount) FROM time_logs tl WHERE tl.client_id = c.id AND tl.payment_status = 'unpaid'), 0) +
-              COALESCE((SELECT SUM(fmp.amount) FROM fixed_monthly_payments fmp WHERE fmp.client_id = c.id AND fmp.status = 'unpaid'), 0)
+              COALESCE((SELECT SUM(tl.amount::numeric) FROM time_logs tl WHERE tl.client_id::text = c.id::text AND LOWER(tl.payment_status) = 'unpaid'), 0) +
+              COALESCE((SELECT SUM(fmp.amount::numeric) FROM fixed_monthly_payments fmp WHERE fmp.client_id::text = c.id::text AND LOWER(fmp.status) = 'unpaid'), 0)
             )::float AS total_due
           FROM clients c
-          WHERE c.freelancer_id = $1
+          WHERE c.freelancer_id::text = $1::text
           ORDER BY total_due DESC
           LIMIT 1
         `, [userId]);
@@ -81,16 +85,22 @@ router.post('/', verifyUserToken, async (req, res, next) => {
         }
 
       } 
-      // 5. Month with Highest Earnings
+      // 5. Month with Highest Earnings (Explicit Type Casting on UNION ALL to fix 42P08)
       else if (lowerMsg.includes('month') && (lowerMsg.includes('earn') || lowerMsg.includes('highest') || lowerMsg.includes('most revenue') || lowerMsg.includes('best month'))) {
         const resDb = await pool.query(`
-          SELECT month, SUM(amount)::float AS total_earned
+          SELECT month_str AS month, SUM(amount_num)::float AS total_earned
           FROM (
-            SELECT TO_CHAR(date, 'YYYY-MM') AS month, amount FROM time_logs WHERE payment_status = 'paid'
+            SELECT TO_CHAR(date::date, 'YYYY-MM')::text AS month_str, amount::numeric AS amount_num 
+            FROM time_logs 
+            WHERE LOWER(payment_status) = 'paid'
+            
             UNION ALL
-            SELECT month, amount FROM fixed_monthly_payments WHERE status = 'paid'
+            
+            SELECT month::text AS month_str, amount::numeric AS amount_num 
+            FROM fixed_monthly_payments 
+            WHERE LOWER(status) = 'paid'
           ) combined
-          GROUP BY month
+          GROUP BY month_str
           ORDER BY total_earned DESC
           LIMIT 1
         `);
@@ -103,11 +113,11 @@ router.post('/', verifyUserToken, async (req, res, next) => {
         }
 
       } 
-      // 6. Total Paid Earnings (Across both tables)
+      // 6. Total Paid Earnings
       else if (lowerMsg.includes('total paid') || lowerMsg.includes('earnings') || lowerMsg.includes('revenue')) {
         const [hourlyPaid, fixedPaid] = await Promise.all([
-          pool.query(`SELECT COALESCE(SUM(tl.amount), 0)::float AS total FROM time_logs tl JOIN clients c ON c.id = tl.client_id WHERE c.freelancer_id = $1 AND tl.payment_status = 'paid'`, [userId]),
-          pool.query(`SELECT COALESCE(SUM(fmp.amount), 0)::float AS total FROM fixed_monthly_payments fmp JOIN clients c ON c.id = fmp.client_id WHERE c.freelancer_id = $1 AND fmp.status = 'paid'`, [userId])
+          pool.query(`SELECT COALESCE(SUM(tl.amount::numeric), 0)::float AS total FROM time_logs tl JOIN clients c ON c.id::text = tl.client_id::text WHERE c.freelancer_id::text = $1::text AND LOWER(tl.payment_status) = 'paid'`, [userId]),
+          pool.query(`SELECT COALESCE(SUM(fmp.amount::numeric), 0)::float AS total FROM fixed_monthly_payments fmp JOIN clients c ON c.id::text = fmp.client_id::text WHERE c.freelancer_id::text = $1::text AND LOWER(fmp.status) = 'paid'`, [userId])
         ]);
         const grandTotal = hourlyPaid.rows[0].total + fixedPaid.rows[0].total;
         reply = `💰 **Total Paid Earnings**: **$${grandTotal.toFixed(2)}** received across hourly logs and fixed payments.`;
@@ -126,8 +136,8 @@ router.post('/', verifyUserToken, async (req, res, next) => {
     } else {
       // 🔒 CLIENT ISOLATION
       const [clientLogs, clientInvoices] = await Promise.all([
-        pool.query(`SELECT SUM(amount)::float AS total FROM time_logs WHERE client_id = $1 AND payment_status = 'unpaid'`, [userId]),
-        pool.query(`SELECT SUM(amount)::float AS total FROM fixed_monthly_payments WHERE client_id = $1 AND status = 'unpaid'`, [userId])
+        pool.query(`SELECT COALESCE(SUM(amount::numeric), 0)::float AS total FROM time_logs WHERE client_id::text = $1::text AND LOWER(payment_status) = 'unpaid'`, [userId]),
+        pool.query(`SELECT COALESCE(SUM(amount::numeric), 0)::float AS total FROM fixed_monthly_payments WHERE client_id::text = $1::text AND LOWER(status) = 'unpaid'`, [userId])
       ]);
       
       const unpaidHourly = clientLogs.rows[0].total || 0;
