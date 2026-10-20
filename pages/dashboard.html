@@ -207,30 +207,122 @@
     .float-timer.collapsed .float-timer-body{ display:none; }
     @media(max-width:480px){ .float-timer{ width:calc(100vw - 24px) !important; } }
 
-    /* ── FLOATING AI CHATBOT WIDGET ── */
+    /* ── FLOATING AI CHATBOT WIDGET (POSITIONED RIGHT, NEXT TO TIMER) ── */
     .float-chat{
-      position:fixed; bottom:20px; left:20px; width:310px;
-      background:var(--card-bg); border-radius:var(--r);
-      box-shadow:var(--sh-lg); border:1px solid var(--hairline);
-      z-index:250; overflow:hidden; display:flex; flex-direction:column;
-      transition:all 0.3s ease; backdrop-filter:blur(16px);
+      position: fixed; 
+      bottom: 20px; 
+      right: 320px; 
+      width: 320px;
+      background: var(--card-bg); 
+      border-radius: var(--r);
+      box-shadow: var(--sh-lg); 
+      border: 1px solid var(--hairline);
+      z-index: 240; 
+      overflow: hidden; 
+      display: flex; 
+      flex-direction: column;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      backdrop-filter: blur(16px);
     }
-    .float-chat.collapsed{ width:54px; height:54px; border-radius:50%; overflow:hidden; cursor:pointer; }
-    .float-chat.collapsed .chat-body, .float-chat.collapsed .chat-header-text{ display:none; }
+    .float-chat.collapsed{ 
+      width: 52px; 
+      height: 52px; 
+      border-radius: 50%; 
+      overflow: hidden; 
+      cursor: pointer;
+      box-shadow: var(--sh-md);
+      border: 1px solid var(--hairline-strong);
+    }
+    .float-chat.collapsed .chat-body, 
+    .float-chat.collapsed .chat-header-text{ 
+      display: none; 
+    }
     .float-chat-handle{
-      background:linear-gradient(135deg,var(--navy),var(--navy2)); color:#fff; padding:.7rem 1rem;
-      display:flex; align-items:center; justify-content:space-between; font-size:.82rem; font-weight:700; cursor:pointer;
+      background: linear-gradient(135deg, var(--navy), var(--navy2)); 
+      color: #fff; 
+      padding: 0.75rem 1rem;
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      font-size: 0.82rem; 
+      font-weight: 700; 
+      cursor: pointer;
+      height: 52px;
     }
-    .chat-body{ display:flex; flex-direction:column; height:320px; background:var(--bg); }
-    .float-chat.collapsed .chat-body{ display:none; }
-    .chat-messages{ flex:1; padding:.9rem; overflow-y:auto; display:flex; flex-direction:column; gap:.6rem; font-size:.81rem; }
-    .chat-msg{ padding:.55rem .85rem; border-radius:10px; max-width:85%; line-height:1.4; word-break:break-word; }
-    .chat-msg.user{ background:var(--accent); color:white; align-self:flex-end; border-bottom-right-radius:2px; }
-    .chat-msg.bot{ background:var(--card-bg); color:var(--ink); align-self:flex-start; border-bottom-left-radius:2px; border:1px solid var(--hairline); }
-    .chat-input-row{ display:flex; padding:.5rem; background:var(--card-bg); border-top:1px solid var(--hairline); gap:.4rem; }
-    .chat-input-row input{ flex:1; padding:.45rem .75rem; border:1px solid var(--hairline-strong); border-radius:8px; font-size:.8rem; background:var(--bg); color:var(--ink); outline:none; }
-    .chat-input-row button{ background:var(--navy); color:white; border:none; padding:.45rem .8rem; border-radius:8px; font-weight:600; cursor:pointer; font-size:.8rem; }
-    @media(max-width:480px){ .float-chat{ left:12px; width:calc(100vw - 24px); } }
+    .float-chat.collapsed .float-chat-handle{
+      padding: 0;
+      justify-content: center;
+    }
+    .chat-body{ 
+      display: flex; 
+      flex-direction: column; 
+      height: 320px; 
+      background: var(--bg); 
+    }
+    .float-chat.collapsed .chat-body{ display: none; }
+    .chat-messages{ 
+      flex: 1; 
+      padding: 0.9rem; 
+      overflow-y: auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.6rem; 
+      font-size: 0.81rem; 
+    }
+    .chat-msg{ 
+      padding: 0.55rem 0.85rem; 
+      border-radius: 10px; 
+      max-width: 85%; 
+      line-height: 1.4; 
+      word-break: break-word; 
+    }
+    .chat-msg.user{ 
+      background: var(--accent); 
+      color: white; 
+      align-self: flex-end; 
+      border-bottom-right-radius: 2px; 
+    }
+    .chat-msg.bot{ 
+      background: var(--card-bg); 
+      color: var(--ink); 
+      align-self: flex-start; 
+      border-bottom-left-radius: 2px; 
+      border: 1px solid var(--hairline); 
+    }
+    .chat-input-row{ 
+      display: flex; 
+      padding: 0.5rem; 
+      background: var(--card-bg); 
+      border-top: 1px solid var(--hairline); 
+      gap: 0.4rem; 
+    }
+    .chat-input-row input{ 
+      flex: 1; 
+      padding: 0.45rem 0.75rem; 
+      border: 1px solid var(--hairline-strong); 
+      border-radius: 8px; 
+      font-size: 0.8rem; 
+      background: var(--bg); 
+      color: var(--ink); 
+      outline: none; 
+    }
+    .chat-input-row button{ 
+      background: var(--navy); 
+      color: white; 
+      border: none; 
+      padding: 0.45rem 0.8rem; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      font-size: 0.8rem; 
+    }
+    @media(max-width: 768px){ 
+      .float-chat{ 
+        right: 15px; 
+        bottom: 85px; 
+        width: calc(100vw - 30px); 
+      } 
+    }
 
     /* ── TABLE ── */
     .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -1060,7 +1152,7 @@ function toggleMinimize(){
 }
 
 /* ────────────────────────────────────────────────────────────────────────
-   AI CHATBOT WIDGET LOGIC ──────────────────────────────────────────────── */
+   AI CHATBOT WIDGET LOGIC (CORRECTED API ENDPOINT /chatbot) ─── */
 function toggleChatCollapse(){
   const widget = document.getElementById('float-chat-widget');
   const btn = document.getElementById('chat-toggle-btn');
@@ -1085,17 +1177,26 @@ async function sendChatMessage(){
   container.scrollTop = container.scrollHeight;
 
   try {
-    const res = await fetch(`${API}/chat`, {
+    const res = await fetch(`${API}/chatbot`, {
       method: 'POST',
       headers: auth.hdrs(),
       body: JSON.stringify({ message: text })
     });
+
+    if(!res.ok) {
+      throw new Error(`Server returned status ${res.status}`);
+    }
+
     const data = await res.json();
     
-    document.getElementById(loadingId).remove();
+    const loadingElem = document.getElementById(loadingId);
+    if(loadingElem) loadingElem.remove();
+
     container.innerHTML += `<div class="chat-msg bot">${escapeHtml(data.reply || 'No response received.')}</div>`;
   } catch (e) {
-    document.getElementById(loadingId).remove();
+    const loadingElem = document.getElementById(loadingId);
+    if(loadingElem) loadingElem.remove();
+
     container.innerHTML += `<div class="chat-msg bot" style="color:var(--red);">Error connecting to assistant.</div>`;
   }
   container.scrollTop = container.scrollHeight;
