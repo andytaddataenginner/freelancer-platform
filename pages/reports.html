@@ -514,6 +514,24 @@
             </div>
           </div>
 
+          <div class="statement-hero">
+            <span class="statement-hero-label">Fixed-Rate Total</span>
+            <h3 class="statement-hero-value" id="kpi-fixed-total">$0.00</h3>
+            <div class="statement-hero-split">
+              <span class="split-item split-paid"><i></i>Paid <b id="kpi-fixed-paid">$0</b></span>
+              <span class="split-item split-unpaid"><i></i>Due <b id="kpi-fixed-unpaid">$0</b></span>
+            </div>
+          </div>
+
+          <div class="statement-hero">
+            <span class="statement-hero-label">Hourly Total</span>
+            <h3 class="statement-hero-value" id="kpi-hourly-total">$0.00</h3>
+            <div class="statement-hero-split">
+              <span class="split-item split-paid"><i></i>Paid <b id="kpi-hourly-paid">$0</b></span>
+              <span class="split-item split-unpaid"><i></i>Due <b id="kpi-hourly-unpaid">$0</b></span>
+            </div>
+          </div>
+
           <div class="statement-stats">
             <div class="stat-cell">
               <span>Total Hours</span>
@@ -783,6 +801,13 @@ async function loadReportData() {
     let macroPaid = 0;
     let macroUnpaid = 0;
 
+    // Type-split totals (hourly vs fixed), all-time — additive, doesn't
+    // touch the combined macroPaid/macroUnpaid used by Total Volume above.
+    let hourlyPaidAll = 0;
+    let hourlyUnpaidAll = 0;
+    let fixedPaidAll = 0;
+    let fixedUnpaidAll = 0;
+
     let totalHours = 0;
     let uniqueClients = new Set();
     let activeMonths = new Set();
@@ -798,8 +823,10 @@ async function loadReportData() {
       if (!isFixedClient) {
         if (isPaid) {
           macroPaid += amt;
+          hourlyPaidAll += amt;
         } else {
           macroUnpaid += amt;
+          hourlyUnpaidAll += amt;
         }
 
         if (log.date && log.date.startsWith(month)) {
@@ -829,6 +856,8 @@ async function loadReportData() {
       const { paid, unpaid } = splitFixedPayment(f);
       macroPaid += paid;
       macroUnpaid += unpaid;
+      fixedPaidAll += paid;
+      fixedUnpaidAll += unpaid;
       if (f.client_name) uniqueClients.add(f.client_name);
     });
 
@@ -841,6 +870,14 @@ async function loadReportData() {
     animateCount(document.getElementById('global-total-all'), macroPaid + macroUnpaid, { prefix: '$', decimals: 2 });
     animateCount(document.getElementById('global-paid-all'), macroPaid, { prefix: '$', decimals: 2 });
     animateCount(document.getElementById('global-unpaid-all'), macroUnpaid, { prefix: '$', decimals: 2 });
+
+    animateCount(document.getElementById('kpi-fixed-total'), fixedPaidAll + fixedUnpaidAll, { prefix: '$', decimals: 2 });
+    animateCount(document.getElementById('kpi-fixed-paid'), fixedPaidAll, { prefix: '$', decimals: 2 });
+    animateCount(document.getElementById('kpi-fixed-unpaid'), fixedUnpaidAll, { prefix: '$', decimals: 2 });
+
+    animateCount(document.getElementById('kpi-hourly-total'), hourlyPaidAll + hourlyUnpaidAll, { prefix: '$', decimals: 2 });
+    animateCount(document.getElementById('kpi-hourly-paid'), hourlyPaidAll, { prefix: '$', decimals: 2 });
+    animateCount(document.getElementById('kpi-hourly-unpaid'), hourlyUnpaidAll, { prefix: '$', decimals: 2 });
 
     document.getElementById('health-paid-val').textContent = `$${monthPaid.toFixed(2)}`;
     document.getElementById('health-unpaid-val').textContent = `$${monthUnpaid.toFixed(2)}`;
