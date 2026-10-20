@@ -18,72 +18,83 @@ router.post('/', verifyUserToken, async (req, res, next) => {
   try {
     const { message } = req.body;
     const userId = req.user.id;
-    const userRole = req.user.role; 
+    const userRole = req.user.role; // 'freelancer' (Anduamlak) or 'client'
     const userName = req.user.name || 'User';
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    let contextSummary = {};
-    let dynamicReply = "";
-    const lowerMsg = message.toLowerCase();
+    let reply = "";
+    const lowerMsg = message.toLowerCase().trim();
 
     if (userRole === 'freelancer') {
-      // 🛡️ ADMIN (Anduamlak): Fetch full agency metrics
-      const [clientsRes, logsRes, fixedRes, earningsRes] = await Promise.all([
-        pool.query(`SELECT COUNT(*)::int AS cnt FROM clients WHERE freelancer_id = $1`, [userId]),
-        pool.query(`SELECT COALESCE(SUM(hours),0)::float AS total_hours FROM time_logs WHERE freelancer_id = $1`, [userId]),
-        pool.query(`SELECT COUNT(*)::int AS cnt FROM fixed_monthly_payments WHERE freelancer_id = $1 AND status = 'unpaid'`, [userId]),
-        pool.query(`SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs WHERE freelancer_id = $1 AND payment_status = 'paid'`, [userId])
-      ]);
+      // 🛡️ ADMIN (Anduamlak) Metrics
 
-      contextSummary = {
-        role: 'admin',
-        totalClients: clientsRes.rows[0].cnt,
-        totalHoursLogged: logsRes.rows[0].cnt ? logsRes.rows[0].total_hours : 0,
-        unpaidInvoices: fixedRes.rows[0].cnt,
-        totalEarnings: earningsRes.rows[0].total
-      };
+      if (lowerMsg.includes('total number of clients') || lowerMsg.includes('how many clients') || lowerMsg.includes('total clients')) {
+        const resDb = await pool.query(`SELECT COUNT(*)::int AS count FROM clients WHERE freelancer_id = $1`, [userId]);
+        reply = `👥 **Total Number of Clients**: You have **${resDb.rows[0].count}** registered clients in your agency database.`;
 
-      // 🧠 Dynamic Answer Builder for Admin
-      if (lowerMsg.includes('client') || lowerMsg.includes('how many client')) {
-        dynamicReply = `Hello ${userName}! You currently have ${contextSummary.totalClients} registered active clients in your agency database.`;
-      } else if (lowerMsg.includes('hour') || lowerMsg.includes('logged')) {
-        dynamicReply = `You have logged a total of ${contextSummary.totalHoursLogged} hours across your projects.`;
-      } else if (lowerMsg.includes('earning') || lowerMsg.includes('paid') || lowerMsg.includes('revenue')) {
-        dynamicReply = `Your total paid earnings recorded are $${contextSummary.totalEarnings.toFixed(2)}, with ${contextSummary.unpaidInvoices} unpaid fixed invoices pending.`;
+      } else if (lowerMsg.includes('total due from fixed') || lowerMsg.includes('fixed unpaid')) {
+        const resDb = await pool.query(`
+          SELECT COALESCE(SUM(amount), 0)::float AS total 
+          FROM fixed_monthly_payments 
+          WHERE freelancer_id = $1 AND status = 'unpaid'
+        `, [userId]);
+        reply = `⏳ **Total Due from Fixed Contracts**: **$${resDb.rows[0].total.toFixed(2)}** is currently unpaid.`;
+
+      } else if (lowerMsg.includes('total due from hourly') || lowerMsg.includes('hourly unpaid')) {
+        const resDb = await pool.query(`
+          SELECT COALESCE(SUM(amount), 0)::float AS total 
+          FROM time_logs 
+          WHERE freelancer_id = $1 AND payment_status = 'unpaid'
+        `, [userId]);
+        reply = `⏱️ **Total Due from Hourly Logs**: **$${resDb.rows[0].total.toFixed(2)}** is currently pending payment.`;
+
+      } else if (lowerMsg.includes('total paid') || lowerMsg.includes('earnings') || lowerMsg.includes('revenue')) {
+        const [hourlyPaid, fixedPaid] = await Promise.all([
+          pool.query(`SELECT COALESCE(SUM(amount), 0)::float AS total FROM time_logs WHERE freelancer_id = $1 AND payment_status = 'paid'`, [userId]),
+          pool.query(`SELECT COALESCE(SUM(amount), 0)::float AS total FROM fixed_monthly_payments WHERE freelancer_id = $1 AND status = 'paid'`, [userId])
+        ]);
+        const grandTotal = hourlyPaid.rows[0].total + fixedPaid.rows[0].total;
+        reply = `💰 **Total Paid Earnings**: **$${grandTotal.toFixed(2)}** received across your agency.`;
+
+      } else if (lowerMsg.includes('unpaid') || lowerMsg.includes('outstanding')) {
+        const [hourlyUnpaid, fixedUnpaid] = await Promise.all([
+          pool.query(`SELECT COALESCE(SUM(amount), 0)::float AS total FROM time_logs WHERE freelancer_id = $1 AND payment_status = 'unpaid'`, [userId]),
+          pool.query(`SELECT COALESCE(SUM(amount), 0)::float AS total FROM fixed_monthly_payments WHERE freelancer_id = $1 AND status = 'unpaid'`, [userId])
+        ]);
+        const grandUnpaid = hourlyUnpaid.rows[0].total + fixedUnpaid.rows[0].total;
+        reply = `⚠️ **Total Outstanding / Unpaid**: **$${grandUnpaid.toFixed(2)}** is currently pending across all client accounts.`;
+
       } else {
-        dynamicReply = `Hello ${userName}! I checked your agency records: You have ${contextSummary.totalClients} clients, ${contextSummary.totalHoursLogged} logged hours, and $${contextSummary.totalEarnings.toFixed(2)} in paid earnings.`;
+        // Default Help Prompt if query isn't matched
+        reply = `Hello ${userName}! I am your QFA database assistant. You can ask me structured queries like:\n` +
+                `• "Total number of clients"\n` +
+                `• "Total due from fixed"\n` +
+                `• "Total due from hourly"\n` +
+                `• "Total paid"\n` +
+                `• "Total unpaid"`;
       }
 
     } else {
-      // 🔒 CLIENT ISOLATION: Fetch respective client data
+      // 🔒 CLIENT ISOLATION
       const [clientLogs, clientInvoices] = await Promise.all([
-        pool.query(`SELECT date, hours, task_description, payment_status, amount FROM time_logs WHERE client_id = $1 ORDER BY date DESC LIMIT 10`, [userId]),
-        pool.query(`SELECT month, amount, status FROM fixed_monthly_payments WHERE client_id = $1 ORDER BY month DESC`, [userId])
+        pool.query(`SELECT SUM(amount)::float AS total FROM time_logs WHERE client_id = $1 AND payment_status = 'unpaid'`, [userId]),
+        pool.query(`SELECT SUM(amount)::float AS total FROM fixed_monthly_payments WHERE client_id = $1 AND status = 'unpaid'`, [userId])
       ]);
+      
+      const unpaidLogs = clientLogs.rows[0].total || 0;
+      const unpaidInvoices = clientInvoices.rows[0].total || 0;
 
-      contextSummary = {
-        role: 'client',
-        timeLogs: clientLogs.rows,
-        invoices: clientInvoices.rows
-      };
-
-      // 🧠 Dynamic Answer Builder for Client
-      const totalInvoices = clientInvoices.rows.length;
-      const unpaidInvoices = clientInvoices.rows.filter(inv => inv.status === 'unpaid').length;
-
-      if (lowerMsg.includes('invoice') || lowerMsg.includes('payment')) {
-        dynamicReply = `Hello ${userName}! You have ${totalInvoices} total invoice records, with ${unpaidInvoices} currently showing as unpaid.`;
-      } else if (lowerMsg.includes('hour') || lowerMsg.includes('log') || lowerMsg.includes('work')) {
-        dynamicReply = `You have ${clientLogs.rows.length} recent time log entries recorded on your account.`;
+      if (lowerMsg.includes('due') || lowerMsg.includes('unpaid')) {
+        reply = `⏳ Hello ${userName}! Your total outstanding due is **$${(unpaidLogs + unpaidInvoices).toFixed(2)}**.`;
       } else {
-        dynamicReply = `Hello ${userName}! I looked up your client portal records. You have ${totalInvoices} invoice items and ${clientLogs.rows.length} logged task sessions.`;
+        reply = `Hello ${userName}! You can ask me about your account status, such as "Total due" or "My invoices".`;
       }
     }
 
-    res.json({ success: true, reply: dynamicReply, contextSummary });
+    res.json({ success: true, reply });
 
   } catch (e) { 
     next(e); 
