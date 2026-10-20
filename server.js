@@ -18,7 +18,7 @@ app.use('/api/client',         require('./routes/client-portal'));
 app.use('/api/payments',       require('./routes/payments'));
 app.use('/api/fixed-payments', require('./routes/fixed-payments')); // ← NEW
 app.use('/api/contracts',      require('./routes/contracts')); // ← NEW
-app.use('/api', require('./routes/chatbot'));)
+app.use('/api',                require('./routes/chatbot'));
 
 
 app.get('/api/health', (req, res) => res.json({ status:'ok', timestamp:new Date() }));
