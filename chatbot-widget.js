@@ -12,7 +12,7 @@
   'use strict';
 
   // ── CONFIG ────────────────────────────────────────────────────────────────
-  const FALLBACK_API = 'https://qfa-backend.onrender.com'; // ← your Render URL
+  const FALLBACK_API = 'https://freelancer-platform-9jut.onrender.com'; // ← your Render URL
   const getApiBase = () => {
     const meta = document.querySelector('meta[name="api-base"]');
     return (meta && meta.content) ? meta.content : FALLBACK_API;
