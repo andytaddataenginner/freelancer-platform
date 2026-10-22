@@ -329,5 +329,8 @@ async function deletePortfolioItem(id) {
   try { await apiFetch('/portfolio/' + id, { method: 'DELETE' }); loadPortfolio(); } catch(e) { alert(e.message); }
 }
 </script>
+---Added for chatbot---
+<link rel="stylesheet" href="chatbot-widget.css">
+<script src="chatbot-widget.js"></script>
 </body>
 </html>
