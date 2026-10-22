@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — QFA</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/chatbot-widget.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{overflow-y:scroll;scroll-behavior:smooth}
@@ -1036,9 +1037,6 @@ async function addClient(e){
   }catch(e){st.className='fs er';st.textContent=e.message;}
 }
 </script>
-<!-- Put this in <head> -->
-<link rel="stylesheet" href="css/chatbot-widget.css">
-
 <!-- Put this just before </body> -->
 <script src="chatbot-widget.js"></script>
 </body>
