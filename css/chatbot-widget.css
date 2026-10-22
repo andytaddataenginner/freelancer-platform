@@ -1,4 +1,4 @@
-/* ── QFA Chatbot Widget ─────────────────────────────────────────────────── */
+/* ── QFA Chatbot Widget — two-pane (menu + chat) ────────────────────────── */
 
 /* FAB button */
 .qfa-fab {
@@ -19,10 +19,10 @@
   z-index: 9999;
   transition: transform 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.22s;
 }
-.qfa-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(26,92,255,.55); }
+.qfa-fab:hover  { transform: scale(1.08); box-shadow: 0 6px 28px rgba(26,92,255,.55); }
 .qfa-fab.active { background: linear-gradient(135deg, #1a3a7a, #0d2353); }
-.qfa-fab svg { width: 22px; height: 22px; }
-.qfa-fab-badge {
+.qfa-fab svg    { width: 22px; height: 22px; }
+.qfa-fab-badge  {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -31,13 +31,13 @@
   line-height: 1;
 }
 
-/* Panel */
+/* ── Panel shell ─────────────────────────────────────────────────────────── */
 .qfa-panel {
   position: fixed;
   bottom: 5.5rem;
   right: 1.5rem;
-  width: 340px;
-  max-height: 520px;
+  width: 540px;           /* wider to fit sidebar + chat */
+  height: 520px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(13,35,83,.18), 0 2px 8px rgba(0,0,0,.08);
@@ -55,38 +55,38 @@
   transform: translateY(0) scale(1);
   pointer-events: all;
 }
-
-/* Dark mode */
 [data-theme="dark"] .qfa-panel {
   background: #111827;
   box-shadow: 0 12px 48px rgba(0,0,0,.5);
 }
 
-/* Header */
-.qfa-panel-head {
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.qfa-head {
   background: linear-gradient(135deg, #0d2353, #1a5cff);
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
-.qfa-head-left { display: flex; align-items: center; gap: 0.65rem; }
+.qfa-head-left  { display: flex; align-items: center; gap: 0.65rem; }
+.qfa-head-right { display: flex; align-items: center; gap: 0.3rem; }
 .qfa-avatar {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: rgba(255,255,255,.15);
   color: #fff;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1.5px solid rgba(255,255,255,.3);
+  flex-shrink: 0;
 }
-.qfa-panel-head strong { display: block; color: #fff; font-size: 0.85rem; font-weight: 700; }
-.qfa-panel-head span   { display: block; color: rgba(255,255,255,.6); font-size: 0.68rem; margin-top: 1px; }
+.qfa-head strong { display: block; color: #fff; font-size: 0.82rem; font-weight: 700; }
+.qfa-head span   { display: block; color: rgba(255,255,255,.6); font-size: 0.65rem; margin-top: 1px; }
 .qfa-icon-btn {
   background: rgba(255,255,255,.12);
   border: none;
@@ -94,69 +94,119 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s;
 }
-.qfa-icon-btn:hover { background: rgba(255,255,255,.24); }
+.qfa-icon-btn:hover { background: rgba(255,255,255,.25); }
 
-/* Messages area */
+/* ── Two-pane body ───────────────────────────────────────────────────────── */
+.qfa-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── LEFT: Menu sidebar ──────────────────────────────────────────────────── */
+.qfa-menu {
+  width: 168px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(13,35,83,.08);
+  overflow-y: auto;
+  background: #f8fafd;
+  padding: 0.5rem 0;
+}
+[data-theme="dark"] .qfa-menu {
+  background: #0f172a;
+  border-color: rgba(255,255,255,.07);
+}
+.qfa-menu::-webkit-scrollbar { width: 3px; }
+.qfa-menu::-webkit-scrollbar-thumb { background: rgba(0,0,0,.1); border-radius: 3px; }
+
+.qfa-menu-section { margin-bottom: 0.25rem; }
+
+.qfa-menu-cat {
+  padding: 0.5rem 0.85rem 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #6b7fa8;
+  user-select: none;
+}
+[data-theme="dark"] .qfa-menu-cat { color: #4e617a; }
+
+.qfa-menu-btn {
+  display: block;
+  width: 100%;
+  padding: 0.38rem 0.85rem;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.72rem;
+  color: #1e3a6e;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  border-radius: 0;
+  line-height: 1.4;
+}
+.qfa-menu-btn:hover  { background: rgba(26,92,255,.08); color: #1a5cff; }
+.qfa-menu-btn.active { background: rgba(26,92,255,.12); color: #1a5cff; font-weight: 600; }
+[data-theme="dark"] .qfa-menu-btn         { color: #94a3b8; }
+[data-theme="dark"] .qfa-menu-btn:hover   { background: rgba(26,92,255,.15); color: #60a5fa; }
+[data-theme="dark"] .qfa-menu-btn.active  { background: rgba(26,92,255,.2);  color: #60a5fa; }
+
+/* ── RIGHT: Chat pane ────────────────────────────────────────────────────── */
+.qfa-right {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Messages */
 .qfa-messages {
   flex: 1;
   overflow-y: auto;
   padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.55rem;
   scroll-behavior: smooth;
 }
 .qfa-messages::-webkit-scrollbar { width: 4px; }
 .qfa-messages::-webkit-scrollbar-track { background: transparent; }
-.qfa-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 4px; }
+.qfa-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,.1); border-radius: 4px; }
 
 /* Welcome */
 .qfa-welcome {
   text-align: center;
-  padding: 0.75rem 0.5rem;
+  padding: 1.5rem 0.75rem 0.75rem;
   color: #3a4a6a;
 }
 [data-theme="dark"] .qfa-welcome { color: #94a3b8; }
 .qfa-welcome-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-.qfa-welcome p { font-size: 0.78rem; line-height: 1.5; margin-bottom: 0.75rem; }
-.qfa-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
-.qfa-chip {
-  background: #f0f4ff;
-  border: 1px solid rgba(26,92,255,.2);
-  color: #1a5cff;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.28rem 0.65rem;
-  border-radius: 100px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  font-family: inherit;
-}
-.qfa-chip:hover { background: #1a5cff; color: #fff; }
-[data-theme="dark"] .qfa-chip { background: rgba(26,92,255,.15); border-color: rgba(26,92,255,.35); color: #60a5fa; }
-[data-theme="dark"] .qfa-chip:hover { background: #1a5cff; color: #fff; }
+.qfa-welcome p    { font-size: 0.76rem; line-height: 1.5; }
 
-/* Bubbles */
-.qfa-bubble-wrap {
+/* Bubble wrappers */
+.qfa-bwrap {
   display: flex;
   align-items: flex-end;
-  gap: 0.4rem;
-  max-width: 90%;
+  gap: 0.35rem;
+  max-width: 93%;
 }
-.qfa-bubble-wrap.user { align-self: flex-end; flex-direction: row-reverse; }
-.qfa-bubble-wrap.bot  { align-self: flex-start; }
+.qfa-bwrap.user { align-self: flex-end; flex-direction: row-reverse; }
+.qfa-bwrap.bot  { align-self: flex-start; }
 
+/* Bubbles */
 .qfa-bubble {
-  padding: 0.55rem 0.85rem;
-  border-radius: 14px;
-  font-size: 0.79rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 13px;
+  font-size: 0.775rem;
   line-height: 1.55;
   word-break: break-word;
 }
@@ -178,19 +228,19 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0.6rem 0.85rem;
-  min-width: 52px;
+  padding: 0.55rem 0.8rem;
+  min-width: 48px;
 }
 .qfa-typing span {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   background: #94a3b8;
   border-radius: 50%;
   display: inline-block;
   animation: qfaDot 1.2s infinite both;
 }
-.qfa-typing span:nth-child(2) { animation-delay: 0.2s; }
-.qfa-typing span:nth-child(3) { animation-delay: 0.4s; }
+.qfa-typing span:nth-child(2) { animation-delay: .2s; }
+.qfa-typing span:nth-child(3) { animation-delay: .4s; }
 @keyframes qfaDot {
   0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
   40%           { transform: scale(1);   opacity: 1; }
@@ -200,30 +250,32 @@
 .qfa-input-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 0.85rem;
-  border-top: 1px solid rgba(13,35,83,.08);
+  gap: 0.45rem;
+  padding: 0.6rem 0.75rem;
+  border-top: 1px solid rgba(13,35,83,.07);
   background: #fff;
   flex-shrink: 0;
 }
 [data-theme="dark"] .qfa-input-row {
-  border-color: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.06);
   background: #111827;
 }
 .qfa-input-row input {
   flex: 1;
+  min-width: 0;
   border: 1.5px solid rgba(13,35,83,.12);
   border-radius: 20px;
-  padding: 0.5rem 0.9rem;
-  font-size: 0.8rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
   font-family: inherit;
   color: #0d2353;
   background: #f8fafc;
   outline: none;
   transition: border-color 0.2s;
-  /* override page-level input styles */
+  /* prevent page-level styles from breaking layout */
   width: auto !important;
   box-shadow: none !important;
+  box-sizing: border-box;
 }
 .qfa-input-row input:focus { border-color: #1a5cff; }
 [data-theme="dark"] .qfa-input-row input {
@@ -232,8 +284,9 @@
   color: #e2e8f0;
 }
 .qfa-send-btn {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: #1a5cff;
   border: none;
@@ -242,20 +295,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   transition: background 0.15s, transform 0.15s;
 }
-.qfa-send-btn:hover { background: #0d2353; transform: scale(1.08); }
+.qfa-send-btn:hover    { background: #0d2353; transform: scale(1.08); }
 .qfa-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.qfa-send-btn svg { width: 15px; height: 15px; }
+.qfa-send-btn svg      { width: 14px; height: 14px; }
 
-/* Mobile */
-@media (max-width: 480px) {
+/* ── Mobile (≤ 560px) — menu slides in as overlay ───────────────────────── */
+@media (max-width: 560px) {
   .qfa-panel {
     width: calc(100vw - 1.5rem);
     right: 0.75rem;
     bottom: 5rem;
-    max-height: 65vh;
+    height: 72vh;
+    max-height: 540px;
   }
   .qfa-fab { bottom: 1rem; right: 1rem; }
+
+  /* Menu hidden by default, toggle with .open */
+  .qfa-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 10;
+    width: 200px;
+    border-right: 1px solid rgba(13,35,83,.1);
+    transform: translateX(-100%);
+    transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+    box-shadow: 4px 0 16px rgba(0,0,0,.08);
+  }
+  .qfa-menu.open { transform: translateX(0); }
+
+  /* On desktop the ☰ button is always visible; hide on wider screens */
+}
+@media (min-width: 561px) {
+  /* Menu toggle button not needed on desktop — menu is always visible */
+  #qfaMenuToggle { display: none; }
 }
