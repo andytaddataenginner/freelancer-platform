@@ -1,45 +1,80 @@
 /**
- * QFA Chatbot Widget — drop this + chatbot-widget.css into ANY page:
- *
- *   <link rel="stylesheet" href="chatbot-widget.css">
- *   <script src="chatbot-widget.js"></script>
- *
- * Reads token from localStorage key 'token' and sends to /api/chatbot.
- * The API_BASE is auto-detected from the page's meta[name="api-base"] or
- * falls back to a hardcoded Render URL — update FALLBACK_API below.
+ * QFA Chatbot Widget — menu-driven floating assistant
+ * Add to any page before </body>:
+ *   <link rel="stylesheet" href="../css/chatbot-widget.css">
+ *   <script src="../chatbot-widget.js"></script>
  */
 (function () {
   'use strict';
 
-  // ── CONFIG ────────────────────────────────────────────────────────────────
   const FALLBACK_API = 'https://freelancer-platform-9jut.onrender.com'; // ← your Render URL
   const getApiBase = () => {
     const meta = document.querySelector('meta[name="api-base"]');
     return (meta && meta.content) ? meta.content : FALLBACK_API;
   };
 
-  // Quick prompts shown as chips in the welcome state
-  const QUICK_PROMPTS = [
-    'This month summary',
-    'Total unpaid',
-    'Who owes the most',
-    'Total hours this month',
-    'Best earning month',
-    'Active clients',
-    'Payment summary',
-    'Upcoming bookings',
-    'Help',
+  // ── MENU STRUCTURE ────────────────────────────────────────────────────────
+  // Each category has prompt buttons. Clicking sends that prompt to the backend.
+  const MENU = [
+    {
+      category: '💰 Earnings',
+      items: [
+        { label: 'This month summary',  prompt: 'This month summary' },
+        { label: 'Last month',          prompt: 'Last month earnings' },
+        { label: 'Earnings by month',   prompt: 'Earnings by month' },
+        { label: 'Best earning month',  prompt: 'Best earning month' },
+        { label: 'All-time paid',       prompt: 'Total paid earnings' },
+      ]
+    },
+    {
+      category: '⏳ Outstanding',
+      items: [
+        { label: 'Total unpaid',        prompt: 'Total unpaid' },
+        { label: 'Fixed due',           prompt: 'Fixed due' },
+        { label: 'Hourly due',          prompt: 'Hourly due' },
+        { label: 'Who owes the most',   prompt: 'Who owes the most' },
+        { label: 'Overdue summary',     prompt: 'Overdue summary' },
+      ]
+    },
+    {
+      category: '👥 Clients',
+      items: [
+        { label: 'Client summary',      prompt: 'Client summary' },
+        { label: 'Active clients',      prompt: 'Active clients' },
+        { label: 'Fixed-rate clients',  prompt: 'Fixed clients' },
+        { label: 'Hourly clients',      prompt: 'Hourly clients' },
+        { label: 'Top client',          prompt: 'Top client' },
+        { label: 'How many clients',    prompt: 'How many clients' },
+      ]
+    },
+    {
+      category: '📋 Work & Logs',
+      items: [
+        { label: 'Hours this month',    prompt: 'Total hours this month' },
+        { label: 'Total hours logged',  prompt: 'Total hours logged' },
+        { label: 'Recent logs',         prompt: 'Recent logs' },
+        { label: 'Upcoming bookings',   prompt: 'Upcoming bookings' },
+      ]
+    },
+    {
+      category: '📊 Reports',
+      items: [
+        { label: 'Payment summary',     prompt: 'Payment summary' },
+        { label: 'Paused clients',      prompt: 'Paused clients' },
+      ]
+    },
   ];
 
   // ── INJECT HTML ───────────────────────────────────────────────────────────
   const html = `
-<div id="qfa-chat-btn" class="qfa-fab" title="Ask QFA Assistant" aria-label="Open chat">
+<div id="qfaFab" class="qfa-fab" title="QFA Assistant" aria-label="Open chat">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   <span class="qfa-fab-badge" id="qfaBadge" style="display:none">●</span>
 </div>
 
-<div id="qfa-chat-panel" class="qfa-panel" role="dialog" aria-label="QFA Assistant">
-  <div class="qfa-panel-head">
+<div id="qfaPanel" class="qfa-panel" role="dialog" aria-label="QFA Assistant">
+  <!-- Header -->
+  <div class="qfa-head">
     <div class="qfa-head-left">
       <div class="qfa-avatar">Q</div>
       <div>
@@ -47,22 +82,36 @@
         <span id="qfaStatus">Online</span>
       </div>
     </div>
-    <button id="qfaClose" class="qfa-icon-btn" aria-label="Close chat">✕</button>
-  </div>
-
-  <div class="qfa-messages" id="qfaMessages">
-    <div class="qfa-welcome">
-      <div class="qfa-welcome-icon">🤖</div>
-      <p>Hi! Ask me anything about your earnings, clients, or work logs. Try one of these:</p>
-      <div class="qfa-chips" id="qfaChips"></div>
+    <div class="qfa-head-right">
+      <button id="qfaMenuToggle" class="qfa-icon-btn" title="Show menu">☰</button>
+      <button id="qfaClear"      class="qfa-icon-btn" title="Clear chat">🗑</button>
+      <button id="qfaClose"      class="qfa-icon-btn" title="Close">✕</button>
     </div>
   </div>
 
-  <div class="qfa-input-row">
-    <input type="text" id="qfaInput" placeholder="Ask me anything…" autocomplete="off" maxlength="200"/>
-    <button id="qfaSend" class="qfa-send-btn" aria-label="Send">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-    </button>
+  <!-- Two-pane body: menu sidebar + messages -->
+  <div class="qfa-body">
+    <!-- LEFT: menu -->
+    <div class="qfa-menu" id="qfaMenu">
+      <div class="qfa-menu-inner" id="qfaMenuInner"></div>
+    </div>
+
+    <!-- RIGHT: conversation -->
+    <div class="qfa-right">
+      <div class="qfa-messages" id="qfaMessages">
+        <div class="qfa-welcome">
+          <div class="qfa-welcome-icon">🤖</div>
+          <p>Pick a topic from the menu, or type your question below.</p>
+        </div>
+      </div>
+      <!-- Input -->
+      <div class="qfa-input-row">
+        <input type="text" id="qfaInput" placeholder="Or type a question…" autocomplete="off" maxlength="200"/>
+        <button id="qfaSend" class="qfa-send-btn" aria-label="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 `;
@@ -72,23 +121,45 @@
   document.body.appendChild(wrapper);
 
   // ── REFS ──────────────────────────────────────────────────────────────────
-  const btn      = document.getElementById('qfa-chat-btn');
-  const panel    = document.getElementById('qfa-chat-panel');
-  const closeBtn = document.getElementById('qfaClose');
-  const messages = document.getElementById('qfaMessages');
-  const input    = document.getElementById('qfaInput');
-  const sendBtn  = document.getElementById('qfaSend');
-  const statusEl = document.getElementById('qfaStatus');
-  const badge    = document.getElementById('qfaBadge');
-  const chips    = document.getElementById('qfaChips');
+  const fab         = document.getElementById('qfaFab');
+  const panel       = document.getElementById('qfaPanel');
+  const closeBtn    = document.getElementById('qfaClose');
+  const clearBtn    = document.getElementById('qfaClear');
+  const menuToggle  = document.getElementById('qfaMenuToggle');
+  const menuEl      = document.getElementById('qfaMenu');
+  const menuInner   = document.getElementById('qfaMenuInner');
+  const messages    = document.getElementById('qfaMessages');
+  const input       = document.getElementById('qfaInput');
+  const sendBtn     = document.getElementById('qfaSend');
+  const statusEl    = document.getElementById('qfaStatus');
+  const badge       = document.getElementById('qfaBadge');
 
-  // ── BUILD QUICK-PROMPT CHIPS ──────────────────────────────────────────────
-  QUICK_PROMPTS.forEach(p => {
-    const c = document.createElement('button');
-    c.className = 'qfa-chip';
-    c.textContent = p;
-    c.addEventListener('click', () => sendMessage(p));
-    chips.appendChild(c);
+  // ── BUILD MENU ────────────────────────────────────────────────────────────
+  MENU.forEach(cat => {
+    const section = document.createElement('div');
+    section.className = 'qfa-menu-section';
+
+    const heading = document.createElement('div');
+    heading.className = 'qfa-menu-cat';
+    heading.textContent = cat.category;
+    section.appendChild(heading);
+
+    cat.items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'qfa-menu-btn';
+      btn.textContent = item.label;
+      btn.addEventListener('click', () => {
+        // highlight active
+        document.querySelectorAll('.qfa-menu-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        sendMessage(item.prompt);
+        // on mobile close menu after picking
+        if (window.innerWidth < 560) menuEl.classList.remove('open');
+      });
+      section.appendChild(btn);
+    });
+
+    menuInner.appendChild(section);
   });
 
   // ── OPEN / CLOSE ──────────────────────────────────────────────────────────
@@ -97,51 +168,63 @@
   function openPanel() {
     isOpen = true;
     panel.classList.add('open');
-    btn.classList.add('active');
+    fab.classList.add('active');
     badge.style.display = 'none';
+    restoreHistory();
     input.focus();
-    // restore history from sessionStorage
-    const saved = sessionStorage.getItem('qfa_chat_history');
-    if (saved && messages.querySelector('.qfa-welcome')) {
-      try {
-        const hist = JSON.parse(saved);
-        if (hist.length) {
-          messages.innerHTML = '';
-          hist.forEach(m => appendBubble(m.role, m.text, false));
-        }
-      } catch (_) {}
-    }
   }
 
   function closePanel() {
     isOpen = false;
     panel.classList.remove('open');
-    btn.classList.remove('active');
+    fab.classList.remove('active');
   }
 
-  btn.addEventListener('click', () => isOpen ? closePanel() : openPanel());
+  fab.addEventListener('click', () => isOpen ? closePanel() : openPanel());
   closeBtn.addEventListener('click', closePanel);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closePanel(); });
 
-  // Close on Escape
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && isOpen) closePanel();
+  // Toggle menu sidebar on mobile
+  menuToggle.addEventListener('click', () => menuEl.classList.toggle('open'));
+
+  // Clear chat
+  clearBtn.addEventListener('click', () => {
+    sessionStorage.removeItem('qfa_chat_history');
+    messages.innerHTML = `<div class="qfa-welcome"><div class="qfa-welcome-icon">🤖</div><p>Pick a topic from the menu, or type your question below.</p></div>`;
+    document.querySelectorAll('.qfa-menu-btn').forEach(b => b.classList.remove('active'));
   });
 
-  // ── APPEND BUBBLE ─────────────────────────────────────────────────────────
+  // ── SESSION HISTORY ───────────────────────────────────────────────────────
+  function saveHistory(role, text) {
+    try {
+      const hist = JSON.parse(sessionStorage.getItem('qfa_chat_history') || '[]');
+      hist.push({ role, text });
+      if (hist.length > 40) hist.splice(0, hist.length - 40);
+      sessionStorage.setItem('qfa_chat_history', JSON.stringify(hist));
+    } catch (_) {}
+  }
+
+  function restoreHistory() {
+    try {
+      const hist = JSON.parse(sessionStorage.getItem('qfa_chat_history') || '[]');
+      if (!hist.length) return;
+      messages.innerHTML = '';
+      hist.forEach(m => appendBubble(m.role, m.text, false));
+    } catch (_) {}
+  }
+
+  // ── BUBBLE ────────────────────────────────────────────────────────────────
   function appendBubble(role, text, save = true) {
-    // Remove welcome screen on first real message
     const welcome = messages.querySelector('.qfa-welcome');
     if (welcome) welcome.remove();
 
     const wrap = document.createElement('div');
-    wrap.className = `qfa-bubble-wrap ${role}`;
+    wrap.className = `qfa-bwrap ${role}`;
 
     const bubble = document.createElement('div');
     bubble.className = `qfa-bubble ${role}`;
-
-    // Render **bold** and newlines
     bubble.innerHTML = text
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>');
 
@@ -149,22 +232,13 @@
     messages.appendChild(wrap);
     messages.scrollTop = messages.scrollHeight;
 
-    // Persist to sessionStorage
-    if (save) {
-      try {
-        const key = 'qfa_chat_history';
-        const hist = JSON.parse(sessionStorage.getItem(key) || '[]');
-        hist.push({ role, text });
-        if (hist.length > 40) hist.splice(0, hist.length - 40);
-        sessionStorage.setItem(key, JSON.stringify(hist));
-      } catch (_) {}
-    }
+    if (save) saveHistory(role, text);
   }
 
-  // ── LOADING DOTS ──────────────────────────────────────────────────────────
+  // ── TYPING INDICATOR ──────────────────────────────────────────────────────
   function showTyping() {
     const wrap = document.createElement('div');
-    wrap.className = 'qfa-bubble-wrap bot';
+    wrap.className = 'qfa-bwrap bot';
     wrap.id = 'qfaTyping';
     wrap.innerHTML = `<div class="qfa-bubble bot qfa-typing"><span></span><span></span><span></span></div>`;
     messages.appendChild(wrap);
@@ -175,7 +249,7 @@
     if (el) el.remove();
   }
 
-  // ── SEND MESSAGE ──────────────────────────────────────────────────────────
+  // ── SEND ──────────────────────────────────────────────────────────────────
   let sending = false;
 
   async function sendMessage(text) {
@@ -210,17 +284,15 @@
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        appendBubble('bot', `❌ Error: ${err.error || resp.statusText}`);
+        appendBubble('bot', `❌ Error ${resp.status}: ${err.error || resp.statusText}`);
       } else {
         const data = await resp.json();
-        appendBubble('bot', data.reply || '(no response)');
-
-        // If panel is closed, show badge
+        appendBubble('bot', data.reply || '(empty response)');
         if (!isOpen) badge.style.display = 'block';
       }
     } catch (e) {
       hideTyping();
-      appendBubble('bot', '⚠️ Could not reach the server. Please try again.');
+      appendBubble('bot', '⚠️ Could not reach the server. Check your connection or try again in a moment.');
     } finally {
       sending = false;
       sendBtn.disabled = false;
