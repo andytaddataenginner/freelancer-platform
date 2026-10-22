@@ -207,123 +207,6 @@
     .float-timer.collapsed .float-timer-body{ display:none; }
     @media(max-width:480px){ .float-timer{ width:calc(100vw - 24px) !important; } }
 
-    /* ── FLOATING AI CHATBOT WIDGET (POSITIONED RIGHT, NEXT TO TIMER) ── */
-    .float-chat{
-      position: fixed; 
-      bottom: 20px; 
-      right: 320px; 
-      width: 320px;
-      background: var(--card-bg); 
-      border-radius: var(--r);
-      box-shadow: var(--sh-lg); 
-      border: 1px solid var(--hairline);
-      z-index: 240; 
-      overflow: hidden; 
-      display: flex; 
-      flex-direction: column;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-      backdrop-filter: blur(16px);
-    }
-    .float-chat.collapsed{ 
-      width: 52px; 
-      height: 52px; 
-      border-radius: 50%; 
-      overflow: hidden; 
-      cursor: pointer;
-      box-shadow: var(--sh-md);
-      border: 1px solid var(--hairline-strong);
-    }
-    .float-chat.collapsed .chat-body, 
-    .float-chat.collapsed .chat-header-text{ 
-      display: none; 
-    }
-    .float-chat-handle{
-      background: linear-gradient(135deg, var(--navy), var(--navy2)); 
-      color: #fff; 
-      padding: 0.75rem 1rem;
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      font-size: 0.82rem; 
-      font-weight: 700; 
-      cursor: pointer;
-      height: 52px;
-    }
-    .float-chat.collapsed .float-chat-handle{
-      padding: 0;
-      justify-content: center;
-    }
-    .chat-body{ 
-      display: flex; 
-      flex-direction: column; 
-      height: 320px; 
-      background: var(--bg); 
-    }
-    .float-chat.collapsed .chat-body{ display: none; }
-    .chat-messages{ 
-      flex: 1; 
-      padding: 0.9rem; 
-      overflow-y: auto; 
-      display: flex; 
-      flex-direction: column; 
-      gap: 0.6rem; 
-      font-size: 0.81rem; 
-    }
-    .chat-msg{ 
-      padding: 0.55rem 0.85rem; 
-      border-radius: 10px; 
-      max-width: 85%; 
-      line-height: 1.4; 
-      word-break: break-word; 
-    }
-    .chat-msg.user{ 
-      background: var(--accent); 
-      color: white; 
-      align-self: flex-end; 
-      border-bottom-right-radius: 2px; 
-    }
-    .chat-msg.bot{ 
-      background: var(--card-bg); 
-      color: var(--ink); 
-      align-self: flex-start; 
-      border-bottom-left-radius: 2px; 
-      border: 1px solid var(--hairline); 
-    }
-    .chat-input-row{ 
-      display: flex; 
-      padding: 0.5rem; 
-      background: var(--card-bg); 
-      border-top: 1px solid var(--hairline); 
-      gap: 0.4rem; 
-    }
-    .chat-input-row input{ 
-      flex: 1; 
-      padding: 0.45rem 0.75rem; 
-      border: 1px solid var(--hairline-strong); 
-      border-radius: 8px; 
-      font-size: 0.8rem; 
-      background: var(--bg); 
-      color: var(--ink); 
-      outline: none; 
-    }
-    .chat-input-row button{ 
-      background: var(--navy); 
-      color: white; 
-      border: none; 
-      padding: 0.45rem 0.8rem; 
-      border-radius: 8px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      font-size: 0.8rem; 
-    }
-    @media(max-width: 768px){ 
-      .float-chat{ 
-        right: 15px; 
-        bottom: 85px; 
-        width: calc(100vw - 30px); 
-      } 
-    }
-
     /* ── TABLE ── */
     .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
@@ -571,26 +454,6 @@
   </div>
 </div>
 
-<!-- ── Floating AI Chatbot Widget (Secure Role-Based) ── -->
-<div class="float-chat collapsed" id="float-chat-widget">
-  <div class="float-chat-handle" onclick="toggleChatCollapse()">
-    <span style="display:flex; align-items:center; gap:.5rem;">
-      <span>🤖</span>
-      <span class="chat-header-text">QFA Assistant</span>
-    </span>
-    <button style="background:none; border:none; color:white; font-size:1.1rem; cursor:pointer;" id="chat-toggle-btn">＋</button>
-  </div>
-  <div class="chat-body">
-    <div class="chat-messages" id="chat-messages">
-      <div class="chat-msg bot">Hello! I am your secure QFA assistant. Ask me anything about your platform records.</div>
-    </div>
-    <div class="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendChatMessage()"/>
-      <button onclick="sendChatMessage()">Send</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-ov" id="modal-client">
   <div class="modal">
     <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
@@ -675,6 +538,7 @@ async function api(path, opts = {}) {
   if (r.status === 401) {
     const e = await r.json().catch(() => ({}));
     
+    // Check if the route is related to changing passwords
     if (path.includes('change-password')) {
       throw new Error(e.error || 'Current password is incorrect');
     }
@@ -1151,61 +1015,6 @@ function toggleMinimize(){
   localStorage.setItem('qfa_timer_collapsed', collapsed?'1':'0');
 }
 
-/* ────────────────────────────────────────────────────────────────────────
-   AI CHATBOT WIDGET LOGIC (CORRECTED API ENDPOINT /chatbot) ─── */
-function toggleChatCollapse(){
-  const widget = document.getElementById('float-chat-widget');
-  const btn = document.getElementById('chat-toggle-btn');
-  const isCollapsed = widget.classList.toggle('collapsed');
-  btn.textContent = isCollapsed ? '＋' : '－';
-}
-
-async function sendChatMessage(){
-  const input = document.getElementById('chat-input');
-  const container = document.getElementById('chat-messages');
-  const text = input.value.trim();
-  if(!text) return;
-
-  // Append User message
-  container.innerHTML += `<div class="chat-msg user">${escapeHtml(text)}</div>`;
-  input.value = '';
-  container.scrollTop = container.scrollHeight;
-
-  // Temporary loading state
-  const loadingId = 'loading-' + Date.now();
-  container.innerHTML += `<div class="chat-msg bot" id="${loadingId}">Thinking...</div>`;
-  container.scrollTop = container.scrollHeight;
-
-  try {
-    const res = await fetch(`${API}/chatbot`, {
-      method: 'POST',
-      headers: auth.hdrs(),
-      body: JSON.stringify({ message: text })
-    });
-
-    if(!res.ok) {
-      throw new Error(`Server returned status ${res.status}`);
-    }
-
-    const data = await res.json();
-    
-    const loadingElem = document.getElementById(loadingId);
-    if(loadingElem) loadingElem.remove();
-
-    container.innerHTML += `<div class="chat-msg bot">${escapeHtml(data.reply || 'No response received.')}</div>`;
-  } catch (e) {
-    const loadingElem = document.getElementById(loadingId);
-    if(loadingElem) loadingElem.remove();
-
-    container.innerHTML += `<div class="chat-msg bot" style="color:var(--red);">Error connecting to assistant.</div>`;
-  }
-  container.scrollTop = container.scrollHeight;
-}
-
-function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 async function submitLog(e){
   e.preventDefault();
   const st=document.getElementById('ls');
@@ -1227,7 +1036,6 @@ async function addClient(e){
   }catch(e){st.className='fs er';st.textContent=e.message;}
 }
 </script>
----Added for chatbot---
 <link rel="stylesheet" href="chatbot-widget.css">
 <script src="chatbot-widget.js"></script>
 </body>
