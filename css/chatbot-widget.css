@@ -1,23 +1,25 @@
 /* ── QFA Chatbot Widget — two-pane (menu + chat) ────────────────────────── */
 
 /* FAB button */
-.qfa-fab {
+/* ── Panel shell ─────────────────────────────────────────────────────────── */
+.qfa-panel {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: 5.5rem;
   right: 1.5rem;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0d2353, #1a5cff);
-  color: #fff;
-  border: none;
-  cursor: pointer;
+  width: 540px;           /* wider to fit sidebar + chat */
+  height: 520px;
+  max-height: calc(100vh - 7rem); /* 🛡️ Prevents panel from exceeding browser height */
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(13,35,83,.18), 0 2px 8px rgba(0,0,0,.08);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(26, 92, 255, 0.45);
-  z-index: 9999;
-  transition: transform 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.22s;
+  flex-direction: column;
+  z-index: 9998;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(16px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.22s, transform 0.22s cubic-bezier(.4,0,.2,1);
 }
 .qfa-fab:hover  { transform: scale(1.08); box-shadow: 0 6px 28px rgba(26,92,255,.55); }
 .qfa-fab.active { background: linear-gradient(135deg, #1a3a7a, #0d2353); }
