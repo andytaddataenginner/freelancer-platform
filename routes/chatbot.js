@@ -40,7 +40,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       JOIN users u ON u.id = c.user_id
       LEFT JOIN LATERAL (
         SELECT status FROM client_contracts
-        WHERE client_id = c.id AND freelancer_id = c.freelancer_id
+        WHERE client_id = c.user_id AND freelancer_id = c.freelancer_id
           AND effective_from <= CURRENT_DATE
           AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)
         ORDER BY effective_from DESC, id DESC LIMIT 1
@@ -61,7 +61,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     const { rows } = await pool.query(`
       SELECT COUNT(DISTINCT c.id)::int AS cnt
       FROM clients c
-      JOIN client_contracts cc ON cc.client_id = c.id AND cc.freelancer_id = c.freelancer_id
+      JOIN client_contracts cc ON cc.client_id = c.user_id AND cc.freelancer_id = c.freelancer_id
       WHERE c.freelancer_id = $1 AND c.is_active = true 
         AND cc.effective_from <= CURRENT_DATE 
         AND (cc.effective_to IS NULL OR cc.effective_to >= CURRENT_DATE)
@@ -119,7 +119,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `🏆 **Top Client**: **${r.name}**${r.company ? ` (${r.company})` : ''} has paid a total of **$${fmt(r.total)}**.`;
   }
 
-  // 7. Paused clients — checks current active contract period using effective_from and effective_to
+  // 7. Paused clients — fixed to use c.user_id correctly
   if (has(lowerMsg, 'paused clients', 'paused contracts', 'on hold')) {
     const { rows } = await pool.query(`
       SELECT u.name, u.company
@@ -127,9 +127,9 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       JOIN users u ON u.id = c.user_id
       JOIN LATERAL (
         SELECT status FROM client_contracts
-        WHERE client_id = c.id AND freelancer_id = c.freelancer_id
+        WHERE client_id = c.user_id AND freelancer_id = c.freelancer_id
           AND effective_from <= CURRENT_DATE
-          And (effective_to IS NULL OR effective_to >= CURRENT_DATE)
+          AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)
         ORDER BY effective_from DESC, id DESC LIMIT 1
       ) cc ON true
       WHERE c.freelancer_id = $1 AND c.is_active = true AND cc.status = 'paused'
@@ -140,7 +140,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `⏸️ **Paused Contracts (${rows.length})**:\n${lines}`;
   }
 
-  // 8. Fixed due (respecting active contract coverage for the specific payment month)
+  // 8. Fixed due
   if (has(lowerMsg, 'fixed due', 'fixed unpaid', 'total due from fixed')) {
     const { rows } = await pool.query(`
       SELECT COALESCE(SUM(f.amount::numeric), 0)::float AS total
@@ -155,7 +155,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `📋 **Fixed Monthly Due**: **$${fmt(rows[0].total)}** outstanding from active fixed contracts.`;
   }
 
-  // 9. Hourly due (respecting active contract coverage on log date)
+  // 9. Hourly due
   if (has(lowerMsg, 'hourly due', 'hourly unpaid', 'total due from hourly')) {
     const { rows } = await pool.query(`
       SELECT COALESCE(SUM(t.amount::numeric), 0)::float AS total
@@ -170,7 +170,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `⏱️ **Hourly Logs Due**: **$${fmt(rows[0].total)}** outstanding from active hourly work.`;
   }
 
-  // 10. Total unpaid (combined with active contract check)
+  // 10. Total unpaid (combined)
   if (has(lowerMsg, 'total unpaid', 'total due', 'total outstanding', 'total owed')) {
     const [hr, fx] = await Promise.all([
       pool.query(`
@@ -192,7 +192,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `⏳ **Total Outstanding**: **$${fmt(total)}**\n• Hourly unpaid: $${fmt(hr.rows[0].t)}\n• Fixed unpaid: $${fmt(fx.rows[0].t)}`;
   }
 
-  // 11. Who owes the most (respecting active contracts)
+  // 11. Who owes the most
   if (has(lowerMsg, 'owes the most', 'most overdue', 'most outstanding', 'highest due')) {
     const { rows } = await pool.query(`
       SELECT name, company, hourly_due, fixed_due
@@ -263,7 +263,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `🚨 **Overdue Summary** (>30 days unpaid):\nTotal: **$${fmt(grandTotal)}**\n${lines}`;
   }
 
-  // 13. Payment summary (unpaid filtered by active contracts)
+  // 13. Payment summary
   if (has(lowerMsg, 'payment summary')) {
     const [hr, fx] = await Promise.all([
       pool.query(`
@@ -293,7 +293,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     );
   }
 
-  // 14. This month summary (strict active contract check for the month)
+  // 14. This month summary
   if (has(lowerMsg, 'this month summary', 'this month', 'current month')) {
     const month = new Date().toISOString().slice(0, 7);
     const [hr, fx] = await Promise.all([
@@ -388,7 +388,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `💰 **All-Time Paid Earnings**: **$${fmt(total)}**\n• Hourly: $${fmt(hr.rows[0].t)}\n• Fixed: $${fmt(fx.rows[0].t)}`;
   }
 
-  // 19. Hours this month (active contract filtered)
+  // 19. Hours this month
   if (has(lowerMsg, 'hours this month', 'total hours this month')) {
     const month = new Date().toISOString().slice(0, 7);
     const { rows } = await pool.query(
