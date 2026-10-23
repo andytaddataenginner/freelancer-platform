@@ -39,7 +39,8 @@
   width: 540px;
   max-width: calc(100vw - 2rem);
   height: 520px;
-  max-height: 75vh;       /* Universally supported viewport height cap */
+  max-height: calc(100vh - 120px); /* Safe viewport cap preventing top-bar cutoff without collapsing */
+  box-sizing: border-box;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(13,35,83,.18), 0 2px 8px rgba(0,0,0,.08);
@@ -110,7 +111,6 @@
   display: flex;
   flex: 1;
   overflow: hidden;
-  min-height: 0; /* Prevents flex container from collapsing to 0 height */
 }
 
 /* ── LEFT: Menu sidebar ──────────────────────────────────────────────────── */
@@ -169,14 +169,12 @@
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  min-height: 0; /* Ensures inner scrolling works across all browsers */
 }
 
 /* Messages */
 .qfa-messages {
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
   padding: 0.85rem;
   display: flex;
   flex-direction: column;
