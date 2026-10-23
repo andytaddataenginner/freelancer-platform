@@ -1,25 +1,23 @@
 /* ── QFA Chatbot Widget — two-pane (menu + chat) ────────────────────────── */
 
 /* FAB button */
-/* ── Panel shell ─────────────────────────────────────────────────────────── */
-.qfa-panel {
+.qfa-fab {
   position: fixed;
-  bottom: 5.5rem;
+  bottom: 1.5rem;
   right: 1.5rem;
-  width: 540px;           /* wider to fit sidebar + chat */
-  height: 520px;
-  max-height: calc(100vh - 7rem); /* 🛡️ Prevents panel from exceeding browser height */
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 12px 48px rgba(13,35,83,.18), 0 2px 8px rgba(0,0,0,.08);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d2353, #1a5cff);
+  color: #fff;
+  border: none;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  z-index: 9998;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(16px) scale(0.97);
-  pointer-events: none;
-  transition: opacity 0.22s, transform 0.22s cubic-bezier(.4,0,.2,1);
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(26, 92, 255, 0.45);
+  z-index: 9999;
+  transition: transform 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.22s;
 }
 .qfa-fab:hover  { transform: scale(1.08); box-shadow: 0 6px 28px rgba(26,92,255,.55); }
 .qfa-fab.active { background: linear-gradient(135deg, #1a3a7a, #0d2353); }
@@ -38,8 +36,10 @@
   position: fixed;
   bottom: 5.5rem;
   right: 1.5rem;
-  width: 540px;           /* wider to fit sidebar + chat */
+  width: 540px;
+  max-width: calc(100vw - 2rem);
   height: 520px;
+  max-height: 75vh;       /* Universally supported viewport height cap */
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(13,35,83,.18), 0 2px 8px rgba(0,0,0,.08);
@@ -110,6 +110,7 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0; /* Prevents flex container from collapsing to 0 height */
 }
 
 /* ── LEFT: Menu sidebar ──────────────────────────────────────────────────── */
@@ -168,12 +169,14 @@
   flex-direction: column;
   flex: 1;
   overflow: hidden;
+  min-height: 0; /* Ensures inner scrolling works across all browsers */
 }
 
 /* Messages */
 .qfa-messages {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
   padding: 0.85rem;
   display: flex;
   flex-direction: column;
@@ -274,7 +277,6 @@
   background: #f8fafc;
   outline: none;
   transition: border-color 0.2s;
-  /* prevent page-level styles from breaking layout */
   width: auto !important;
   box-shadow: none !important;
   box-sizing: border-box;
@@ -314,7 +316,6 @@
   }
   .qfa-fab { bottom: 1rem; right: 1rem; }
 
-  /* Menu hidden by default, toggle with .open */
   .qfa-menu {
     position: absolute;
     top: 0;
@@ -328,10 +329,7 @@
     box-shadow: 4px 0 16px rgba(0,0,0,.08);
   }
   .qfa-menu.open { transform: translateX(0); }
-
-  /* On desktop the ☰ button is always visible; hide on wider screens */
 }
 @media (min-width: 561px) {
-  /* Menu toggle button not needed on desktop — menu is always visible */
   #qfaMenuToggle { display: none; }
 }
