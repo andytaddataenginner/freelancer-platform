@@ -114,14 +114,18 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `🏆 **Top Client**: **${r.name}**${r.company ? ` (${r.company})` : ''} has paid a total of **$${fmt(r.total)}**.`;
   }
 
-  // 7. Paused clients
+  // 7. Paused clients — most recent contract per client must be 'paused'
   if (has(lowerMsg, 'paused clients', 'paused contracts', 'on hold')) {
     const { rows } = await pool.query(`
       SELECT u.name, u.company
-      FROM client_contracts cc
-      JOIN clients c ON c.id = cc.client_id
+      FROM clients c
       JOIN users u ON u.id = c.user_id
-      WHERE cc.freelancer_id = $1 AND cc.status = 'paused'
+      JOIN LATERAL (
+        SELECT status FROM client_contracts
+        WHERE client_id = c.id AND freelancer_id = c.freelancer_id
+        ORDER BY effective_from DESC LIMIT 1
+      ) latest ON true
+      WHERE c.freelancer_id = $1 AND c.is_active = true AND latest.status = 'paused'
       ORDER BY u.name
     `, [userId]);
     if (!rows.length) return '✅ No paused contracts right now.';
