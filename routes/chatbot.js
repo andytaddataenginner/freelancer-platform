@@ -41,7 +41,9 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       LEFT JOIN LATERAL (
         SELECT status FROM client_contracts
         WHERE client_id = c.id AND freelancer_id = c.freelancer_id
-        ORDER BY effective_from DESC LIMIT 1
+          AND effective_from <= CURRENT_DATE
+          AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)
+        ORDER BY effective_from DESC, id DESC LIMIT 1
       ) cc ON true
       WHERE c.freelancer_id = $1 AND c.is_active = true
       ORDER BY u.name
@@ -49,7 +51,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     if (!rows.length) return '👥 No active clients found.';
     const lines = rows.map(r =>
       `• **${r.name}**${r.company ? ` (${r.company})` : ''} — ${r.type}` +
-      (r.contract_status ? ` [${r.contract_status}]` : '')
+      (r.contract_status ? ` [${r.contract_status}]` : ' [active]')
     ).join('\n');
     return `👥 **Your ${rows.length} Active Client(s)**:\n${lines}`;
   }
@@ -60,7 +62,10 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       SELECT COUNT(DISTINCT c.id)::int AS cnt
       FROM clients c
       JOIN client_contracts cc ON cc.client_id = c.id AND cc.freelancer_id = c.freelancer_id
-      WHERE c.freelancer_id = $1 AND c.is_active = true AND cc.status = 'active'
+      WHERE c.freelancer_id = $1 AND c.is_active = true 
+        AND cc.effective_from <= CURRENT_DATE 
+        AND (cc.effective_to IS NULL OR cc.effective_to >= CURRENT_DATE)
+        AND cc.status = 'active'
     `, [userId]);
     return `✅ **Active Contracts**: **${rows[0].cnt}** client(s) have an active contract right now.`;
   }
@@ -114,7 +119,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `🏆 **Top Client**: **${r.name}**${r.company ? ` (${r.company})` : ''} has paid a total of **$${fmt(r.total)}**.`;
   }
 
-  // 7. Paused clients — most recent contract per client must be 'paused'
+  // 7. Paused clients — checks current active contract period using effective_from and effective_to
   if (has(lowerMsg, 'paused clients', 'paused contracts', 'on hold')) {
     const { rows } = await pool.query(`
       SELECT u.name, u.company
@@ -123,9 +128,11 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       JOIN LATERAL (
         SELECT status FROM client_contracts
         WHERE client_id = c.id AND freelancer_id = c.freelancer_id
-        ORDER BY effective_from DESC LIMIT 1
-      ) latest ON true
-      WHERE c.freelancer_id = $1 AND c.is_active = true AND latest.status = 'paused'
+          AND effective_from <= CURRENT_DATE
+          And (effective_to IS NULL OR effective_to >= CURRENT_DATE)
+        ORDER BY effective_from DESC, id DESC LIMIT 1
+      ) cc ON true
+      WHERE c.freelancer_id = $1 AND c.is_active = true AND cc.status = 'paused'
       ORDER BY u.name
     `, [userId]);
     if (!rows.length) return '✅ No paused contracts right now.';
@@ -133,49 +140,75 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `⏸️ **Paused Contracts (${rows.length})**:\n${lines}`;
   }
 
-  // 8. Fixed due
+  // 8. Fixed due (respecting active contract coverage for the specific payment month)
   if (has(lowerMsg, 'fixed due', 'fixed unpaid', 'total due from fixed')) {
     const { rows } = await pool.query(`
       SELECT COALESCE(SUM(f.amount::numeric), 0)::float AS total
       FROM fixed_monthly_payments f
+      JOIN client_contracts cc ON cc.client_id = f.client_id 
+        AND cc.freelancer_id = f.freelancer_id
+        AND cc.effective_from <= (f.month || '-01')::date
+        AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
       WHERE f.freelancer_id = $1 AND LOWER(f.status) = 'unpaid'
+        AND cc.status = 'active'
     `, [userId]);
-    return `📋 **Fixed Monthly Due**: **$${fmt(rows[0].total)}** outstanding from fixed contracts.`;
+    return `📋 **Fixed Monthly Due**: **$${fmt(rows[0].total)}** outstanding from active fixed contracts.`;
   }
 
-  // 9. Hourly due
+  // 9. Hourly due (respecting active contract coverage on log date)
   if (has(lowerMsg, 'hourly due', 'hourly unpaid', 'total due from hourly')) {
     const { rows } = await pool.query(`
-      SELECT COALESCE(SUM(amount::numeric), 0)::float AS total
-      FROM time_logs
-      WHERE freelancer_id = $1 AND LOWER(payment_status) = 'unpaid'
+      SELECT COALESCE(SUM(t.amount::numeric), 0)::float AS total
+      FROM time_logs t
+      JOIN client_contracts cc ON cc.client_id = t.client_id 
+        AND cc.freelancer_id = t.freelancer_id
+        AND cc.effective_from <= t.date
+        AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+      WHERE t.freelancer_id = $1 AND LOWER(t.payment_status) = 'unpaid'
+        AND cc.status = 'active'
     `, [userId]);
-    return `⏱️ **Hourly Logs Due**: **$${fmt(rows[0].total)}** outstanding from hourly work.`;
+    return `⏱️ **Hourly Logs Due**: **$${fmt(rows[0].total)}** outstanding from active hourly work.`;
   }
 
-  // 10. Total unpaid (combined)
+  // 10. Total unpaid (combined with active contract check)
   if (has(lowerMsg, 'total unpaid', 'total due', 'total outstanding', 'total owed')) {
     const [hr, fx] = await Promise.all([
-      pool.query(`SELECT COALESCE(SUM(amount::numeric),0)::float AS t FROM time_logs WHERE freelancer_id=$1 AND LOWER(payment_status)='unpaid'`, [userId]),
-      pool.query(`SELECT COALESCE(SUM(amount::numeric),0)::float AS t FROM fixed_monthly_payments WHERE freelancer_id=$1 AND LOWER(status)='unpaid'`, [userId]),
+      pool.query(`
+        SELECT COALESCE(SUM(t.amount::numeric),0)::float AS t 
+        FROM time_logs t
+        JOIN client_contracts cc ON cc.client_id = t.client_id AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND LOWER(t.payment_status)='unpaid' AND cc.status='active'
+      `, [userId]),
+      pool.query(`
+        SELECT COALESCE(SUM(f.amount::numeric),0)::float AS t 
+        FROM fixed_monthly_payments f
+        JOIN client_contracts cc ON cc.client_id = f.client_id AND cc.freelancer_id = f.freelancer_id
+          AND cc.effective_from <= (f.month || '-01')::date AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+        WHERE f.freelancer_id=$1 AND LOWER(f.status)='unpaid' AND cc.status='active'
+      `, [userId]),
     ]);
     const total = hr.rows[0].t + fx.rows[0].t;
     return `⏳ **Total Outstanding**: **$${fmt(total)}**\n• Hourly unpaid: $${fmt(hr.rows[0].t)}\n• Fixed unpaid: $${fmt(fx.rows[0].t)}`;
   }
 
-  // 11. Who owes the most — FIX: subquery avoids HAVING before GROUP BY
+  // 11. Who owes the most (respecting active contracts)
   if (has(lowerMsg, 'owes the most', 'most overdue', 'most outstanding', 'highest due')) {
     const { rows } = await pool.query(`
       SELECT name, company, hourly_due, fixed_due
       FROM (
         SELECT u.name, u.company,
           COALESCE((
-            SELECT SUM(amount::numeric) FROM time_logs
-            WHERE client_id=u.id AND freelancer_id=$1 AND LOWER(payment_status)='unpaid'
+            SELECT SUM(t.amount::numeric) FROM time_logs t
+            JOIN client_contracts cc ON cc.client_id = t.client_id AND cc.freelancer_id = t.freelancer_id
+              AND cc.effective_from <= t.date AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+            WHERE t.client_id=u.id AND t.freelancer_id=$1 AND LOWER(t.payment_status)='unpaid' AND cc.status='active'
           ), 0)::float AS hourly_due,
           COALESCE((
-            SELECT SUM(amount::numeric) FROM fixed_monthly_payments
-            WHERE client_id=u.id AND freelancer_id=$1 AND LOWER(status)='unpaid'
+            SELECT SUM(f.amount::numeric) FROM fixed_monthly_payments f
+            JOIN client_contracts cc ON cc.client_id = f.client_id AND cc.freelancer_id = f.freelancer_id
+              AND cc.effective_from <= (f.month || '-01')::date AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+            WHERE f.client_id=u.id AND f.freelancer_id=$1 AND LOWER(f.status)='unpaid' AND cc.status='active'
           ), 0)::float AS fixed_due
         FROM clients c
         JOIN users u ON u.id = c.user_id
@@ -185,7 +218,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       ORDER BY (hourly_due + fixed_due) DESC
       LIMIT 5
     `, [userId]);
-    if (!rows.length) return '✅ All clients are fully paid up — no outstanding balances!';
+    if (!rows.length) return '✅ All clients are fully paid up under active contracts!';
     const lines = rows.map((r, i) => {
       const total = r.hourly_due + r.fixed_due;
       return `${i + 1}. **${r.name}**${r.company ? ` (${r.company})` : ''} — **$${fmt(total)}** (Hourly: $${fmt(r.hourly_due)}, Fixed: $${fmt(r.fixed_due)})`;
@@ -193,23 +226,29 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `⚠️ **Top Clients by Outstanding Balance**:\n${lines}`;
   }
 
-  // 12. Overdue summary — FIX: same subquery pattern
+  // 12. Overdue summary
   if (has(lowerMsg, 'overdue summary', 'overdue report')) {
     const { rows } = await pool.query(`
       SELECT name, company, hourly_due, fixed_due
       FROM (
         SELECT u.name, u.company,
           COALESCE((
-            SELECT SUM(amount::numeric) FROM time_logs
-            WHERE client_id=u.id AND freelancer_id=$1
-              AND LOWER(payment_status)='unpaid'
-              AND date < NOW() - INTERVAL '30 days'
+            SELECT SUM(t.amount::numeric) FROM time_logs t
+            JOIN client_contracts cc ON cc.client_id = t.client_id AND cc.freelancer_id = t.freelancer_id
+              AND cc.effective_from <= t.date AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+            WHERE t.client_id=u.id AND t.freelancer_id=$1
+              AND LOWER(t.payment_status)='unpaid'
+              AND t.date < NOW() - INTERVAL '30 days'
+              AND cc.status='active'
           ), 0)::float AS hourly_due,
           COALESCE((
-            SELECT SUM(amount::numeric) FROM fixed_monthly_payments
-            WHERE client_id=u.id AND freelancer_id=$1
-              AND LOWER(status)='unpaid'
-              AND (month || '-28')::date < NOW() - INTERVAL '30 days'
+            SELECT SUM(f.amount::numeric) FROM fixed_monthly_payments f
+            JOIN client_contracts cc ON cc.client_id = f.client_id AND cc.freelancer_id = f.freelancer_id
+              AND cc.effective_from <= (f.month || '-01')::date AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+            WHERE f.client_id=u.id AND f.freelancer_id=$1
+              AND LOWER(f.status)='unpaid'
+              AND (f.month || '-28')::date < NOW() - INTERVAL '30 days'
+              AND cc.status='active'
           ), 0)::float AS fixed_due
         FROM clients c
         JOIN users u ON u.id = c.user_id
@@ -224,20 +263,26 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `🚨 **Overdue Summary** (>30 days unpaid):\nTotal: **$${fmt(grandTotal)}**\n${lines}`;
   }
 
-  // 13. Payment summary
+  // 13. Payment summary (unpaid filtered by active contracts)
   if (has(lowerMsg, 'payment summary')) {
     const [hr, fx] = await Promise.all([
       pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN LOWER(payment_status)='paid'   THEN amount::numeric END),0)::float AS paid,
-          COALESCE(SUM(CASE WHEN LOWER(payment_status)='unpaid' THEN amount::numeric END),0)::float AS unpaid
-        FROM time_logs WHERE freelancer_id=$1
+          COALESCE(SUM(CASE WHEN LOWER(t.payment_status)='paid'   THEN t.amount::numeric END),0)::float AS paid,
+          COALESCE(SUM(CASE WHEN LOWER(t.payment_status)='unpaid' THEN t.amount::numeric END),0)::float AS unpaid
+        FROM time_logs t
+        LEFT JOIN client_contracts cc ON cc.client_id = t.client_id AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND (LOWER(t.payment_status) = 'paid' OR cc.status = 'active')
       `, [userId]),
       pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN LOWER(status)='paid'   THEN amount::numeric END),0)::float AS paid,
-          COALESCE(SUM(CASE WHEN LOWER(status)='unpaid' THEN amount::numeric END),0)::float AS unpaid
-        FROM fixed_monthly_payments WHERE freelancer_id=$1
+          COALESCE(SUM(CASE WHEN LOWER(f.status)='paid'   THEN f.amount::numeric END),0)::float AS paid,
+          COALESCE(SUM(CASE WHEN LOWER(f.status)='unpaid' THEN f.amount::numeric END),0)::float AS unpaid
+        FROM fixed_monthly_payments f
+        LEFT JOIN client_contracts cc ON cc.client_id = f.client_id AND cc.freelancer_id = f.freelancer_id
+          AND cc.effective_from <= (f.month || '-01')::date AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+        WHERE f.freelancer_id=$1 AND (LOWER(f.status) = 'paid' OR cc.status = 'active')
       `, [userId]),
     ]);
     const h = hr.rows[0]; const f = fx.rows[0];
@@ -248,22 +293,28 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     );
   }
 
-  // 14. This month summary
+  // 14. This month summary (strict active contract check for the month)
   if (has(lowerMsg, 'this month summary', 'this month', 'current month')) {
     const month = new Date().toISOString().slice(0, 7);
     const [hr, fx] = await Promise.all([
       pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN LOWER(payment_status)='paid'   THEN amount::numeric END),0)::float AS paid,
-          COALESCE(SUM(CASE WHEN LOWER(payment_status)='unpaid' THEN amount::numeric END),0)::float AS unpaid,
-          COALESCE(SUM(hours::numeric),0)::float AS hrs
-        FROM time_logs WHERE freelancer_id=$1 AND TO_CHAR(date,'YYYY-MM')=$2
+          COALESCE(SUM(CASE WHEN LOWER(t.payment_status)='paid'   THEN t.amount::numeric END),0)::float AS paid,
+          COALESCE(SUM(CASE WHEN LOWER(t.payment_status)='unpaid' THEN t.amount::numeric END),0)::float AS unpaid,
+          COALESCE(SUM(t.hours::numeric),0)::float AS hrs
+        FROM time_logs t
+        JOIN client_contracts cc ON cc.client_id = t.client_id AND cc.freelancer_id = t.freelancer_id
+          AND cc.effective_from <= t.date AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+        WHERE t.freelancer_id=$1 AND TO_CHAR(t.date,'YYYY-MM')=$2 AND cc.status='active'
       `, [userId, month]),
       pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN LOWER(status)='paid'   THEN amount::numeric END),0)::float AS paid,
-          COALESCE(SUM(CASE WHEN LOWER(status)='unpaid' THEN amount::numeric END),0)::float AS unpaid
-        FROM fixed_monthly_payments WHERE freelancer_id=$1 AND month=$2
+          COALESCE(SUM(CASE WHEN LOWER(f.status)='paid'   THEN f.amount::numeric END),0)::float AS paid,
+          COALESCE(SUM(CASE WHEN LOWER(f.status)='unpaid' THEN f.amount::numeric END),0)::float AS unpaid
+        FROM fixed_monthly_payments f
+        JOIN client_contracts cc ON cc.client_id = f.client_id AND cc.freelancer_id = f.freelancer_id
+          AND cc.effective_from <= (f.month || '-01')::date AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+        WHERE f.freelancer_id=$1 AND f.month=$2 AND cc.status='active'
       `, [userId, month]),
     ]);
     const h = hr.rows[0]; const f = fx.rows[0];
@@ -337,11 +388,15 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `💰 **All-Time Paid Earnings**: **$${fmt(total)}**\n• Hourly: $${fmt(hr.rows[0].t)}\n• Fixed: $${fmt(fx.rows[0].t)}`;
   }
 
-  // 19. Hours this month
+  // 19. Hours this month (active contract filtered)
   if (has(lowerMsg, 'hours this month', 'total hours this month')) {
     const month = new Date().toISOString().slice(0, 7);
     const { rows } = await pool.query(
-      `SELECT COALESCE(SUM(hours::numeric),0)::float AS hrs FROM time_logs WHERE freelancer_id=$1 AND TO_CHAR(date,'YYYY-MM')=$2`,
+      `SELECT COALESCE(SUM(t.hours::numeric),0)::float AS hrs 
+       FROM time_logs t
+       JOIN client_contracts cc ON cc.client_id = t.client_id AND cc.freelancer_id = t.freelancer_id
+         AND cc.effective_from <= t.date AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
+       WHERE t.freelancer_id=$1 AND TO_CHAR(t.date,'YYYY-MM')=$2 AND cc.status='active'`,
       [userId, month]
     );
     return `⏱️ **Hours This Month (${month})**: **${fmt(rows[0].hrs)} hours** logged.`;
@@ -394,7 +449,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
   );
 }
 
-// ── Client handler ────────────────────────────────────────────────────────────
+// ── Client handler ------------------------------------------------------------
 async function handleClient(userId, userName, lowerMsg) {
 
   if (has(lowerMsg, 'help', 'what can')) {
@@ -440,7 +495,7 @@ async function handleClient(userId, userName, lowerMsg) {
   return `Hi ${userName}! Ask me about your balance, paid history, hours, or invoices.`;
 }
 
-// ── Route ─────────────────────────────────────────────────────────────────────
+// ── Route ---------------------------------------------------------------------
 router.post('/', verifyUserToken, async (req, res, next) => {
   try {
     const { message } = req.body;
