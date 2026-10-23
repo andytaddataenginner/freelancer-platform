@@ -36,11 +36,8 @@
   position: fixed;
   bottom: 5.5rem;
   right: 1.5rem;
-  width: 540px;
-  max-width: calc(100vw - 2rem);
+  width: 540px;           /* wider to fit sidebar + chat */
   height: 520px;
-  max-height: calc(100vh - 120px); /* Safe viewport cap preventing top-bar cutoff without collapsing */
-  box-sizing: border-box;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(13,35,83,.18), 0 2px 8px rgba(0,0,0,.08);
@@ -275,6 +272,7 @@
   background: #f8fafc;
   outline: none;
   transition: border-color 0.2s;
+  /* prevent page-level styles from breaking layout */
   width: auto !important;
   box-shadow: none !important;
   box-sizing: border-box;
@@ -314,6 +312,7 @@
   }
   .qfa-fab { bottom: 1rem; right: 1rem; }
 
+  /* Menu hidden by default, toggle with .open */
   .qfa-menu {
     position: absolute;
     top: 0;
@@ -327,7 +326,10 @@
     box-shadow: 4px 0 16px rgba(0,0,0,.08);
   }
   .qfa-menu.open { transform: translateX(0); }
+
+  /* On desktop the ☰ button is always visible; hide on wider screens */
 }
 @media (min-width: 561px) {
+  /* Menu toggle button not needed on desktop — menu is always visible */
   #qfaMenuToggle { display: none; }
 }
