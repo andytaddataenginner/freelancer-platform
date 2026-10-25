@@ -429,7 +429,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
   // 22. Upcoming bookings
   if (has(lowerMsg, 'upcoming bookings', 'upcoming sessions', 'next sessions')) {
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(t.date,'YYYY-MM-DD') AS day, u.name AS client, t.hours::float AS hrs
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, u.name AS client, t.hours::float AS hrs
       FROM time_logs t
       JOIN users u ON u.id = t.client_id
       WHERE t.freelancer_id = $1 AND t.date >= CURRENT_DATE
@@ -448,7 +448,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
   );
 }
 
-// ── Client handler (with fixed 'note' column support) ─────────────────────────
+// ── Client handler (with corrected bookings & message table columns) ──────────
 async function handleClient(userId, userName, lowerMsg) {
 
   // C1. Help
@@ -595,46 +595,43 @@ async function handleClient(userId, userName, lowerMsg) {
     const { rows } = await pool.query(`
       SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
              hours::float AS hrs, amount::float AS amt,
-             payment_status AS status, note
+             payment_status AS status
       FROM time_logs WHERE client_id=$1
       ORDER BY date DESC LIMIT 8
     `, [userId]);
     if (!rows.length) return 'No time logs found yet.';
     const lines = rows.map(r =>
-      `• **${r.day}** — ${r.hrs}h / $${fmt(r.amt)} [${r.status}]` +
-      (r.note ? ` — _${r.note}_` : '')
+      `• **${r.day}** — ${r.hrs}h / $${fmt(r.amt)} [${r.status}]`
     ).join('\n');
     return `📋 **Recent Time Logs**:\n${lines}`;
   }
 
-  // C10. Upcoming bookings
+  // C10. Upcoming bookings (Fixed: Queries 'bookings' table using 'message')
   if (has(lowerMsg, 'upcoming bookings', 'upcoming sessions', 'next session', 'scheduled')) {
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
-             hours::float AS hrs, note
-      FROM time_logs WHERE client_id=$1 AND date >= CURRENT_DATE
-      ORDER BY date ASC LIMIT 5
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, time,
+             duration::float AS hrs, type, message
+      FROM bookings WHERE client_id=$1 AND date >= CURRENT_DATE
+      ORDER BY date ASC, time ASC LIMIT 5
     `, [userId]);
     if (!rows.length) return '📅 No upcoming sessions scheduled.';
     const lines = rows.map(r =>
-      `• **${r.day}** — ${r.hrs}h` + (r.note ? ` — _${r.note}_` : '')
+      `• **${r.day}** at ${r.time} (${r.hrs}h) [${r.type}]` + (r.message ? ` — _${r.message}_` : '')
     ).join('\n');
     return `📅 **Upcoming Sessions**:\n${lines}`;
   }
 
-  // C11. Booking history
+  // C11. Booking history (Fixed: Queries 'bookings' table using 'message')
   if (has(lowerMsg, 'booking history', 'past sessions', 'session history', 'all sessions')) {
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
-             hours::float AS hrs, amount::float AS amt,
-             payment_status AS status, note
-      FROM time_logs WHERE client_id=$1 AND date < CURRENT_DATE
-      ORDER BY date DESC LIMIT 10
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, time,
+             duration::float AS hrs, type, message, status
+      FROM bookings WHERE client_id=$1 AND date < CURRENT_DATE
+      ORDER BY date DESC, time DESC LIMIT 10
     `, [userId]);
     if (!rows.length) return 'No past sessions found.';
     const lines = rows.map(r =>
-      `• **${r.day}** — ${r.hrs}h / $${fmt(r.amt)} [${r.status}]` +
-      (r.note ? ` — _${r.note}_` : '')
+      `• **${r.day}** (${r.hrs}h) [${r.type}] — Status: ${r.status}` + (r.message ? ` — _${r.message}_` : '')
     ).join('\n');
     return `📅 **Session History** (last 10):\n${lines}`;
   }
@@ -712,16 +709,16 @@ async function handleClient(userId, userName, lowerMsg) {
     );
   }
 
-  // C15. Recent activity / tasks
+  // C15. Recent activity / tasks (Fixed: Queries 'bookings' table using 'message')
   if (has(lowerMsg, 'recent activity', 'my tasks', 'task history', 'work done', 'activities')) {
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, hours::float AS hrs, note
-      FROM time_logs
-      WHERE client_id=$1 AND note IS NOT NULL AND note <> ''
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, duration::float AS hrs, type, message
+      FROM bookings
+      WHERE client_id=$1 AND message IS NOT NULL AND message <> ''
       ORDER BY date DESC LIMIT 8
     `, [userId]);
-    if (!rows.length) return 'No task activity notes found yet.';
-    const lines = rows.map(r => `• **${r.day}** (${r.hrs}h) — ${r.note}`).join('\n');
+    if (!rows.length) return 'No task activity messages found yet.';
+    const lines = rows.map(r => `• **${r.day}** [${r.type}] (${r.hrs}h) — ${r.message}`).join('\n');
     return `🗂️ **Recent Work Activity**:\n${lines}`;
   }
 
