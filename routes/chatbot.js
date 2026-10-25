@@ -161,7 +161,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       SELECT COALESCE(SUM(t.amount::numeric), 0)::float AS total
       FROM time_logs t
       JOIN client_contracts cc ON cc.client_id = t.client_id 
-        AND cc.freelancer_id = f.freelancer_id
+        AND cc.freelancer_id = t.freelancer_id
         AND cc.effective_from <= t.date
         AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
       WHERE t.freelancer_id = $1 AND LOWER(t.payment_status) = 'unpaid'
@@ -448,7 +448,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
   );
 }
 
-// ── Client handler ------------------------------------------------------------
+// ── Client handler (with fixed 'note' column support) ─────────────────────────
 async function handleClient(userId, userName, lowerMsg) {
 
   // C1. Help
@@ -595,14 +595,14 @@ async function handleClient(userId, userName, lowerMsg) {
     const { rows } = await pool.query(`
       SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
              hours::float AS hrs, amount::float AS amt,
-             payment_status AS status, notes
+             payment_status AS status, note
       FROM time_logs WHERE client_id=$1
       ORDER BY date DESC LIMIT 8
     `, [userId]);
     if (!rows.length) return 'No time logs found yet.';
     const lines = rows.map(r =>
       `• **${r.day}** — ${r.hrs}h / $${fmt(r.amt)} [${r.status}]` +
-      (r.notes ? ` — _${r.notes}_` : '')
+      (r.note ? ` — _${r.note}_` : '')
     ).join('\n');
     return `📋 **Recent Time Logs**:\n${lines}`;
   }
@@ -611,13 +611,13 @@ async function handleClient(userId, userName, lowerMsg) {
   if (has(lowerMsg, 'upcoming bookings', 'upcoming sessions', 'next session', 'scheduled')) {
     const { rows } = await pool.query(`
       SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
-             hours::float AS hrs, notes
+             hours::float AS hrs, note
       FROM time_logs WHERE client_id=$1 AND date >= CURRENT_DATE
       ORDER BY date ASC LIMIT 5
     `, [userId]);
     if (!rows.length) return '📅 No upcoming sessions scheduled.';
     const lines = rows.map(r =>
-      `• **${r.day}** — ${r.hrs}h` + (r.notes ? ` — _${r.notes}_` : '')
+      `• **${r.day}** — ${r.hrs}h` + (r.note ? ` — _${r.note}_` : '')
     ).join('\n');
     return `📅 **Upcoming Sessions**:\n${lines}`;
   }
@@ -627,14 +627,14 @@ async function handleClient(userId, userName, lowerMsg) {
     const { rows } = await pool.query(`
       SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
              hours::float AS hrs, amount::float AS amt,
-             payment_status AS status, notes
+             payment_status AS status, note
       FROM time_logs WHERE client_id=$1 AND date < CURRENT_DATE
       ORDER BY date DESC LIMIT 10
     `, [userId]);
     if (!rows.length) return 'No past sessions found.';
     const lines = rows.map(r =>
       `• **${r.day}** — ${r.hrs}h / $${fmt(r.amt)} [${r.status}]` +
-      (r.notes ? ` — _${r.notes}_` : '')
+      (r.note ? ` — _${r.note}_` : '')
     ).join('\n');
     return `📅 **Session History** (last 10):\n${lines}`;
   }
@@ -715,20 +715,20 @@ async function handleClient(userId, userName, lowerMsg) {
   // C15. Recent activity / tasks
   if (has(lowerMsg, 'recent activity', 'my tasks', 'task history', 'work done', 'activities')) {
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, hours::float AS hrs, notes
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, hours::float AS hrs, note
       FROM time_logs
-      WHERE client_id=$1 AND notes IS NOT NULL AND notes <> ''
+      WHERE client_id=$1 AND note IS NOT NULL AND note <> ''
       ORDER BY date DESC LIMIT 8
     `, [userId]);
     if (!rows.length) return 'No task activity notes found yet.';
-    const lines = rows.map(r => `• **${r.day}** (${r.hrs}h) — ${r.notes}`).join('\n');
+    const lines = rows.map(r => `• **${r.day}** (${r.hrs}h) — ${r.note}`).join('\n');
     return `🗂️ **Recent Work Activity**:\n${lines}`;
   }
 
   return `Hi ${userName}! 👋 Type **"help"** to see everything I can answer about your account.`;
 }
 
-// ── Route ─────────────────────────────────────────────────────────────────────
+// ── Route ---------------------------------------------------------------------
 router.post('/', verifyUserToken, async (req, res, next) => {
   try {
     const { message } = req.body;
