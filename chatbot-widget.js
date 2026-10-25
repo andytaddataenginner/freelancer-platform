@@ -1,8 +1,5 @@
 /**
- * QFA Chatbot Widget — menu-driven floating assistant
- * Add to any page before </body>:
- *   <link rel="stylesheet" href="../css/chatbot-widget.css">
- *   <script src="../chatbot-widget.js"></script>
+ * QFA Chatbot Widget — menu-driven floating assistant (Role-Aware)
  */
 (function () {
   'use strict';
@@ -13,9 +10,18 @@
     return (meta && meta.content) ? meta.content : FALLBACK_API;
   };
 
-  // ── MENU STRUCTURE ────────────────────────────────────────────────────────
-  // Each category has prompt buttons. Clicking sends that prompt to the backend.
-  const MENU = [
+  // ── ROLE DETECTION ────────────────────────────────────────────────────────
+  function getUserRole() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return 'freelancer';
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role || 'freelancer';
+    } catch (_) { return 'freelancer'; }
+  }
+
+  // ── MENU STRUCTURES ───────────────────────────────────────────────────────
+  const MENU_FREELANCER = [
     {
       category: '💰 Earnings',
       items: [
@@ -65,6 +71,51 @@
     },
   ];
 
+  const MENU_CLIENT = [
+    {
+      category: '💳 Billing',
+      items: [
+        { label: 'Total unpaid',          prompt: 'Total unpaid' },
+        { label: 'Total paid',            prompt: 'Total paid' },
+        { label: 'Billing history',       prompt: 'Billing history' },
+        { label: 'Fixed invoices',        prompt: 'Fixed invoices' },
+        { label: 'Last invoice',          prompt: 'Last invoice' },
+      ]
+    },
+    {
+      category: '⏱️ Time & Hours',
+      items: [
+        { label: 'Hours this month',      prompt: 'My hours this month' },
+        { label: 'Total hours',           prompt: 'Total hours' },
+        { label: 'Recent logs',           prompt: 'Recent logs' },
+      ]
+    },
+    {
+      category: '📅 Bookings',
+      items: [
+        { label: 'Upcoming sessions',     prompt: 'Upcoming bookings' },
+        { label: 'Session history',       prompt: 'Booking history' },
+      ]
+    },
+    {
+      category: '📊 Reports',
+      items: [
+        { label: 'Month I paid most',     prompt: 'Month I paid most' },
+        { label: 'Payments by month',     prompt: 'Payment by month' },
+        { label: 'My contract',           prompt: 'My contract' },
+      ]
+    },
+    {
+      category: '🗂️ Activity',
+      items: [
+        { label: 'Recent activity',       prompt: 'Recent activity' },
+        { label: 'My tasks',              prompt: 'My tasks' },
+      ]
+    },
+  ];
+
+  const MENU = getUserRole() === 'client' ? MENU_CLIENT : MENU_FREELANCER;
+
   // ── INJECT HTML ───────────────────────────────────────────────────────────
   const html = `
 <div id="qfaFab" class="qfa-fab" title="QFA Assistant" aria-label="Open chat">
@@ -101,7 +152,7 @@
       <div class="qfa-messages" id="qfaMessages">
         <div class="qfa-welcome">
           <div class="qfa-welcome-icon">🤖</div>
-          <p>Pick a topic from the menu, or type your question below.</p>
+          <p id="qfaWelcomeMsg">Pick a topic from the menu, or type your question below.</p>
         </div>
       </div>
       <!-- Input -->
@@ -149,11 +200,9 @@
       btn.className = 'qfa-menu-btn';
       btn.textContent = item.label;
       btn.addEventListener('click', () => {
-        // highlight active
         document.querySelectorAll('.qfa-menu-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         sendMessage(item.prompt);
-        // on mobile close menu after picking
         if (window.innerWidth < 560) menuEl.classList.remove('open');
       });
       section.appendChild(btn);
@@ -170,6 +219,12 @@
     panel.classList.add('open');
     fab.classList.add('active');
     badge.style.display = 'none';
+    const wm = document.getElementById('qfaWelcomeMsg');
+    if (wm) {
+      wm.textContent = getUserRole() === 'client'
+        ? 'Pick a topic from the menu to check your billing, hours, bookings and more.'
+        : 'Pick a topic from the menu, or type your question below.';
+    }
     restoreHistory();
     input.focus();
   }
@@ -184,10 +239,8 @@
   closeBtn.addEventListener('click', closePanel);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closePanel(); });
 
-  // Toggle menu sidebar on mobile
   menuToggle.addEventListener('click', () => menuEl.classList.toggle('open'));
 
-  // Clear chat
   clearBtn.addEventListener('click', () => {
     sessionStorage.removeItem('qfa_chat_history');
     messages.innerHTML = `<div class="qfa-welcome"><div class="qfa-welcome-icon">🤖</div><p>Pick a topic from the menu, or type your question below.</p></div>`;
