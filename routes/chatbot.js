@@ -669,14 +669,15 @@ async function handleClient(userId, userName, lowerMsg) {
     return `📈 **Payments by Month** (last 12):\n${lines}`;
   }
 
+  // C14. My contract details (Fixed JOIN)
   if (has(lowerMsg, 'my contract', 'contract details', 'contract status', 'my rate', 'my plan')) {
     const { rows } = await pool.query(`
       SELECT cc.rate_type, cc.fixed_price, cc.effective_from,
              cc.effective_to, cc.status,
              c.hourly_rate
       FROM client_contracts cc
-      JOIN clients c ON c.id = cc.client_id
-      WHERE c.user_id = $1
+      JOIN clients c ON c.user_id = cc.client_id
+      WHERE cc.client_id = $1
       ORDER BY cc.effective_from DESC
       LIMIT 1
     `, [userId]);
