@@ -119,7 +119,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `🏆 **Top Client**: **${r.name}**${r.company ? ` (${r.company})` : ''} has paid a total of **$${fmt(r.total)}**.`;
   }
 
-  // 7. Paused clients — fixed to use c.user_id correctly
+  // 7. Paused clients
   if (has(lowerMsg, 'paused clients', 'paused contracts', 'on hold')) {
     const { rows } = await pool.query(`
       SELECT u.name, u.company
@@ -161,7 +161,7 @@ async function handleFreelancer(userId, userName, lowerMsg) {
       SELECT COALESCE(SUM(t.amount::numeric), 0)::float AS total
       FROM time_logs t
       JOIN client_contracts cc ON cc.client_id = t.client_id 
-        AND cc.freelancer_id = t.freelancer_id
+        AND cc.freelancer_id = f.freelancer_id
         AND cc.effective_from <= t.date
         AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
       WHERE t.freelancer_id = $1 AND LOWER(t.payment_status) = 'unpaid'
@@ -440,7 +440,6 @@ async function handleFreelancer(userId, userName, lowerMsg) {
     return `📅 **Upcoming Sessions**:\n${lines}`;
   }
 
-  // Default fallback
   return (
     `Hi ${userName}! 👋 Use the menu on the left to explore your data.\n\n` +
     `You can also type questions like:\n` +
@@ -452,50 +451,284 @@ async function handleFreelancer(userId, userName, lowerMsg) {
 // ── Client handler ------------------------------------------------------------
 async function handleClient(userId, userName, lowerMsg) {
 
-  if (has(lowerMsg, 'help', 'what can')) {
-    return `Hi ${userName}! You can ask me:\n• "Total due"\n• "Paid history"\n• "My hours"\n• "Last invoice"`;
-  }
-
-  if (has(lowerMsg, 'total due', 'unpaid', 'invoice', 'how much do i owe')) {
-    const [hr, fx] = await Promise.all([
-      pool.query(`SELECT COALESCE(SUM(amount::numeric),0)::float AS t FROM time_logs WHERE client_id=$1 AND LOWER(payment_status)='unpaid'`, [userId]),
-      pool.query(`SELECT COALESCE(SUM(amount::numeric),0)::float AS t FROM fixed_monthly_payments WHERE client_id=$1 AND LOWER(status)='unpaid'`, [userId]),
-    ]);
-    const total = hr.rows[0].t + fx.rows[0].t;
-    return `⏳ **Your Outstanding Balance**: **$${fmt(total)}**\n• Hourly: $${fmt(hr.rows[0].t)}\n• Fixed: $${fmt(fx.rows[0].t)}`;
-  }
-
-  if (has(lowerMsg, 'paid history', 'total paid', 'how much have i paid')) {
-    const [hr, fx] = await Promise.all([
-      pool.query(`SELECT COALESCE(SUM(amount::numeric),0)::float AS t FROM time_logs WHERE client_id=$1 AND LOWER(payment_status)='paid'`, [userId]),
-      pool.query(`SELECT COALESCE(SUM(amount::numeric),0)::float AS t FROM fixed_monthly_payments WHERE client_id=$1 AND LOWER(status)='paid'`, [userId]),
-    ]);
-    const total = hr.rows[0].t + fx.rows[0].t;
-    return `✅ **Total Paid to Date**: **$${fmt(total)}**\n• Hourly: $${fmt(hr.rows[0].t)}\n• Fixed: $${fmt(fx.rows[0].t)}`;
-  }
-
-  if (has(lowerMsg, 'my hours', 'hours logged', 'time logged')) {
-    const { rows } = await pool.query(
-      `SELECT COALESCE(SUM(hours::numeric),0)::float AS hrs FROM time_logs WHERE client_id=$1`,
-      [userId]
+  // C1. Help
+  if (has(lowerMsg, 'help', 'what can', 'what do')) {
+    return (
+      `Hi ${userName}! 👋 Here's what you can ask me:\n\n` +
+      `💳 **Billing**\n• "Total unpaid" • "Total paid" • "Billing history"\n• "Fixed invoices" • "Last invoice"\n\n` +
+      `⏱️ **Time & Hours**\n• "My hours this month" • "Total hours" • "Recent logs"\n\n` +
+      `📅 **Bookings**\n• "Upcoming bookings" • "Booking history"\n\n` +
+      `📊 **Reports**\n• "Month I paid most" • "Payment by month" • "My contract"\n\n` +
+      `🗂️ **Activity**\n• "Recent activity" • "My tasks"`
     );
-    return `⏱️ **Hours Logged for Your Account**: **${fmt(rows[0].hrs)} hours** total.`;
   }
 
-  if (has(lowerMsg, 'last invoice', 'latest invoice', 'recent invoice')) {
+  // C2. Total unpaid / what do I owe
+  if (has(lowerMsg, 'total unpaid', 'total due', 'how much do i owe', 'outstanding', 'what do i owe')) {
+    const [hr, fx] = await Promise.all([
+      pool.query(
+        `SELECT COALESCE(SUM(amount::numeric),0)::float AS t
+         FROM time_logs WHERE client_id=$1 AND LOWER(payment_status)='unpaid'`,
+        [userId]
+      ),
+      pool.query(
+        `SELECT COALESCE(SUM(amount::numeric),0)::float AS t
+         FROM fixed_monthly_payments WHERE client_id=$1 AND LOWER(status)='unpaid'`,
+        [userId]
+      ),
+    ]);
+    const total = hr.rows[0].t + fx.rows[0].t;
+    if (total === 0) return `✅ **${userName}**, you have no outstanding balance right now!`;
+    return (
+      `⏳ **Your Outstanding Balance**: **$${fmt(total)}**\n` +
+      `• Hourly work unpaid: $${fmt(hr.rows[0].t)}\n` +
+      `• Fixed invoices unpaid: $${fmt(fx.rows[0].t)}`
+    );
+  }
+
+  // C3. Total paid / paid history
+  if (has(lowerMsg, 'total paid', 'how much have i paid', 'paid so far', 'paid history', 'paid to date')) {
+    const [hr, fx] = await Promise.all([
+      pool.query(
+        `SELECT COALESCE(SUM(amount::numeric),0)::float AS t
+         FROM time_logs WHERE client_id=$1 AND LOWER(payment_status)='paid'`,
+        [userId]
+      ),
+      pool.query(
+        `SELECT COALESCE(SUM(amount::numeric),0)::float AS t
+         FROM fixed_monthly_payments WHERE client_id=$1 AND LOWER(status)='paid'`,
+        [userId]
+      ),
+    ]);
+    const total = hr.rows[0].t + fx.rows[0].t;
+    return (
+      `✅ **Total Paid to Date**: **$${fmt(total)}**\n` +
+      `• From hourly work: $${fmt(hr.rows[0].t)}\n` +
+      `• From fixed invoices: $${fmt(fx.rows[0].t)}`
+    );
+  }
+
+  // C4. Billing history
+  if (has(lowerMsg, 'billing history', 'invoice history', 'payment history', 'all invoices')) {
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, amount::float AS amt, payment_status AS status
-      FROM time_logs WHERE client_id=$1 ORDER BY date DESC LIMIT 1
+      SELECT day, type, amount, status FROM (
+        SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, 'Hourly' AS type,
+               amount::float, payment_status AS status
+        FROM time_logs WHERE client_id=$1
+        UNION ALL
+        SELECT (month || '-01') AS day, 'Fixed' AS type,
+               amount::float, status
+        FROM fixed_monthly_payments WHERE client_id=$1
+      ) all_bills
+      ORDER BY day DESC
+      LIMIT 10
+    `, [userId]);
+    if (!rows.length) return 'No billing records found yet.';
+    const lines = rows.map(r =>
+      `• **${r.day}** [${r.type}] — $${fmt(r.amount)} [${r.status}]`
+    ).join('\n');
+    return `🧾 **Billing History** (last 10):\n${lines}`;
+  }
+
+  // C5. Fixed invoices only
+  if (has(lowerMsg, 'fixed invoice', 'monthly invoice', 'fixed bill', 'fixed invoices')) {
+    const { rows } = await pool.query(`
+      SELECT month, amount::float AS amt, status
+      FROM fixed_monthly_payments WHERE client_id=$1
+      ORDER BY month DESC LIMIT 12
+    `, [userId]);
+    if (!rows.length) return 'No fixed invoices found.';
+    const lines = rows.map(r => `• **${r.month}** — $${fmt(r.amt)} [${r.status}]`).join('\n');
+    return `📋 **Fixed Monthly Invoices** (last 12):\n${lines}`;
+  }
+
+  // C6. Last invoice
+  if (has(lowerMsg, 'last invoice', 'latest invoice', 'recent invoice', 'my invoice')) {
+    const { rows } = await pool.query(`
+      SELECT day, type, amount, status FROM (
+        SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, 'Hourly' AS type,
+               amount::float, payment_status AS status
+        FROM time_logs WHERE client_id=$1
+        UNION ALL
+        SELECT (month || '-01') AS day, 'Fixed' AS type,
+               amount::float, status
+        FROM fixed_monthly_payments WHERE client_id=$1
+      ) all_bills
+      ORDER BY day DESC LIMIT 1
     `, [userId]);
     if (!rows.length) return 'No invoices found yet.';
     const r = rows[0];
-    return `🧾 **Last Invoice**: ${r.day} — **$${fmt(r.amt)}** [${r.status}]`;
+    return `🧾 **Last Invoice**: ${r.day} [${r.type}] — **$${fmt(r.amount)}** [${r.status}]`;
   }
 
-  return `Hi ${userName}! Ask me about your balance, paid history, hours, or invoices.`;
+  // C7. Hours this month
+  if (has(lowerMsg, 'hours this month', 'my hours this month')) {
+    const month = new Date().toISOString().slice(0, 7);
+    const { rows } = await pool.query(`
+      SELECT COALESCE(SUM(hours::numeric),0)::float AS hrs,
+             COALESCE(SUM(amount::numeric),0)::float AS amt
+      FROM time_logs WHERE client_id=$1 AND TO_CHAR(date,'YYYY-MM')=$2
+    `, [userId, month]);
+    return (
+      `⏱️ **Your Hours — ${month}**:\n` +
+      `• Hours logged: **${fmt(rows[0].hrs)} hrs**\n` +
+      `• Billed amount: $${fmt(rows[0].amt)}`
+    );
+  }
+
+  // C8. Total hours (all-time)
+  if (has(lowerMsg, 'total hours', 'all hours', 'hours logged', 'my hours')) {
+    const { rows } = await pool.query(`
+      SELECT COALESCE(SUM(hours::numeric),0)::float AS hrs,
+             COALESCE(SUM(amount::numeric),0)::float AS amt
+      FROM time_logs WHERE client_id=$1
+    `, [userId]);
+    return (
+      `⏱️ **Total Hours on Your Account**:\n` +
+      `• Hours logged: **${fmt(rows[0].hrs)} hrs**\n` +
+      `• Total billed: $${fmt(rows[0].amt)}`
+    );
+  }
+
+  // C9. Recent time logs
+  if (has(lowerMsg, 'recent logs', 'latest logs', 'time logs', 'my logs')) {
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
+             hours::float AS hrs, amount::float AS amt,
+             payment_status AS status, notes
+      FROM time_logs WHERE client_id=$1
+      ORDER BY date DESC LIMIT 8
+    `, [userId]);
+    if (!rows.length) return 'No time logs found yet.';
+    const lines = rows.map(r =>
+      `• **${r.day}** — ${r.hrs}h / $${fmt(r.amt)} [${r.status}]` +
+      (r.notes ? ` — _${r.notes}_` : '')
+    ).join('\n');
+    return `📋 **Recent Time Logs**:\n${lines}`;
+  }
+
+  // C10. Upcoming bookings
+  if (has(lowerMsg, 'upcoming bookings', 'upcoming sessions', 'next session', 'scheduled')) {
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
+             hours::float AS hrs, notes
+      FROM time_logs WHERE client_id=$1 AND date >= CURRENT_DATE
+      ORDER BY date ASC LIMIT 5
+    `, [userId]);
+    if (!rows.length) return '📅 No upcoming sessions scheduled.';
+    const lines = rows.map(r =>
+      `• **${r.day}** — ${r.hrs}h` + (r.notes ? ` — _${r.notes}_` : '')
+    ).join('\n');
+    return `📅 **Upcoming Sessions**:\n${lines}`;
+  }
+
+  // C11. Booking history
+  if (has(lowerMsg, 'booking history', 'past sessions', 'session history', 'all sessions')) {
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day,
+             hours::float AS hrs, amount::float AS amt,
+             payment_status AS status, notes
+      FROM time_logs WHERE client_id=$1 AND date < CURRENT_DATE
+      ORDER BY date DESC LIMIT 10
+    `, [userId]);
+    if (!rows.length) return 'No past sessions found.';
+    const lines = rows.map(r =>
+      `• **${r.day}** — ${r.hrs}h / $${fmt(r.amt)} [${r.status}]` +
+      (r.notes ? ` — _${r.notes}_` : '')
+    ).join('\n');
+    return `📅 **Session History** (last 10):\n${lines}`;
+  }
+
+  // C12. Month I paid most
+  if (has(lowerMsg, 'month i paid most', 'highest payment month', 'most paid month', 'best month')) {
+    const { rows } = await pool.query(`
+      SELECT month_str AS month, SUM(amount_num)::float AS total
+      FROM (
+        SELECT TO_CHAR(date,'YYYY-MM') AS month_str, amount::numeric AS amount_num
+        FROM time_logs WHERE client_id=$1 AND LOWER(payment_status)='paid'
+        UNION ALL
+        SELECT month AS month_str, amount::numeric AS amount_num
+        FROM fixed_monthly_payments WHERE client_id=$1 AND LOWER(status)='paid'
+      ) combined
+      GROUP BY month_str
+      ORDER BY total DESC
+      LIMIT 1
+    `, [userId]);
+    if (!rows.length) return 'No paid records found yet.';
+    const r = rows[0];
+    return `🏆 **Month You Paid Most**: **${r.month}** — total of **$${fmt(r.total)}** paid.`;
+  }
+
+  // C13. Payment by month breakdown
+  if (has(lowerMsg, 'payment by month', 'monthly payments', 'payments by month', 'month breakdown')) {
+    const { rows } = await pool.query(`
+      SELECT month_str AS month,
+             SUM(CASE WHEN status='paid'   THEN amount_num ELSE 0 END)::float AS paid,
+             SUM(CASE WHEN status='unpaid' THEN amount_num ELSE 0 END)::float AS unpaid
+      FROM (
+        SELECT TO_CHAR(date,'YYYY-MM') AS month_str, amount::numeric AS amount_num,
+               LOWER(payment_status) AS status
+        FROM time_logs WHERE client_id=$1
+        UNION ALL
+        SELECT month AS month_str, amount::numeric AS amount_num,
+               LOWER(status) AS status
+        FROM fixed_monthly_payments WHERE client_id=$1
+      ) combined
+      GROUP BY month_str
+      ORDER BY month_str DESC
+      LIMIT 12
+    `, [userId]);
+    if (!rows.length) return 'No payment records found yet.';
+    const lines = rows.map(r =>
+      `• **${r.month}** — Paid: $${fmt(r.paid)}${r.unpaid > 0 ? ` / Unpaid: $${fmt(r.unpaid)}` : ''}`
+    ).join('\n');
+    return `📈 **Payments by Month** (last 12):\n${lines}`;
+  }
+
+  // C14. My contract details
+  if (has(lowerMsg, 'my contract', 'contract details', 'contract status', 'my rate', 'my plan')) {
+    const { rows } = await pool.query(`
+      SELECT cc.rate_type, cc.fixed_price, cc.effective_from,
+             cc.effective_to, cc.status,
+             c.hourly_rate
+      FROM client_contracts cc
+      JOIN clients c ON c.id = cc.client_id
+      WHERE c.user_id = $1
+      ORDER BY cc.effective_from DESC
+      LIMIT 1
+    `, [userId]);
+    if (!rows.length) return 'No contract information found for your account.';
+    const r = rows[0];
+    const rate = r.rate_type === 'fixed'
+      ? `Fixed — $${fmt(r.fixed_price)}/month`
+      : `Hourly — $${fmt(r.hourly_rate)}/hr`;
+    const since = r.effective_from ? r.effective_from.toISOString().slice(0,10) : '—';
+    const until = r.effective_to   ? r.effective_to.toISOString().slice(0,10)   : 'ongoing';
+    return (
+      `📄 **Your Contract**:\n` +
+      `• Rate: **${rate}**\n` +
+      `• Status: **${r.status}**\n` +
+      `• Active from: ${since} → ${until}`
+    );
+  }
+
+  // C15. Recent activity / tasks
+  if (has(lowerMsg, 'recent activity', 'my tasks', 'task history', 'work done', 'activities')) {
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(date,'YYYY-MM-DD') AS day, hours::float AS hrs, notes
+      FROM time_logs
+      WHERE client_id=$1 AND notes IS NOT NULL AND notes <> ''
+      ORDER BY date DESC LIMIT 8
+    `, [userId]);
+    if (!rows.length) return 'No task activity notes found yet.';
+    const lines = rows.map(r => `• **${r.day}** (${r.hrs}h) — ${r.notes}`).join('\n');
+    return `🗂️ **Recent Work Activity**:\n${lines}`;
+  }
+
+  return `Hi ${userName}! 👋 Type **"help"** to see everything I can answer about your account.`;
 }
 
-// ── Route ---------------------------------------------------------------------
+// ── Route ─────────────────────────────────────────────────────────────────────
 router.post('/', verifyUserToken, async (req, res, next) => {
   try {
     const { message } = req.body;
