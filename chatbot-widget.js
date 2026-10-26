@@ -1,5 +1,5 @@
 /**
- * QFA Chatbot Widget — menu-driven floating assistant (Role-Aware)
+ * QFA Chatbot Widget — menu-driven floating assistant (Role-Aware & Isolated Sessions)
  */
 (function () {
   'use strict';
@@ -10,15 +10,43 @@
     return (meta && meta.content) ? meta.content : FALLBACK_API;
   };
 
-  // ── ROLE DETECTION ────────────────────────────────────────────────────────
-  function getUserRole() {
+  // ── USER & ROLE SESSION MANAGEMENT ────────────────────────────────────────
+  function parseToken() {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return 'freelancer';
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.role || 'freelancer';
-    } catch (_) { return 'freelancer'; }
+      if (!token) return null;
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (_) { return null; }
   }
+
+  function getUserRole() {
+    const payload = parseToken();
+    return (payload && payload.role) ? payload.role : 'freelancer';
+  }
+
+  function getCurrentUserId() {
+    const payload = parseToken();
+    return (payload && (payload.id || payload.userId)) ? String(payload.id || payload.userId) : 'guest';
+  }
+
+  function getCurrentUserName() {
+    const payload = parseToken();
+    return (payload && payload.name) ? payload.name : 'User';
+  }
+
+  // Enforce strict session isolation on load
+  function checkAndCleanSession() {
+    const currentUserId = getCurrentUserId();
+    const storedUserId = localStorage.getItem('qfa_chat_user_id');
+
+    // If user changed or logged out/in as someone else, clear old conversation history immediately
+    if (storedUserId !== currentUserId) {
+      localStorage.removeItem('qfa_chat_history');
+      localStorage.setItem('qfa_chat_user_id', currentUserId);
+    }
+  }
+
+  checkAndCleanSession();
 
   // ── MENU STRUCTURES ───────────────────────────────────────────────────────
   const MENU_FREELANCER = [
@@ -152,7 +180,7 @@
       <div class="qfa-messages" id="qfaMessages">
         <div class="qfa-welcome">
           <div class="qfa-welcome-icon">🤖</div>
-          <p id="qfaWelcomeMsg">Pick a topic from the menu, or type your question below.</p>
+          <p id="qfaWelcomeMsg"></p>
         </div>
       </div>
       <!-- Input -->
@@ -184,6 +212,17 @@
   const sendBtn     = document.getElementById('qfaSend');
   const statusEl    = document.getElementById('qfaStatus');
   const badge       = document.getElementById('qfaBadge');
+  const welcomeMsgEl = document.getElementById('qfaWelcomeMsg');
+
+  // Set initial welcome text based on user role and name
+  function updateWelcomeText() {
+    if (!welcomeMsgEl) return;
+    const name = getCurrentUserName();
+    welcomeMsgEl.textContent = getUserRole() === 'client'
+      ? `Hi ${name}! 👋 Type "help" or pick a topic from the menu to check your billing, hours, bookings and more.`
+      : `Hi ${name}! 👋 Pick a topic from the menu, or type your question below.`;
+  }
+  updateWelcomeText();
 
   // ── BUILD MENU ────────────────────────────────────────────────────────────
   MENU.forEach(cat => {
@@ -215,16 +254,15 @@
   let isOpen = false;
 
   function openPanel() {
+    // Re-verify session in case user switched accounts while app was open
+    checkAndCleanSession();
+    updateWelcomeText();
+    
     isOpen = true;
     panel.classList.add('open');
     fab.classList.add('active');
     badge.style.display = 'none';
-    const wm = document.getElementById('qfaWelcomeMsg');
-    if (wm) {
-      wm.textContent = getUserRole() === 'client'
-        ? 'Pick a topic from the menu to check your billing, hours, bookings and more.'
-        : 'Pick a topic from the menu, or type your question below.';
-    }
+    
     restoreHistory();
     input.focus();
   }
@@ -242,28 +280,36 @@
   menuToggle.addEventListener('click', () => menuEl.classList.toggle('open'));
 
   clearBtn.addEventListener('click', () => {
-    sessionStorage.removeItem('qfa_chat_history');
-    messages.innerHTML = `<div class="qfa-welcome"><div class="qfa-welcome-icon">🤖</div><p>Pick a topic from the menu, or type your question below.</p></div>`;
+    localStorage.removeItem('qfa_chat_history');
+    const name = getCurrentUserName();
+    const defaultWelcome = getUserRole() === 'client'
+      ? `Hi ${name}! 👋 Type "help" or pick a topic from the menu to check your billing, hours, bookings and more.`
+      : `Hi ${name}! 👋 Pick a topic from the menu, or type your question below.`;
+
+    messages.innerHTML = `<div class="qfa-welcome"><div class="qfa-welcome-icon">🤖</div><p id="qfaWelcomeMsg">${defaultWelcome}</p></div>`;
     document.querySelectorAll('.qfa-menu-btn').forEach(b => b.classList.remove('active'));
   });
 
-  // ── SESSION HISTORY ───────────────────────────────────────────────────────
+  // ── SESSION HISTORY (LocalStorage bounded to user ID) ─────────────────────
   function saveHistory(role, text) {
     try {
-      const hist = JSON.parse(sessionStorage.getItem('qfa_chat_history') || '[]');
+      const hist = JSON.parse(localStorage.getItem('qfa_chat_history') || '[]');
       hist.push({ role, text });
       if (hist.length > 40) hist.splice(0, hist.length - 40);
-      sessionStorage.setItem('qfa_chat_history', JSON.stringify(hist));
+      localStorage.setItem('qfa_chat_history', JSON.stringify(hist));
     } catch (_) {}
   }
 
   function restoreHistory() {
     try {
-      const hist = JSON.parse(sessionStorage.getItem('qfa_chat_history') || '[]');
+      const hist = JSON.parse(localStorage.getItem('qfa_chat_history') || '[]');
       if (!hist.length) return;
       messages.innerHTML = '';
       hist.forEach(m => appendBubble(m.role, m.text, false));
-    } catch (_) {}
+    } catch (_) {
+      messages.innerHTML = `<div class="qfa-welcome"><div class="qfa-welcome-icon">🤖</div><p id="qfaWelcomeMsg"></p></div>`;
+      updateWelcomeText();
+    }
   }
 
   // ── BUBBLE ────────────────────────────────────────────────────────────────
