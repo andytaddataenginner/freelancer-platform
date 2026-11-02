@@ -410,8 +410,9 @@ async function pollClientActiveTimer() {
     const card = document.getElementById('client-live-card');
     
     if (res && res.active) {
-      card.style.display = 'block';
-      document.getElementById('client-live-task').textContent = res.timer.task || 'Active working session';
+      if (card) card.style.display = 'block';
+      const taskElem = document.getElementById('client-live-task');
+      if (taskElem) taskElem.textContent = res.timer.task || 'Active working session';
       
       const start = res.timer.start_time;
       const accum = res.timer.accumulated_ms || 0;
@@ -424,14 +425,21 @@ async function pollClientActiveTimer() {
         const h = Math.floor(secs / 3600).toString().padStart(2, '0');
         const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
         const s = (secs % 60).toString().padStart(2, '0');
-        document.getElementById('client-live-disp').textContent = `${h}:${m}:${s}`;
+        const dispElem = document.getElementById('client-live-disp');
+        if (dispElem) dispElem.textContent = `${h}:${m}:${s}`;
       }, 1000);
     } else {
-      card.style.display = 'none';
+      if (card) card.style.display = 'none';
       if (clientTimerInterval) { clearInterval(clientTimerInterval); clientTimerInterval = null; }
     }
-  } catch (e) { console.error("Client timer poll error:", e); }
+  } catch (e) {
+    console.error("Client timer poll error:", e);
+  }
 }
+
+// Poll every 5 seconds
+setInterval(pollClientActiveTimer, 5000);
+document.addEventListener('DOMContentLoaded', pollClientActiveTimer);
 
 setInterval(pollClientActiveTimer, 5000);
 document.addEventListener('DOMContentLoaded', pollClientActiveTimer);
