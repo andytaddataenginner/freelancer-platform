@@ -97,7 +97,6 @@
     .mpick input{padding:.4rem .8rem;border:1.5px solid var(--hairline-strong);border-radius:8px;font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--bg);transition:border-color .2s,box-shadow .2s}
     .mpick input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
 
-    /* Theme Toggle Button */
     .theme-toggle {
       background: var(--bg2); border: 1px solid var(--hairline-strong);
       color: var(--ink); width: 36px; height: 36px; border-radius: 50%;
@@ -172,7 +171,7 @@
     .btn-gold:hover{filter:brightness(1.06)}
     .btn-sm{padding:.38rem .8rem;font-size:.75rem}
 
-    /* ── TIMER ── */
+    /* TIMER DISPLAY */
     .timer-disp{font-family:var(--serif);font-size:2.5rem;text-align:center;padding:.7rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.05em;font-variant-numeric:tabular-nums;transition:color .3s}
     .timer-disp.running{color:var(--green)}
     .timer-disp.paused{color:var(--amber)}
@@ -180,7 +179,7 @@
     .timer-status{text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;height:1rem}
     .timer-btns{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap}
 
-    /* ── FLOATING DRAGGABLE TIMER WIDGET ── */
+    /* FLOATING TIMER WIDGET */
     .float-timer{
       position:fixed; bottom:20px; right:20px; width:280px;
       background:var(--card-bg); border-radius:var(--r);
@@ -208,7 +207,7 @@
     .float-timer.collapsed .float-timer-body{ display:none; }
     @media(max-width:480px){ .float-timer{ width:calc(100vw - 24px) !important; } }
 
-    /* ── TABLE ── */
+    /* TABLE */
     .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
     th{padding:.6rem .9rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:2px solid var(--hairline-strong);font-weight:700;text-align:left;white-space:nowrap}
@@ -231,24 +230,12 @@
     .mc:hover{background:var(--rbg);color:var(--red);transform:rotate(90deg)}
 
     @media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
-
     @media(max-width:768px){
       .mob-bar{display:flex}
       .sidebar{transform:translateX(-100%);z-index:150}
       .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
-
-      .main{
-        margin-left:0;
-        padding-top:52px !important;
-      }
-
-      .topbar{
-        position: relative !important;
-        top: 0 !important;
-        padding: 1rem !important;
-        border-bottom: 1px solid var(--hairline);
-      }
-
+      .main{margin-left:0;padding-top:52px !important;}
+      .topbar{position: relative !important;top: 0 !important;padding: 1rem !important;border-bottom: 1px solid var(--hairline);}
       .stats-row{grid-template-columns:1fr 1fr !important;gap:.8rem}
       .two-col{grid-template-columns:1fr}
       .content{padding:1rem}
@@ -398,7 +385,6 @@
   </div>
 </div>
 
-<!-- ── CHANGE PASSWORD MODAL WITH SHOW/HIDE TOGGLES ── -->
 <div class="modal-ov" id="modal-password">
   <div class="modal">
     <div class="mh"><h3>Change Password</h3><button class="mc" onclick="hide('modal-password')">✕</button></div>
@@ -431,7 +417,7 @@
   </div>
 </div>
 
-<!-- ── Floating draggable Live Timer widget ── -->
+<!-- Floating draggable Live Timer widget -->
 <div class="float-timer" id="float-timer">
   <div class="float-timer-handle" id="float-timer-handle">
     <div class="float-timer-handle-title">
@@ -514,7 +500,6 @@ const auth={
   hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')})
 };
 
-// Theme Management Logic
 function initTheme() {
   const savedTheme = localStorage.getItem('qfa_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
@@ -535,20 +520,13 @@ initTheme();
 
 async function api(path, opts = {}) {
   const r = await fetch(API + path, { ...opts, headers: { ...auth.hdrs(), ...(opts.headers || {}) } });
-  
   if (r.status === 401) {
     const e = await r.json().catch(() => ({}));
-    
-    // Check if the route is related to changing passwords
-    if (path.includes('change-password')) {
-      throw new Error(e.error || 'Current password is incorrect');
-    }
-
+    if (path.includes('change-password')) throw new Error(e.error || 'Current password is incorrect');
     auth.clear();
     go('login.html?reason=' + (e.error === 'SESSION_REVOKED' ? 'revoked' : 'expired'));
     return;
   }
-
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Failed'); }
   return r.json();
 }
@@ -572,34 +550,11 @@ function show(id){document.getElementById(id).classList.add('on');}
 function hide(id){document.getElementById(id).classList.remove('on');}
 function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
 function sbClose(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
-document.querySelectorAll('.sb-nav a:not(.sb-parent)').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();}));
-function toggleSubmenu(e,groupId){
-  e.preventDefault();
-  const g=document.getElementById(groupId);
-  if(!g)return;
-  g.classList.toggle('open');
-  try{localStorage.setItem('sb_submenu_'+groupId, g.classList.contains('open')?'1':'0');}catch(_){}
-}
-(function(){
-  try{
-    document.querySelectorAll('.sb-group').forEach(g=>{
-      if(localStorage.getItem('sb_submenu_'+g.id)==='1') g.classList.add('open');
-    });
-  }catch(_){}
-})();
-function toggleRate(){const t=document.getElementById('art').value;document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';document.getElementById('afp').style.display=t==='fixed'?'flex':'none';}
-function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
 
-// ── Password Visibility & Change Modal Handlers ──
 function toggleModalPassword(fieldId, btnEl) {
   const input = document.getElementById(fieldId);
-  if (input.type === 'password') {
-    input.type = 'text';
-    btnEl.textContent = '🙈';
-  } else {
-    input.type = 'password';
-    btnEl.textContent = '👁️';
-  }
+  if (input.type === 'password') { input.type = 'text'; btnEl.textContent = '🙈'; } 
+  else { input.type = 'password'; btnEl.textContent = '👁️'; }
 }
 
 async function changePasswordModal(e) {
@@ -611,98 +566,21 @@ async function changePasswordModal(e) {
   const confirmPassword = formData.get('confirmPassword');
 
   if (newPassword !== confirmPassword) {
-    statusEl.className = 'fs er';
-    statusEl.textContent = 'New passwords do not match.';
-    return;
+    statusEl.className = 'fs er'; statusEl.textContent = 'New passwords do not match.'; return;
   }
   if (newPassword.length < 8 || !/\d/.test(newPassword)) {
-    statusEl.className = 'fs er';
-    statusEl.textContent = 'New password must be at least 8 characters and include a number.';
-    return;
+    statusEl.className = 'fs er'; statusEl.textContent = 'New password must be at least 8 characters and include a number.'; return;
   }
 
   try {
-    statusEl.className = 'fs';
-    statusEl.textContent = 'Updating password…';
-    
-    const resData = await api('/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify({ currentPassword, newPassword })
-    });
-
-    statusEl.className = 'fs ok';
-    statusEl.textContent = '✓ ' + (resData.message || 'Password updated successfully!');
+    statusEl.className = 'fs'; statusEl.textContent = 'Updating password…';
+    const resData = await api('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+    statusEl.className = 'fs ok'; statusEl.textContent = '✓ ' + (resData.message || 'Password updated successfully!');
     e.target.reset();
     setTimeout(() => { hide('modal-password'); statusEl.textContent = ''; }, 1500);
   } catch (err) {
-    statusEl.className = 'fs er';
-    statusEl.textContent = err.message || 'Failed to update password.';
+    statusEl.className = 'fs er'; statusEl.textContent = err.message || 'Failed to update password.';
   }
-}
-
-async function toggleFixed(recordId, newStatus){
-  try{
-    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
-    load();
-  }catch(e){alert('Failed: '+e.message);}
-}
-
-function initials(name){
-  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-}
-
-function renderActiveClients(clients, breakdown){
-  const list=document.getElementById('active-clients-list');
-  const count=document.getElementById('ac-count');
-
-  const breakdownByKey = new Map();
-  (breakdown||[]).forEach(b => breakdownByKey.set((b.client_name||'')+'|'+(b.company||''), b));
-
-  const active = clients.filter(c => breakdownByKey.has((c.name||'')+'|'+(c.company||'')));
-
-  count.textContent = active.length ? active.length+' this month' : '';
-
-  if(!active.length){
-    list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">No client activity logged yet this month.</div>';
-    return;
-  }
-
-  const sorted=[...active].sort((a,b)=>a.name.localeCompare(b.name));
-  list.innerHTML=sorted.map(c=>{
-    const b = breakdownByKey.get((c.name||'')+'|'+(c.company||''));
-    const rateLabel = c.rate_type==='fixed'
-      ? `Fixed $${parseFloat(c.fixed_price||0).toFixed(0)}`
-      : `$${parseFloat(c.hourly_rate||0).toFixed(0)}/hr`;
-    const rateBadge = c.rate_type==='fixed'
-      ? `<span class="badge bg-b">${rateLabel}</span>`
-      : `<span class="badge" style="background:#e8f0ff;color:var(--accent)">${rateLabel}</span>`;
-    const hoursLine = b ? `<span style="font-size:.68rem;color:var(--ink3)">${fmtH(parseFloat(b.hours||0))} logged</span>` : '';
-    const credit=parseFloat(c.credit_balance||0);
-    const creditLine = credit!==0
-      ? `<span class="ac-credit" style="color:${credit>0?'var(--accent)':'var(--red)'}">${credit>0?'Credit':'Owes'} $${Math.abs(credit).toFixed(2)}</span>`
-      : '';
-    return `<div class="ac-row" onclick="selectClientForEntry(${c.id})" title="Click to select for Manual Log Entry">
-      <div class="ac-avatar">${initials(c.name)}</div>
-      <div class="ac-info">
-        <strong>${c.name}</strong>
-        ${c.company?`<span>${c.company}</span>`:''}
-      </div>
-      <div class="ac-meta">
-        ${rateBadge}
-        ${hoursLine}
-        ${creditLine}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function selectClientForEntry(id){
-  const sel=document.getElementById('mc');
-  sel.value=id;
-  sel.focus();
-  sel.style.borderColor='var(--accent)';
-  sel.style.boxShadow='0 0 0 3px rgba(26,92,255,.15)';
-  setTimeout(()=>{ sel.style.borderColor=''; sel.style.boxShadow=''; }, 800);
 }
 
 async function load(){
@@ -765,45 +643,24 @@ async function load(){
   }catch(e){console.error(e);}
 }
 
-async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
-
-function openEdit(id,date,hours,task,hr){
-  document.getElementById('eid').value=id;
-  document.getElementById('ehr').value=hr;
-  document.getElementById('edate').value=date.slice(0,10);
-  document.getElementById('ehours').value=hours;
-  document.getElementById('etask').value=task;
-  document.getElementById('es').textContent='';
-  document.getElementById('einfo').textContent=hr>0?`Hourly rate: $${hr}/hr`:'No rate set';
-  previewAmt();
-  show('modal-edit');
-}
-function previewAmt(){
-  const h=parseFloat(document.getElementById('ehours').value||0);
-  const hr=parseFloat(document.getElementById('ehr').value||0);
-  const p=document.getElementById('aprev');
-  if(h>0&&hr>0){p.textContent='💰 New amount: $'+(h*hr).toFixed(2)+' ('+fmtH(h)+' ×$'+hr+'/hr)';p.style.display='block';}
-  else p.style.display='none';
-}
-async function saveEdit(){
-  const s=document.getElementById('es');
-  const id=document.getElementById('eid').value;
-  const hours=parseFloat(document.getElementById('ehours').value);
-  const hr=parseFloat(document.getElementById('ehr').value||0);
-  const amount=hr>0?(hours*hr).toFixed(2):undefined;
-  try{
-    await api('/timelogs/'+id,{method:'PUT',body:JSON.stringify({hours,task_description:document.getElementById('etask').value,date:document.getElementById('edate').value,amount})});
-    s.className='fs ok';s.textContent='✓ Updated!';
-    setTimeout(()=>{hide('modal-edit');load();},700);
-  }catch(e){s.className='fs er';s.textContent=e.message;}
-}
-
-/* ────────────────────────────────────────────────────────────────────────
-   LIVE TIMER ──────────────────────────────────────────────────────────── */
+/* ── LIVE TIMER WITH LIVE SERVER SYNC ── */
 let tiv=null;
 let timerState='idle';
 let startTimestamp=null;
 let accumulatedMs=0;
+
+async function syncTimerToServer(stateOverride) {
+  try {
+    const payload = {
+      client_id: document.getElementById('tc').value || null,
+      task: document.getElementById('tt').value || '',
+      start_time: startTimestamp,
+      accumulated_ms: accumulatedMs,
+      state: stateOverride || timerState
+    };
+    await api('/timer/sync', { method: 'POST', body: JSON.stringify(payload) });
+  } catch (err) { console.error("Timer sync error:", err); }
+}
 
 function persistTimerState(){
   localStorage.setItem('qfa_timer_v2', JSON.stringify({
@@ -836,45 +693,38 @@ function tSetUI(state){
   ['t-start','t-pause','t-resume','t-stop'].forEach(id=>el(id).style.display='none');
   if(state==='idle'){
     el('t-start').style.display='inline-flex';
-    disp.className='timer-disp idle';
-    status.textContent='Ready'; status.style.color='var(--ink3)';
+    disp.className='timer-disp idle'; status.textContent='Ready'; status.style.color='var(--ink3)';
   } else if(state==='running'){
-    el('t-pause').style.display='inline-flex';
-    el('t-stop').style.display='inline-flex';
-    disp.className='timer-disp running';
-    status.textContent='● Running'; status.style.color='var(--green)';
+    el('t-pause').style.display='inline-flex'; el('t-stop').style.display='inline-flex';
+    disp.className='timer-disp running'; status.textContent='● Running'; status.style.color='var(--green)';
   } else if(state==='paused'){
-    el('t-resume').style.display='inline-flex';
-    el('t-stop').style.display='inline-flex';
-    disp.className='timer-disp paused';
-    status.textContent='⏸ Paused — time preserved'; status.style.color='var(--amber)';
+    el('t-resume').style.display='inline-flex'; el('t-stop').style.display='inline-flex';
+    disp.className='timer-disp paused'; status.textContent='⏸ Paused — time preserved'; status.style.color='var(--amber)';
   }
 }
 
 function timerStart(){
   if(timerState!=='idle') return;
-  accumulatedMs=0;
-  startTimestamp=Date.now();
+  accumulatedMs=0; startTimestamp=Date.now();
   tSetUI('running');
-  persistTimerState();
+  syncTimerToServer('running');
   tiv=setInterval(tDisp,1000);
   tDisp();
 }
 
 function timerPause(){
   if(timerState!=='running') return;
-  accumulatedMs += Date.now()-startTimestamp;
-  startTimestamp=null;
+  accumulatedMs += Date.now()-startTimestamp; startTimestamp=null;
   clearInterval(tiv); tiv=null;
   tSetUI('paused');
-  persistTimerState();
+  syncTimerToServer('paused');
 }
 
 function timerResume(){
   if(timerState!=='paused') return;
   startTimestamp=Date.now();
   tSetUI('running');
-  persistTimerState();
+  syncTimerToServer('running');
   tiv=setInterval(tDisp,1000);
   tDisp();
 }
@@ -905,12 +755,10 @@ async function timerStop(){
 
   try{
     await api('/timelogs',{method:'POST',body:JSON.stringify({
-      client_id:cid, hours,
-      task_description:task||'Timed session',
-      date:new Date().toISOString().slice(0,10),
-      source:'timer'
+      client_id:cid, hours, task_description:task||'Timed session', date:new Date().toISOString().slice(0,10), source:'timer'
     })});
     alert('✓ Logged '+fmtH(hours)+' successfully!');
+    await syncTimerToServer('idle');
     timerReset(); load();
   }catch(e){
     alert('Failed to save: '+e.message);
@@ -924,6 +772,7 @@ function timerReset(){
   clearInterval(tiv); tiv=null;
   accumulatedMs=0; startTimestamp=null;
   localStorage.removeItem('qfa_timer_v2');
+  syncTimerToServer('idle');
   tSetUI('idle');
   tDisp();
   document.getElementById('tt').value='';
@@ -935,23 +784,15 @@ function initFloatingTimer(){
     startTimestamp=saved.startTimestamp||null;
     accumulatedMs=saved.accumulatedMs||0;
     if(saved.timerState==='running' && startTimestamp){
-      tiv=setInterval(tDisp,1000);
-      tSetUI('running');
-    } else if(saved.timerState==='paused'){
-      tSetUI('paused');
-    } else {
-      tSetUI('idle');
-    }
-  } else {
-    tSetUI('idle');
-  }
+      tiv=setInterval(tDisp,1000); tSetUI('running');
+    } else if(saved.timerState==='paused'){ tSetUI('paused'); } 
+    else { tSetUI('idle'); }
+  } else { tSetUI('idle'); }
   tDisp();
 
   document.getElementById('tc').addEventListener('change', ()=>{ if(timerState!=='idle') persistTimerState(); });
   document.getElementById('tt').addEventListener('input', ()=>{ if(timerState!=='idle') persistTimerState(); });
-
-  initTimerDrag();
-  initTimerCollapse();
+  initTimerDrag(); initTimerCollapse();
 }
 
 function initTimerDrag(){
@@ -959,19 +800,14 @@ function initTimerDrag(){
   const handle=document.getElementById('float-timer-handle');
   const savedPos=JSON.parse(localStorage.getItem('qfa_timer_pos')||'null');
   if(savedPos){
-    panel.style.left=savedPos.left+'px';
-    panel.style.top=savedPos.top+'px';
-    panel.style.right='auto';
-    panel.style.bottom='auto';
+    panel.style.left=savedPos.left+'px'; panel.style.top=savedPos.top+'px';
+    panel.style.right='auto'; panel.style.bottom='auto';
   }
 
   let dragging=false, offsetX=0, offsetY=0;
-
   function startDrag(cx,cy){
     const rect=panel.getBoundingClientRect();
-    dragging=true;
-    offsetX=cx-rect.left;
-    offsetY=cy-rect.top;
+    dragging=true; offsetX=cx-rect.left; offsetY=cy-rect.top;
     panel.style.right='auto'; panel.style.bottom='auto';
     panel.classList.add('dragging');
   }
@@ -980,15 +816,12 @@ function initTimerDrag(){
     let x=cx-offsetX, y=cy-offsetY;
     const maxX=window.innerWidth-panel.offsetWidth-8;
     const maxY=window.innerHeight-panel.offsetHeight-8;
-    x=Math.max(8,Math.min(x,maxX));
-    y=Math.max(8,Math.min(y,maxY));
-    panel.style.left=x+'px';
-    panel.style.top=y+'px';
+    x=Math.max(8,Math.min(x,maxX)); y=Math.max(8,Math.min(y,maxY));
+    panel.style.left=x+'px'; panel.style.top=y+'px';
   }
   function endDrag(){
     if(!dragging) return;
-    dragging=false;
-    panel.classList.remove('dragging');
+    dragging=false; panel.classList.remove('dragging');
     const rect=panel.getBoundingClientRect();
     localStorage.setItem('qfa_timer_pos', JSON.stringify({left:rect.left, top:rect.top}));
   }
@@ -1015,29 +848,7 @@ function toggleMinimize(){
   document.getElementById('float-timer-min-btn').textContent=collapsed?'+':'–';
   localStorage.setItem('qfa_timer_collapsed', collapsed?'1':'0');
 }
-
-async function submitLog(e){
-  e.preventDefault();
-  const st=document.getElementById('ls');
-  try{
-    await api('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
-    st.className='fs ok';st.textContent='✓ Log saved!';
-    e.target.reset();document.getElementById('ld').value=new Date().toISOString().slice(0,10);
-    load();setTimeout(()=>st.textContent='',3000);
-  }catch(e){st.className='fs er';st.textContent=e.message;}
-}
-
-async function addClient(e){
-  e.preventDefault();
-  const st=document.getElementById('cs');
-  try{
-    await api('/clients',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
-    st.className='fs ok';st.textContent='✓ Client created!';
-    e.target.reset();setTimeout(()=>{hide('modal-client');st.textContent='';},1200);load();
-  }catch(e){st.className='fs er';st.textContent=e.message;}
-}
 </script>
-<!-- Put this just before </body> -->
 <script src="../chatbot-widget.js"></script>
 </body>
 </html>
