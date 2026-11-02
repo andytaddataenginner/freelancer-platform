@@ -616,16 +616,18 @@ async function load(){
       }).join('');
     }
 
-    const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
-    document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
-    document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
-    document.getElementById('acmonth').textContent=ml;
+    // 1. Populate client dropdown options FIRST
+    const opts = cl.map(c => `<option value="${c.id}">${c.name}${c.company ? ' — ' + c.company : ''}</option>`).join('');
+    document.getElementById('tc').innerHTML = '<option value="">Select client…</option>' + opts;
+    document.getElementById('mc').innerHTML = '<option value="">Select client…</option>' + opts;
+    document.getElementById('acmonth').textContent = ml;
     renderActiveClients(cl, st.clientBreakdown);
 
-    const savedTimer=JSON.parse(localStorage.getItem('qfa_timer_v2')||'null');
-    if(savedTimer){
-      if(savedTimer.clientId) document.getElementById('tc').value=savedTimer.clientId;
-      if(savedTimer.taskText) document.getElementById('tt').value=savedTimer.taskText;
+    // 2. Restore saved timer client AFTER populating the dropdown
+    const savedTimer = JSON.parse(localStorage.getItem('qfa_timer_v2') || 'null');
+    if (savedTimer) {
+      if (savedTimer.clientId) document.getElementById('tc').value = savedTimer.clientId;
+      if (savedTimer.taskText) document.getElementById('tt').value = savedTimer.taskText;
     }
 
     const rt=document.getElementById('rtable');
@@ -640,8 +642,11 @@ async function load(){
         return`<tr><td><strong>${l.client_name}</strong></td><td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td><td>${fmtH(parseFloat(l.hours))}</td><td>${parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—'}</td><td>${badge}</td><td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td><td style="display:flex;gap:.3rem;flex-wrap:wrap">${pb}<button class="btn btn-o btn-sm" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${cl2.hourly_rate||0})">✏️</button></td></tr>`;
       }).join('');
     }
-  }catch(e){console.error(e);}
+  }catch(e){console.error("Dashboard load error:", e);}
 }
+
+
+  
 
 /* ── LIVE TIMER WITH LIVE SERVER SYNC ── */
 let tiv=null;
@@ -778,6 +783,7 @@ function timerReset(){
   document.getElementById('tt').value='';
 }
 
+// Ensure dropdown selection immediately updates the backend sync state
 function initFloatingTimer(){
   const saved=JSON.parse(localStorage.getItem('qfa_timer_v2')||'null');
   if(saved){
@@ -790,15 +796,15 @@ function initFloatingTimer(){
   } else { tSetUI('idle'); }
   tDisp();
 
-
-  // Update this section inside initFloatingTimer() in dashboard.html:
-  document.getElementById('tc').addEventListener('change', () => {
-    if (timerState !== 'idle') {
-      persistTimerState();
-      syncTimerToServer(timerState); // Immediately sync client selection change to server
-    }
+  document.getElementById('tc').addEventListener('change', ()=>{ 
+    persistTimerState(); 
+    if(timerState!=='idle') syncTimerToServer(timerState); 
   });
-  document.getElementById('tt').addEventListener('input', ()=>{ if(timerState!=='idle') persistTimerState(); });
+  document.getElementById('tt').addEventListener('input', ()=>{ 
+    persistTimerState(); 
+    if(timerState!=='idle') syncTimerToServer(timerState); 
+  });
+
   initTimerDrag(); initTimerCollapse();
 }
 
