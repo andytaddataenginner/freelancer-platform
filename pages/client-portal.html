@@ -92,6 +92,12 @@
     .lstat:last-child{ border-right:none; }
     .lstat-value{ font-size:1.28rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .lstat-label{ font-size:.63rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
+    @media (max-width: 860px){
+      .ledger-strip{ border-bottom:none; }
+      .lstat{ flex:1 1 50%; border-right:1px solid var(--line); }
+      .lstat:nth-child(2n){ border-right:none; }
+      .lstat:last-child{ border-bottom:none; }
+    }
 
     .ledger-tabs{ display:flex; gap:.3rem; padding:0 0 0 .15rem; overflow-x:auto; }
     .ledger-tab{ appearance:none; border:1px solid var(--line); border-bottom:none; background:var(--bg2); color:var(--ink-2); font-family:var(--sans); font-size:.82rem; font-weight:600; padding:.62rem 1.05rem .58rem; border-radius:10px 10px 0 0; cursor:pointer; display:flex; align-items:center; gap:.45rem; position:relative; top:1px; white-space:nowrap; transition:background .15s ease, color .15s ease; }
@@ -118,6 +124,11 @@
     .bg-gray{background:var(--bg2);color:var(--ink-3)}
     .badge-stamp{ display:inline-flex; align-items:center; gap:.28rem; padding:.22rem .6rem; border:1.5px dashed var(--green); border-radius:4px; color:var(--green); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.11em; transform:rotate(-3deg); background:rgba(20,108,67,.05); }
 
+    .stat-mini-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.8rem; margin-bottom:1.1rem; }
+    .stat-mini{ background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:.8rem .95rem; }
+    .stat-mini .v{ font-size:1.05rem; font-weight:600; color:var(--ink); }
+    .stat-mini .l{ font-size:.62rem; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:600; margin-top:.15rem; display:block; }
+
     .btn{padding:.6rem 1.2rem;border-radius:8px;font-family:var(--sans);font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
     .btn-p{background:var(--navy-900);color:#fff}.btn-p:hover{background:var(--accent)}
     .btn-p:disabled{opacity:.6;cursor:default}
@@ -138,6 +149,7 @@
     .period-card .ph{font-weight:600;font-size:.88rem;color:var(--ink);border-bottom:1px solid var(--bg2);padding-bottom:.4rem;margin-bottom:.6rem;display:flex;justify-content:space-between;align-items:center}
     .period-row{display:flex;justify-content:space-between;font-size:.8rem;padding:.12rem 0}
     .period-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:1rem; }
+
     .empty-note{ color:var(--ink-3); font-size:.85rem; padding:1rem 0; }
 
     @media (max-width: 768px) {
@@ -207,17 +219,6 @@
       </div>
     </div>
 
-    <!-- Live Work Monitor Card for Client -->
-    <div class="subcard" id="client-live-card" style="display:none; border-left:3px solid #22c55e; background:var(--panel);">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <span style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#22c55e; font-weight:700;">🟢 Live Active Session</span>
-          <h3 style="font-size:1.1rem; margin-top:0.2rem;" id="client-live-task">Working on project…</h3>
-        </div>
-        <div class="mono" id="client-live-disp" style="font-size:1.4rem; font-weight:700; color:#22c55e;">00:00:00</div>
-      </div>
-    </div>
-
     <!-- Ledger summary strip -->
     <div class="ledger-strip">
       <div class="lstat"><span class="lstat-value mono" id="s-paid">$0.00</span><span class="lstat-label">Total paid</span></div>
@@ -237,6 +238,7 @@
     </div>
 
     <div class="ledger-panel-wrap">
+
       <!-- OVERVIEW -->
       <section class="view-panel active" id="panel-overview">
         <div id="overview-hourly">
@@ -249,7 +251,7 @@
           <div class="subcard" id="fixed-contract-card" style="border-left:3px solid var(--gold-500)">
             <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gold-600);font-weight:700;margin-bottom:.3rem" id="fixed-card-heading">Fixed Price Contract</div>
             <div class="mono" style="font-size:1.5rem;font-weight:600;color:var(--ink)" id="fixed-price-display">$0.00</div>
-            <p style="font-size:.85rem;color:var(--ink-2);margin-top:.5rem" id="fixed-card-desc">Milestone-structured agreement, billed according to the agreed schedule.</p>
+            <p style="font-size:.85rem;color:var(--ink-2);margin-top:.5rem" id="fixed-card-desc">Milestone-structured agreement, billed according to the agreed schedule. See the Billing History tab for a month-by-month breakdown.</p>
           </div>
         </div>
         <div class="subcard" id="overview-upcoming-teaser" style="margin-top:1.1rem">
@@ -309,6 +311,7 @@
       <!-- BOOK A SESSION -->
       <section class="view-panel" id="panel-book">
         <div class="panel-heading">Request a session</div>
+        <p style="color:var(--ink-2);font-size:0.88rem;margin:-.4rem 0 1.1rem">Request a meeting or working session. I'll confirm within 24 hours.</p>
         <form onsubmit="bookSession(event)" class="booking-form-grid">
           <div class="fg"><label>Preferred date</label><input type="date" name="date" id="book-date" required/></div>
           <div class="fg">
@@ -348,18 +351,28 @@
       <!-- SECURITY & PASSWORD -->
       <section class="view-panel" id="panel-security">
         <div class="panel-heading">Change Password</div>
+        <p style="color:var(--ink-2);font-size:0.88rem;margin:-.4rem 0 1.1rem">Update your account password securely.</p>
         <form onsubmit="clientChangePassword(event)" style="max-width: 440px;">
           <div class="fg" style="margin-bottom:0.9rem">
             <label>Current password</label>
-            <input type="password" name="currentPassword" required placeholder="••••••••"/>
+            <div style="position:relative;">
+              <input type="password" name="currentPassword" id="client-curr-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+              <button type="button" onclick="toggleClientPassword('client-curr-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink-3);">👁️</button>
+            </div>
           </div>
           <div class="fg" style="margin-bottom:0.9rem">
             <label>New password</label>
-            <input type="password" name="newPassword" required placeholder="••••••••" minlength="8"/>
+            <div style="position:relative;">
+              <input type="password" name="newPassword" id="client-new-pwd" required placeholder="••••••••" minlength="8" style="padding-right:2.8rem;"/>
+              <button type="button" onclick="toggleClientPassword('client-new-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink-3);">👁️</button>
+            </div>
           </div>
           <div class="fg" style="margin-bottom:1.1rem">
             <label>Confirm new password</label>
-            <input type="password" name="confirmPassword" required placeholder="••••••••"/>
+            <div style="position:relative;">
+              <input type="password" name="confirmPassword" id="client-conf-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+              <button type="button" onclick="toggleClientPassword('client-conf-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink-3);">👁️</button>
+            </div>
           </div>
           <div>
             <button type="submit" class="btn btn-p">Update password →</button>
@@ -382,67 +395,49 @@ const auth = {
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
 
-async function apiFetch(path, options = {}) {
-  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers || {}) } });
-  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'Failed'); }
-  return res.json();
-}
+const TYPE_LABELS = { call: 'Video call', review: 'Project review', workshop: 'Working session', other: 'Other' };
 
 function initTheme(){
   const saved = localStorage.getItem('qfa_theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
+  updateThemeButtons(saved);
 }
 function toggleTheme(){
   const cur = document.documentElement.getAttribute('data-theme');
   const next = cur==='dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('qfa_theme', next);
+  updateThemeButtons(next);
+}
+function updateThemeButtons(theme){
+  const icon = theme==='dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(b=>b.textContent=icon);
 }
 initTheme();
 
-// CLIENT LIVE TIMER MONITORING SCRIPT
-let clientTimerInterval = null;
-
-async function pollClientActiveTimer() {
-  try {
-    const res = await apiFetch('/client/active-timer');
-    const card = document.getElementById('client-live-card');
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { 
+    ...options, 
+    headers: { ...auth.headers(), ...(options.headers || {}) } 
+  });
+  if (res.status === 401) { 
+    const e = await res.json().catch(() => ({}));
     
-    if (res && res.active) {
-      if (card) card.style.display = 'block';
-      const taskElem = document.getElementById('client-live-task');
-      if (taskElem) taskElem.textContent = res.timer.task || 'Active working session';
-      
-      const start = res.timer.start_time;
-      const accum = res.timer.accumulated_ms || 0;
-      
-      if (clientTimerInterval) clearInterval(clientTimerInterval);
-      
-      clientTimerInterval = setInterval(() => {
-        const elapsed = accum + (Date.now() - start);
-        const secs = Math.floor(elapsed / 1000);
-        const h = Math.floor(secs / 3600).toString().padStart(2, '0');
-        const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
-        const s = (secs % 60).toString().padStart(2, '0');
-        const dispElem = document.getElementById('client-live-disp');
-        if (dispElem) dispElem.textContent = `${h}:${m}:${s}`;
-      }, 1000);
-    } else {
-      if (card) card.style.display = 'none';
-      if (clientTimerInterval) { clearInterval(clientTimerInterval); clientTimerInterval = null; }
+    // Prevent logging out client when entering wrong current password
+    if (path.includes('change-password')) {
+      throw new Error(e.error || 'Current password is incorrect');
     }
-  } catch (e) {
-    console.error("Client timer poll error:", e);
+
+    auth.clear(); 
+    window.location.href = 'login.html?reason=' + (e.error === 'SESSION_REVOKED' ? 'revoked' : 'expired'); 
+    return; 
   }
+  if (!res.ok) { 
+    const e = await res.json().catch(() => ({})); 
+    throw new Error(e.error || 'Failed'); 
+  }
+  return res.json();
 }
-
-// Poll every 5 seconds
-setInterval(pollClientActiveTimer, 5000);
-document.addEventListener('DOMContentLoaded', pollClientActiveTimer);
-
-setInterval(pollClientActiveTimer, 5000);
-document.addEventListener('DOMContentLoaded', pollClientActiveTimer);
 
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
@@ -450,16 +445,540 @@ document.addEventListener('DOMContentLoaded', pollClientActiveTimer);
   if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
   document.getElementById('user-name').textContent = u ? u.name : '';
   if (u && u.company) document.getElementById('user-company').textContent = u.company;
+  document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
 })();
 
 function logout() { auth.clear(); window.location.href = '../index.html'; }
+
+let allLogs = [];
+let currentTab = 'all';
+let currentHourlyRate = 20;
+let currentCreditBalance = 0;
+let filtersInitialized = false;
+let isFixedContract = false;
 
 function switchView(view){
   document.querySelectorAll('.ledger-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + view).classList.add('active');
 }
+
+// Show/Hide password toggle function
+function toggleClientPassword(fieldId, btnEl) {
+  const input = document.getElementById(fieldId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btnEl.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btnEl.textContent = '👁️';
+  }
+}
+
+async function clientChangePassword(e) {
+  e.preventDefault();
+  const status = document.getElementById('client-pwd-status');
+  const btn = e.target.querySelector('button[type=submit]');
+  const formData = new FormData(e.target);
+  const currentPassword = formData.get('currentPassword');
+  const newPassword = formData.get('newPassword');
+  const confirmPassword = formData.get('confirmPassword');
+
+  if (newPassword !== confirmPassword) {
+    status.className = 'fs er';
+    status.textContent = 'New passwords do not match.';
+    return;
+  }
+  if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+    status.className = 'fs er';
+    status.textContent = 'New password must be at least 8 characters and include a number.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+
+  try {
+    const resData = await apiFetch('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    status.className = 'fs ok';
+    status.textContent = '✓ ' + (resData.message || 'Password updated successfully!');
+    e.target.reset();
+    setTimeout(() => { status.textContent = ''; }, 4000);
+  } catch (err) {
+    status.className = 'fs er';
+    status.textContent = err.message || 'Failed to update password.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Update password →';
+  }
+}
+
+async function loadPortal() {
+    const badgeContainer = document.getElementById('engagement-badge-container');
+
+    try {
+        const [stats, logs, bookings] = await Promise.all([
+            apiFetch('/client/stats'),
+            apiFetch('/client/timelogs'),
+            apiFetch('/client/bookings')
+        ]);
+
+        if (!stats) {
+            badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load. Please refresh.</span>`;
+            return;
+        }
+
+        const isFixed = stats.rateType === 'fixed';
+        const contractStatus = stats.contractStatus || 'active';
+        isFixedContract = isFixed;
+        currentHourlyRate = parseFloat(stats.hourlyRate || 0);
+        currentCreditBalance = parseFloat(stats.creditBalance || 0);
+
+        if (contractStatus === 'paused') {
+          badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
+        } else if (contractStatus === 'terminated') {
+          badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(185,28,28,0.15); border-color:rgba(185,28,28,0.32); color:var(--red);">🛑 Contract Terminated</span>`;
+        } else if (isFixed) {
+          badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(240,195,74,0.15); border-color:rgba(240,195,74,0.32); color:var(--gold-300);">📦 Fixed-Rate Contract</span>`;
+        } else {
+          badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.32); color:#4ade80;"><span style="width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${currentHourlyRate.toFixed(2)}/hr)</span>`;
+        }
+
+        const todayStr = new Date().toISOString().slice(0,10);
+        const futureBookings = bookings.filter(b => {
+            const bDate = b.date ? b.date.slice(0,10) : '';
+            return bDate >= todayStr && b.status !== 'cancelled';
+        });
+        document.getElementById('s-bookings').textContent = futureBookings.length;
+        document.getElementById('overview-upcoming-text').textContent =
+            futureBookings.length ? `You have ${futureBookings.length} upcoming session${futureBookings.length===1?'':'s'}.` : 'No upcoming sessions booked yet.';
+
+        document.getElementById('tab-view-logs').style.display = isFixed ? 'none' : '';
+        document.getElementById('overview-hourly').style.display = isFixed ? 'none' : 'block';
+        document.getElementById('overview-fixed').style.display  = isFixed ? 'block' : 'none';
+        
+        // Correctly toggle visibility for billing sub-sections
+        const billingHourly = document.getElementById('billing-hourly');
+        const billingFixed = document.getElementById('billing-fixed');
+        if (billingHourly) billingHourly.style.display = isFixed ? 'none' : 'block';
+        if (billingFixed) billingFixed.style.display = isFixed ? 'block' : 'none';
+
+        if (isFixed) {
+            const cardElem = document.getElementById('fixed-contract-card');
+            const cardHeading = document.getElementById('fixed-card-heading');
+            const cardDesc = document.getElementById('fixed-card-desc');
+
+            if (contractStatus === 'paused') {
+              cardElem.style.borderLeftColor = 'var(--amber)';
+              cardHeading.textContent = 'Fixed Price Contract (Paused)';
+              cardHeading.style.color = 'var(--amber)';
+              cardDesc.textContent = 'This contract is currently paused. No active billing milestones will be accrued until resumed.';
+            } else if (contractStatus === 'terminated') {
+              cardElem.style.borderLeftColor = 'var(--red)';
+              cardHeading.textContent = 'Fixed Price Contract (Terminated)';
+              cardHeading.style.color = 'var(--red)';
+              cardDesc.textContent = 'This contract has been terminated. Outstanding invoices have been settled or cleared.';
+            } else {
+              cardElem.style.borderLeftColor = 'var(--gold-500)';
+              cardHeading.textContent = 'Fixed Price Contract';
+              cardHeading.style.color = 'var(--gold-600)';
+              cardDesc.textContent = 'Milestone-structured agreement, billed according to the agreed schedule. See the Billing History tab for a month-by-month breakdown.';
+            }
+
+            document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
+            document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid ||0).toFixed(2);
+            document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid ||0).toFixed(2);
+            document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
+            document.getElementById('s-hours').textContent  = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
+            document.getElementById('s-hours-label').textContent = 'Contract value';
+            renderFixedPeriodicBreakdown(stats, logs);
+        } else {
+            document.getElementById('s-hours-label').textContent = 'Hours logged';
+            allLogs = logs;
+            renderOverallStats(allLogs);
+
+            if(!filtersInitialized){
+              setDatePreset('recent');
+              filtersInitialized = true;
+            } else {
+              switchTab(currentTab);
+            }
+        }
+
+        const upcoming = document.getElementById('upcoming-sessions');
+        if (!futureBookings.length) {
+            upcoming.innerHTML = '<p style="color:var(--ink-3);font-size:0.9rem">No upcoming sessions.</p>';
+        } else {
+            upcoming.innerHTML = futureBookings.map(b => {
+                let formattedDate = b.date;
+                try { formattedDate = new Date(b.date).toLocaleDateString(); } catch(e){}
+                const statusClass = b.status==='confirmed'?'bg-g':b.status==='pending'?'bg-a':'bg-gray';
+                return `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 0;border-bottom:1px solid var(--bg2)">
+                  <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
+                    <div style="color:var(--ink-2);font-size:0.8rem;margin-top:0.2rem;">📅 ${formattedDate} at 🕐 ${b.time} · ⏱ ${b.duration}h</div>
+                    ${b.message?`<div style="color:var(--ink-3);font-size:0.78rem;margin-top:0.2rem">💬 ${b.message}</div>`:''}
+                  </div>
+                  <span class="badge ${statusClass}">${b.status}</span>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) {
+        console.error("Portal load error:", e);
+        if (badgeContainer) {
+            badgeContainer.innerHTML = `<span style="color:#ef4444;">⚠️ Failed to load dashboard data.</span>`;
+        }
+    }
+}
+
+function renderFixedPeriodicBreakdown(stats, logs) {
+    const container = document.getElementById('fixed-periodic-breakdown-container');
+    const periodicData = {};
+
+    if (logs && logs.length > 0) {
+        logs.forEach(l => {
+            const amt = parseFloat(l.amount || 0);
+            try {
+                const d = new Date(l.date || l.createdAt);
+                if (!isNaN(d.getTime())) {
+                    const periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+                    if (!periodicData[periodKey]) periodicData[periodKey] = { amount: 0, paid: 0, unpaid: 0, count: 0 };
+                    periodicData[periodKey].amount += amt;
+                    periodicData[periodKey].count += 1;
+                    if (l.payment_status === 'paid') periodicData[periodKey].paid += amt;
+                    else periodicData[periodKey].unpaid += amt;
+                }
+            } catch(err) {}
+        });
+    }
+
+    if (Object.keys(periodicData).length === 0) {
+        let periodKey = "Current Billing Period";
+        if (stats.updatedAt || stats.createdAt) {
+            try {
+                const d = new Date(stats.updatedAt || stats.createdAt);
+                if (!isNaN(d.getTime())) periodKey = `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+            } catch(err) {}
+        }
+        periodicData[periodKey] = {
+            amount: parseFloat(stats.fixedPrice || 0),
+            paid: parseFloat(stats.totalPaid || 0),
+            unpaid: parseFloat(stats.totalUnpaid || 0),
+            count: 1
+        };
+    }
+
+    const periods = Object.keys(periodicData);
+    container.innerHTML = periods.map(period => {
+        const data = periodicData[period];
+        return `
+            <div class="period-card">
+              <div class="ph">
+                <span>📅 ${period}</span>
+                <span style="font-size:0.72rem; background:rgba(201,149,42,0.15); padding:0.15rem 0.5rem; border-radius:4px; color:var(--gold-600)">Fixed Milestone</span>
+              </div>
+              <div class="period-row"><span style="color:var(--ink-3)">Total Milestone Value:</span><strong class="mono" style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
+              <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span class="mono" style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
+              <div class="period-row"><span style="color:var(--amber)">Outstanding Balance:</span><span class="mono" style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderOverallStats(logs){
+  let totalPaid=0, totalBilled=0, totalHours=0;
+  const periodicData = {};
+
+  logs.forEach(l => {
+    const h = parseFloat(l.hours || 0);
+    let amt = parseFloat(l.amount || 0);
+    if (!amt && h && currentHourlyRate) amt = h * currentHourlyRate;
+
+    totalHours += h;
+    totalBilled += amt;
+    if (l.payment_status === 'paid') totalPaid += amt;
+
+    try {
+      const d = new Date(l.date);
+      if (!isNaN(d.getTime())) {
+        const key = `${d.toLocaleString('default',{month:'long'})} ${d.getFullYear()}`;
+        if (!periodicData[key]) periodicData[key] = { hours:0, amount:0, paid:0, unpaid:0, count:0 };
+        periodicData[key].hours += h;
+        periodicData[key].amount += amt;
+        periodicData[key].count += 1;
+        if (l.payment_status === 'paid') periodicData[key].paid += amt;
+        else periodicData[key].unpaid += amt;
+      }
+    } catch(err) {}
+  });
+
+  const outstanding = Math.max(0, totalBilled - totalPaid);
+  document.getElementById('s-paid').textContent   = '$' + totalPaid.toFixed(2);
+  document.getElementById('s-unpaid').textContent = '$' + outstanding.toFixed(2);
+  document.getElementById('s-hours').textContent  = totalHours.toFixed(1) + 'h';
+  document.getElementById('s-credit').textContent = '$' + currentCreditBalance.toFixed(2);
+
+  renderPeriodicBreakdown(periodicData);
+  renderMonthlyCharts(periodicData);
+}
+
+function renderPeriodicBreakdown(periodicData){
+  const container = document.getElementById('periodic-breakdown-container');
+  const periods = Object.keys(periodicData);
+
+  if (!periods.length) {
+    container.innerHTML = `<p class="empty-note">No billing history yet.</p>`;
+    return;
+  }
+  container.innerHTML = periods.map(period => {
+    const data = periodicData[period];
+    return `
+      <div class="period-card">
+        <div class="ph">
+          <span>📅 ${period}</span>
+          <span style="font-size:.72rem;background:rgba(13,35,83,.06);padding:.15rem .5rem;border-radius:4px;color:var(--ink-2)">${data.hours.toFixed(1)}h</span>
+        </div>
+        <div class="period-row"><span style="color:var(--ink-3)">Total Volume:</span><strong class="mono" style="color:var(--ink)">$${data.amount.toFixed(2)}</strong></div>
+        <div class="period-row"><span style="color:var(--green)">Settled Paid:</span><span class="mono" style="color:var(--green);font-weight:600">$${data.paid.toFixed(2)}</span></div>
+        <div class="period-row"><span style="color:var(--amber)">Outstanding:</span><span class="mono" style="color:var(--amber);font-weight:600">$${data.unpaid.toFixed(2)}</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function niceCeil(val){
+  if (val <= 0) return 10;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(val)));
+  const residual = val / magnitude;
+  let niceResidual;
+  if (residual <= 1) niceResidual = 1;
+  else if (residual <= 2) niceResidual = 2;
+  else if (residual <= 5) niceResidual = 5;
+  else niceResidual = 10;
+  return niceResidual * magnitude;
+}
+function chartEmptyMsg(){
+  return `<p class="empty-note">No data yet to chart.</p>`;
+}
+function shortMonthLabel(key){
+  const d = new Date(key);
+  if (isNaN(d.getTime())) return key;
+  return d.toLocaleString('default',{month:'short'}) + " '" + String(d.getFullYear()).slice(2);
+}
+
+function renderMonthlyCharts(periodicData){
+  const allKeys = Object.keys(periodicData).sort((a,b) => new Date(a) - new Date(b));
+  const keys = allKeys.slice(-12);
+  renderPaidUnpaidChart(keys, periodicData);
+  renderEntriesChart(keys, periodicData);
+}
+
+function renderPaidUnpaidChart(keys, data){
+  const container = document.getElementById('chart-paid-unpaid');
+  if (!keys.length) { container.innerHTML = chartEmptyMsg(); return; }
+
+  const W=640, H=220, padL=48, padB=32, padT=14, padR=10;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+  const groupW=chartW/keys.length;
+  const barW=Math.min(34, groupW*0.55);
+  const maxVal=Math.max(1, ...keys.map(k => data[k].paid + data[k].unpaid));
+  const niceMax=niceCeil(maxVal);
+
+  let grid='', bars='', labels='';
+  const steps=4;
+  for(let i=0;i<=steps;i++){
+    const y=padT+chartH-(chartH*i/steps);
+    const val=niceMax*i/steps;
+    grid+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" style="stroke:var(--bg2);stroke-width:1"/>`;
+    grid+=`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" style="fill:var(--ink-3)">$${Math.round(val)}</text>`;
+  }
+  keys.forEach((k,i)=>{
+    const cx=padL+groupW*i+groupW/2;
+    const paid=data[k].paid, unpaid=data[k].unpaid;
+    const paidH=(paid/niceMax)*chartH, unpaidH=(unpaid/niceMax)*chartH;
+    const x=cx-barW/2;
+    const yPaidTop=padT+chartH-paidH;
+    const yUnpaidTop=yPaidTop-unpaidH;
+    bars+=`<g>
+      <title>${k} — Paid $${paid.toFixed(2)}, Unpaid $${unpaid.toFixed(2)}</title>
+      <rect x="${x}" y="${yPaidTop}" width="${barW}" height="${Math.max(paidH,0)}" rx="2" style="fill:var(--green)"/>
+      <rect x="${x}" y="${yUnpaidTop}" width="${barW}" height="${Math.max(unpaidH,0)}" rx="2" style="fill:var(--amber)"/>
+    </g>`;
+    labels+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" style="fill:var(--ink-3)">${shortMonthLabel(k)}</text>`;
+  });
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:var(--sans)">
+      ${grid}${bars}${labels}
+    </svg>
+    <div style="display:flex;gap:1.2rem;margin-top:.5rem;font-size:.75rem;color:var(--ink-2)">
+      <span style="display:inline-flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></span>Paid</span>
+      <span style="display:inline-flex;align-items:center;gap:.35rem"><span style="width:10px;height:10px;border-radius:2px;background:var(--amber);display:inline-block"></span>Unpaid</span>
+    </div>
+  `;
+}
+
+function renderEntriesChart(keys, data){
+  const container = document.getElementById('chart-entries');
+  if (!keys.length) { container.innerHTML = chartEmptyMsg(); return; }
+
+  const W=640, H=200, padL=32, padB=32, padT=14, padR=10;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+  const groupW=chartW/keys.length;
+  const barW=Math.min(30, groupW*0.5);
+  const maxVal=Math.max(1, ...keys.map(k => data[k].count));
+  const niceMax=niceCeil(maxVal);
+
+  let grid='', bars='', labels='';
+  const steps=Math.min(4, niceMax);
+  for(let i=0;i<=steps;i++){
+    const y=padT+chartH-(chartH*i/steps);
+    const val=Math.round(niceMax*i/steps);
+    grid+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" style="stroke:var(--bg2);stroke-width:1"/>`;
+    grid+=`<text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="10" style="fill:var(--ink-3)">${val}</text>`;
+  }
+  keys.forEach((k,i)=>{
+    const cx=padL+groupW*i+groupW/2;
+    const count=data[k].count;
+    const barH=(count/niceMax)*chartH;
+    const x=cx-barW/2, y=padT+chartH-barH;
+    bars+=`<g><title>${k} — ${count} ${count===1?'entry':'entries'}</title><rect x="${x}" y="${y}" width="${barW}" height="${Math.max(barH,0)}" rx="2" style="fill:var(--accent)"/></g>`;
+    labels+=`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" style="fill:var(--ink-3)">${shortMonthLabel(k)}</text>`;
+  });
+
+  container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:var(--sans)">${grid}${bars}${labels}</svg>`;
+}
+
+function updateChipStates(active){
+  ['recent','month','all'].forEach(p=>{
+    document.getElementById('chip-'+p).classList.toggle('active', p===active);
+  });
+}
+function setDatePreset(preset){
+  const today = new Date();
+  let from='', to=today.toISOString().slice(0,10);
+  if(preset==='recent'){
+    const d=new Date(); d.setDate(d.getDate()-30);
+    from=d.toISOString().slice(0,10);
+  } else if(preset==='month'){
+    from=new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0,10);
+  } else if(preset==='all'){
+    from=''; to='';
+  }
+  document.getElementById('filter-from').value=from;
+  document.getElementById('filter-to').value=to;
+  updateChipStates(preset);
+  renderLogsTable();
+}
+function onCustomDateChange(){
+  updateChipStates(null);
+  renderLogsTable();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['all','unpaid','paid'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  document.getElementById('logs-title').textContent = { all:'Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' }[tab];
+  renderLogsTable();
+}
+
+function getFilteredLogs(){
+  const from = document.getElementById('filter-from').value;
+  const to   = document.getElementById('filter-to').value;
+  return allLogs.filter(l => {
+    if (currentTab !== 'all' && l.payment_status !== currentTab) return false;
+    const d = (l.date || '').slice(0,10);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  });
+}
+
+function renderLogsTable(){
+  renderLogs(getFilteredLogs());
+}
+
+function renderLogs(logs) {
+  const tbody  = document.getElementById('logs-table');
+  const footer = document.getElementById('logs-footer');
+  if (!logs.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink-3)">${
+      currentTab==='unpaid' ? 'No unpaid logs in this range — all settled! ✓' : currentTab==='paid' ? 'No paid logs in this range.' : 'No logs in this range.'
+    }</td></tr>`;
+    footer.textContent = '';
+    return;
+  }
+  let sumHours=0, sumAmount=0;
+  tbody.innerHTML = logs.map(l => {
+    const isPaid  = l.payment_status === 'paid';
+    const hours = parseFloat(l.hours || 0);
+
+    let amount = parseFloat(l.amount || 0);
+    if (!amount && hours && currentHourlyRate) amount = hours * currentHourlyRate;
+
+    sumHours  += hours;
+    sumAmount += amount;
+    const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
+    return `
+      <tr class="${!isPaid?'row-unpaid':''}">
+        <td>${new Date(l.date).toLocaleDateString()}</td>
+        <td class="mono"><strong>${hours}h</strong></td>
+        <td class="mono">${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+        <td>${badge}</td>
+        <td>${l.task_description || ''}</td>
+      </tr>`;
+  }).join('');
+  footer.innerHTML = `<strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong>`;
+}
+
+async function bookSession(e) {
+  e.preventDefault();
+  const status = document.getElementById('book-status');
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await apiFetch('/client/bookings', { method:'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+    status.className = 'fs ok';
+    status.textContent = '✓ Request sent! I\'ll confirm within 24 hours.';
+    e.target.reset();
+    document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
+    loadPortal();
+  } catch(err) {
+    status.className = 'fs er';
+    status.textContent = err.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Request session →';
+  }
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('is-open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('is-open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+});
+
+loadPortal();
 </script>
-<script src="../chatbot-widget.js"></script>
+  <script src="../chatbot-widget.js"></script>
 </body>
 </html>
