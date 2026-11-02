@@ -790,7 +790,14 @@ function initFloatingTimer(){
   } else { tSetUI('idle'); }
   tDisp();
 
-  document.getElementById('tc').addEventListener('change', ()=>{ if(timerState!=='idle') persistTimerState();syncTimerToServer(timerState); });
+
+  // Update this section inside initFloatingTimer() in dashboard.html:
+  document.getElementById('tc').addEventListener('change', () => {
+    if (timerState !== 'idle') {
+      persistTimerState();
+      syncTimerToServer(timerState); // Immediately sync client selection change to server
+    }
+  });
   document.getElementById('tt').addEventListener('input', ()=>{ if(timerState!=='idle') persistTimerState(); });
   initTimerDrag(); initTimerCollapse();
 }
