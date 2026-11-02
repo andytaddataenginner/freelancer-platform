@@ -266,6 +266,32 @@
 </head>
 <body>
 
+<div class="card" style="margin-top: 1.5rem;">
+  <div class="ch"><h3>📝 Client Project Notes & Guidelines</h3></div>
+  <div class="cb">
+    <form onsubmit="saveClientNote(event, currentClientId)" style="margin-bottom: 1.2rem;">
+      <div class="fg" style="margin-bottom: 0.7rem;">
+        <label>Title</label>
+        <input type="text" name="title" required placeholder="e.g. Deployment Steps, Coding Rules"/>
+      </div>
+      <div class="fg" style="margin-bottom: 0.7rem;">
+        <label>Category</label>
+        <select name="category">
+          <option value="guidelines">Guidelines</option>
+          <option value="mandatory">Mandatory Rule</option>
+          <option value="tips">Tips</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom: 0.7rem;">
+        <label>Content</label>
+        <textarea name="content" rows="3" required placeholder="Write instructions for the client..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-p btn-sm">Save Note →</button>
+    </form>
+    <div id="freelancer-notes-list"></div>
+  </div>
+</div>
+
 <div class="mob-bar" id="mob-bar">
   <div class="mob-brand">
     <img src="../QFA_Logo.png" alt="QFA"/>
