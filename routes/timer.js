@@ -97,12 +97,13 @@ router.post('/resume', requireFreelancer, async (req, res, next) => {
 });
 
 // ── POST /api/timer/stop (Stop & Save) ───────────────────────────────────────
+// ── POST /api/timer/stop (Stop & Save) ───────────────────────────────────────
 router.post('/stop', requireFreelancer, async (req, res, next) => {
   try {
-    let { client_id } = req.body;
+    let { client_id, elapsed_sec } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
-    // Resolve client_id to actual users.id
+    // 1. Resolve client_id to actual user_id
     const clientCheck = await pool.query(
       `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
       [client_id]
@@ -110,40 +111,45 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
     const actualUserId = clientCheck.rows[0].id;
 
-    // Fetch the active timer and compute total elapsed seconds (accounting for pause/accumulated time)
+    // 2. Fetch active timer record
     const check = await pool.query(`
-      SELECT *, 
-             CASE WHEN is_paused THEN accumulated_seconds 
-                  ELSE accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - started_at))::int 
-             END AS total_secs
-      FROM active_timers
+      SELECT * FROM active_timers
       WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE
     `, [req.user.id, actualUserId]);
 
     if (!check.rows.length) return res.status(404).json({ error: 'No running timer found for this client' });
-    
     const timer = check.rows[0];
-    const elapsedSec = parseInt(timer.total_secs || 0);
-    const hours = Math.round((elapsedSec / 3600) * 100) / 100;
 
-    // CRITICAL FIX: Insert the completed session into the time_logs table
+    // 3. Compute exact hours
+    let totalSecs = parseInt(elapsed_sec) || 0;
+    const hours = Math.round((totalSecs / 3600) * 100) / 100;
+
+    // 4. Fetch client hourly rate to calculate amount
+    const rateRes = await pool.query(
+      `SELECT hourly_rate FROM clients WHERE user_id = $1 OR id = $1 LIMIT 1`,
+      [actualUserId]
+    );
+    const hourlyRate = parseFloat(rateRes.rows[0]?.hourly_rate || 0);
+    const amount = Math.round((hours * hourlyRate) * 100) / 100;
+
+    // 5. Insert completed time log WITH calculated amount
     if (hours > 0) {
       await pool.query(`
-        INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, payment_status)
-        VALUES ($1, $2, CURRENT_DATE, $3, $4, 'timer', 'unpaid')
-      `, [actualUserId, req.user.id, hours, timer.description || 'Timed session']);
+        INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
+        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
+      `, [actualUserId, req.user.id, hours, amount, timer.description || 'Timed session']);
     }
 
-    // Clean up active timer record
+    // 6. Clean up active timer
     await pool.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
 
-    // Notify the client via SSE/polling that the timer stopped
-    pushToClient(actualUserId, { event: 'stopped', elapsed_sec: elapsedSec });
+    pushToClient(actualUserId, { event: 'stopped', elapsed_sec: totalSecs });
 
     res.json({
       message:     'Timer stopped and saved',
-      elapsed_sec: elapsedSec,
-      hours:       hours
+      elapsed_sec: totalSecs,
+      hours:       hours,
+      amount:      amount
     });
   } catch (e) { next(e); }
 });
