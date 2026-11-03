@@ -1,35 +1,8 @@
-/**
- * routes/timer.js
- * Live timer — freelancer starts/stops, client watches in real-time via SSE.
- *
- * DB migration (run once in Supabase SQL editor):
- * ─────────────────────────────────────────────────────────────────
- * CREATE TABLE IF NOT EXISTS active_timers (
- *   id              SERIAL PRIMARY KEY,
- *   freelancer_id   INTEGER NOT NULL REFERENCES users(id),
- *   client_id       INTEGER NOT NULL REFERENCES users(id),
- *   started_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
- *   description     TEXT,
- *   is_running      BOOLEAN NOT NULL DEFAULT TRUE,
- *   UNIQUE (freelancer_id, client_id)   -- one active timer per pair
- * );
- * ─────────────────────────────────────────────────────────────────
- *
- * Routes:
- *   POST   /api/timer/start          — freelancer starts timer for a client
- *   POST   /api/timer/stop           — freelancer stops timer, returns elapsed seconds
- *   GET    /api/timer/status         — freelancer: all running timers they own
- *   GET    /api/timer/watch          — client: SSE stream that pushes live elapsed time
- *   GET    /api/timer/client-status  — client: simple JSON snapshot (for non-SSE polling)
- */
-
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer, requireAuth } = require('../middleware/auth');
-const verifyToken = requireAuth; // alias — requireAuth sets req.user for any role
+const verifyToken = requireAuth;
 
-// ── SSE client registry (in-memory) ─────────────────────────────────────────
-// Map<clientId, Set<res>>  — multiple browser tabs supported
 const sseClients = new Map();
 
 function pushToClient(clientId, payload) {
@@ -39,27 +12,30 @@ function pushToClient(clientId, payload) {
   set.forEach(res => { try { res.write(data); } catch (_) {} });
 }
 
-// ── POST /api/timer/start ────────────────────────────────────────────────────
+// Helper to resolve client user ID
+async function resolveClientUserId(client_id) {
+  const clientCheck = await pool.query(
+    `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
+    [client_id]
+  );
+  if (!clientCheck.rows.length) return null;
+  return clientCheck.rows[0].id;
+}
+
 // ── POST /api/timer/start ────────────────────────────────────────────────────
 router.post('/start', requireFreelancer, async (req, res, next) => {
   try {
     let { client_id, description } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
-    // CRITICAL FIX: Ensure client_id resolves to the actual users.id
-    const clientCheck = await pool.query(
-      `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
-      [client_id]
-    );
-    if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
-    const actualUserId = clientCheck.rows[0].id;
+    const actualUserId = await resolveClientUserId(client_id);
+    if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
 
-    // Upsert using the verified users.id
     const { rows } = await pool.query(`
-      INSERT INTO active_timers (freelancer_id, client_id, started_at, description, is_running)
-      VALUES ($1, $2, NOW(), $3, TRUE)
+      INSERT INTO active_timers (freelancer_id, client_id, started_at, description, is_running, is_paused, accumulated_seconds)
+      VALUES ($1, $2, NOW(), $3, TRUE, FALSE, 0)
       ON CONFLICT (freelancer_id, client_id)
-      DO UPDATE SET started_at = NOW(), description = $3, is_running = TRUE
+      DO UPDATE SET started_at = NOW(), description = $3, is_running = TRUE, is_paused = FALSE, accumulated_seconds = 0
       RETURNING *
     `, [req.user.id, actualUserId, description || null]);
 
@@ -75,44 +51,98 @@ router.post('/start', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ── POST /api/timer/stop ─────────────────────────────────────────────────────
-router.post('/stop', requireFreelancer, async (req, res, next) => {
+// ── POST /api/timer/pause ────────────────────────────────────────────────────
+router.post('/pause', requireFreelancer, async (req, res, next) => {
   try {
-    const { client_id } = req.body;
-    if (!client_id) return res.status(400).json({ error: 'client_id required' });
+    let { client_id } = req.body;
+    const actualUserId = await resolveClientUserId(client_id);
+    if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
 
     const { rows } = await pool.query(`
       UPDATE active_timers
-      SET is_running = FALSE
-      WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE
-      RETURNING *, EXTRACT(EPOCH FROM (NOW() - started_at))::int AS elapsed_sec
-    `, [req.user.id, client_id]);
+      SET is_paused = TRUE,
+          accumulated_seconds = accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - started_at))::int
+      WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE AND is_paused = FALSE
+      RETURNING *, accumulated_seconds AS elapsed_sec
+    `, [req.user.id, actualUserId]);
 
-    if (!rows.length) return res.status(404).json({ error: 'No running timer found for this client' });
+    if (!rows.length) return res.status(404).json({ error: 'No active running timer found to pause' });
 
     const timer = rows[0];
-    // Notify client their timer stopped
-    pushToClient(client_id, {
-      event:       'stopped',
-      elapsed_sec: timer.elapsed_sec,
-      description: timer.description
-    });
-
-    res.json({
-      message:     'Timer stopped',
-      elapsed_sec: timer.elapsed_sec,
-      hours:       (timer.elapsed_sec / 3600).toFixed(4),
-      started_at:  timer.started_at
-    });
+    pushToClient(actualUserId, { event: 'paused', elapsed_sec: timer.elapsed_sec });
+    res.json({ message: 'Timer paused', elapsed_sec: timer.elapsed_sec });
   } catch (e) { next(e); }
 });
 
-// ── GET /api/timer/status — freelancer sees all their running timers ──────────
+// ── POST /api/timer/resume ───────────────────────────────────────────────────
+router.post('/resume', requireFreelancer, async (req, res, next) => {
+  try {
+    let { client_id } = req.body;
+    const actualUserId = await resolveClientUserId(client_id);
+    if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
+
+    const { rows } = await pool.query(`
+      UPDATE active_timers
+      SET is_paused = FALSE, started_at = NOW()
+      WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE AND is_paused = TRUE
+      RETURNING *
+    `, [req.user.id, actualUserId]);
+
+    if (!rows.length) return res.status(404).json({ error: 'No paused timer found to resume' });
+
+    const timer = rows[0];
+    pushToClient(actualUserId, { event: 'resumed', started_at: timer.started_at });
+    res.json({ message: 'Timer resumed', timer });
+  } catch (e) { next(e); }
+});
+
+// ── POST /api/timer/stop (Stop & Save) ───────────────────────────────────────
+router.post('/stop', requireFreelancer, async (req, res, next) => {
+  try {
+    let { client_id } = req.body;
+    const actualUserId = await resolveClientUserId(client_id);
+    if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
+
+    // Fetch current timer state to calculate total elapsed time
+    const check = await pool.query(`
+      SELECT *, 
+             CASE WHEN is_paused THEN accumulated_seconds 
+                  ELSE accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - started_at))::int 
+             END AS total_secs
+      FROM active_timers
+      WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE
+    `, [req.user.id, actualUserId]);
+
+    if (!check.rows.length) return res.status(404).json({ error: 'No running timer found' });
+    const timer = check.rows[0];
+    const elapsedSec = parseInt(timer.total_secs || 0);
+    const hours = Math.round((elapsedSec / 3600) * 100) / 100;
+
+    // Automatically insert into time_logs
+    if (hours > 0) {
+      await pool.query(`
+        INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, payment_status)
+        VALUES ($1, $2, CURRENT_DATE, $3, $4, 'timer', 'unpaid')
+      `, [actualUserId, req.user.id, hours, timer.description || 'Timed session']);
+    }
+
+    // Delete active timer record
+    await pool.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
+
+    pushToClient(actualUserId, { event: 'stopped', elapsed_sec: elapsedSec });
+
+    res.json({ message: 'Timer stopped and saved', elapsed_sec: elapsedSec, hours });
+  } catch (e) { next(e); }
+});
+
+// ── GET /api/timer/status — freelancer active timers ──────────────────────────
 router.get('/status', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT t.*, u.name AS client_name, u.company,
-             EXTRACT(EPOCH FROM (NOW() - t.started_at))::int AS elapsed_sec
+             CASE WHEN t.is_paused THEN t.accumulated_seconds 
+                  ELSE t.accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - t.started_at))::int 
+             END AS elapsed_sec
       FROM active_timers t
       JOIN users u ON u.id = t.client_id
       WHERE t.freelancer_id = $1 AND t.is_running = TRUE
@@ -122,14 +152,16 @@ router.get('/status', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ── GET /api/timer/client-status — client polls their own timer (JSON) ────────
+// ── GET /api/timer/client-status — client status poll ─────────────────────────
 router.get('/client-status', verifyToken, async (req, res, next) => {
   try {
     if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
 
     const { rows } = await pool.query(`
-      SELECT t.started_at, t.description, t.is_running,
-             EXTRACT(EPOCH FROM (NOW() - t.started_at))::int AS elapsed_sec
+      SELECT t.started_at, t.description, t.is_running, t.is_paused, t.accumulated_seconds,
+             CASE WHEN t.is_paused THEN t.accumulated_seconds 
+                  ELSE t.accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - t.started_at))::int 
+             END AS elapsed_sec
       FROM active_timers t
       WHERE t.client_id = $1 AND t.is_running = TRUE
       ORDER BY t.started_at DESC LIMIT 1
@@ -137,63 +169,6 @@ router.get('/client-status', verifyToken, async (req, res, next) => {
 
     if (!rows.length) return res.json({ running: false });
     res.json({ running: true, ...rows[0] });
-  } catch (e) { next(e); }
-});
-
-// ── GET /api/timer/watch — SSE: client subscribes to live timer ticks ─────────
-// Client browser opens:  new EventSource('/api/timer/watch?token=<JWT>')
-router.get('/watch', async (req, res, next) => {
-  try {
-    // Auth via query-string token (EventSource can't set headers)
-    const token = req.query.token;
-    if (!token) return res.status(401).send('Token required');
-
-    const jwt = require('jsonwebtoken');
-    let user;
-    try { user = jwt.verify(token, process.env.JWT_SECRET); }
-    catch (_) { return res.status(403).send('Invalid token'); }
-
-    if (user.role !== 'client') return res.status(403).send('Clients only');
-
-    const clientId = String(user.id);
-
-    // SSE headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    // Register this connection
-    if (!sseClients.has(clientId)) sseClients.set(clientId, new Set());
-    sseClients.get(clientId).add(res);
-
-    // Send current timer state immediately on connect
-    const { rows } = await pool.query(`
-      SELECT started_at, description, is_running,
-             EXTRACT(EPOCH FROM (NOW() - started_at))::int AS elapsed_sec
-      FROM active_timers
-      WHERE client_id = $1 AND is_running = TRUE
-      ORDER BY started_at DESC LIMIT 1
-    `, [user.id]);
-
-    if (rows.length) {
-      res.write(`data: ${JSON.stringify({ event: 'sync', ...rows[0] })}\n\n`);
-    } else {
-      res.write(`data: ${JSON.stringify({ event: 'idle' })}\n\n`);
-    }
-
-    // Heartbeat every 30s so the connection stays alive through proxies
-    const heartbeat = setInterval(() => {
-      try { res.write(': heartbeat\n\n'); } catch (_) { clearInterval(heartbeat); }
-    }, 30000);
-
-    // Cleanup on disconnect
-    req.on('close', () => {
-      clearInterval(heartbeat);
-      const set = sseClients.get(clientId);
-      if (set) { set.delete(res); if (!set.size) sseClients.delete(clientId); }
-    });
-
   } catch (e) { next(e); }
 });
 
