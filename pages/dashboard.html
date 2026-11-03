@@ -957,16 +957,16 @@ async function timerReset(){
   if(tiv){ clearInterval(tiv); tiv = null; }
   
   const cid = activeClientId || document.getElementById('tc').value;
-  if(cid){
-    try {
-      await fetch(API + '/timer/cancel', {
-        method: 'POST',
-        headers: auth.hdrs(),
-        body: JSON.stringify({ client_id: cid })
-      });
-    } catch(e) {
-      console.warn('Failed to notify backend on timer reset:', e);
-    }
+
+  // Always notify backend to clear active timer state
+  try {
+    await fetch(API + '/timer/cancel', {
+      method: 'POST',
+      headers: auth.hdrs(),
+      body: JSON.stringify(cid ? { client_id: cid } : {})
+    });
+  } catch(e) {
+    console.warn('Failed to notify backend on timer reset:', e);
   }
 
   accumulatedMs = 0; 
