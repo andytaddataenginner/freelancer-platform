@@ -18,7 +18,10 @@ app.use('/api/client',         require('./routes/client-portal'));
 app.use('/api/payments',       require('./routes/payments'));
 app.use('/api/fixed-payments', require('./routes/fixed-payments')); // ← NEW
 app.use('/api/contracts',      require('./routes/contracts')); // ← NEW
-app.use('/api/chatbot', require('./routes/chatbot'));
+app.use('/api/chatbot',       require('./routes/chatbot'));
+app.use('/api/timer',        require('./routes/timer'));        // ← Live timer (SSE)
+app.use('/api/client-notes', require('./routes/client-notes')); // ← already mounted, now upgraded
+app.use('/api/projects',     require('./routes/projects'));     // ← Project + task tracking
 
 app.get('/api/health', (req, res) => res.json({ status:'ok', timestamp:new Date() }));
 app.use((err, req, res, next) => {
