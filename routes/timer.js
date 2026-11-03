@@ -1,35 +1,8 @@
-/**
- * routes/timer.js
- * Live timer — freelancer starts/stops, client watches in real-time via SSE.
- *
- * DB migration (run once in Supabase SQL editor):
- * ─────────────────────────────────────────────────────────────────
- * CREATE TABLE IF NOT EXISTS active_timers (
- *   id              SERIAL PRIMARY KEY,
- *   freelancer_id   INTEGER NOT NULL REFERENCES users(id),
- *   client_id       INTEGER NOT NULL REFERENCES users(id),
- *   started_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
- *   description     TEXT,
- *   is_running      BOOLEAN NOT NULL DEFAULT TRUE,
- *   UNIQUE (freelancer_id, client_id)   -- one active timer per pair
- * );
- * ─────────────────────────────────────────────────────────────────
- *
- * Routes:
- *   POST   /api/timer/start          — freelancer starts timer for a client
- *   POST   /api/timer/stop           — freelancer stops timer, returns elapsed seconds
- *   GET    /api/timer/status         — freelancer: all running timers they own
- *   GET    /api/timer/watch          — client: SSE stream that pushes live elapsed time
- *   GET    /api/timer/client-status  — client: simple JSON snapshot (for non-SSE polling)
- */
-
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer, requireAuth } = require('../middleware/auth');
-const verifyToken = requireAuth; // alias — requireAuth sets req.user for any role
+const verifyToken = requireAuth;
 
-// ── SSE client registry (in-memory) ─────────────────────────────────────────
-// Map<clientId, Set<res>>  — multiple browser tabs supported
 const sseClients = new Map();
 
 function pushToClient(clientId, payload) {
@@ -39,21 +12,25 @@ function pushToClient(clientId, payload) {
   set.forEach(res => { try { res.write(data); } catch (_) {} });
 }
 
+// Helper to resolve any client identifier (users.id or clients.id) to the real users.id
+async function resolveClientUserId(client_id) {
+  const clientCheck = await pool.query(
+    `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
+    [client_id]
+  );
+  if (!clientCheck.rows.length) return null;
+  return clientCheck.rows[0].id;
+}
+
 // ── POST /api/timer/start ────────────────────────────────────────────────────
 router.post('/start', requireFreelancer, async (req, res, next) => {
   try {
     let { client_id, description } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
-    // Ensure client_id points to the actual users table ID (in case a profile ID was passed)
-    const clientCheck = await pool.query(
-      `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
-      [client_id]
-    );
-    if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
-    const actualUserId = clientCheck.rows[0].id;
+    const actualUserId = await resolveClientUserId(client_id);
+    if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
 
-    // Upsert using the verified user ID
     const { rows } = await pool.query(`
       INSERT INTO active_timers (freelancer_id, client_id, started_at, description, is_running)
       VALUES ($1, $2, NOW(), $3, TRUE)
@@ -73,24 +50,27 @@ router.post('/start', requireFreelancer, async (req, res, next) => {
     res.json({ message: 'Timer started', timer });
   } catch (e) { next(e); }
 });
+
 // ── POST /api/timer/stop ─────────────────────────────────────────────────────
 router.post('/stop', requireFreelancer, async (req, res, next) => {
   try {
-    const { client_id } = req.body;
+    let { client_id } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
+
+    const actualUserId = await resolveClientUserId(client_id);
+    if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
 
     const { rows } = await pool.query(`
       UPDATE active_timers
       SET is_running = FALSE
       WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE
       RETURNING *, EXTRACT(EPOCH FROM (NOW() - started_at))::int AS elapsed_sec
-    `, [req.user.id, client_id]);
+    `, [req.user.id, actualUserId]);
 
     if (!rows.length) return res.status(404).json({ error: 'No running timer found for this client' });
 
     const timer = rows[0];
-    // Notify client their timer stopped
-    pushToClient(client_id, {
+    pushToClient(actualUserId, {
       event:       'stopped',
       elapsed_sec: timer.elapsed_sec,
       description: timer.description
@@ -139,10 +119,8 @@ router.get('/client-status', verifyToken, async (req, res, next) => {
 });
 
 // ── GET /api/timer/watch — SSE: client subscribes to live timer ticks ─────────
-// Client browser opens:  new EventSource('/api/timer/watch?token=<JWT>')
 router.get('/watch', async (req, res, next) => {
   try {
-    // Auth via query-string token (EventSource can't set headers)
     const token = req.query.token;
     if (!token) return res.status(401).send('Token required');
 
@@ -155,17 +133,14 @@ router.get('/watch', async (req, res, next) => {
 
     const clientId = String(user.id);
 
-    // SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    // Register this connection
     if (!sseClients.has(clientId)) sseClients.set(clientId, new Set());
     sseClients.get(clientId).add(res);
 
-    // Send current timer state immediately on connect
     const { rows } = await pool.query(`
       SELECT started_at, description, is_running,
              EXTRACT(EPOCH FROM (NOW() - started_at))::int AS elapsed_sec
@@ -180,12 +155,10 @@ router.get('/watch', async (req, res, next) => {
       res.write(`data: ${JSON.stringify({ event: 'idle' })}\n\n`);
     }
 
-    // Heartbeat every 30s so the connection stays alive through proxies
     const heartbeat = setInterval(() => {
       try { res.write(': heartbeat\n\n'); } catch (_) { clearInterval(heartbeat); }
     }, 30000);
 
-    // Cleanup on disconnect
     req.on('close', () => {
       clearInterval(heartbeat);
       const set = sseClients.get(clientId);
