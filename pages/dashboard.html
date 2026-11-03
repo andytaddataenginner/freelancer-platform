@@ -803,6 +803,9 @@ async function saveEdit(){
  /* ────────────────────────────────────────────────────────────────────────
    LIVE TIMER (Synchronized with Backend & Client Portal)
    ──────────────────────────────────────────────────────────────────────── */
+  /* ────────────────────────────────────────────────────────────────────────
+   LIVE TIMER (Synchronized with Backend & Client Portal)
+   ──────────────────────────────────────────────────────────────────────── */
 let tiv = null;
 let timerState = 'idle';
 let startTimestamp = null;
@@ -845,12 +848,19 @@ function tSetUI(state){
   timerState = state;
   const el = id => document.getElementById(id);
   const disp = el('tdisp'), status = el('t-status');
-  ['t-start','t-pause','t-resume','t-stop'].forEach(id => el(id).style.display = 'none');
+  ['t-start','t-pause','t-resume','t-stop'].forEach(id => el('t-'+id.replace('t-','')).style.display = 'none'); // safe selector fix below
   
+  // Reset explicit button visibility safely
+  el('t-start').style.display = 'none';
+  el('t-pause').style.display = 'none';
+  el('t-resume').style.display = 'none';
+  el('t-stop').style.display = 'none';
+
   const sel = el('tc');
   const taskInput = el('tt');
   sel.disabled = (state !== 'idle');
-  taskInput.disabled = (state !== 'idle');
+  // NOTE: taskInput is NOT disabled anymore so you can type or change descriptions anytime!
+  taskInput.disabled = false; 
 
   if(state === 'idle'){
     el('t-start').style.display = 'inline-flex';
@@ -916,17 +926,20 @@ async function timerResume(){
 async function timerStop(){
   if(timerState === 'idle') return;
   const cid = activeClientId || document.getElementById('tc').value;
+  const task = document.getElementById('tt').value.trim();
   if(!cid){ alert('No active client selected.'); return; }
 
   const wasRunning = (timerState === 'running');
   if(tiv){ clearInterval(tiv); tiv = null; }
 
   const elapsedMs = wasRunning ? accumulatedMs + (Date.now() - startTimestamp) : accumulatedMs;
-  const hours = Math.round((elapsedMs / 1000 / 3600) * 100) / 100;
+  const elapsedSec = Math.max(1, Math.round(elapsedMs / 1000));
+  
+  // Ensure hours calculation preserves small test sessions (e.g., minimum 0.01h if > 0 seconds)
+  let hours = parseFloat((elapsedSec / 3600).toFixed(4));
+  if (hours <= 0 && elapsedSec > 0) hours = 0.01;
 
-  if(hours < 0.01){ alert('Timer too short to log.'); timerReset(); return; }
-
-  if(!confirm(`Stop & save ${fmtH(hours)} to time logs for this client?`)){
+  if(!confirm(`Stop & save session (${fmtH ? fmtH(hours) : hours + ' hrs'}) to time logs?`)){
     if(wasRunning){ accumulatedMs = elapsedMs; startTimestamp = null; tiv = setInterval(tDisp, 1000); }
     tSetUI(wasRunning ? 'running' : 'paused');
     return;
@@ -936,7 +949,11 @@ async function timerStop(){
     const res = await fetch(API + '/timer/stop', {
       method: 'POST',
       headers: auth.hdrs(),
-      body: JSON.stringify({ client_id: cid })
+      body: JSON.stringify({ 
+        client_id: cid, 
+        elapsed_sec: elapsedSec,
+        description: task || undefined
+      })
     });
     if(!res.ok) {
       const err = await res.json().catch(()=>({}));
@@ -957,16 +974,14 @@ async function timerReset(){
   if(tiv){ clearInterval(tiv); tiv = null; }
   
   const cid = activeClientId || document.getElementById('tc').value;
-
-  // Always notify backend to clear active timer state
-  try {
-    await fetch(API + '/timer/cancel', {
-      method: 'POST',
-      headers: auth.hdrs(),
-      body: JSON.stringify(cid ? { client_id: cid } : {})
-    });
-  } catch(e) {
-    console.warn('Failed to notify backend on timer reset:', e);
+  if(cid){
+    try {
+      await fetch(API + '/timer/cancel', {
+        method: 'POST',
+        headers: auth.hdrs(),
+        body: JSON.stringify({ client_id: cid })
+      });
+    } catch(e) {}
   }
 
   accumulatedMs = 0; 
@@ -979,7 +994,6 @@ async function timerReset(){
 }
 
 async function initFloatingTimer(){
-  // Check backend for any active running session on load
   try {
     const res = await fetch(API + '/timer/status', { headers: auth.hdrs() });
     if(res.ok) {
@@ -1068,7 +1082,7 @@ function toggleMinimize(){
   const collapsed = panel.classList.toggle('collapsed');
   document.getElementById('float-timer-min-btn').textContent = collapsed ? '+' : '–';
   localStorage.setItem('qfa_timer_collapsed', collapsed ? '1' : '0');
-} 
+}
 
   
 
