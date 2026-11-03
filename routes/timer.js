@@ -40,23 +40,31 @@ function pushToClient(clientId, payload) {
 }
 
 // ── POST /api/timer/start ────────────────────────────────────────────────────
+// ── POST /api/timer/start ────────────────────────────────────────────────────
 router.post('/start', requireFreelancer, async (req, res, next) => {
   try {
-    const { client_id, description } = req.body;
+    let { client_id, description } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
-    // Upsert: if one already exists for this pair, reset it
+    // CRITICAL FIX: Ensure client_id resolves to the actual users.id
+    const clientCheck = await pool.query(
+      `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
+      [client_id]
+    );
+    if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
+    const actualUserId = clientCheck.rows[0].id;
+
+    // Upsert using the verified users.id
     const { rows } = await pool.query(`
       INSERT INTO active_timers (freelancer_id, client_id, started_at, description, is_running)
       VALUES ($1, $2, NOW(), $3, TRUE)
       ON CONFLICT (freelancer_id, client_id)
       DO UPDATE SET started_at = NOW(), description = $3, is_running = TRUE
       RETURNING *
-    `, [req.user.id, client_id, description || null]);
+    `, [req.user.id, actualUserId, description || null]);
 
     const timer = rows[0];
-    // Notify the client's SSE stream
-    pushToClient(client_id, {
+    pushToClient(actualUserId, {
       event:       'started',
       started_at:  timer.started_at,
       description: timer.description,
