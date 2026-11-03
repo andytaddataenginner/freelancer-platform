@@ -182,22 +182,28 @@ router.get('/client-status', verifyToken, async (req, res, next) => {
 router.post('/cancel', requireFreelancer, async (req, res, next) => {
   try {
     let { client_id } = req.body;
-    if (!client_id) return res.status(400).json({ error: 'client_id required' });
+    
+    if (client_id) {
+      // Resolve client_id to actual users.id if provided
+      const clientCheck = await pool.query(
+        `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
+        [client_id]
+      );
+      if (clientCheck.rows.length) {
+        const actualUserId = clientCheck.rows[0].id;
+        await pool.query(`DELETE FROM active_timers WHERE freelancer_id = $1 AND client_id = $2`, [req.user.id, actualUserId]);
+        pushToClient(actualUserId, { event: 'stopped', elapsed_sec: 0 });
+      }
+    } else {
+      // Fallback: If no client_id was sent, wipe ALL active timers for this freelancer and notify all affected clients
+      const activeTimers = await pool.query(`SELECT client_id FROM active_timers WHERE freelancer_id = $1`, [req.user.id]);
+      for (const row of activeTimers.rows) {
+        pushToClient(row.client_id, { event: 'stopped', elapsed_sec: 0 });
+      }
+      await pool.query(`DELETE FROM active_timers WHERE freelancer_id = $1`, [req.user.id]);
+    }
 
-    const clientCheck = await pool.query(
-      `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
-      [client_id]
-    );
-    if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
-    const actualUserId = clientCheck.rows[0].id;
-
-    // Delete active timer record without saving to time_logs
-    await pool.query(`DELETE FROM active_timers WHERE freelancer_id = $1 AND client_id = $2`, [req.user.id, actualUserId]);
-
-    // Notify client to hide the timer immediately
-    pushToClient(actualUserId, { event: 'stopped', elapsed_sec: 0 });
-
-    res.json({ message: 'Timer reset and cancelled' });
+    res.json({ message: 'Timer reset and cancelled successfully' });
   } catch (e) { next(e); }
 });
 
