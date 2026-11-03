@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Notes & Guidelines - Client Portal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 30px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 20px; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+    .qfa-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .qfa-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .pinned-card { border-color: #cbd5e1; background: #fffbeb; }
+    .qfa-card-title { font-weight: 600; font-size: 1.05rem; color: #0f172a; margin-bottom: 6px; }
+    .qfa-card-desc { font-size: 0.9rem; color: #475569; line-height: 1.6; margin-bottom: 14px; white-space: pre-wrap; }
+    .qfa-badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 3px 9px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; background: #f1f5f9; color: #475569; }
+    .qfa-meta { font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 12px; display: flex; justify-content: space-between; }
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 0.85rem; color: #2563eb; text-decoration: none; font-weight: 500; }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="client-portal.html" class="back-link">← Back to Dashboard</a>
+    <h1>📌 Project Notes & Guidelines</h1>
+    <div id="notesList" class="qfa-grid">
+      <p style="color:#64748b;">Loading notes...</p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://freelancer-platform-9jut.onrender.com';
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    async function fetchNotes() {
+      try {
+        const res = await fetch(`${API_URL}/api/client/notes`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to load notes');
+        const notes = await res.json();
+
+        const container = document.getElementById('notesList');
+        if (!notes.length) {
+          container.innerHTML = `<p style="color:#64748b;">No notes or guidelines available at this time.</p>`;
+          return;
+        }
+
+        container.innerHTML = notes.map(n => `
+          <div class="qfa-card ${n.is_pinned ? 'pinned-card' : ''}">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="qfa-card-title">${escapeHtml(n.title)}</div>
+              <span class="qfa-badge">${escapeHtml(n.category)}</span>
+            </div>
+            <div class="qfa-card-desc">${escapeHtml(n.content)}</div>
+            <div class="qfa-meta">
+              <span>${n.is_pinned ? '★ Pinned Important Note' : ''}</span>
+              <span>Added by: ${escapeHtml(n.freelancer_name)}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('notesList').innerHTML = `<p style="color:#ef4444;">Error loading notes.</p>`;
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    fetchNotes();
+  </script>
+</body>
+</html>
