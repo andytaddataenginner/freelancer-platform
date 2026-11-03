@@ -161,12 +161,12 @@
 
   /* Kanban */
   #kanbanView { display: none; }
-  .kanban-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .kanban-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; }
   .kanban-header h2 { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
   .kanban-cols { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
   @media (max-width: 900px) { .kanban-cols { grid-template-columns: 1fr 1fr; } }
   
-  .k-col { border-radius: 12px; padding: 12px; min-height: 250px; border: 1.5px solid var(--hairline); background: var(--bg); }
+  .k-col { border-radius: 12px; padding: 12px; min-height: 280px; border: 1.5px solid var(--hairline); background: var(--bg); }
   .k-col-title { font-size: .78rem; font-weight: 700; text-transform: uppercase;
                  letter-spacing: .06em; margin-bottom: 10px; color: var(--ink3); }
   
@@ -323,25 +323,28 @@
         <!-- Kanban view -->
         <div id="kanbanView">
           <div class="kanban-header">
-            <h2 id="kanbanTitle">Select a project</h2>
-            <button class="btn-sm primary" id="addTaskBtn" style="display:none" onclick="openNewTask()">+ Add Task</button>
+            <div>
+              <h2 id="kanbanTitle">Select a project</h2>
+              <p style="font-size:0.8rem; color:var(--ink3); margin-top:2px;">Manage tasks across columns</p>
+            </div>
+            <button class="btn btn-primary" id="addTaskBtn" style="display:none;" onclick="openNewTask()">+ Add Task</button>
           </div>
           <div class="kanban-cols">
             <div class="k-col">
               <div class="k-col-title">To Do</div>
-              <div id="kTodo"></div>
+              <div id="kTodo"><div class="empty" style="padding:1rem; font-size:0.8rem;">No tasks</div></div>
             </div>
             <div class="k-col">
               <div class="k-col-title">In Progress</div>
-              <div id="kProg"></div>
+              <div id="kProg"><div class="empty" style="padding:1rem; font-size:0.8rem;">No tasks</div></div>
             </div>
             <div class="k-col">
               <div class="k-col-title">Done</div>
-              <div id="kDone"></div>
+              <div id="kDone"><div class="empty" style="padding:1rem; font-size:0.8rem;">No tasks</div></div>
             </div>
             <div class="k-col">
               <div class="k-col-title">Blocked</div>
-              <div id="kBlock"></div>
+              <div id="kBlock"><div class="empty" style="padding:1rem; font-size:0.8rem;">No tasks</div></div>
             </div>
           </div>
         </div>
@@ -383,7 +386,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeProjModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProjModal()">Save</button>
+      <button class="btn btn-primary" onclick="saveProjModal()">Save Project</button>
     </div>
   </div>
 </div>
@@ -398,7 +401,7 @@
     </div>
     <div class="form-group">
       <label>Description</label>
-      <textarea id="tmDesc" placeholder="Optional…"></textarea>
+      <textarea id="tmDesc" placeholder="Optional details…"></textarea>
     </div>
     <div class="form-row2">
       <div class="form-group">
@@ -426,7 +429,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeTaskModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTaskModal()">Save</button>
+      <button class="btn btn-primary" onclick="saveTaskModal()">Save Task</button>
     </div>
   </div>
 </div>
@@ -516,22 +519,29 @@ async function loadProjects() {
   if (stat) params.push(`status=${stat}`);
   if (params.length) url += '?' + params.join('&');
 
-  document.getElementById('projGrid').innerHTML = '<div class="loader">Loading…</div>';
+  document.getElementById('projGrid').innerHTML = '<div class="loader">Loading projects…</div>';
   try {
     const r = await fetch(url, { headers: hdr() });
     allProjects = await r.json();
     renderProjects();
-  } catch (e) { document.getElementById('projGrid').innerHTML = '<div class="empty">Failed to load.</div>'; }
+    
+    // If a current project is selected, keep its reference updated
+    if (currentProj) {
+      currentProj = allProjects.find(p => p.id === currentProj.id) || currentProj;
+    }
+  } catch (e) { document.getElementById('projGrid').innerHTML = '<div class="empty">Failed to load projects.</div>'; }
 }
 
 function renderProjects() {
   const el = document.getElementById('projGrid');
   if (!allProjects.length) {
-    el.innerHTML = '<div class="empty">No projects yet. Create one!</div>';
+    el.innerHTML = '<div class="empty">No projects yet. Click "+ New Project" to add one!</div>';
     return;
   }
   el.innerHTML = allProjects.map(p => {
-    const pct = p.total_tasks ? Math.round((p.done_tasks / p.total_tasks) * 100) : 0;
+    const total = p.total_tasks || 0;
+    const done = p.done_tasks || 0;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
     return `
     <div class="proj-card ${currentProj && currentProj.id === p.id ? 'selected' : ''}"
          onclick="selectProject(${p.id})">
@@ -543,7 +553,7 @@ function renderProjects() {
       </div>
       <div class="proj-progress">
         <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
-        <div class="prog-label">${p.done_tasks}/${p.total_tasks} tasks done${p.blocked_tasks ? ` · ${p.blocked_tasks} blocked` : ''}</div>
+        <div class="prog-label">${done}/${total} tasks done${p.blocked_tasks ? ` · ${p.blocked_tasks} blocked` : ''}</div>
       </div>
       <div class="proj-actions">
         <button class="btn-sm" onclick="event.stopPropagation(); openEditProject(${p.id})">Edit</button>
@@ -566,7 +576,7 @@ async function openBoard(projId) {
   if (!currentProj) return;
   switchView('kanban');
   document.getElementById('kanbanTitle').textContent = currentProj.name;
-  document.getElementById('addTaskBtn').style.display = '';
+  document.getElementById('addTaskBtn').style.display = 'inline-flex';
   loadTasks();
 }
 
@@ -581,11 +591,26 @@ async function loadTasks() {
 
 function renderKanban() {
   const cols = { todo: 'kTodo', in_progress: 'kProg', done: 'kDone', blocked: 'kBlock' };
-  Object.values(cols).forEach(id => document.getElementById(id).innerHTML = '');
+  
+  // Clear columns first
+  Object.values(cols).forEach(id => {
+    document.getElementById(id).innerHTML = '';
+  });
+
+  if (!currentTasks.length) {
+    Object.values(cols).forEach(id => {
+      document.getElementById(id).innerHTML = '<div class="empty" style="padding:1rem; font-size:0.8rem;">No tasks</div>';
+    });
+    return;
+  }
+
+  const counts = { todo: 0, in_progress: 0, done: 0, blocked: 0 };
 
   currentTasks.forEach(t => {
     const colId = cols[t.status];
     if (!colId) return;
+    counts[t.status]++;
+    
     const el = document.createElement('div');
     el.className = 'task-card';
     el.innerHTML = `
@@ -593,7 +618,7 @@ function renderKanban() {
       ${t.description ? `<div class="task-desc">${esc(t.description)}</div>` : ''}
       <div class="task-meta">
         <span class="prio-badge prio-${t.priority}">${t.priority}</span>
-        ${t.due_date ? `<span class="due-label">${t.due_date.slice(0,10)}</span>` : ''}
+        ${t.due_date ? `<span class="due-label">Due ${t.due_date.slice(0,10)}</span>` : ''}
       </div>
       <div class="task-actions">
         <select class="btn-sm" style="padding:2px 6px;font-size:.75rem"
@@ -608,6 +633,13 @@ function renderKanban() {
       </div>`;
     document.getElementById(colId).appendChild(el);
   });
+
+  // Show placeholder if specific column is empty
+  Object.keys(cols).forEach(statusKey => {
+    if (counts[statusKey] === 0) {
+      document.getElementById(cols[statusKey]).innerHTML = '<div class="empty" style="padding:1rem; font-size:0.8rem;">No tasks</div>';
+    }
+  });
 }
 
 async function quickStatus(taskId, status) {
@@ -618,8 +650,8 @@ async function quickStatus(taskId, status) {
     const t = currentTasks.find(x => x.id === taskId);
     if (t) t.status = status;
     renderKanban();
-    loadProjects(); // Update project task counters
-  } catch (e) { toast('Error updating status'); }
+    loadProjects(); // Refresh project card task counts
+  } catch (e) { toast('Error updating task status'); }
 }
 
 function openNewProject() {
@@ -656,7 +688,7 @@ async function saveProjModal() {
   const description = document.getElementById('pmDesc').value.trim();
   const status      = document.getElementById('pmStatus').value;
   const deadline    = document.getElementById('pmDeadline').value || null;
-  if (!name) { toast('Name required'); return; }
+  if (!name) { toast('Project name is required'); return; }
   try {
     const url    = editingProjId ? `${API}/api/projects/${editingProjId}` : `${API}/api/projects`;
     const method = editingProjId ? 'PUT' : 'POST';
@@ -672,10 +704,10 @@ async function saveProjModal() {
 }
 
 async function deleteProject(projId) {
-  if (!confirm('Delete this project and all its tasks?')) return;
+  if (!confirm('Are you sure you want to delete this project and its tasks?')) return;
   try {
     const r = await fetch(`${API}/api/projects/${projId}`, { method: 'DELETE', headers: hdr() });
-    if (!r.ok) { toast('Error'); return; }
+    if (!r.ok) { toast('Error deleting project'); return; }
     toast('Project deleted');
     if (currentProj && currentProj.id === projId) { currentProj = null; switchView('projects'); }
     loadProjects();
@@ -683,6 +715,7 @@ async function deleteProject(projId) {
 }
 
 function openNewTask() {
+  if (!currentProj) { toast('Please select a project first'); return; }
   editingTaskId = null;
   document.getElementById('taskModalTitle').textContent = 'New Task';
   document.getElementById('tmTitle').value    = '';
@@ -718,7 +751,7 @@ async function saveTaskModal() {
   const status   = document.getElementById('tmStatus').value;
   const priority = document.getElementById('tmPriority').value;
   const due_date = document.getElementById('tmDue').value || null;
-  if (!title) { toast('Title required'); return; }
+  if (!title) { toast('Task title required'); return; }
   try {
     const url    = editingTaskId
       ? `${API}/api/projects/${currentProj.id}/tasks/${editingTaskId}`
@@ -732,17 +765,17 @@ async function saveTaskModal() {
     closeTaskModal();
     toast(editingTaskId ? 'Task updated ✓' : 'Task added ✓');
     loadTasks();
-    loadProjects(); // Recalculate progress bars
+    loadProjects(); // Refresh progress bar totals
   } catch (e) { toast('Network error'); }
 }
 
 async function deleteTask(taskId) {
-  if (!confirm('Delete this task?')) return;
+  if (!confirm('Are you sure you want to delete this task?')) return;
   try {
     const r = await fetch(`${API}/api/projects/${currentProj.id}/tasks/${taskId}`, {
       method: 'DELETE', headers: hdr()
     });
-    if (!r.ok) { toast('Error'); return; }
+    if (!r.ok) { toast('Error deleting task'); return; }
     toast('Task deleted');
     loadTasks();
     loadProjects();
