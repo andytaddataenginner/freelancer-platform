@@ -102,6 +102,7 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     let { client_id } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
+    // Resolve client_id to actual users.id
     const clientCheck = await pool.query(
       `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
       [client_id]
@@ -109,7 +110,7 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
     const actualUserId = clientCheck.rows[0].id;
 
-    // Fetch current timer state
+    // Fetch the active timer and compute total elapsed seconds (accounting for pause/accumulated time)
     const check = await pool.query(`
       SELECT *, 
              CASE WHEN is_paused THEN accumulated_seconds 
@@ -120,24 +121,30 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     `, [req.user.id, actualUserId]);
 
     if (!check.rows.length) return res.status(404).json({ error: 'No running timer found for this client' });
+    
     const timer = check.rows[0];
     const elapsedSec = parseInt(timer.total_secs || 0);
     const hours = Math.round((elapsedSec / 3600) * 100) / 100;
 
-    // Insert into time_logs so it shows up in billing and history
+    // CRITICAL FIX: Insert the completed session into the time_logs table
     if (hours > 0) {
       await pool.query(`
-        INSERT INTO time_logs (client_id, date, hours, task_description, source, payment_status)
-        VALUES ($1, CURRENT_DATE, $2, $3, 'timer', 'unpaid')
-      `, [actualUserId, hours, timer.description || 'Timed session']);
+        INSERT INTO time_logs (client_id, freelancer_id, date, hours, task_description, source, payment_status)
+        VALUES ($1, $2, CURRENT_DATE, $3, $4, 'timer', 'unpaid')
+      `, [actualUserId, req.user.id, hours, timer.description || 'Timed session']);
     }
 
-    // Clean up active timer
+    // Clean up active timer record
     await pool.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
 
+    // Notify the client via SSE/polling that the timer stopped
     pushToClient(actualUserId, { event: 'stopped', elapsed_sec: elapsedSec });
 
-    res.json({ message: 'Timer stopped and saved', elapsed_sec: elapsedSec, hours, started_at: timer.started_at });
+    res.json({
+      message:     'Timer stopped and saved',
+      elapsed_sec: elapsedSec,
+      hours:       hours
+    });
   } catch (e) { next(e); }
 });
 
