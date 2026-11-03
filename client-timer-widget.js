@@ -1,118 +1,46 @@
-/**
- * client-timer-widget.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Drop on the CLIENT dashboard page — READ-ONLY live timer view.
- * ─────────────────────────────────────────────────────────────────────────────
- */
 (function () {
   'use strict';
-
-  // ── Config ─────────────────────────────────────────────────────────────────
   const FALLBACK_API = 'https://freelancer-platform-9jut.onrender.com';
   const getApi = () => {
     const m = document.querySelector('meta[name="api-base"]');
     return m && m.content ? m.content : FALLBACK_API;
   };
   const token = () => localStorage.getItem('token');
+  if (!token()) return;
 
-  // ── Inject styles ──────────────────────────────────────────────────────────
   const style = document.createElement('style');
   style.textContent = `
     #qfaClientTimer {
-      position: fixed;
-      bottom: 90px; right: 20px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      width: 240px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.45);
-      font-family: system-ui, sans-serif;
-      color: #e2e8f0;
-      z-index: 900;
-      display: none;           /* hidden when no timer is running */
-      overflow: hidden;
-      animation: ctSlideIn .3s ease;
+      position: fixed; bottom: 20px; right: 20px; background: #0f172a; border: 1px solid #334155;
+      border-radius: 16px; width: 220px; box-shadow: 0 8px 32px rgba(0,0,0,.45); color: #e2e8f0;
+      font-family: system-ui, sans-serif; z-index: 900; display: none; overflow: hidden;
     }
-    @keyframes ctSlideIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    #qfaClientTimer .ct-header {
-      background: #1e293b;
-      border-bottom: 1px solid #334155;
-      padding: 10px 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    #qfaClientTimer .ct-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #22c55e; flex-shrink: 0;
-      animation: ctPulse 1.4s ease-in-out infinite;
-    }
-    @keyframes ctPulse {
-      0%,100% { opacity:1; transform:scale(1); }
-      50%      { opacity:.35; transform:scale(1.5); }
-    }
-    #qfaClientTimer .ct-label {
-      font-size: .72rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .08em;
-      color: #94a3b8;
-    }
-    #qfaClientTimer .ct-badge {
-      margin-left: auto;
-      font-size: .65rem; padding: 2px 7px;
-      background: #1a2e1a; color: #22c55e;
-      border-radius: 10px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .06em;
-    }
-    #qfaClientTimer .ct-body {
-      padding: 14px;
-      text-align: center;
-    }
-    #qfaClientTimer .ct-time {
-      font-size: 2.2rem; font-weight: 800;
-      letter-spacing: .04em;
-      font-variant-numeric: tabular-nums;
-      color: #22c55e;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    #qfaClientTimer .ct-desc {
-      font-size: .78rem; color: #94a3b8;
-      white-space: nowrap; overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 200px; margin: 0 auto;
-    }
-    #qfaClientTimer .ct-note {
-      font-size: .68rem; color: #475569;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #1e293b;
-    }
+    #qfaClientTimer .ct-header { background: #1e293b; padding: 8px 12px; font-size: .75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; display: flex; align-items: center; gap: 6px; }
+    #qfaClientTimer .ct-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+    #qfaClientTimer .ct-dot.paused { background: #f59e0b; }
+    #qfaClientTimer .ct-body { padding: 12px; text-align: center; }
+    #qfaClientTimer .ct-time { font-size: 1.8rem; font-weight: 800; color: #22c55e; font-family: monospace; }
+    #qfaClientTimer .ct-time.paused { color: #f59e0b; }
+    #qfaClientTimer .ct-desc { font-size: .75rem; color: #94a3b8; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   `;
   document.head.appendChild(style);
 
-  // ── Inject HTML ────────────────────────────────────────────────────────────
   const card = document.createElement('div');
   card.id = 'qfaClientTimer';
   card.innerHTML = `
-    <div class="ct-header">
-      <span class="ct-dot"></span>
-      <span class="ct-label">Live Session</span>
-      <span class="ct-badge">LIVE</span>
-    </div>
+    <div class="ct-header"><span class="ct-dot" id="ctDot"></span><span id="ctTitle">Live Session</span></div>
     <div class="ct-body">
       <div class="ct-time" id="ctTime">00:00:00</div>
-      <div class="ct-desc" id="ctDesc">Your freelancer is working…</div>
-      <div class="ct-note">View only — your freelancer controls the timer</div>
+      <div class="ct-desc" id="ctDesc">Freelancer working…</div>
     </div>
   `;
   document.body.appendChild(card);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  let startedAt    = null;
-  let tickInterval = null;
-  let eventSource  = null;
   let pollInterval = null;
+  let localSec = 0;
+  let isRunning = false;
+  let isPaused = false;
+  let timerTicker = null;
 
   function fmt2(n) { return String(n).padStart(2, '0'); }
   function fmtElapsed(sec) {
@@ -122,104 +50,50 @@
     return `${fmt2(h)}:${fmt2(m)}:${fmt2(s)}`;
   }
 
-  function showTimer(desc) {
-    card.style.display = '';
-    document.getElementById('ctDesc').textContent = desc || 'Your freelancer is working…';
-  }
-
-  function hideTimer() {
-    card.style.display = 'none';
-    if (tickInterval) { clearInterval(tickInterval); tickInterval = null; }
-    startedAt = null;
-  }
-
-  function startTick(startedAtStr) {
-    if (tickInterval) clearInterval(tickInterval);
-    startedAt = new Date(startedAtStr).getTime();
-    const sec0 = Math.floor((Date.now() - startedAt) / 1000);
-    document.getElementById('ctTime').textContent = fmtElapsed(sec0);
-    tickInterval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-      document.getElementById('ctTime').textContent = fmtElapsed(elapsed);
-    }, 1000);
-  }
-
-  // ── Handle incoming event ──────────────────────────────────────────────────
-  function handleEvent(data) {
-    if (data.event === 'started' || (data.event === 'sync' && data.is_running)) {
-      showTimer(data.description);
-      startTick(data.started_at);
-    } else if (data.event === 'stopped' || data.event === 'idle') {
-      hideTimer();
-    }
-  }
-
-  // ── SSE connection ─────────────────────────────────────────────────────────
-  function connectSSE() {
-    const tkn = token();
-    if (!tkn) {
-      if (!pollInterval) startPolling();
-      return;
-    }
-    if (eventSource) { eventSource.close(); eventSource = null; }
-
-    const url = `${getApi()}/api/timer/watch?token=${encodeURIComponent(tkn)}`;
-    eventSource = new EventSource(url);
-
-    eventSource.onmessage = (e) => {
-      try { handleEvent(JSON.parse(e.data)); } catch (_) {}
-    };
-
-    eventSource.onerror = () => {
-      if (eventSource) { eventSource.close(); eventSource = null; }
-      if (!pollInterval) startPolling();
-    };
-  }
-
-  // ── Polling fallback ───────────────────────────────────────────────────────
-  async function poll() {
-    const tkn = token();
-    if (!tkn) return;
+  async function pollStatus() {
     try {
       const r = await fetch(`${getApi()}/api/timer/client-status`, {
-        headers: { Authorization: `Bearer ${tkn}` }
+        headers: { Authorization: `Bearer ${token()}` }
       });
       if (!r.ok) return;
       const data = await r.json();
+
       if (data.running) {
-        showTimer(data.description);
-        if (!startedAt) startTick(data.started_at);
+        card.style.display = 'block';
+        isRunning = true;
+        isPaused = data.is_paused;
+        localSec = data.elapsed_sec || 0;
+        document.getElementById('ctDesc').textContent = data.description || 'Freelancer working…';
+
+        const dot = document.getElementById('ctDot');
+        const timeEl = document.getElementById('ctTime');
+        const titleEl = document.getElementById('ctTitle');
+
+        if (isPaused) {
+          dot.className = 'ct-dot paused';
+          timeEl.className = 'ct-time paused';
+          titleEl.textContent = 'Session Paused';
+          if (timerTicker) { clearInterval(timerTicker); timerTicker = null; }
+        } else {
+          dot.className = 'ct-dot';
+          timeEl.className = 'ct-time';
+          titleEl.textContent = 'Live Session';
+          if (!timerTicker) {
+            timerTicker = setInterval(() => {
+              localSec++;
+              timeEl.textContent = fmtElapsed(localSec);
+            }, 1000);
+          }
+        }
+        timeEl.textContent = fmtElapsed(localSec);
       } else {
-        hideTimer();
+        card.style.display = 'none';
+        isRunning = false;
+        if (timerTicker) { clearInterval(timerTicker); timerTicker = null; }
       }
     } catch (_) {}
   }
 
-  function startPolling() {
-    poll();
-    if (!pollInterval) pollInterval = setInterval(poll, 5000);
-  }
-
-  // ── Init on DOM Content Loaded ─────────────────────────────────────────────
-  function init() {
-    if (typeof EventSource !== 'undefined' && token()) {
-      connectSSE();
-    } else {
-      startPolling();
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && token()) {
-      if (!eventSource) connectSSE();
-      poll();
-    }
-  });
-
+  pollStatus();
+  pollInterval = setInterval(pollStatus, 4000);
 })();
