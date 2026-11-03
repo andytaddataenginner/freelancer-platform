@@ -5,215 +5,346 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="api-base" content="https://freelancer-platform-9jut.onrender.com" />
 <title>Projects — QFA</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/chatbot-widget.css">
 <style>
-  :root {
-    --bg: #0f172a; --surface: #1e293b; --surface2: #273549;
-    --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
-    --accent: #6366f1; --accent-h: #818cf8;
-    --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
-    --blue: #3b82f6; --purple: #a855f7;
-    --col-todo: #1e2a3a; --col-prog: #1a2e1a; --col-done: #0f2e1a; --col-block: #2e1a1a;
-    --radius: 10px;
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{overflow-y:scroll;scroll-behavior:smooth}
+  :root{
+    --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
+    --white:#fff;--bg:#f4f6fb;--bg2:#eef1f8;
+    --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
+    --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;
+    --red:#b91c1c;--rbg:#fee2e2;
+    --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
+    --r:16px;--sh:0 2px 20px rgba(13,35,83,.08);
+    --sh-sm:0 1px 4px rgba(13,35,83,.08);
+    --sh-md:0 10px 28px -8px rgba(13,35,83,.14);
+    --sh-lg:0 26px 60px -18px rgba(13,35,83,.22);
+    --ring:rgba(26,92,255,.14);
+    --card-bg: #ffffff;
+    --table-hover: var(--bg);
+    --hairline:rgba(13,35,83,.08);
+    --hairline-strong:rgba(13,35,83,.15);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif;
-         min-height: 100vh; padding-bottom: 80px; }
 
-  nav { background: var(--surface); border-bottom: 1px solid var(--border);
-        padding: 14px 24px; display: flex; align-items: center; gap: 16px; }
-  nav a { color: var(--muted); text-decoration: none; font-size: .85rem; }
-  nav a:hover { color: var(--text); }
-  nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--accent); margin-right: auto; }
+  [data-theme="dark"] {
+    --navy: #1e293b; --navy2: #334155; --accent: #3b82f6; --gold: #d97706; --gold2: #fbbf24;
+    --white: #0f172a; --bg: #090d16; --bg2: #161f30;
+    --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #8493ad;
+    --green: #4ade80; --gbg: rgba(34, 197, 94, 0.14); --amber: #fbbf24; --abg: rgba(217, 119, 6, 0.16);
+    --red: #f87171; --rbg: rgba(248, 113, 113, 0.14);
+    --sh: 0 2px 20px rgba(0,0,0,0.4);
+    --sh-sm:0 1px 4px rgba(0,0,0,.35);
+    --sh-md:0 10px 28px -8px rgba(0,0,0,.5);
+    --sh-lg:0 26px 60px -18px rgba(0,0,0,.6);
+    --ring:rgba(59,130,246,.2);
+    --card-bg: #111a2c;
+    --table-hover: #16213a;
+    --hairline:rgba(255,255,255,.08);
+    --hairline-strong:rgba(255,255,255,.16);
+  }
 
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
-  h1 { font-size: 1.4rem; font-weight: 700; }
-  .sub { color: var(--muted); font-size: .85rem; margin-top: 3px; }
+  body{
+    font-family:var(--sans);color:var(--ink);
+    background:
+      radial-gradient(1100px 520px at 88% -10%, rgba(201,149,42,.10), transparent 60%),
+      radial-gradient(900px 500px at -8% 8%, rgba(26,92,255,.07), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    transition:background 0.3s ease, color 0.3s ease;
+  }
+  .mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:linear-gradient(135deg,var(--navy),var(--navy2));z-index:200;align-items:center;justify-content:space-between;padding:0 1rem;box-shadow:0 2px 16px rgba(0,0,0,.25)}
+  .mob-brand{display:flex;align-items:center;gap:.5rem}
+  .mob-brand img{height:28px;background:#fff;border-radius:6px;padding:2px}
+  .mob-brand span{color:#fff;font-size:.82rem;font-weight:700;letter-spacing:.01em}
+  .mob-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+  .mob-btn:hover{background:rgba(255,255,255,.24)}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(6,12,28,.6);backdrop-filter:blur(2px);z-index:149}
+  .overlay.on{display:block}
 
-  /* ─── Top bar ─────────────────────────────────────────── */
-  .top-bar { display: flex; gap: 10px; margin: 22px 0 20px; flex-wrap: wrap; align-items: center; }
+  .sidebar{width:240px;background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 140%);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;box-shadow:4px 0 24px rgba(0,0,0,.12);transition: background 0.3s ease, transform 0.28s cubic-bezier(.4,0,.2,1);}
+  .sb-brand{padding:1.1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.7rem}
+  .sb-logo{width:36px;height:36px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .sb-logo img{width:100%;height:100%;object-fit:contain}
+  .sb-text strong{display:block;color:#fff;font-size:.8rem;font-weight:700}
+  .sb-text span{font-size:.62rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.1em}
+  .sb-nav{flex:1;padding:.8rem 0;overflow-y:auto}
+  .sb-nav a{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;font-size:.85rem;font-weight:500;color:rgba(255,255,255,.55);text-decoration:none;transition:all .2s;border-right:3px solid transparent}
+  .sb-nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
+  .sb-nav a.active{color:#fff;background:linear-gradient(90deg,rgba(255,255,255,.02),rgba(201,149,42,.16));border-right-color:var(--gold2)}
+  .sb-user{padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.08)}
+  .sb-user strong{display:block;color:#fff;font-size:.88rem}
+  .sb-user span{font-size:.72rem;color:rgba(255,255,255,.4)}
+  .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none;transition:opacity .2s}
+  .sb-user a:hover{opacity:.75}
+  .sb-parent{justify-content:space-between;cursor:pointer}
+  .sb-chevron{font-size:.75rem;color:rgba(255,255,255,.4);transition:transform .25s ease}
+  .sb-group.open .sb-chevron{transform:rotate(90deg);color:var(--gold2)}
+  .sb-submenu{max-height:0;overflow:hidden;transition:max-height .28s ease}
+  .sb-group.open .sb-submenu{max-height:120px}
+  .sb-submenu a{padding:.55rem 1.2rem .55rem 2.5rem;font-size:.8rem;color:rgba(255,255,255,.45)}
+  .sb-submenu a:hover{color:#fff;background:rgba(255,255,255,.05)}
+  .main{margin-left:240px;min-height:100vh;overflow-x:hidden}
+
+  .topbar{background:var(--card-bg);border-bottom:1px solid var(--hairline);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;backdrop-filter:blur(10px);transition: background 0.3s ease;}
+  .topbar h2{font-family:var(--serif);font-size:1.4rem;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.15rem}
+  .topbar-right{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+
+  .theme-toggle {
+    background: var(--bg2); border: 1px solid var(--hairline-strong);
+    color: var(--ink); width: 36px; height: 36px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; transition: all 0.25s;
+  }
+  .theme-toggle:hover { background: linear-gradient(135deg,var(--gold),var(--gold2)); color: white; transform:rotate(15deg); box-shadow:var(--sh-sm); }
+
+  .content{padding:1.5rem}
+
+  .card{background:var(--card-bg);border-radius:var(--r);box-shadow:var(--sh-md);border:1px solid var(--hairline);margin-bottom:1.2rem;transition: background 0.3s ease, box-shadow .25s ease;}
+  .ch{padding:1rem 1.4rem;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;position:relative}
+  .ch h3{font-size:.95rem;font-weight:700;color:var(--ink)}
+  .cb{padding:1.4rem}
+
+  .top-bar { display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
   select, input[type=text], input[type=date], textarea {
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); border-radius: 8px; padding: 9px 12px; font-size: .9rem;
-    outline: none;
+    background: var(--bg); border: 1.5px solid var(--hairline-strong);
+    color: var(--ink); border-radius: 9px; padding: .7rem .9rem; font-size: .88rem;
+    font-family: var(--sans); outline: none; transition: border-color .2s, box-shadow .2s;
   }
-  select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
   select { cursor: pointer; }
 
-  /* ─── View toggle ─────────────────────────────────────── */
-  .view-toggle { display: flex; gap: 2px; background: var(--surface2);
-                 border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
-  .vt-btn { padding: 5px 14px; border-radius: 6px; font-size: .82rem; cursor: pointer;
-            border: none; background: transparent; color: var(--muted); transition: all .15s; }
-  .vt-btn.active { background: var(--accent); color: #fff; }
+  /* View toggle */
+  .view-toggle { display: flex; gap: 3px; background: var(--bg2); border-radius: 9px; padding: 3px; border: 1.5px solid var(--hairline-strong); }
+  .vt-btn { padding: 6px 14px; border-radius: 7px; font-size: .82rem; font-weight: 600; cursor: pointer;
+            border: none; background: transparent; color: var(--ink3); transition: all .15s; }
+  .vt-btn.active { background: var(--navy); color: #fff; }
 
-  /* ─── Projects list ───────────────────────────────────── */
-  #projectsView .proj-grid { display: grid; gap: 12px;
-    grid-template-columns: repeat(auto-fill, minmax(290px,1fr)); }
+  /* Projects grid view */
+  #projectsView .proj-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(290px,1fr)); }
   .proj-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px; cursor: pointer;
-    transition: border-color .15s;
+    background: var(--bg); border: 1.5px solid var(--hairline);
+    border-radius: 12px; padding: 1.2rem; cursor: pointer;
+    transition: border-color .15s, transform .15s;
   }
-  .proj-card:hover { border-color: var(--accent); }
-  .proj-card.selected { border-color: var(--accent); background: var(--surface2); }
-  .proj-name { font-weight: 600; font-size: .98rem; }
-  .proj-client { font-size: .8rem; color: var(--muted); margin-top: 2px; }
-  .proj-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .proj-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .proj-card.selected { border-color: var(--accent); background: var(--card-bg); box-shadow: var(--sh-sm); }
+  .proj-name { font-weight: 700; font-size: 1rem; color: var(--ink); }
+  .proj-client { font-size: .8rem; color: var(--ink3); margin-top: 2px; }
+  .proj-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  
   .status-badge {
-    font-size: .72rem; padding: 2px 9px; border-radius: 12px; font-weight: 600;
+    font-size: .68rem; padding: 3px 9px; border-radius: 12px; font-weight: 700;
     text-transform: uppercase; letter-spacing: .06em;
   }
-  .st-active    { background: #1a2e1a; color: var(--green); }
-  .st-paused    { background: #2d2a0e; color: var(--yellow); }
-  .st-completed { background: #0f1f3a; color: var(--blue); }
-  .st-cancelled { background: #2e1a1a; color: var(--red); }
+  .st-active    { background: var(--gbg); color: var(--green); }
+  .st-paused    { background: var(--abg); color: var(--amber); }
+  .st-completed { background: #dbeafe; color: #1e40af; }
+  .st-cancelled { background: var(--rbg); color: var(--red); }
 
-  .proj-progress { margin-top: 10px; }
-  .prog-bar { background: var(--surface2); border-radius: 4px; height: 5px; overflow: hidden; }
+  .proj-progress { margin-top: 12px; }
+  .prog-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; border: 1px solid var(--hairline); }
   .prog-fill { background: var(--accent); height: 100%; border-radius: 4px; transition: width .4s; }
-  .prog-label { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+  .prog-label { font-size: .75rem; color: var(--ink3); margin-top: 5px; font-weight: 500; }
 
-  .proj-actions { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
-  .btn-sm { padding: 4px 10px; border-radius: 6px; font-size: .78rem; cursor: pointer;
-            border: 1px solid var(--border); background: transparent; color: var(--muted);
+  .proj-actions { display: flex; gap: 6px; margin-top: 12px; justify-content: flex-end; }
+  .btn-sm { padding: 5px 10px; border-radius: 7px; font-size: .78rem; font-weight: 600; cursor: pointer;
+            border: 1.5px solid var(--hairline-strong); background: var(--card-bg); color: var(--ink2);
             transition: all .15s; }
-  .btn-sm:hover { background: var(--surface2); color: var(--text); }
-  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
-  .btn-sm.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-sm:hover { background: var(--bg2); color: var(--ink); border-color: var(--ink3); }
+  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); background: var(--rbg); }
+  .btn-sm.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn-sm.primary:hover { background: var(--accent); border-color: var(--accent); }
 
-  /* ─── Kanban ──────────────────────────────────────────── */
+  /* Kanban */
   #kanbanView { display: none; }
-  .kanban-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
-  }
-  .kanban-header h2 { font-size: 1rem; font-weight: 700; }
-  .kanban-cols { display: grid; gap: 12px;
-    grid-template-columns: repeat(4, 1fr); }
-  @media (max-width: 700px) { .kanban-cols { grid-template-columns: 1fr 1fr; } }
-  .k-col { border-radius: var(--radius); padding: 12px; min-height: 200px; }
-  .k-col.col-todo  { background: var(--col-todo); }
-  .k-col.col-prog  { background: var(--col-prog); }
-  .k-col.col-done  { background: var(--col-done); }
-  .k-col.col-block { background: var(--col-block); }
+  .kanban-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .kanban-header h2 { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+  .kanban-cols { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) { .kanban-cols { grid-template-columns: 1fr 1fr; } }
+  
+  .k-col { border-radius: 12px; padding: 12px; min-height: 250px; border: 1.5px solid var(--hairline); background: var(--bg); }
   .k-col-title { font-size: .78rem; font-weight: 700; text-transform: uppercase;
-                 letter-spacing: .06em; margin-bottom: 10px; opacity: .7; }
+                 letter-spacing: .06em; margin-bottom: 10px; color: var(--ink3); }
+  
   .task-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 10px 12px; margin-bottom: 8px;
+    background: var(--card-bg); border: 1.5px solid var(--hairline); border-radius: 9px;
+    padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh-sm);
   }
-  .task-title { font-size: .88rem; font-weight: 600; }
-  .task-desc { font-size: .78rem; color: var(--muted); margin-top: 4px;
+  .task-title { font-size: .88rem; font-weight: 700; color: var(--ink); }
+  .task-desc { font-size: .78rem; color: var(--ink3); margin-top: 4px;
                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .task-meta { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; align-items: center; }
-  .prio-badge { font-size: .68rem; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
-  .prio-low     { background: #1a2a1a; color: #4ade80; }
-  .prio-medium  { background: #1a1f2e; color: var(--blue); }
-  .prio-high    { background: #2d200a; color: var(--yellow); }
-  .prio-urgent  { background: #2e0a0a; color: var(--red); }
-  .due-label { font-size: .72rem; color: var(--muted); }
-  .task-actions { display: flex; gap: 5px; margin-top: 8px; justify-content: flex-end; }
+  .task-meta { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  
+  .prio-badge { font-size: .65rem; padding: 2px 7px; border-radius: 10px; font-weight: 700; text-transform: uppercase; }
+  .prio-low     { background: var(--gbg); color: var(--green); }
+  .prio-medium  { background: #dbeafe; color: #1e40af; }
+  .prio-high    { background: var(--abg); color: var(--amber); }
+  .prio-urgent  { background: var(--rbg); color: var(--red); }
+  .due-label { font-size: .72rem; color: var(--ink3); font-weight: 500; }
+  .task-actions { display: flex; gap: 5px; margin-top: 8px; justify-content: flex-end; align-items: center; }
 
-  /* ─── Modal ───────────────────────────────────────────── */
+  /* Modal */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.65); z-index: 500; align-items: center; justify-content: center;
+    background: rgba(6,12,28,.6); z-index: 500; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); padding: 1rem;
   }
   .modal-overlay.open { display: flex; }
   .modal {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 22px 24px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+    background: var(--card-bg); border: 1px solid var(--hairline); border-radius: 20px;
+    padding: 1.8rem; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: var(--sh-lg);
   }
-  .modal h2 { font-size: 1rem; margin-bottom: 16px; }
-  .form-group { margin-bottom: 12px; }
-  .form-group label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 4px; }
+  .modal h2 { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); margin-bottom: 1.2rem; }
+  
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink2); margin-bottom: 4px; }
   .form-group select, .form-group input, .form-group textarea { width: 100%; }
   .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  textarea { resize: vertical; min-height: 70px; }
-  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
-  .btn { padding: 8px 18px; border-radius: 8px; font-size: .88rem; font-weight: 600;
-         cursor: pointer; border: none; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent-h); }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn-ghost:hover { color: var(--text); }
+  textarea { resize: vertical; min-height: 80px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.4rem; }
 
-  /* ─── States ──────────────────────────────────────────── */
-  .empty { text-align: center; padding: 48px; color: var(--muted); }
-  .loader { text-align: center; padding: 40px; color: var(--muted); font-size: .9rem; }
+  .btn { padding: .55rem 1.2rem; border-radius: 8px; font-family: var(--sans); font-size: .82rem; font-weight: 600; cursor: pointer; border: none; transition: all .2s; }
+  .btn-primary { background: linear-gradient(135deg,var(--navy),var(--navy2)); color: #fff; box-shadow: var(--sh-sm); }
+  .btn-primary:hover { background: var(--accent); box-shadow: var(--sh-md); }
+  .btn-ghost { background: transparent; color: var(--ink2); border: 1.5px solid var(--hairline-strong); }
+  .btn-ghost:hover { border-color: var(--navy); color: var(--ink); }
+
+  .empty { text-align: center; padding: 3rem; color: var(--ink3); font-size: .9rem; }
+  .loader { text-align: center; padding: 2.5rem; color: var(--ink3); font-size: .9rem; }
+  
   .toast {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--surface2); color: var(--text); border-radius: 8px;
+    background: var(--navy); color: #fff; border-radius: 8px;
     padding: 10px 20px; font-size: .9rem; z-index: 9999;
-    box-shadow: 0 4px 20px rgba(0,0,0,.4); opacity: 0; transition: opacity .3s;
+    box-shadow: var(--sh-lg); opacity: 0; transition: opacity .3s;
     pointer-events: none;
   }
   .toast.show { opacity: 1; }
   .spacer { flex: 1; }
+
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);z-index:150}
+    .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
+    .main{margin-left:0;padding-top:52px!important}
+    .mob-bar{display:flex}
+    .kanban-cols{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
 
-<nav>
-  <span class="logo">QFA</span>
-  <a href="dashboard.html">Dashboard</a>
-  <a href="clients.html">Clients</a>
-  <a href="notes.html">Notes</a>
-  <a href="projects.html" style="color:var(--text)">Projects</a>
-  <a href="#" id="logoutBtn">Logout</a>
-</nav>
+<div class="mob-bar" id="mob-bar">
+  <div class="mob-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>Quick Freelancing Agency</span>
+  </div>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
+</div>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
 
-<div class="wrap">
-  <h1>Projects &amp; Tasks</h1>
-  <p class="sub">Manage projects per client and track tasks with a kanban board.</p>
-
-  <div class="top-bar">
-    <select id="clientFilter" style="max-width:250px">
-      <option value="">All clients</option>
-    </select>
-    <select id="statusFilter" style="max-width:160px">
-      <option value="">All statuses</option>
-      <option value="active">Active</option>
-      <option value="paused">Paused</option>
-      <option value="completed">Completed</option>
-      <option value="cancelled">Cancelled</option>
-    </select>
-    <div class="spacer"></div>
-    <div class="view-toggle">
-      <button class="vt-btn active" data-view="projects" onclick="switchView('projects')">Projects</button>
-      <button class="vt-btn" data-view="kanban" onclick="switchView('kanban')">Board</button>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency · Dashboard</span></div>
+  </div>
+  <nav class="sb-nav">
+    <a href="dashboard.html">📊 Overview</a>
+    <a href="time-logs.html">⏱ Time Logs</a>
+    <div class="sb-group" id="sb-group-clients">
+      <a href="#" class="sb-parent" onclick="toggleSubmenu(event,'sb-group-clients')">
+        <span>👥 Clients</span>
+        <span class="sb-chevron">›</span>
+      </a>
+      <div class="sb-submenu">
+        <a href="clients.html">All Clients</a>
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>
+    <a href="contracts.html">📜 Contracts</a>
+    <a href="schedule.html">📅 Schedule</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="fixed-invoices.html">📄 Invoices</a>
+    <a href="portfolio-admin.html">🖼 Portfolio</a>
+    <a href="notes.html">📝 Notes</a>
+    <a href="projects.html" class="active">📁 Projects</a>
+    <a href="../index.html" target="_blank">🌐 Public Site</a>
+  </nav>
+  <div class="sb-user">
+    <strong id="uname">Loading…</strong>
+    <span>Freelancer · QFA</span>
+    <a href="#" onclick="logout()">Sign out →</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2>Projects &amp; Tasks</h2>
+      <p>Manage projects per client and track tasks with a kanban board.</p>
+    </div>
+    <div class="topbar-right">
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    </div>
   </div>
 
-  <!-- Projects grid view -->
-  <div id="projectsView">
-    <div id="projGrid" class="proj-grid">
-      <div class="loader">Loading…</div>
-    </div>
-  </div>
+  <div class="content">
+    <div class="card">
+      <div class="ch">
+        <div class="top-bar" style="margin:0; width:100%;">
+          <select id="clientFilter" style="max-width:230px">
+            <option value="">All clients</option>
+          </select>
+          <select id="statusFilter" style="max-width:160px">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <div class="spacer"></div>
+          <div class="view-toggle">
+            <button class="vt-btn active" data-view="projects" onclick="switchView('projects')">Projects</button>
+            <button class="vt-btn" data-view="kanban" onclick="switchView('kanban')">Board</button>
+          </div>
+          <button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>
+        </div>
+      </div>
+      <div class="cb">
+        <!-- Projects grid view -->
+        <div id="projectsView">
+          <div id="projGrid" class="proj-grid">
+            <div class="loader">Loading…</div>
+          </div>
+        </div>
 
-  <!-- Kanban view -->
-  <div id="kanbanView">
-    <div class="kanban-header">
-      <h2 id="kanbanTitle">Select a project</h2>
-      <button class="btn-sm primary" id="addTaskBtn" style="display:none" onclick="openNewTask()">+ Add Task</button>
-    </div>
-    <div class="kanban-cols">
-      <div class="k-col col-todo">
-        <div class="k-col-title">To Do</div>
-        <div id="kTodo"></div>
-      </div>
-      <div class="k-col col-prog">
-        <div class="k-col-title">In Progress</div>
-        <div id="kProg"></div>
-      </div>
-      <div class="k-col col-done">
-        <div class="k-col-title">Done</div>
-        <div id="kDone"></div>
-      </div>
-      <div class="k-col col-block">
-        <div class="k-col-title">Blocked</div>
-        <div id="kBlock"></div>
+        <!-- Kanban view -->
+        <div id="kanbanView">
+          <div class="kanban-header">
+            <h2 id="kanbanTitle">Select a project</h2>
+            <button class="btn-sm primary" id="addTaskBtn" style="display:none" onclick="openNewTask()">+ Add Task</button>
+          </div>
+          <div class="kanban-cols">
+            <div class="k-col">
+              <div class="k-col-title">To Do</div>
+              <div id="kTodo"></div>
+            </div>
+            <div class="k-col">
+              <div class="k-col-title">In Progress</div>
+              <div id="kProg"></div>
+            </div>
+            <div class="k-col">
+              <div class="k-col-title">Done</div>
+              <div id="kDone"></div>
+            </div>
+            <div class="k-col">
+              <div class="k-col-title">Blocked</div>
+              <div id="kBlock"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -307,10 +438,42 @@ const API   = document.querySelector('meta[name="api-base"]').content;
 const token = () => localStorage.getItem('token');
 const hdr   = () => ({ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` });
 
-if (!token()) location.href = '../index.html';
-document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); location.href = '../index.html'; };
+// ── Theme Management ───────────────────────────────────────────────────────
+function initTheme() {
+  const savedTheme = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeButton(savedTheme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+  updateThemeButton(next);
+}
+function updateThemeButton(theme) {
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+initTheme();
 
-// ── State ──────────────────────────────────────────────────────────────────
+// ── Sidebar & Auth ─────────────────────────────────────────────────────────
+if (!token()) location.href = '../index.html';
+try {
+  const u = JSON.parse(localStorage.getItem('user'));
+  if (u && u.name) document.getElementById('uname').textContent = u.name;
+} catch(e){}
+
+function logout() { localStorage.clear(); location.href = '../index.html'; }
+function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
+function sbClose(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
+function toggleSubmenu(e,groupId){
+  e.preventDefault();
+  const g=document.getElementById(groupId);
+  if(!g)return;
+  g.classList.toggle('open');
+}
+
 let allProjects  = [];
 let allClients   = [];
 let currentProj  = null;
@@ -328,7 +491,6 @@ function toast(msg, dur=2500) {
   setTimeout(() => el.classList.remove('show'), dur);
 }
 
-// ── Load clients ───────────────────────────────────────────────────────────
 async function loadClients() {
   try {
     const r = await fetch(`${API}/api/clients`, { headers: hdr() });
@@ -347,7 +509,6 @@ async function loadClients() {
   } catch (e) { console.error(e); }
 }
 
-// ── Load projects ──────────────────────────────────────────────────────────
 async function loadProjects() {
   const cid  = document.getElementById('clientFilter').value;
   const stat = document.getElementById('statusFilter').value;
@@ -380,7 +541,7 @@ function renderProjects() {
       <div class="proj-client">${esc(p.client_name)}${p.client_company ? ' · ' + esc(p.client_company) : ''}</div>
       <div class="proj-meta">
         <span class="status-badge st-${p.status}">${p.status}</span>
-        ${p.deadline ? `<span style="font-size:.75rem;color:var(--muted)">Due ${p.deadline.slice(0,10)}</span>` : ''}
+        ${p.deadline ? `<span style="font-size:.75rem;color:var(--ink3)">Due ${p.deadline.slice(0,10)}</span>` : ''}
       </div>
       <div class="proj-progress">
         <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
@@ -395,7 +556,6 @@ function renderProjects() {
   }).join('');
 }
 
-// ── Kanban ─────────────────────────────────────────────────────────────────
 function switchView(v) {
   currentView = v;
   document.querySelectorAll('.vt-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
@@ -463,7 +623,6 @@ async function quickStatus(taskId, status) {
   } catch (e) { toast('Error updating status'); }
 }
 
-// ── Project modal ──────────────────────────────────────────────────────────
 function openNewProject() {
   editingProjId = null;
   document.getElementById('projModalTitle').textContent = 'New Project';
@@ -524,7 +683,6 @@ async function deleteProject(projId) {
   } catch (e) { toast('Network error'); }
 }
 
-// ── Task modal ─────────────────────────────────────────────────────────────
 function openNewTask() {
   editingTaskId = null;
   document.getElementById('taskModalTitle').textContent = 'New Task';
@@ -590,7 +748,6 @@ async function deleteTask(taskId) {
   } catch (e) { toast('Network error'); }
 }
 
-// ── Close modals on overlay click ──────────────────────────────────────────
 document.getElementById('projModal').addEventListener('click', function(e) {
   if (e.target === this) closeProjModal();
 });
@@ -598,16 +755,12 @@ document.getElementById('taskModal').addEventListener('click', function(e) {
   if (e.target === this) closeTaskModal();
 });
 
-// ── Filter listeners ───────────────────────────────────────────────────────
 document.getElementById('clientFilter').addEventListener('change', loadProjects);
 document.getElementById('statusFilter').addEventListener('change', loadProjects);
 
-// ── Init ───────────────────────────────────────────────────────────────────
 loadClients().then(loadProjects);
 
-// shortcut: also expose openBoard from project card
 function selectProject(projId) {
-  // just highlight; double-click or "Board →" goes to kanban
   currentProj = allProjects.find(p => p.id === projId);
   renderProjects();
 }
