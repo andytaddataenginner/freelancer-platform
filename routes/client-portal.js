@@ -78,10 +78,8 @@ router.get('/stats', requireClient, async (req, res, next) => {
 });
 
 // ── GET /api/client/projects — client views their projects (Read-Only) ─────
-router.get('/projects', verifyToken, async (req, res, next) => {
+router.get('/projects', requireClient, async (req, res, next) => {
   try {
-    if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
-
     const { rows } = await pool.query(`
       SELECT p.id, p.name, p.description, p.status, p.deadline, p.created_at,
              u.name AS freelancer_name
@@ -96,10 +94,8 @@ router.get('/projects', verifyToken, async (req, res, next) => {
 });
 
 // ── GET /api/client/notes — client views their notes/guidelines (Read-Only) ─
-router.get('/notes', verifyToken, async (req, res, next) => {
+router.get('/notes', requireClient, async (req, res, next) => {
   try {
-    if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
-
     const { rows } = await pool.query(`
       SELECT n.id, n.category, n.title, n.content, n.is_pinned, n.created_at,
              u.name AS freelancer_name
