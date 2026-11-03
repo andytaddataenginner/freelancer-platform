@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Projects - Client Portal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 30px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 20px; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+    .qfa-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .qfa-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .qfa-card-title { font-weight: 600; font-size: 1.05rem; color: #0f172a; margin-bottom: 6px; }
+    .qfa-card-desc { font-size: 0.9rem; color: #64748b; line-height: 1.5; margin-bottom: 14px; }
+    .qfa-badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 3px 9px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .badge-active { background: #dcfce7; color: #15803d; }
+    .badge-paused { background: #fef9c3; color: #a16207; }
+    .badge-completed { background: #e0f2fe; color: #0369a1; }
+    .qfa-meta { font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 12px; display: flex; justify-content: space-between; }
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 0.85rem; color: #2563eb; text-decoration: none; font-weight: 500; }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="client-portal.html" class="back-link">← Back to Dashboard</a>
+    <h1>📁 My Projects</h1>
+    <div id="projectsList" class="qfa-grid">
+      <p style="color:#64748b;">Loading projects...</p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://freelancer-platform-9jut.onrender.com';
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      window.location.href = 'login.html'; // Redirect if not logged in
+    }
+
+    async function fetchProjects() {
+      try {
+        const res = await fetch(`${API_URL}/api/client/projects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to load projects');
+        const projects = await res.json();
+
+        const container = document.getElementById('projectsList');
+        if (!projects.length) {
+          container.innerHTML = `<p style="color:#64748b;">No projects found for your account.</p>`;
+          return;
+        }
+
+        container.innerHTML = projects.map(p => `
+          <div class="qfa-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="qfa-card-title">${escapeHtml(p.name)}</div>
+              <span class="qfa-badge badge-${p.status || 'active'}">${p.status || 'active'}</span>
+            </div>
+            <div class="qfa-card-desc">${escapeHtml(p.description || 'No description provided.')}</div>
+            <div class="qfa-meta">
+              <span>Deadline: ${p.deadline ? new Date(p.deadline).toLocaleDateString() : 'None specified'}</span>
+              <span>Managed by: ${escapeHtml(p.freelancer_name)}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('projectsList').innerHTML = `<p style="color:#ef4444;">Error loading projects.</p>`;
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    fetchProjects();
+  </script>
+</body>
+</html>
