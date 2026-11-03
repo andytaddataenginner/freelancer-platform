@@ -100,10 +100,10 @@ router.post('/resume', requireFreelancer, async (req, res, next) => {
 // ── POST /api/timer/stop (Stop & Save) ───────────────────────────────────────
 router.post('/stop', requireFreelancer, async (req, res, next) => {
   try {
-    let { client_id, elapsed_sec } = req.body;
+    // 1. Accept description from req.body alongside client_id and elapsed_sec
+    let { client_id, elapsed_sec, description } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
-    // 1. Resolve client_id to actual user_id
     const clientCheck = await pool.query(
       `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
       [client_id]
@@ -111,7 +111,6 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
     const actualUserId = clientCheck.rows[0].id;
 
-    // 2. Fetch active timer record
     const check = await pool.query(`
       SELECT * FROM active_timers
       WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE
@@ -120,27 +119,27 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     if (!check.rows.length) return res.status(404).json({ error: 'No running timer found for this client' });
     const timer = check.rows[0];
 
-    // 3. Compute exact hours
     let totalSecs = parseInt(elapsed_sec) || 0;
-    const hours = Math.round((totalSecs / 3600) * 100) / 100;
+    const hours = Math.round((totalSecs / 3600) * 10000) / 10000;
 
-    // 4. Fetch client hourly rate to calculate amount
     const rateRes = await pool.query(
       `SELECT hourly_rate FROM clients WHERE user_id = $1 OR id = $1 LIMIT 1`,
       [actualUserId]
     );
-    const hourlyRate = parseFloat(rateRes.rows[0]?.hourly_rate || 0);
+    const hourlyRate = parseFloat(rateRes.rows[0]?.hourly_rate || 20);
     const amount = Math.round((hours * hourlyRate) * 100) / 100;
 
-    // 5. Insert completed time log WITH calculated amount
+    // 2. Prioritize what you typed in the frontend task box, 
+    //    falling back to the timer's stored description or 'Timed session'
+    const finalDescription = description || timer.description || 'Timed session';
+
     if (hours > 0) {
       await pool.query(`
         INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
-        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
-      `, [actualUserId, req.user.id, hours, amount, timer.description || 'Timed session']);
+        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, $6, 'timer', 'unpaid')
+      `, [actualUserId, req.user.id, hours, amount, finalDescription]);
     }
 
-    // 6. Clean up active timer
     await pool.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
 
     pushToClient(actualUserId, { event: 'stopped', elapsed_sec: totalSecs });
