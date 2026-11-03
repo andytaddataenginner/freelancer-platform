@@ -134,10 +134,11 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     const finalDescription = description || timer.description || 'Timed session';
 
     if (hours > 0) {
-      await pool.query(`
-        INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
-        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, $6, 'timer', 'unpaid')
-      `, [actualUserId, req.user.id, hours, amount, finalDescription]);
+      // ✅ CORRECT (8 column names matching 8 values):
+        await pool.query(`
+          INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
+          VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
+        `, [actualUserId, req.user.id, hours, amount, finalDescription]);
     }
 
     await pool.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
