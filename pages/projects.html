@@ -438,7 +438,6 @@ const API   = document.querySelector('meta[name="api-base"]').content;
 const token = () => localStorage.getItem('token');
 const hdr   = () => ({ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` });
 
-// ── Theme Management ───────────────────────────────────────────────────────
 function initTheme() {
   const savedTheme = localStorage.getItem('qfa_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
@@ -457,7 +456,6 @@ function updateThemeButton(theme) {
 }
 initTheme();
 
-// ── Sidebar & Auth ─────────────────────────────────────────────────────────
 if (!token()) location.href = '../index.html';
 try {
   const u = JSON.parse(localStorage.getItem('user'));
@@ -533,15 +531,15 @@ function renderProjects() {
     return;
   }
   el.innerHTML = allProjects.map(p => {
-    const pct = p.total_tasks ? Math.round(p.done_tasks / p.total_tasks * 100) : 0;
+    const pct = p.total_tasks ? Math.round((p.done_tasks / p.total_tasks) * 100) : 0;
     return `
     <div class="proj-card ${currentProj && currentProj.id === p.id ? 'selected' : ''}"
          onclick="selectProject(${p.id})">
       <div class="proj-name">${esc(p.name)}</div>
-      <div class="proj-client">${esc(p.client_name)}${p.client_company ? ' · ' + esc(p.client_company) : ''}</div>
+      <div class="proj-client">👤 ${esc(p.client_name)}${p.client_company ? ' · ' + esc(p.client_company) : ''}</div>
       <div class="proj-meta">
         <span class="status-badge st-${p.status}">${p.status}</span>
-        ${p.deadline ? `<span style="font-size:.75rem;color:var(--ink3)">Due ${p.deadline.slice(0,10)}</span>` : ''}
+        ${p.deadline ? `<span style="font-size:.75rem;color:var(--ink3)">📅 Due ${p.deadline.slice(0,10)}</span>` : ''}
       </div>
       <div class="proj-progress">
         <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
@@ -620,6 +618,7 @@ async function quickStatus(taskId, status) {
     const t = currentTasks.find(x => x.id === taskId);
     if (t) t.status = status;
     renderKanban();
+    loadProjects(); // Update project task counters
   } catch (e) { toast('Error updating status'); }
 }
 
@@ -733,6 +732,7 @@ async function saveTaskModal() {
     closeTaskModal();
     toast(editingTaskId ? 'Task updated ✓' : 'Task added ✓');
     loadTasks();
+    loadProjects(); // Recalculate progress bars
   } catch (e) { toast('Network error'); }
 }
 
@@ -745,6 +745,7 @@ async function deleteTask(taskId) {
     if (!r.ok) { toast('Error'); return; }
     toast('Task deleted');
     loadTasks();
+    loadProjects();
   } catch (e) { toast('Network error'); }
 }
 
