@@ -800,223 +800,260 @@ async function saveEdit(){
   }catch(e){s.className='fs er';s.textContent=e.message;}
 }
 
-/* ────────────────────────────────────────────────────────────────────────
-   LIVE TIMER ──────────────────────────────────────────────────────────── */
-let tiv=null;
-let timerState='idle';
-let startTimestamp=null;
-let accumulatedMs=0;
+ /* ────────────────────────────────────────────────────────────────────────
+   LIVE TIMER (Synchronized with Backend & Client Portal)
+   ──────────────────────────────────────────────────────────────────────── */
+let tiv = null;
+let timerState = 'idle';
+let startTimestamp = null;
+let accumulatedMs = 0;
+let activeClientId = null;
 
-function persistTimerState(){
-  localStorage.setItem('qfa_timer_v2', JSON.stringify({
-    timerState, startTimestamp, accumulatedMs,
-    clientId: document.getElementById('tc').value,
-    taskText: document.getElementById('tt').value
-  }));
-}
-
-function currentElapsedMs(){
-  return timerState==='running' && startTimestamp
-    ? accumulatedMs + (Date.now()-startTimestamp)
-    : accumulatedMs;
+async function syncBackendTimerAction(action, payload = {}) {
+  try {
+    const res = await fetch(API + '/timer/' + action, {
+      method: 'POST',
+      headers: auth.hdrs(),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.warn(`Timer action ${action} failed:`, err.error);
+    }
+  } catch (e) {
+    console.error(`Timer network error on ${action}:`, e);
+  }
 }
 
 function tDisp(){
-  const secs=Math.floor(currentElapsedMs()/1000);
-  const h=Math.floor(secs/3600).toString().padStart(2,'0');
-  const m=Math.floor((secs%3600)/60).toString().padStart(2,'0');
-  const s=(secs%60).toString().padStart(2,'0');
-  const str=`${h}:${m}:${s}`;
-  document.getElementById('tdisp').textContent=str;
-  document.getElementById('float-timer-mini-time').textContent=str;
+  const secs = Math.floor(currentElapsedMs()/1000);
+  const h = Math.floor(secs/3600).toString().padStart(2,'0');
+  const m = Math.floor((secs%3600)/60).toString().padStart(2,'0');
+  const s = (secs%60).toString().padStart(2,'0');
+  const str = `${h}:${m}:${s}`;
+  document.getElementById('tdisp').textContent = str;
+  document.getElementById('float-timer-mini-time').textContent = str;
+}
+
+function currentElapsedMs(){
+  return timerState === 'running' && startTimestamp
+    ? accumulatedMs + (Date.now() - startTimestamp)
+    : accumulatedMs;
 }
 
 function tSetUI(state){
-  timerState=state;
-  const el=id=>document.getElementById(id);
-  const disp=el('tdisp'), status=el('t-status');
-  ['t-start','t-pause','t-resume','t-stop'].forEach(id=>el(id).style.display='none');
-  if(state==='idle'){
-    el('t-start').style.display='inline-flex';
-    disp.className='timer-disp idle';
-    status.textContent='Ready'; status.style.color='var(--ink3)';
-  } else if(state==='running'){
-    el('t-pause').style.display='inline-flex';
-    el('t-stop').style.display='inline-flex';
-    disp.className='timer-disp running';
-    status.textContent='● Running'; status.style.color='var(--green)';
-  } else if(state==='paused'){
-    el('t-resume').style.display='inline-flex';
-    el('t-stop').style.display='inline-flex';
-    disp.className='timer-disp paused';
-    status.textContent='⏸ Paused — time preserved'; status.style.color='var(--amber)';
+  timerState = state;
+  const el = id => document.getElementById(id);
+  const disp = el('tdisp'), status = el('t-status');
+  ['t-start','t-pause','t-resume','t-stop'].forEach(id => el(id).style.display = 'none');
+  
+  const sel = el('tc');
+  const taskInput = el('tt');
+  sel.disabled = (state !== 'idle');
+  taskInput.disabled = (state !== 'idle');
+
+  if(state === 'idle'){
+    el('t-start').style.display = 'inline-flex';
+    disp.className = 'timer-disp idle';
+    status.textContent = 'Ready'; status.style.color = 'var(--ink3)';
+  } else if(state === 'running'){
+    el('t-pause').style.display = 'inline-flex';
+    el('t-stop').style.display = 'inline-flex';
+    disp.className = 'timer-disp running';
+    status.textContent = '● Running Live'; status.style.color = 'var(--green)';
+  } else if(state === 'paused'){
+    el('t-resume').style.display = 'inline-flex';
+    el('t-stop').style.display = 'inline-flex';
+    disp.className = 'timer-disp paused';
+    status.textContent = '⏸ Paused'; status.style.color = 'var(--amber)';
   }
 }
 
-function timerStart(){
-  if(timerState!=='idle') return;
-  accumulatedMs=0;
-  startTimestamp=Date.now();
+async function timerStart(){
+  if(timerState !== 'idle') return;
+  const cid = document.getElementById('tc').value;
+  const task = document.getElementById('tt').value.trim();
+  if(!cid){ alert('Please select a client first.'); return; }
+
+  activeClientId = cid;
+  accumulatedMs = 0;
+  startTimestamp = Date.now();
   tSetUI('running');
-  persistTimerState();
-  tiv=setInterval(tDisp,1000);
+  
+  if(tiv) clearInterval(tiv);
+  tiv = setInterval(tDisp, 1000);
   tDisp();
+
+  await syncBackendTimerAction('start', { client_id: cid, description: task || 'Timed session' });
 }
 
-function timerPause(){
-  if(timerState!=='running') return;
-  accumulatedMs += Date.now()-startTimestamp;
-  startTimestamp=null;
-  clearInterval(tiv); tiv=null;
+async function timerPause(){
+  if(timerState !== 'running') return;
+  accumulatedMs += Date.now() - startTimestamp;
+  startTimestamp = null;
+  clearInterval(tiv); tiv = null;
   tSetUI('paused');
-  persistTimerState();
+
+  if(activeClientId) {
+    await syncBackendTimerAction('pause', { client_id: activeClientId });
+  }
 }
 
-function timerResume(){
-  if(timerState!=='paused') return;
-  startTimestamp=Date.now();
+async function timerResume(){
+  if(timerState !== 'paused') return;
+  startTimestamp = Date.now();
   tSetUI('running');
-  persistTimerState();
-  tiv=setInterval(tDisp,1000);
+  
+  if(tiv) clearInterval(tiv);
+  tiv = setInterval(tDisp, 1000);
   tDisp();
+
+  if(activeClientId) {
+    await syncBackendTimerAction('resume', { client_id: activeClientId });
+  }
 }
 
 async function timerStop(){
-  if(timerState==='idle') return;
-  const wasRunning = timerState==='running';
-  clearInterval(tiv); tiv=null;
+  if(timerState === 'idle') return;
+  const cid = activeClientId || document.getElementById('tc').value;
+  if(!cid){ alert('No active client selected.'); return; }
 
-  const elapsedMs = wasRunning ? accumulatedMs+(Date.now()-startTimestamp) : accumulatedMs;
-  const hours=Math.round(elapsedMs/1000/3600*100)/100;
-  const cid=document.getElementById('tc').value;
-  const task=document.getElementById('tt').value;
+  const wasRunning = (timerState === 'running');
+  if(tiv){ clearInterval(tiv); tiv = null; }
 
-  if(!cid){
-    alert('Please select a client before saving.');
-    if(wasRunning){ tiv=setInterval(tDisp,1000); }
-    return;
-  }
-  if(hours<0.01){ alert('Timer too short to log.'); timerReset(); return; }
+  const elapsedMs = wasRunning ? accumulatedMs + (Date.now() - startTimestamp) : accumulatedMs;
+  const hours = Math.round((elapsedMs / 1000 / 3600) * 100) / 100;
 
-  if(!confirm(`Save ${fmtH(hours)} to logs?`)){
-    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; }
-    tSetUI('paused');
-    persistTimerState();
+  if(hours < 0.01){ alert('Timer too short to log.'); timerReset(); return; }
+
+  if(!confirm(`Stop & save ${fmtH(hours)} to time logs for this client?`)){
+    if(wasRunning){ accumulatedMs = elapsedMs; startTimestamp = null; tiv = setInterval(tDisp, 1000); }
+    tSetUI(wasRunning ? 'running' : 'paused');
     return;
   }
 
-  try{
-    await api('/timelogs',{method:'POST',body:JSON.stringify({
-      client_id:cid, hours,
-      task_description:task||'Timed session',
-      date:new Date().toISOString().slice(0,10),
-      source:'timer'
-    })});
-    alert('✓ Logged '+fmtH(hours)+' successfully!');
-    timerReset(); load();
-  }catch(e){
-    alert('Failed to save: '+e.message);
-    if(wasRunning){ accumulatedMs=elapsedMs; startTimestamp=null; }
+  try {
+    const res = await fetch(API + '/timer/stop', {
+      method: 'POST',
+      headers: auth.hdrs(),
+      body: JSON.stringify({ client_id: cid })
+    });
+    if(!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error || 'Failed to stop timer');
+    }
+    const data = await res.json();
+    alert(`✓ Successfully saved ${data.hours} hours to database!`);
+    timerReset();
+    load();
+  } catch(e) {
+    alert('Failed to save: ' + e.message);
+    if(wasRunning){ accumulatedMs = elapsedMs; startTimestamp = null; tiv = setInterval(tDisp, 1000); }
     tSetUI('paused');
-    persistTimerState();
   }
 }
 
 function timerReset(){
-  clearInterval(tiv); tiv=null;
-  accumulatedMs=0; startTimestamp=null;
-  localStorage.removeItem('qfa_timer_v2');
+  if(tiv){ clearInterval(tiv); tiv = null; }
+  accumulatedMs = 0; startTimestamp = null; activeClientId = null;
   tSetUI('idle');
   tDisp();
-  document.getElementById('tt').value='';
+  document.getElementById('tt').value = '';
 }
 
-function initFloatingTimer(){
-  const saved=JSON.parse(localStorage.getItem('qfa_timer_v2')||'null');
-  if(saved){
-    startTimestamp=saved.startTimestamp||null;
-    accumulatedMs=saved.accumulatedMs||0;
-    if(saved.timerState==='running' && startTimestamp){
-      tiv=setInterval(tDisp,1000);
-      tSetUI('running');
-    } else if(saved.timerState==='paused'){
-      tSetUI('paused');
-    } else {
-      tSetUI('idle');
+async function initFloatingTimer(){
+  // Check backend for any active running session on load
+  try {
+    const res = await fetch(API + '/timer/status', { headers: auth.hdrs() });
+    if(res.ok) {
+      const timers = await res.json();
+      if(timers && timers.length > 0) {
+        const t = timers[0];
+        activeClientId = t.client_id;
+        document.getElementById('tc').value = t.client_id;
+        if(t.description) document.getElementById('tt').value = t.description;
+        
+        accumulatedMs = (t.elapsed_sec || 0) * 1000;
+        if(t.is_paused) {
+          tSetUI('paused');
+        } else {
+          startTimestamp = Date.now();
+          tSetUI('running');
+          if(tiv) clearInterval(tiv);
+          tiv = setInterval(tDisp, 1000);
+        }
+        tDisp();
+      }
     }
-  } else {
-    tSetUI('idle');
-  }
-  tDisp();
-
-  document.getElementById('tc').addEventListener('change', ()=>{ if(timerState!=='idle') persistTimerState(); });
-  document.getElementById('tt').addEventListener('input', ()=>{ if(timerState!=='idle') persistTimerState(); });
+  } catch(_) {}
 
   initTimerDrag();
   initTimerCollapse();
 }
 
 function initTimerDrag(){
-  const panel=document.getElementById('float-timer');
-  const handle=document.getElementById('float-timer-handle');
-  const savedPos=JSON.parse(localStorage.getItem('qfa_timer_pos')||'null');
+  const panel = document.getElementById('float-timer');
+  const handle = document.getElementById('float-timer-handle');
+  const savedPos = JSON.parse(localStorage.getItem('qfa_timer_pos') || 'null');
   if(savedPos){
-    panel.style.left=savedPos.left+'px';
-    panel.style.top=savedPos.top+'px';
-    panel.style.right='auto';
-    panel.style.bottom='auto';
+    panel.style.left = savedPos.left + 'px';
+    panel.style.top = savedPos.top + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
   }
 
-  let dragging=false, offsetX=0, offsetY=0;
+  let dragging = false, offsetX = 0, offsetY = 0;
 
-  function startDrag(cx,cy){
-    const rect=panel.getBoundingClientRect();
-    dragging=true;
-    offsetX=cx-rect.left;
-    offsetY=cy-rect.top;
-    panel.style.right='auto'; panel.style.bottom='auto';
+  function startDrag(cx, cy){
+    const rect = panel.getBoundingClientRect();
+    dragging = true;
+    offsetX = cx - rect.left;
+    offsetY = cy - rect.top;
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
     panel.classList.add('dragging');
   }
-  function moveDrag(cx,cy){
+  function moveDrag(cx, cy){
     if(!dragging) return;
-    let x=cx-offsetX, y=cy-offsetY;
-    const maxX=window.innerWidth-panel.offsetWidth-8;
-    const maxY=window.innerHeight-panel.offsetHeight-8;
-    x=Math.max(8,Math.min(x,maxX));
-    y=Math.max(8,Math.min(y,maxY));
-    panel.style.left=x+'px';
-    panel.style.top=y+'px';
+    let x = cx - offsetX, y = cy - offsetY;
+    const maxX = window.innerWidth - panel.offsetWidth - 8;
+    const maxY = window.innerHeight - panel.offsetHeight - 8;
+    x = Math.max(8, Math.min(x, maxX));
+    y = Math.max(8, Math.min(y, maxY));
+    panel.style.left = x + 'px';
+    panel.style.top = y + 'px';
   }
   function endDrag(){
     if(!dragging) return;
-    dragging=false;
+    dragging = false;
     panel.classList.remove('dragging');
-    const rect=panel.getBoundingClientRect();
-    localStorage.setItem('qfa_timer_pos', JSON.stringify({left:rect.left, top:rect.top}));
+    const rect = panel.getBoundingClientRect();
+    localStorage.setItem('qfa_timer_pos', JSON.stringify({ left: rect.left, top: rect.top }));
   }
 
-  handle.addEventListener('mousedown', e=>{ startDrag(e.clientX,e.clientY); e.preventDefault(); });
-  window.addEventListener('mousemove', e=> moveDrag(e.clientX,e.clientY));
+  handle.addEventListener('mousedown', e => { startDrag(e.clientX, e.clientY); e.preventDefault(); });
+  window.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
   window.addEventListener('mouseup', endDrag);
 
-  handle.addEventListener('touchstart', e=>{ const t=e.touches[0]; startDrag(t.clientX,t.clientY); }, {passive:true});
-  window.addEventListener('touchmove', e=>{ if(dragging){ const t=e.touches[0]; moveDrag(t.clientX,t.clientY); } }, {passive:true});
+  handle.addEventListener('touchstart', e => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  window.addEventListener('touchmove', e => { if(dragging){ const t = e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:true});
   window.addEventListener('touchend', endDrag);
 }
 
 function initTimerCollapse(){
-  const collapsed=localStorage.getItem('qfa_timer_collapsed')==='1';
+  const collapsed = localStorage.getItem('qfa_timer_collapsed') === '1';
   if(collapsed){
     document.getElementById('float-timer').classList.add('collapsed');
-    document.getElementById('float-timer-min-btn').textContent='+';
+    document.getElementById('float-timer-min-btn').textContent = '+';
   }
 }
 function toggleMinimize(){
-  const panel=document.getElementById('float-timer');
-  const collapsed=panel.classList.toggle('collapsed');
-  document.getElementById('float-timer-min-btn').textContent=collapsed?'+':'–';
-  localStorage.setItem('qfa_timer_collapsed', collapsed?'1':'0');
-}
+  const panel = document.getElementById('float-timer');
+  const collapsed = panel.classList.toggle('collapsed');
+  document.getElementById('float-timer-min-btn').textContent = collapsed ? '+' : '–';
+  localStorage.setItem('qfa_timer_collapsed', collapsed ? '1' : '0');
+} 
+
+  
 
 async function submitLog(e){
   e.preventDefault();
