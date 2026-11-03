@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="api-base" content="https://freelancer-platform-9jut.onrender.com" />
+<title>Client Notes — QFA</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #273549;
+    --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #6366f1; --accent-h: #818cf8;
+    --green: #22c55e; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif;
+         min-height: 100vh; padding: 0 0 80px; }
+
+  /* ─── Nav ─────────────────────────────────────────────── */
+  nav { background: var(--surface); border-bottom: 1px solid var(--border);
+        padding: 14px 24px; display: flex; align-items: center; gap: 16px; }
+  nav a { color: var(--muted); text-decoration: none; font-size: .85rem; }
+  nav a:hover { color: var(--text); }
+  nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--accent); margin-right: auto; }
+
+  /* ─── Layout ──────────────────────────────────────────── */
+  .wrap { max-width: 960px; margin: 0 auto; padding: 28px 20px; }
+  h1 { font-size: 1.4rem; font-weight: 700; }
+  .sub { color: var(--muted); font-size: .85rem; margin-top: 3px; }
+
+  /* ─── Client selector ─────────────────────────────────── */
+  .client-bar { display: flex; gap: 10px; margin: 22px 0 18px; flex-wrap: wrap; }
+  select, input[type=text], textarea {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 9px 12px; font-size: .9rem;
+    outline: none; width: 100%;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+  select { cursor: pointer; }
+
+  /* ─── Category tabs ───────────────────────────────────── */
+  .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+  .cat-tab {
+    padding: 5px 14px; border-radius: 20px; font-size: .8rem; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+    transition: all .15s;
+  }
+  .cat-tab.active, .cat-tab:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ─── Note card ───────────────────────────────────────── */
+  .notes-grid { display: grid; gap: 12px; }
+  .note-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; position: relative;
+  }
+  .note-card.pinned { border-color: var(--yellow); }
+  .note-card .nc-top { display: flex; align-items: flex-start; gap: 10px; }
+  .note-card .nc-badge {
+    font-size: .68rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; flex-shrink: 0;
+  }
+  .badge-basic        { background: #1e3a5f; color: var(--blue); }
+  .badge-mandatory    { background: #3b1111; color: var(--red); }
+  .badge-business_rule{ background: #1a2e1a; color: var(--green); }
+  .badge-tip          { background: #2d2a0e; color: var(--yellow); }
+  .badge-general      { background: var(--surface2); color: var(--muted); }
+
+  .note-card .nc-title { font-weight: 600; font-size: .95rem; flex: 1; }
+  .note-card .nc-content { color: var(--muted); font-size: .85rem; margin-top: 8px;
+                            line-height: 1.55; white-space: pre-wrap; }
+  .note-card .nc-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+  .btn-icon { background: none; border: 1px solid var(--border); color: var(--muted);
+              border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: .8rem;
+              transition: all .15s; }
+  .btn-icon:hover { background: var(--surface2); color: var(--text); }
+  .btn-icon.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn-icon.pin-on { border-color: var(--yellow); color: var(--yellow); }
+
+  /* ─── Add note form ───────────────────────────────────── */
+  .add-card {
+    background: var(--surface2); border: 1px dashed var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .form-row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; margin-bottom: 10px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  textarea { resize: vertical; min-height: 80px; }
+  .row-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+  .btn { padding: 8px 18px; border-radius: 8px; font-size: .88rem; font-weight: 600;
+         cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-h); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); }
+
+  /* ─── States ──────────────────────────────────────────── */
+  .empty { text-align: center; padding: 48px; color: var(--muted); }
+  .empty svg { margin-bottom: 12px; opacity: .3; }
+  .loader { text-align: center; padding: 40px; color: var(--muted); }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); color: var(--text); border-radius: 8px;
+    padding: 10px 20px; font-size: .9rem; z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,.4); opacity: 0; transition: opacity .3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ─── Edit modal ──────────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.6); z-index: 500; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px; width: 90%; max-width: 520px;
+  }
+  .modal h2 { font-size: 1rem; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">QFA</span>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="clients.html">Clients</a>
+  <a href="notes.html" style="color:var(--text)">Notes</a>
+  <a href="projects.html">Projects</a>
+  <a href="#" id="logoutBtn">Logout</a>
+</nav>
+
+<div class="wrap">
+  <h1>Client Notes</h1>
+  <p class="sub">Store tips, mandatory rules, and business guidelines per client.</p>
+
+  <!-- Client selector -->
+  <div class="client-bar">
+    <select id="clientSelect" style="max-width:320px">
+      <option value="">— Select a client —</option>
+    </select>
+  </div>
+
+  <!-- Category filter tabs -->
+  <div class="cat-tabs" id="catTabs">
+    <div class="cat-tab active" data-cat="all">All</div>
+    <div class="cat-tab" data-cat="mandatory">Mandatory</div>
+    <div class="cat-tab" data-cat="basic">Basic</div>
+    <div class="cat-tab" data-cat="business_rule">Business Rules</div>
+    <div class="cat-tab" data-cat="tip">Tips</div>
+    <div class="cat-tab" data-cat="general">General</div>
+  </div>
+
+  <!-- Notes list -->
+  <div id="notesList" class="notes-grid">
+    <div class="empty">Select a client to view notes.</div>
+  </div>
+
+  <!-- Add note form -->
+  <div id="addCard" class="add-card" style="margin-top:18px; display:none">
+    <div class="form-row">
+      <input type="text" id="noteTitle" placeholder="Title" />
+      <select id="noteCat">
+        <option value="general">General</option>
+        <option value="basic">Basic</option>
+        <option value="mandatory">Mandatory</option>
+        <option value="business_rule">Business Rule</option>
+        <option value="tip">Tip</option>
+      </select>
+    </div>
+    <div class="form-row single">
+      <textarea id="noteContent" placeholder="Note content…"></textarea>
+    </div>
+    <div class="row-actions">
+      <button class="btn btn-ghost" onclick="toggleAdd()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="addBtn" style="margin-top:14px; display:none"
+          onclick="toggleAdd()">+ Add Note</button>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>Edit Note</h2>
+    <div class="form-row">
+      <input type="text" id="editTitle" placeholder="Title" />
+      <select id="editCat">
+        <option value="general">General</option>
+        <option value="basic">Basic</option>
+        <option value="mandatory">Mandatory</option>
+        <option value="business_rule">Business Rule</option>
+        <option value="tip">Tip</option>
+      </select>
+    </div>
+    <div class="form-row single" style="margin-bottom:0">
+      <textarea id="editContent" placeholder="Note content…"></textarea>
+    </div>
+    <div class="row-actions">
+      <button class="btn btn-ghost" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = document.querySelector('meta[name="api-base"]').content;
+const token = () => localStorage.getItem('token');
+const hdr   = () => ({ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` });
+
+// ── Auth guard ─────────────────────────────────────────────────────────────
+if (!token()) location.href = '../index.html';
+document.getElementById('logoutBtn').onclick = () => {
+  localStorage.clear(); location.href = '../index.html';
+};
+
+let currentClientId = null;
+let allNotes        = [];
+let activeCat       = 'all';
+let editingNoteId   = null;
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, dur=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+// ── Load clients ───────────────────────────────────────────────────────────
+async function loadClients() {
+  try {
+    const r = await fetch(`${API}/api/clients`, { headers: hdr() });
+    const clients = await r.json();
+    const sel = document.getElementById('clientSelect');
+    clients.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.user_id || c.id;
+      opt.textContent = c.name + (c.company ? ` (${c.company})` : '');
+      sel.appendChild(opt);
+    });
+  } catch (e) { console.error(e); }
+}
+
+document.getElementById('clientSelect').addEventListener('change', function() {
+  currentClientId = this.value;
+  if (currentClientId) {
+    document.getElementById('addBtn').style.display = '';
+    loadNotes();
+  } else {
+    document.getElementById('addBtn').style.display = 'none';
+    document.getElementById('addCard').style.display = 'none';
+    document.getElementById('notesList').innerHTML = '<div class="empty">Select a client to view notes.</div>';
+  }
+});
+
+// ── Load notes ─────────────────────────────────────────────────────────────
+async function loadNotes() {
+  if (!currentClientId) return;
+  document.getElementById('notesList').innerHTML = '<div class="loader">Loading…</div>';
+  try {
+    const r = await fetch(`${API}/api/client-notes/${currentClientId}`, { headers: hdr() });
+    allNotes = await r.json();
+    renderNotes();
+  } catch (e) { console.error(e); }
+}
+
+function renderNotes() {
+  const filtered = activeCat === 'all' ? allNotes : allNotes.filter(n => n.category === activeCat);
+  const el = document.getElementById('notesList');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 12h6M9 16h6M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+        <polyline points="13 2 13 9 20 9"/>
+      </svg>
+      <div>No ${activeCat === 'all' ? '' : activeCat + ' '}notes yet.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(n => `
+    <div class="note-card ${n.is_pinned ? 'pinned' : ''}">
+      <div class="nc-top">
+        <span class="nc-badge badge-${n.category}">${n.category.replace('_',' ')}</span>
+        <span class="nc-title">${esc(n.title)}</span>
+      </div>
+      <div class="nc-content">${esc(n.content)}</div>
+      <div class="nc-actions">
+        <button class="btn-icon ${n.is_pinned ? 'pin-on' : ''}"
+                onclick="togglePin(${n.id})" title="${n.is_pinned ? 'Unpin' : 'Pin'}">
+          ${n.is_pinned ? '📌 Pinned' : '📌 Pin'}
+        </button>
+        <button class="btn-icon" onclick="openEdit(${n.id})">Edit</button>
+        <button class="btn-icon danger" onclick="deleteNote(${n.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── Category filter ────────────────────────────────────────────────────────
+document.getElementById('catTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.cat-tab');
+  if (!tab) return;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  activeCat = tab.dataset.cat;
+  renderNotes();
+});
+
+// ── Add note ───────────────────────────────────────────────────────────────
+function toggleAdd() {
+  const card = document.getElementById('addCard');
+  card.style.display = card.style.display === 'none' ? '' : 'none';
+  if (card.style.display === '') {
+    document.getElementById('noteTitle').focus();
+  }
+}
+
+async function saveNote() {
+  const title   = document.getElementById('noteTitle').value.trim();
+  const content = document.getElementById('noteContent').value.trim();
+  const category = document.getElementById('noteCat').value;
+  if (!title || !content) { toast('Title and content required'); return; }
+  try {
+    const r = await fetch(`${API}/api/client-notes/${currentClientId}`, {
+      method: 'POST', headers: hdr(),
+      body: JSON.stringify({ title, content, category })
+    });
+    if (!r.ok) { const d = await r.json(); toast(d.error || 'Error'); return; }
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteContent').value = '';
+    document.getElementById('addCard').style.display = 'none';
+    toast('Note saved ✓');
+    loadNotes();
+  } catch (e) { toast('Network error'); }
+}
+
+// ── Pin toggle ─────────────────────────────────────────────────────────────
+async function togglePin(noteId) {
+  try {
+    await fetch(`${API}/api/client-notes/${currentClientId}/${noteId}/pin`, {
+      method: 'PATCH', headers: hdr()
+    });
+    loadNotes();
+  } catch (e) { toast('Error'); }
+}
+
+// ── Delete ─────────────────────────────────────────────────────────────────
+async function deleteNote(noteId) {
+  if (!confirm('Delete this note?')) return;
+  try {
+    const r = await fetch(`${API}/api/client-notes/${currentClientId}/${noteId}`, {
+      method: 'DELETE', headers: hdr()
+    });
+    if (!r.ok) { toast('Error deleting'); return; }
+    toast('Deleted');
+    loadNotes();
+  } catch (e) { toast('Network error'); }
+}
+
+// ── Edit ───────────────────────────────────────────────────────────────────
+function openEdit(noteId) {
+  const note = allNotes.find(n => n.id === noteId);
+  if (!note) return;
+  editingNoteId = noteId;
+  document.getElementById('editTitle').value   = note.title;
+  document.getElementById('editContent').value = note.content;
+  document.getElementById('editCat').value     = note.category;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEdit() {
+  editingNoteId = null;
+  document.getElementById('editModal').classList.remove('open');
+}
+
+async function submitEdit() {
+  if (!editingNoteId) return;
+  const title    = document.getElementById('editTitle').value.trim();
+  const content  = document.getElementById('editContent').value.trim();
+  const category = document.getElementById('editCat').value;
+  if (!title || !content) { toast('Title and content required'); return; }
+  try {
+    const r = await fetch(`${API}/api/client-notes/${currentClientId}/${editingNoteId}`, {
+      method: 'PUT', headers: hdr(),
+      body: JSON.stringify({ title, content, category })
+    });
+    if (!r.ok) { const d = await r.json(); toast(d.error || 'Error'); return; }
+    closeEdit();
+    toast('Updated ✓');
+    loadNotes();
+  } catch (e) { toast('Network error'); }
+}
+
+// Close modal on overlay click
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) closeEdit();
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadClients();
+</script>
+
+<!-- Chatbot widget -->
+<script src="../chatbot-widget.js"></script>
+</body>
+</html>
