@@ -2,15 +2,6 @@
  * client-timer-widget.js
  * ─────────────────────────────────────────────────────────────────────────────
  * Drop on the CLIENT dashboard page — READ-ONLY live timer view.
- *
- *   <script src="../client-timer-widget.js"></script>
- *
- * How it works:
- *  • Opens an SSE connection to GET /api/timer/watch?token=<JWT>
- *  • Server pushes "started" when the freelancer starts the timer
- *  • Server pushes "stopped" when the freelancer stops
- *  • Client sees a live ticking clock — ZERO controls (watch only)
- *  • Falls back to polling GET /api/timer/client-status every 5s if SSE fails
  * ─────────────────────────────────────────────────────────────────────────────
  */
 (function () {
@@ -23,9 +14,6 @@
     return m && m.content ? m.content : FALLBACK_API;
   };
   const token = () => localStorage.getItem('token');
-
-  // Only inject for logged-in clients
-  if (!token()) return;
 
   // ── Inject styles ──────────────────────────────────────────────────────────
   const style = document.createElement('style');
@@ -148,7 +136,6 @@
   function startTick(startedAtStr) {
     if (tickInterval) clearInterval(tickInterval);
     startedAt = new Date(startedAtStr).getTime();
-    // Immediately set the current elapsed so there's no 1-second lag
     const sec0 = Math.floor((Date.now() - startedAt) / 1000);
     document.getElementById('ctTime').textContent = fmtElapsed(sec0);
     tickInterval = setInterval(() => {
@@ -157,7 +144,7 @@
     }, 1000);
   }
 
-  // ── Handle incoming event (shared between SSE and poll) ────────────────────
+  // ── Handle incoming event ──────────────────────────────────────────────────
   function handleEvent(data) {
     if (data.event === 'started' || (data.event === 'sync' && data.is_running)) {
       showTimer(data.description);
@@ -169,9 +156,14 @@
 
   // ── SSE connection ─────────────────────────────────────────────────────────
   function connectSSE() {
+    const tkn = token();
+    if (!tkn) {
+      if (!pollInterval) startPolling();
+      return;
+    }
     if (eventSource) { eventSource.close(); eventSource = null; }
 
-    const url = `${getApi()}/api/timer/watch?token=${encodeURIComponent(token())}`;
+    const url = `${getApi()}/api/timer/watch?token=${encodeURIComponent(tkn)}`;
     eventSource = new EventSource(url);
 
     eventSource.onmessage = (e) => {
@@ -179,24 +171,23 @@
     };
 
     eventSource.onerror = () => {
-      // SSE failed — clean up and fall back to polling
-      eventSource.close();
-      eventSource = null;
+      if (eventSource) { eventSource.close(); eventSource = null; }
       if (!pollInterval) startPolling();
     };
   }
 
-  // ── Polling fallback (every 5 s) ───────────────────────────────────────────
+  // ── Polling fallback ───────────────────────────────────────────────────────
   async function poll() {
+    const tkn = token();
+    if (!tkn) return;
     try {
       const r = await fetch(`${getApi()}/api/timer/client-status`, {
-        headers: { Authorization: `Bearer ${token()}` }
+        headers: { Authorization: `Bearer ${tkn}` }
       });
       if (!r.ok) return;
       const data = await r.json();
       if (data.running) {
         showTimer(data.description);
-        // Only reset the tick if we weren't already ticking from this session
         if (!startedAt) startTick(data.started_at);
       } else {
         hideTimer();
@@ -205,23 +196,29 @@
   }
 
   function startPolling() {
-    poll(); // immediate check
-    pollInterval = setInterval(poll, 5000);
+    poll();
+    if (!pollInterval) pollInterval = setInterval(poll, 5000);
   }
 
-  // ── Init ───────────────────────────────────────────────────────────────────
-  if (typeof EventSource !== 'undefined') {
-    connectSSE();
-  } else {
-    startPolling();
-  }
-
-  // Reconnect SSE when tab becomes visible again after being in background
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && typeof EventSource !== 'undefined' && !eventSource) {
-      // Stop polling if it was running as fallback
-      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  // ── Init on DOM Content Loaded ─────────────────────────────────────────────
+  function init() {
+    if (typeof EventSource !== 'undefined' && token()) {
       connectSSE();
+    } else {
+      startPolling();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && token()) {
+      if (!eventSource) connectSSE();
+      poll();
     }
   });
 
