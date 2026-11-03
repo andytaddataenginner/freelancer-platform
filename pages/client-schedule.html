@@ -9,11 +9,6 @@
   <link rel="stylesheet" href="../css/style.css"/>
   <link rel="stylesheet" href="../css/chatbot-widget.css">
   <style>
-    /* ══════════════════════════════════════════════════════════
-       QFA CLIENT SCHEDULER — design tokens
-       Palette: ink navy + brass gold, warm-white panels
-       Type: Playfair Display (display) / Outfit (ui) / IBM Plex Mono (figures)
-       ══════════════════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -77,6 +72,7 @@
     .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
+    /* Standardized max-width and margin layout matching all other pages */
     .main-content { margin-left: 232px; flex: 1; padding: 1.6rem 2rem 2.5rem; position: relative; max-width: 1180px; }
 
     .theme-toggle { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all .2s; flex-shrink: 0; }
@@ -93,8 +89,8 @@
     .engagement-pill { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.45rem; }
 
     /* ── PANELS & FORM STYLES ── */
-    .ledger-panel-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.4rem; padding: 1.3rem 1.4rem 1.5rem; }
-    .panel-heading { font-size: .68rem; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .9rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+    .ledger-panel-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.4rem; padding: 1.5rem; }
+    .panel-heading { font-size: .68rem; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1.1rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
 
     .fg { display: flex; flex-direction: column; gap: .35rem; }
     .fg label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
@@ -169,7 +165,6 @@
       <a href="client-projects.html">📁 My Projects</a>
       <a href="client-notes.html">📌 Guidelines & Notes</a>
       <a href="client-schedule.html" class="active">📅 Book a Session</a>
-      
       <a href="../index.html" target="_blank">🌐 Portfolio</a>
     </nav>
     <div class="sidebar-user">
@@ -197,7 +192,7 @@
     </div>
 
     <!-- Booking Form Panel -->
-    <div class="ledger-panel-wrap" style="max-width: 720px;">
+    <div class="ledger-panel-wrap">
       <div class="panel-heading">📅 New Booking Request</div>
       <form onsubmit="bookSession(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem">
         <div class="fg">
@@ -273,7 +268,6 @@ const auth = {
   headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
 };
 
-/* ── Theme ── */
 function initTheme(){
   const saved = localStorage.getItem('qfa_theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
@@ -343,24 +337,20 @@ async function loadBookings() {
     }
 
     const todayStr = new Date().toISOString().slice(0,10);
-    
     const upcoming = bookings.filter(b => {
       const bDate = b.date ? b.date.slice(0,10) : '';
       return bDate >= todayStr && b.status !== 'cancelled';
     });
-    
     const past = bookings.filter(b => {
       const bDate = b.date ? b.date.slice(0,10) : '';
       return bDate < todayStr || b.status === 'cancelled';
     });
 
     let html = '';
-
     if (upcoming.length) {
       html += '<p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3);font-weight:700;margin-bottom:0.7rem">Upcoming Sessions</p>';
       html += upcoming.map(b => bookingCard(b)).join('');
     }
-
     if (past.length) {
       html += '<p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3);font-weight:700;margin:1.4rem 0 0.7rem">Past / Cancelled</p>';
       html += past.map(b => bookingCard(b)).join('');
@@ -374,10 +364,7 @@ async function loadBookings() {
 }
 
 function bookingCard(b) {
-  const badgeClass = b.status === 'confirmed' ? 'bg-g'
-                   : b.status === 'pending'   ? 'bg-a'
-                   : 'bg-gray';
-                   
+  const badgeClass = b.status === 'confirmed' ? 'bg-g' : b.status === 'pending' ? 'bg-a' : 'bg-gray';
   const todayStr = new Date().toISOString().slice(0,10);
   const bDate = b.date ? b.date.slice(0,10) : '';
 
@@ -442,6 +429,6 @@ async function cancelBooking(id) {
 
 loadBookings();
 </script>
-  <script src="../chatbot-widget.js"></script>
+<script src="../chatbot-widget.js"></script>
 </body>
 </html>
