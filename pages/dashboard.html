@@ -590,7 +590,13 @@ function toggleSubmenu(e,groupId){
   }catch(_){}
 })();
 function toggleRate(){const t=document.getElementById('art').value;document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';document.getElementById('afp').style.display=t==='fixed'?'flex':'none';}
-function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
+function fmtH(h){
+  const totalMin = Math.round(h * 60);
+  const hr = Math.floor(totalMin / 60), mn = totalMin % 60;
+  if(hr === 0) return mn + 'min';
+  if(mn === 0) return hr + 'h';
+  return hr + 'h ' + mn + 'min';
+}
 
 // ── Password Visibility & Change Modal Handlers ──
 function toggleModalPassword(fieldId, btnEl) {
