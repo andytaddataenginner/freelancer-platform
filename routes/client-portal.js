@@ -77,6 +77,43 @@ router.get('/stats', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ── GET /api/client/projects — client views their projects (Read-Only) ─────
+router.get('/projects', verifyToken, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
+
+    const { rows } = await pool.query(`
+      SELECT p.id, p.name, p.description, p.status, p.deadline, p.created_at,
+             u.name AS freelancer_name
+      FROM projects p
+      JOIN users u ON u.id = p.freelancer_id
+      WHERE p.client_id = $1
+      ORDER BY p.created_at DESC
+    `, [req.user.id]);
+
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
+// ── GET /api/client/notes — client views their notes/guidelines (Read-Only) ─
+router.get('/notes', verifyToken, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
+
+    const { rows } = await pool.query(`
+      SELECT n.id, n.category, n.title, n.content, n.is_pinned, n.created_at,
+             u.name AS freelancer_name
+      FROM client_notes n
+      JOIN users u ON u.id = n.freelancer_id
+      WHERE n.client_id = $1
+      ORDER BY n.is_pinned DESC, n.created_at DESC
+    `, [req.user.id]);
+
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
+
 // GET /api/client/timelogs
 router.get('/timelogs', requireClient, async (req, res, next) => {
     try {
