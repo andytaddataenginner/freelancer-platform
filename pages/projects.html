@@ -567,19 +567,34 @@ function renderProjects() {
 function switchView(v) {
   currentView = v;
   document.querySelectorAll('.vt-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
-  document.getElementById('projectsView').style.display = v === 'projects' ? '' : 'none';
-  document.getElementById('kanbanView').style.display   = v === 'kanban'   ? '' : 'none';
+  
+  const projView = document.getElementById('projectsView');
+  const kanbanView = document.getElementById('kanbanView');
+  
+  if (v === 'projects') {
+    projView.style.display = 'block';
+    kanbanView.style.display = 'none';
+  } else {
+    projView.style.display = 'none';
+    kanbanView.style.display = 'block';
+  }
 }
 
 async function openBoard(projId) {
-  currentProj = allProjects.find(p => p.id === projId);
-  if (!currentProj) return;
+  // Use loose equality (==) to prevent string vs number ID mismatch
+  currentProj = allProjects.find(p => p.id == projId);
+  
+  if (!currentProj) {
+    toast('Project not found. Please refresh.');
+    console.error("Project ID not found in allProjects:", projId, allProjects);
+    return;
+  }
+  
   switchView('kanban');
   document.getElementById('kanbanTitle').textContent = currentProj.name;
   document.getElementById('addTaskBtn').style.display = 'inline-flex';
   loadTasks();
 }
-
 async function loadTasks() {
   if (!currentProj) return;
   try {
