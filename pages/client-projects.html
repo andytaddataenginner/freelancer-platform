@@ -194,7 +194,7 @@ function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 async function fetchProjects() {
   try {
-    const res = await fetch(`${API}/client/projects`, {
+    const res = await fetch(`${API}/projects/client-view`, {
       headers: auth.headers()
     });
     if (!res.ok) throw new Error('Failed to load projects');
