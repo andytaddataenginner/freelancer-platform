@@ -162,6 +162,7 @@
     </div>
   </main>
 </div>
+
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const auth = {
@@ -207,26 +208,40 @@ async function fetchProjects() {
     }
 
     container.innerHTML = projects.map(p => {
-      // Parse tasks if they come as an array or JSON string
       let tasks = [];
       try {
         tasks = typeof p.tasks === 'string' ? JSON.parse(p.tasks) : (p.tasks || []);
       } catch(e) { tasks = []; }
 
-      // Compute completion ratio if tasks exist
-      const completedCount = tasks.filter(t => t.completed || t.is_completed || t.status === 'completed').length;
+      // Compute completion ratio using 'done' status from the database
+      const completedCount = tasks.filter(t => t.status === 'done' || t.completed || t.is_completed).length;
       const totalTasks = tasks.length;
       const percent = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
-      // Build task checklist HTML
       let tasksHtml = '';
       if (totalTasks > 0) {
         const listItems = tasks.map(t => {
-          const isDone = t.completed || t.is_completed || t.status === 'completed';
+          const isDone = t.status === 'done' || t.completed || t.is_completed;
+          const isInProgress = t.status === 'in_progress';
+          const isBlocked = t.status === 'blocked';
+
+          let statusBadge = '';
+          if (isDone) {
+            statusBadge = '<span style="font-size:0.9rem; color:var(--green);">☑</span>';
+          } else if (isInProgress) {
+            statusBadge = '<span style="font-size:0.65rem; background:var(--abg); color:var(--amber); padding:0.1rem 0.4rem; border-radius:4px; font-weight:600; text-transform:uppercase;">In Progress</span>';
+          } else if (isBlocked) {
+            statusBadge = '<span style="font-size:0.65rem; background:var(--rbg); color:var(--red); padding:0.1rem 0.4rem; border-radius:4px; font-weight:600; text-transform:uppercase;">Blocked</span>';
+          } else {
+            statusBadge = '<span style="font-size:0.9rem; color:var(--ink-3);">☐</span>';
+          }
+
           return `
-            <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; margin-bottom:0.3rem; color:${isDone ? 'var(--ink-3)' : 'var(--ink)'};">
-              <span style="font-size:0.9rem;">${isDone ? '☑' : '☐'}</span>
-              <span style="${isDone ? 'text-decoration: line-through;' : ''}">${escapeHtml(t.title || t.name || t.task)}</span>
+            <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.82rem; margin-bottom:0.4rem; color:${isDone ? 'var(--ink-3)' : 'var(--ink)'};">
+              <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
+                <span style="${isDone ? 'text-decoration: line-through;' : ''}">${escapeHtml(t.title || t.name || t.task)}</span>
+              </div>
+              <div>${statusBadge}</div>
             </div>
           `;
         }).join('');
@@ -241,7 +256,7 @@ async function fetchProjects() {
             <div style="width:100%; height:6px; background:var(--bg2); border-radius:3px; overflow:hidden; margin-bottom:0.6rem;">
               <div style="width:${percent}%; height:100%; background:var(--accent); transition: width 0.3s ease;"></div>
             </div>
-            <div style="max-height:120px; overflow-y:auto; display:flex; flex-direction:column; gap:0.2rem;">
+            <div style="max-height:140px; overflow-y:auto; display:flex; flex-direction:column; gap:0.3rem;">
               ${listItems}
             </div>
           </div>
