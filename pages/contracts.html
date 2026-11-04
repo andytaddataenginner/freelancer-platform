@@ -132,6 +132,15 @@
     }
     .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--ink); }
 
+    /* ── OVERVIEW TABLE / GRID ── */
+    .table-container { width: 100%; overflow-x: auto; }
+    .overview-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    .overview-table th { background: var(--bg2); color: var(--ink2); font-weight: 600; padding: 0.75rem 1rem; border-bottom: 1px solid rgba(13,35,83,0.08); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .overview-table td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(13,35,83,0.05); color: var(--ink); vertical-align: middle; }
+    .overview-table tbody tr { transition: background 0.15s; cursor: pointer; }
+    .overview-table tbody tr:hover { background: var(--table-hover); }
+    .overview-table tbody tr.selected { background: rgba(26,92,255,0.07); }
+
     /* ── CLIENT SELECT BAR ── */
     .client-bar {
       display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.2rem;
@@ -304,11 +313,35 @@
 
     <div class="content">
 
+      <!-- Contracts Overview Table / Grid (Added Above) -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📋 All Client Contracts At-A-Glance</h3>
+          <span style="font-size:0.75rem;color:var(--ink3)">Click any row to inspect & manage</span>
+        </div>
+        <div class="table-container">
+          <table class="overview-table" id="overview-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Company</th>
+                <th>Current Rate</th>
+                <th>Status</th>
+                <th style="text-align:right">Quick Action</th>
+              </tr>
+            </thead>
+            <tbody id="overview-tbody">
+              <tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:1.5rem">Loading contracts overview…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Client selector bar -->
       <div class="card">
         <div class="client-bar">
           <label>Select client</label>
-          <select id="client-select" onchange="loadClient()">
+          <select id="client-select" onchange="onClientSelectChange()">
             <option value="">Choose a client…</option>
           </select>
           <span id="client-status-pill"></span>
@@ -318,7 +351,7 @@
       <!-- Empty state -->
       <div id="empty-state" class="card" style="text-align:center;padding:4rem;color:var(--ink3)">
         <div style="font-size:3rem;margin-bottom:1rem">📜</div>
-        <div style="font-weight:600;font-size:1rem;margin-bottom:.4rem;color:var(--ink)">Select a client to manage their contract</div>
+        <div style="font-weight:600;font-size:1rem;margin-bottom:.4rem;color:var(--ink)">Select a client above to manage their contract</div>
         <div style="font-size:.85rem">View history, change rates, pause or terminate engagements</div>
       </div>
 
@@ -502,6 +535,7 @@ function fmtDate(d) {
 }
 
 let currentClientId = null, currentContract = null;
+let allClientsData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
@@ -515,16 +549,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (el) el.value = today();
   });
   
-  // Load client list
+  // Load client list and overview data
+  await loadClientsAndOverview();
+});
+
+async function loadClientsAndOverview() {
   try {
-    const clients = await api('/clients');
+    allClientsData = await api('/clients');
     const sel = document.getElementById('client-select');
-    clients.forEach(c => {
+    sel.innerHTML = '<option value="">Choose a client…</option>';
+    
+    allClientsData.forEach(c => {
       const o = document.createElement('option');
       o.value = c.id;
       o.textContent = c.name + (c.company ? ' — ' + c.company : '');
       sel.appendChild(o);
     });
+
+    // Populate overview table with contract details for each client
+    await renderOverviewTable(allClientsData);
     
     // Deep link: contracts.html?client=ID
     const preselect = new URLSearchParams(location.search).get('client');
@@ -535,7 +578,83 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (e) {
     console.error('Failed to load clients:', e);
   }
-});
+}
+
+async function renderOverviewTable(clients) {
+  const tbody = document.getElementById('overview-tbody');
+  if (!clients.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:1.5rem">No clients found.</td></tr>';
+    return;
+  }
+
+  // Fetch contract status concurrently for all clients
+  const rowsPromises = clients.map(async (c) => {
+    let contract = null;
+    try {
+      const history = await api('/contracts/' + c.id);
+      contract = history.find(h => !h.effective_to) || history[0] || null;
+    } catch (err) {
+      console.warn(`Could not load contract for client ${c.id}`);
+    }
+
+    const status = contract ? contract.status : 'none';
+    const rateLabel = contract 
+      ? (contract.rate_type === 'fixed' ? `Fixed $${parseFloat(contract.fixed_price || 0).toFixed(2)}` : `$${parseFloat(contract.hourly_rate || 0).toFixed(2)}/hr`)
+      : 'No contract set';
+
+    const badges = {
+      active: { cls: 'badge-green', label: '● Active' },
+      paused: { cls: 'badge-amber', label: '⏸ Paused' },
+      terminated: { cls: 'badge-red', label: '🔴 Terminated' },
+      none: { cls: 'badge-blue', label: 'No contract' }
+    };
+    const b = badges[status] || { cls: 'badge-blue', label: status };
+
+    return {
+      client: c,
+      contract,
+      status,
+      rateLabel,
+      badgeHtml: `<span class="badge ${b.cls}">${b.label}</span>`
+    };
+  });
+
+  const results = await Promise.all(rowsPromises);
+
+  tbody.innerHTML = results.map(r => `
+    <tr onclick="selectClient('${r.client.id}')" id="overview-row-${r.client.id}">
+      <td style="font-weight:600">${r.client.name}</td>
+      <td style="color:var(--ink3)">${r.client.company || '—'}</td>
+      <td>${r.rateLabel}</td>
+      <td>${r.badgeHtml}</td>
+      <td style="text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); selectClient('${r.client.id}')">Manage →</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function selectClient(id) {
+  const sel = document.getElementById('client-select');
+  sel.value = id;
+  
+  // Highlight active row in overview table
+  document.querySelectorAll('.overview-table tbody tr').forEach(tr => tr.classList.remove('selected'));
+  const activeRow = document.getElementById('overview-row-' + id);
+  if (activeRow) activeRow.classList.add('selected');
+
+  loadClient();
+}
+
+function onClientSelectChange() {
+  const id = document.getElementById('client-select').value;
+  document.querySelectorAll('.overview-table tbody tr').forEach(tr => tr.classList.remove('selected'));
+  if (id) {
+    const activeRow = document.getElementById('overview-row-' + id);
+    if (activeRow) activeRow.classList.add('selected');
+  }
+  loadClient();
+}
 
 async function loadClient() {
   const id = document.getElementById('client-select').value;
@@ -550,7 +669,8 @@ async function loadClient() {
   try {
     const history = await api('/contracts/' + id);
     currentContract = history.find(h => !h.effective_to) || history[0] || null;
-    renderHero(currentContract, document.getElementById('client-select').selectedOptions[0].text.split(' — ')[0]);
+    const selectedClientObj = allClientsData.find(c => c.id === id);
+    renderHero(currentContract, selectedClientObj ? selectedClientObj.name : 'Client');
     renderTimeline(history);
     renderActionCards(currentContract);
   } catch (e) { console.error(e); }
@@ -668,7 +788,7 @@ async function submitChange() {
   try {
     await api('/contracts/' + currentClientId + '/change', { method: 'POST', body: JSON.stringify({ rate_type: rt, hourly_rate: hr || null, fixed_price: fp || null, effective_from: from, note }) });
     st.className = 'form-status success'; st.textContent = '✓ Rate updated!';
-    setTimeout(() => { closeModal('modal-change'); st.textContent = ''; loadClient(); }, 900);
+    setTimeout(async () => { closeModal('modal-change'); st.textContent = ''; await loadClientsAndOverview(); loadClient(); }, 900);
   } catch (e) { st.className = 'form-status error'; st.textContent = e.message; }
 }
 
@@ -679,7 +799,7 @@ async function submitPause() {
   try {
     await api('/contracts/' + currentClientId + '/pause', { method: 'POST', body: JSON.stringify({ effective_from: from, note: note || 'Contract paused' }) });
     st.className = 'form-status success'; st.textContent = '✓ Contract paused.';
-    setTimeout(() => { closeModal('modal-pause'); st.textContent = ''; loadClient(); }, 900);
+    setTimeout(async () => { closeModal('modal-pause'); st.textContent = ''; await loadClientsAndOverview(); loadClient(); }, 900);
   } catch (e) { st.className = 'form-status error'; st.textContent = e.message; }
 }
 
@@ -690,7 +810,7 @@ async function submitResume() {
   try {
     await api('/contracts/' + currentClientId + '/resume', { method: 'POST', body: JSON.stringify({ effective_from: from, note: note || 'Contract resumed' }) });
     st.className = 'form-status success'; st.textContent = '✓ Contract resumed!';
-    setTimeout(() => { closeModal('modal-resume'); st.textContent = ''; loadClient(); }, 900);
+    setTimeout(async () => { closeModal('modal-resume'); st.textContent = ''; await loadClientsAndOverview(); loadClient(); }, 900);
   } catch (e) { st.className = 'form-status error'; st.textContent = e.message; }
 }
 
@@ -703,7 +823,7 @@ async function submitTerminate() {
   try {
     await api('/contracts/' + currentClientId + '/terminate', { method: 'POST', body: JSON.stringify({ effective_from: from, note }) });
     st.className = 'form-status success'; st.textContent = '✓ Contract terminated.';
-    setTimeout(() => { closeModal('modal-terminate'); st.textContent = ''; loadClient(); }, 900);
+    setTimeout(async () => { closeModal('modal-terminate'); st.textContent = ''; await loadClientsAndOverview(); loadClient(); }, 900);
   } catch (e) { st.className = 'form-status error'; st.textContent = e.message; }
 }
 </script>
