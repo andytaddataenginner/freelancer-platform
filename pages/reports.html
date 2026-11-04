@@ -374,6 +374,95 @@
     .distribution-track { height: 14px; background: var(--chart-bar-bg); border-radius: 10px; overflow: hidden; }
     .distribution-fill { height: 100%; transform-origin: left center; background: linear-gradient(90deg, var(--gold2), var(--accent)); }
 
+    /* ── OVERALL TREND CHART ── */
+    #trend-chart-wrap {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+    #trend-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      min-height: 160px;
+      padding: 0 0.25rem;
+    }
+    .trend-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      flex: 1;
+      min-width: 36px;
+      max-width: 64px;
+    }
+    .trend-bars {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 2px;
+      position: relative;
+    }
+    .trend-bar-paid {
+      width: 100%;
+      border-radius: 5px 5px 0 0;
+      background: linear-gradient(180deg, var(--green), rgba(34,197,94,0.6));
+      min-height: 3px;
+      transition: height 0.9s cubic-bezier(.16,1,.3,1);
+    }
+    .trend-bar-unpaid {
+      width: 100%;
+      border-radius: 0;
+      background: linear-gradient(180deg, var(--amber), rgba(201,164,76,0.6));
+      min-height: 3px;
+      transition: height 0.9s cubic-bezier(.16,1,.3,1);
+    }
+    /* when there's no paid segment, round the top of unpaid */
+    .trend-bar-unpaid:first-child {
+      border-radius: 5px 5px 0 0;
+    }
+    .trend-bar-paid + .trend-bar-unpaid {
+      border-radius: 0;
+    }
+    .trend-label {
+      font-size: 0.65rem;
+      color: var(--ink3);
+      white-space: nowrap;
+      font-family: var(--mono);
+      letter-spacing: -0.02em;
+    }
+    .trend-col.is-selected .trend-bar-paid,
+    .trend-col.is-selected .trend-bar-unpaid {
+      filter: brightness(1.2);
+      box-shadow: 0 0 0 1.5px var(--gold2);
+    }
+    .trend-col.is-selected .trend-label {
+      color: var(--gold2);
+      font-weight: 700;
+    }
+    .trend-legend {
+      display: flex;
+      gap: 1.2rem;
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: var(--ink3);
+    }
+    .trend-legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .trend-legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .trend-bar-paid, .trend-bar-unpaid { animation: bar-grow 0.9s cubic-bezier(.16,1,.3,1) both; }
+    }
+
     @media (prefers-reduced-motion: no-preference) {
       .chart-bar, .distribution-fill { animation: bar-grow 0.85s cubic-bezier(.16,1,.3,1) both; }
       #leaderboard-body tr { animation: row-in 0.45s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(var(--i, 0) * 45ms); }
@@ -553,6 +642,30 @@
               <strong id="global-client-count">0</strong>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ── OVERALL REVENUE TREND CARD ── -->
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-header">
+          <div class="card-header-text">
+            <h3>
+              <span class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+              </span>
+              All-Time Revenue Trend
+            </h3>
+            <p>Monthly earnings across all clients — green = collected, amber = outstanding</p>
+          </div>
+        </div>
+        <div id="trend-chart-wrap">
+          <div id="trend-chart"></div>
+        </div>
+        <div class="trend-legend">
+          <span><i style="background:var(--green);"></i> Paid</span>
+          <span><i style="background:var(--amber);"></i> Unpaid / Due</span>
         </div>
       </div>
 
@@ -752,7 +865,7 @@ async function loadReportData() {
   try {
     const [statsRes, allLogsRes, fixedAllRes, fixedMonthRes, clientsRes] = await Promise.all([
       fetch(`${API}/stats/freelancer?month=${month}`, { headers: auth.headers() }),
-      fetch(`${API}/timelogs`, { headers: auth.headers() }),
+      fetch(`${API}/timelogs?limit=10000`, { headers: auth.headers() }),
       fetch(`${API}/fixed-payments`, { headers: auth.headers() }),
       fetch(`${API}/fixed-payments/bulk-generate`, {
         method: 'POST',
@@ -882,6 +995,61 @@ async function loadReportData() {
     animateCount(document.getElementById('kpi-hourly-paid'), hourlyPaidAll, { prefix: '$', decimals: 2 });
     animateCount(document.getElementById('kpi-hourly-unpaid'), hourlyUnpaidAll, { prefix: '$', decimals: 2 });
 
+    // ── OVERALL REVENUE TREND ────────────────────────────────────────────
+    // Aggregate paid + unpaid per calendar month from all timelogs & fixed rows
+    const trendMap = {}; // { 'YYYY-MM': { paid, unpaid } }
+    const ensureTrendMonth = m => { if (!trendMap[m]) trendMap[m] = { paid: 0, unpaid: 0 }; };
+
+    allLogs.forEach(log => {
+      const m = (log.date || '').substring(0, 7);
+      if (!m) return;
+      ensureTrendMonth(m);
+      const amt = parseFloat(log.amount || 0);
+      if (log.payment_status === 'paid') trendMap[m].paid += amt;
+      else trendMap[m].unpaid += amt;
+    });
+
+    fixedAllRows.forEach(f => {
+      const m = (f.month || f.date || '').substring(0, 7);
+      if (!m) return;
+      ensureTrendMonth(m);
+      const { paid, unpaid } = splitFixedPayment(f);
+      trendMap[m].paid += paid;
+      trendMap[m].unpaid += unpaid;
+    });
+
+    const trendMonths = Object.keys(trendMap).sort();
+    const trendEl = document.getElementById('trend-chart');
+    trendEl.innerHTML = '';
+
+    if (trendMonths.length > 0) {
+      const maxBar = Math.max(...trendMonths.map(m => trendMap[m].paid + trendMap[m].unpaid), 1);
+      const BAR_MAX_PX = 140; // max total bar height in px
+
+      trendMonths.forEach(m => {
+        const { paid, unpaid } = trendMap[m];
+        const total = paid + unpaid;
+        const paidH  = Math.round((paid  / maxBar) * BAR_MAX_PX);
+        const unpaidH = Math.round((unpaid / maxBar) * BAR_MAX_PX);
+        const isSelected = m === month;
+        const shortLabel = m.substring(2).replace('-', '/'); // "YY/MM"
+
+        const col = document.createElement('div');
+        col.className = 'trend-col' + (isSelected ? ' is-selected' : '');
+        col.title = `${m}\nPaid: $${paid.toFixed(2)}\nDue: $${unpaid.toFixed(2)}\nTotal: $${total.toFixed(2)}`;
+        col.innerHTML = `
+          <div class="trend-bars" style="height:${BAR_MAX_PX}px;">
+            ${paidH  > 0 ? `<div class="trend-bar-paid"   style="height:${paidH}px;"></div>` : ''}
+            ${unpaidH > 0 ? `<div class="trend-bar-unpaid" style="height:${unpaidH}px;"></div>` : ''}
+          </div>
+          <span class="trend-label">${shortLabel}</span>`;
+        trendEl.appendChild(col);
+      });
+    } else {
+      trendEl.innerHTML = '<p style="color:var(--ink3);font-size:0.85rem;padding:1rem 0;">No trend data available yet.</p>';
+    }
+    // ────────────────────────────────────────────────────────────────────
+
     document.getElementById('health-paid-val').textContent = `$${monthPaid.toFixed(2)}`;
     document.getElementById('health-unpaid-val').textContent = `$${monthUnpaid.toFixed(2)}`;
 
@@ -1006,7 +1174,7 @@ async function exportFilteredCSV() {
   const monthFilter = document.getElementById('report-month').value;
   try {
     const [logsRes, fixedRes] = await Promise.all([
-      fetch(`${API}/timelogs`, { headers: auth.headers() }),
+      fetch(`${API}/timelogs?limit=10000`, { headers: auth.headers() }),
       fetch(`${API}/fixed-payments/bulk-generate`, {
         method: 'POST',
         headers: auth.headers(),
