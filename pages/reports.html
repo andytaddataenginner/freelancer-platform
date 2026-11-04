@@ -375,6 +375,15 @@
     .distribution-fill { height: 100%; transform-origin: left center; background: linear-gradient(90deg, var(--gold2), var(--accent)); }
 
     /* ── OVERALL TREND CHART ── */
+    .trend-layout {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 1.5rem;
+      align-items: end;
+    }
+    @media (max-width: 900px) {
+      .trend-layout { grid-template-columns: 1fr; }
+    }
     #trend-chart-wrap {
       width: 100%;
       overflow-x: auto;
@@ -383,9 +392,9 @@
     #trend-chart {
       display: flex;
       align-items: flex-end;
-      gap: 6px;
-      min-height: 160px;
-      padding: 0 0.25rem;
+      gap: 5px;
+      height: 180px;
+      width: 100%;
     }
     .trend-col {
       display: flex;
@@ -393,8 +402,8 @@
       align-items: center;
       gap: 3px;
       flex: 1;
-      min-width: 36px;
-      max-width: 64px;
+      min-width: 0;
+      cursor: pointer;
     }
     .trend-bars {
       width: 100%;
@@ -407,58 +416,92 @@
     .trend-bar-paid {
       width: 100%;
       border-radius: 5px 5px 0 0;
-      background: linear-gradient(180deg, var(--green), rgba(34,197,94,0.6));
+      background: linear-gradient(180deg, var(--green), rgba(34,197,94,0.55));
       min-height: 3px;
-      transition: height 0.9s cubic-bezier(.16,1,.3,1);
     }
     .trend-bar-unpaid {
       width: 100%;
       border-radius: 0;
-      background: linear-gradient(180deg, var(--amber), rgba(201,164,76,0.6));
+      background: linear-gradient(180deg, var(--amber), rgba(201,164,76,0.55));
       min-height: 3px;
-      transition: height 0.9s cubic-bezier(.16,1,.3,1);
     }
-    /* when there's no paid segment, round the top of unpaid */
-    .trend-bar-unpaid:first-child {
-      border-radius: 5px 5px 0 0;
-    }
-    .trend-bar-paid + .trend-bar-unpaid {
-      border-radius: 0;
-    }
+    .trend-bar-unpaid:first-child { border-radius: 5px 5px 0 0; }
+    .trend-bar-paid + .trend-bar-unpaid { border-radius: 0; }
     .trend-label {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: var(--ink3);
       white-space: nowrap;
       font-family: var(--mono);
       letter-spacing: -0.02em;
+      margin-top: 2px;
     }
     .trend-col.is-selected .trend-bar-paid,
     .trend-col.is-selected .trend-bar-unpaid {
-      filter: brightness(1.2);
+      filter: brightness(1.18);
       box-shadow: 0 0 0 1.5px var(--gold2);
     }
-    .trend-col.is-selected .trend-label {
-      color: var(--gold2);
-      font-weight: 700;
+    .trend-col.is-selected .trend-label { color: var(--gold2); font-weight: 700; }
+
+    /* right panel */
+    .trend-breakdown {
+      border-left: 1px solid var(--border-color);
+      padding-left: 1.25rem;
+      min-height: 180px;
     }
+    .trend-breakdown h4 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ink3);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .trend-breakdown h4 strong {
+      color: var(--gold2);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .tbd-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--bg2);
+      font-size: 0.8rem;
+    }
+    .tbd-row:last-child { border-bottom: none; }
+    .tbd-name {
+      color: var(--ink2);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
+    }
+    .tbd-amounts {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1px;
+      flex-shrink: 0;
+    }
+    .tbd-paid  { color: var(--green); font-family: var(--mono); font-size: 0.78rem; font-weight: 700; }
+    .tbd-unpaid{ color: var(--amber); font-family: var(--mono); font-size: 0.72rem; }
+    .tbd-empty { color: var(--ink3); font-size: 0.8rem; padding-top: 0.5rem; }
+
     .trend-legend {
       display: flex;
       gap: 1.2rem;
-      margin-top: 1rem;
+      margin-top: 0.9rem;
       font-size: 0.75rem;
       color: var(--ink3);
     }
-    .trend-legend span {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .trend-legend i {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-    }
+    .trend-legend span { display: flex; align-items: center; gap: 5px; }
+    .trend-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+
     @media (prefers-reduced-motion: no-preference) {
       .trend-bar-paid, .trend-bar-unpaid { animation: bar-grow 0.9s cubic-bezier(.16,1,.3,1) both; }
     }
@@ -660,12 +703,20 @@
             <p>Monthly earnings across all clients — green = collected, amber = outstanding</p>
           </div>
         </div>
-        <div id="trend-chart-wrap">
-          <div id="trend-chart"></div>
-        </div>
-        <div class="trend-legend">
-          <span><i style="background:var(--green);"></i> Paid</span>
-          <span><i style="background:var(--amber);"></i> Unpaid / Due</span>
+        <div class="trend-layout">
+          <div>
+            <div id="trend-chart-wrap">
+              <div id="trend-chart"></div>
+            </div>
+            <div class="trend-legend">
+              <span><i style="background:var(--green);"></i> Paid</span>
+              <span><i style="background:var(--amber);"></i> Unpaid / Due</span>
+            </div>
+          </div>
+          <div class="trend-breakdown" id="trend-breakdown">
+            <h4>Client Breakdown — <strong id="trend-breakdown-month"></strong></h4>
+            <div id="trend-breakdown-list"></div>
+          </div>
         </div>
       </div>
 
@@ -996,55 +1047,104 @@ async function loadReportData() {
     animateCount(document.getElementById('kpi-hourly-unpaid'), hourlyUnpaidAll, { prefix: '$', decimals: 2 });
 
     // ── OVERALL REVENUE TREND ────────────────────────────────────────────
-    // Aggregate paid + unpaid per calendar month from all timelogs & fixed rows
-    const trendMap = {}; // { 'YYYY-MM': { paid, unpaid } }
-    const ensureTrendMonth = m => { if (!trendMap[m]) trendMap[m] = { paid: 0, unpaid: 0 }; };
+    // trendMap: { 'YYYY-MM': { paid, unpaid, clients: { name: { paid, unpaid } } } }
+    const trendMap = {};
+    const ensureTrendMonth = m => {
+      if (!trendMap[m]) trendMap[m] = { paid: 0, unpaid: 0, clients: {} };
+    };
+    const ensureTrendClient = (m, name) => {
+      if (!trendMap[m].clients[name]) trendMap[m].clients[name] = { paid: 0, unpaid: 0 };
+    };
 
     allLogs.forEach(log => {
       const m = (log.date || '').substring(0, 7);
       if (!m) return;
       ensureTrendMonth(m);
+      const name = log.client_name || `Client ${log.client_id}`;
+      ensureTrendClient(m, name);
       const amt = parseFloat(log.amount || 0);
-      if (log.payment_status === 'paid') trendMap[m].paid += amt;
-      else trendMap[m].unpaid += amt;
+      if (log.payment_status === 'paid') {
+        trendMap[m].paid += amt;
+        trendMap[m].clients[name].paid += amt;
+      } else {
+        trendMap[m].unpaid += amt;
+        trendMap[m].clients[name].unpaid += amt;
+      }
     });
 
     fixedAllRows.forEach(f => {
       const m = (f.month || f.date || '').substring(0, 7);
       if (!m) return;
       ensureTrendMonth(m);
+      const name = f.client_name || `Client ${f.client_id}`;
+      ensureTrendClient(m, name);
       const { paid, unpaid } = splitFixedPayment(f);
       trendMap[m].paid += paid;
       trendMap[m].unpaid += unpaid;
+      trendMap[m].clients[name].paid += paid;
+      trendMap[m].clients[name].unpaid += unpaid;
     });
 
     const trendMonths = Object.keys(trendMap).sort();
     const trendEl = document.getElementById('trend-chart');
     trendEl.innerHTML = '';
 
+    // Renders the right-side breakdown panel for a given month
+    function renderTrendBreakdown(m) {
+      const monthLabel = document.getElementById('trend-breakdown-month');
+      const listEl = document.getElementById('trend-breakdown-list');
+      monthLabel.textContent = m;
+      const data = trendMap[m];
+      if (!data) { listEl.innerHTML = '<p class="tbd-empty">No data.</p>'; return; }
+
+      const clients = Object.entries(data.clients)
+        .sort((a, b) => (b[1].paid + b[1].unpaid) - (a[1].paid + a[1].unpaid));
+
+      if (!clients.length) { listEl.innerHTML = '<p class="tbd-empty">No records.</p>'; return; }
+
+      listEl.innerHTML = clients.map(([name, v]) => `
+        <div class="tbd-row">
+          <span class="tbd-name" title="${name}">${name}</span>
+          <div class="tbd-amounts">
+            <span class="tbd-paid">$${v.paid.toFixed(2)}</span>
+            ${v.unpaid > 0 ? `<span class="tbd-unpaid">+$${v.unpaid.toFixed(2)} due</span>` : ''}
+          </div>
+        </div>`).join('');
+    }
+
     if (trendMonths.length > 0) {
+      const BAR_MAX_PX = 155;
       const maxBar = Math.max(...trendMonths.map(m => trendMap[m].paid + trendMap[m].unpaid), 1);
-      const BAR_MAX_PX = 140; // max total bar height in px
 
       trendMonths.forEach(m => {
         const { paid, unpaid } = trendMap[m];
         const total = paid + unpaid;
-        const paidH  = Math.round((paid  / maxBar) * BAR_MAX_PX);
+        const paidH   = Math.round((paid   / maxBar) * BAR_MAX_PX);
         const unpaidH = Math.round((unpaid / maxBar) * BAR_MAX_PX);
         const isSelected = m === month;
-        const shortLabel = m.substring(2).replace('-', '/'); // "YY/MM"
+        const shortLabel = m.substring(2).replace('-', '/');
 
         const col = document.createElement('div');
         col.className = 'trend-col' + (isSelected ? ' is-selected' : '');
-        col.title = `${m}\nPaid: $${paid.toFixed(2)}\nDue: $${unpaid.toFixed(2)}\nTotal: $${total.toFixed(2)}`;
+        col.title = `${m}  •  Paid: $${paid.toFixed(2)}  •  Due: $${unpaid.toFixed(2)}`;
         col.innerHTML = `
           <div class="trend-bars" style="height:${BAR_MAX_PX}px;">
-            ${paidH  > 0 ? `<div class="trend-bar-paid"   style="height:${paidH}px;"></div>` : ''}
+            ${paidH   > 0 ? `<div class="trend-bar-paid"   style="height:${paidH}px;"></div>`   : ''}
             ${unpaidH > 0 ? `<div class="trend-bar-unpaid" style="height:${unpaidH}px;"></div>` : ''}
           </div>
           <span class="trend-label">${shortLabel}</span>`;
+
+        col.addEventListener('click', () => {
+          document.querySelectorAll('.trend-col').forEach(c => c.classList.remove('is-selected'));
+          col.classList.add('is-selected');
+          renderTrendBreakdown(m);
+        });
+
         trendEl.appendChild(col);
       });
+
+      // Default: show selected month in breakdown panel
+      renderTrendBreakdown(month in trendMap ? month : trendMonths[trendMonths.length - 1]);
     } else {
       trendEl.innerHTML = '<p style="color:var(--ink3);font-size:0.85rem;padding:1rem 0;">No trend data available yet.</p>';
     }
