@@ -162,7 +162,6 @@
     </div>
   </main>
 </div>
-
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const auth = {
@@ -207,20 +206,73 @@ async function fetchProjects() {
       return;
     }
 
-    container.innerHTML = projects.map(p => `
-      <div class="qfa-card">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem;">
-          <div class="qfa-card-title">${escapeHtml(p.name)}</div>
-          <span class="qfa-badge badge-${p.status || 'active'}">${p.status || 'active'}</span>
+    container.innerHTML = projects.map(p => {
+      // Parse tasks if they come as an array or JSON string
+      let tasks = [];
+      try {
+        tasks = typeof p.tasks === 'string' ? JSON.parse(p.tasks) : (p.tasks || []);
+      } catch(e) { tasks = []; }
+
+      // Compute completion ratio if tasks exist
+      const completedCount = tasks.filter(t => t.completed || t.is_completed || t.status === 'completed').length;
+      const totalTasks = tasks.length;
+      const percent = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+
+      // Build task checklist HTML
+      let tasksHtml = '';
+      if (totalTasks > 0) {
+        const listItems = tasks.map(t => {
+          const isDone = t.completed || t.is_completed || t.status === 'completed';
+          return `
+            <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; margin-bottom:0.3rem; color:${isDone ? 'var(--ink-3)' : 'var(--ink)'};">
+              <span style="font-size:0.9rem;">${isDone ? '☑' : '☐'}</span>
+              <span style="${isDone ? 'text-decoration: line-through;' : ''}">${escapeHtml(t.title || t.name || t.task)}</span>
+            </div>
+          `;
+        }).join('');
+
+        tasksHtml = `
+          <div style="margin-top:0.8rem; border-top:1px dashed var(--line); padding-top:0.8rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:700; color:var(--ink-3); margin-bottom:0.4rem; text-transform:uppercase;">
+              <span>Tasks (${completedCount}/${totalTasks})</span>
+              <span>${percent}%</span>
+            </div>
+            <!-- Progress Bar -->
+            <div style="width:100%; height:6px; background:var(--bg2); border-radius:3px; overflow:hidden; margin-bottom:0.6rem;">
+              <div style="width:${percent}%; height:100%; background:var(--accent); transition: width 0.3s ease;"></div>
+            </div>
+            <div style="max-height:120px; overflow-y:auto; display:flex; flex-direction:column; gap:0.2rem;">
+              ${listItems}
+            </div>
+          </div>
+        `;
+      } else {
+        tasksHtml = `
+          <div style="margin-top:0.8rem; border-top:1px dashed var(--line); padding-top:0.6rem; font-size:0.78rem; color:var(--ink-3); font-style:italic;">
+            No sub-tasks listed for this project.
+          </div>
+        `;
+      }
+
+      return `
+        <div class="qfa-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem;">
+            <div class="qfa-card-title">${escapeHtml(p.name)}</div>
+            <span class="qfa-badge badge-${p.status || 'active'}">${p.status || 'active'}</span>
+          </div>
+          <div class="qfa-card-desc">${escapeHtml(p.description || 'No description provided.')}</div>
+          
+          ${tasksHtml}
+
+          <div class="qfa-meta">
+            <span>Deadline: ${p.deadline ? new Date(p.deadline).toLocaleDateString() : 'None'}</span>
+            <span>Managed by: ${escapeHtml(p.freelancer_name || 'Freelancer')}</span>
+          </div>
         </div>
-        <div class="qfa-card-desc">${escapeHtml(p.description || 'No description provided.')}</div>
-        <div class="qfa-meta">
-          <span>Deadline: ${p.deadline ? new Date(p.deadline).toLocaleDateString() : 'None'}</span>
-          <span>Managed by: ${escapeHtml(p.freelancer_name)}</span>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (err) {
+    console.error(err);
     document.getElementById('projectsList').innerHTML = `<p style="color:var(--red);font-size:0.88rem;">Error loading projects.</p>`;
   }
 }
