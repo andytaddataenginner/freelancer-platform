@@ -72,45 +72,24 @@
     .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    .main-content { margin-left: 232px; flex: 1; padding: 1.6rem 2rem 2.5rem; position: relative; max-width: 1180px; }
+    .main-content { margin-left: 232px; flex: 1; padding: 1.2rem 1.8rem 2rem; position: relative; max-width: 1180px; }
     .booking-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; flex-shrink:0; }
+    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.95rem; transition:all .2s; flex-shrink:0; }
     .theme-toggle:hover{ background:rgba(255,255,255,.22); }
-    /* REPLACE old .hero CSS with this compact version */
-.hero { 
-  background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); 
-  border-radius: var(--radius); /* changed from var(--radius-lg) */
-  padding: 0.85rem 1.2rem;     /* reduced padding */
-  color: white; 
-  margin-bottom: 0.9rem;      /* reduced bottom margin */
-  box-shadow: 0 4px 16px rgba(13,35,83,0.14); 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;        /* centered alignment */
-  flex-wrap: wrap; 
-  gap: 0.6rem; 
-}
-.hero h1 { 
-  margin: 0.1rem 0 0; 
-  font-family: var(--serif); 
-  font-style: italic; 
-  font-size: 1.25rem;         /* compact header font size */
-  font-weight: 700; 
-  line-height: 1.15; 
-}
-    .eyebrow{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
-    .hero-rule{ width:58px; height:0; border-top:2.5px solid var(--gold-500); position:relative; margin:.55rem 0 .6rem; }
-    .hero-rule::after{ content:''; position:absolute; top:4px; left:0; width:32px; border-top:1px solid var(--gold-500); opacity:.55; }
-    .hero-sub{ color: rgba(255,255,255,0.68); font-size: 0.85rem; max-width: 30em; }
-    .hero-actions{ display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; }
-    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.45rem; }
 
-    .ledger-strip{ display:flex; flex-wrap:wrap; background:var(--panel); border-radius:var(--radius-lg); box-shadow:var(--shadow); border:1px solid var(--line); overflow:hidden; margin-bottom:1.3rem; }
-    .lstat{ flex:1 1 19%; min-width:120px; padding:.85rem 1.1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:.28rem; }
+    /* Compact Hero Styling */
+    .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius); padding: 0.85rem 1.2rem; color: white; margin-bottom: 0.9rem; box-shadow: 0 4px 16px rgba(13,35,83,0.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+    .eyebrow{ font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
+    .hero h1{ margin: 0.1rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.25rem; font-weight: 700; line-height: 1.15; }
+    .hero-actions{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+    .ledger-strip{ display:flex; flex-wrap:wrap; background:var(--panel); border-radius:var(--radius-lg); box-shadow:var(--shadow); border:1px solid var(--line); overflow:hidden; margin-bottom:1rem; }
+    .lstat{ flex:1 1 19%; min-width:120px; padding:.7rem 1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:.2rem; }
     .lstat:last-child{ border-right:none; }
-    .lstat-value{ font-size:1.28rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .lstat-label{ font-size:.63rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
+    .lstat-value{ font-size:1.15rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lstat-label{ font-size:.6rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
     @media (max-width: 860px){
       .ledger-strip{ border-bottom:none; }
       .lstat{ flex:1 1 50%; border-right:1px solid var(--line); }
@@ -124,12 +103,12 @@
     .ledger-tab.active{ background:var(--panel); color:var(--ink); }
     .ledger-tab.active::after{ content:''; position:absolute; left:0; right:0; bottom:-1px; height:3px; background:var(--gold-500); border-radius:2px 2px 0 0; }
     .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:0 var(--radius-lg) var(--radius-lg) var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; margin-bottom:1.4rem; }
-    .view-panel{ display:none; padding:1.3rem 1.4rem 1.5rem; }
+    .view-panel{ display:none; padding:1.1rem 1.2rem 1.3rem; }
     .view-panel.active{ display:block; animation:panelIn .3s ease; }
     @keyframes panelIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
-    .panel-heading{ font-size:.68rem; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:.9rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
+    .panel-heading{ font-size:.68rem; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:.7rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
 
-    .subcard{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; margin-bottom:1.1rem; }
+    .subcard{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.75rem .9rem; margin-bottom:.9rem; }
     .subcard:last-child{ margin-bottom:0; }
     table{width:100%;border-collapse:collapse;font-size:.85rem}
     th{padding:.65rem .85rem;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
@@ -137,6 +116,13 @@
     tr:last-child td{border-bottom:none}
     tr:hover td{background:var(--table-hover)}
     .row-unpaid td{background:rgba(245,158,11,.06)}
+
+    /* Collapsible Group Rows Matrix Styling */
+    .group-row td { background: var(--bg2) !important; cursor: pointer; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--line); }
+    .group-row:hover td { background: var(--table-hover) !important; }
+    .group-toggle { display: inline-block; width: 18px; font-size: 0.8rem; text-align: center; margin-right: 0.35rem; transition: transform 0.2s; }
+    .child-row td { padding-left: 1.6rem; }
+
     .badge{display:inline-block;padding:.2rem .65rem;border-radius:100px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
     .bg-g{background:var(--gbg);color:var(--green)}
     .bg-a{background:var(--abg);color:var(--amber)}
@@ -153,15 +139,15 @@
     .btn-p:disabled{opacity:.6;cursor:default}
     .fg{display:flex;flex-direction:column;gap:.35rem}
     .fg label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
-    input,select,textarea{width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);font-family:var(--sans);font-size:.87rem;color:var(--ink);transition:border-color .2s}
+    input,select,textarea{width:100%;padding:.5rem .75rem;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);font-family:var(--sans);font-size:.85rem;color:var(--ink);transition:border-color .2s}
     input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
     .fs{font-size:.8rem}
     .fs.ok{color:var(--green)}.fs.er{color:var(--red)}
 
-    .chip{padding:.38rem .9rem;border-radius:100px;border:1.5px solid var(--line);background:transparent;color:var(--ink-2);font-family:var(--sans);font-size:.76rem;font-weight:600;cursor:pointer;transition:all .15s}
+    .chip{padding:.35rem .85rem;border-radius:100px;border:1.5px solid var(--line);background:transparent;color:var(--ink-2);font-family:var(--sans);font-size:.76rem;font-weight:600;cursor:pointer;transition:all .15s}
     .chip:hover{border-color:var(--navy-900)}
     .chip.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900)}
-    .tab-btn{padding:.45rem 1.1rem;border-radius:6px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.82rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+    .tab-btn{padding:.4rem .95rem;border-radius:6px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.8rem;font-weight:600;color:var(--ink-2);transition:all .15s}
     .tab-btn.active{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 
     .period-card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:1rem}
@@ -175,10 +161,10 @@
       .sidebar { transform: translateX(-100%) !important; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 74px !important; }
+      .main-content { margin-left: 0 !important; padding: 0.8rem !important; padding-top: 68px !important; }
       .mobile-header { display: flex !important; }
       .booking-form-grid { grid-template-columns: 1fr !important; }
-      .hero h1{ font-size:1.4rem; }
+      .hero h1{ font-size:1.15rem; }
     }
   </style>
 </head>
@@ -227,18 +213,19 @@
 
   <main class="main-content">
 
+    <!-- Compact Hero Header -->
     <div class="hero">
-  <div>
-    <span class="eyebrow">Client Workspace</span>
-    <h1 id="page-main-title">My Project Ledger</h1>
-  </div>
-  <div class="hero-actions">
-    <span id="engagement-badge-container">
-      <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
-    </span>
-    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-  </div>
-</div>
+      <div>
+        <span class="eyebrow">Client Workspace</span>
+        <h1 id="page-main-title">My Project Ledger</h1>
+      </div>
+      <div class="hero-actions">
+        <span id="engagement-badge-container">
+          <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
+        </span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" id="hero-theme-btn">🌙</button>
+      </div>
+    </div>
 
     <!-- Ledger summary strip -->
     <div class="ledger-strip">
@@ -286,7 +273,7 @@
       <!-- TIME & LOGS -->
       <section class="view-panel" id="panel-logs">
         <div class="subcard">
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem">
             <button class="chip" id="chip-recent" onclick="setDatePreset('recent')">Last 30 days</button>
             <button class="chip" id="chip-month" onclick="setDatePreset('month')">This month</button>
             <button class="chip" id="chip-all" onclick="setDatePreset('all')">All time</button>
@@ -444,7 +431,6 @@ async function apiFetch(path, options = {}) {
   if (res.status === 401) { 
     const e = await res.json().catch(() => ({}));
     
-    // Prevent logging out client when entering wrong current password
     if (path.includes('change-password')) {
       throw new Error(e.error || 'Current password is incorrect');
     }
@@ -459,13 +445,14 @@ async function apiFetch(path, options = {}) {
   }
   return res.json();
 }
+
 let clientName = '';
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   const u = auth.user();
   if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
-  clientName = u ? u.name : ''; // Capture client name
-  document.getElementById('user-name').textContent = u ? u.name : '';
+  clientName = u ? u.name : '';
+  document.getElementById('user-name').textContent = clientName;
   if (u && u.company) document.getElementById('user-company').textContent = u.company;
   document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
 })();
@@ -485,7 +472,6 @@ function switchView(view){
   document.getElementById('panel-' + view).classList.add('active');
 }
 
-// Show/Hide password toggle function
 function toggleClientPassword(fieldId, btnEl) {
   const input = document.getElementById(fieldId);
   if (input.type === 'password') {
@@ -539,8 +525,6 @@ async function clientChangePassword(e) {
 }
 
 async function loadPortal() {
-    const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
-  document.getElementById('page-main-title').textContent = titlePrefix + 'My Project Ledger';
     const badgeContainer = document.getElementById('engagement-badge-container');
 
     try {
@@ -560,6 +544,9 @@ async function loadPortal() {
         isFixedContract = isFixed;
         currentHourlyRate = parseFloat(stats.hourlyRate || 0);
         currentCreditBalance = parseFloat(stats.creditBalance || 0);
+
+        const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+        document.getElementById('page-main-title').textContent = titlePrefix + 'My Project Ledger';
 
         if (contractStatus === 'paused') {
           badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
@@ -584,7 +571,6 @@ async function loadPortal() {
         document.getElementById('overview-hourly').style.display = isFixed ? 'none' : 'block';
         document.getElementById('overview-fixed').style.display  = isFixed ? 'block' : 'none';
         
-        // Correctly toggle visibility for billing sub-sections
         const billingHourly = document.getElementById('billing-hourly');
         const billingFixed = document.getElementById('billing-fixed');
         if (billingHourly) billingHourly.style.display = isFixed ? 'none' : 'block';
@@ -925,10 +911,10 @@ function getFilteredLogs(){
 }
 
 function renderLogsTable(){
-  renderLogs(getFilteredLogs());
+  renderLogsMatrix(getFilteredLogs());
 }
 
-function renderLogs(logs) {
+function renderLogsMatrix(logs) {
   const tbody  = document.getElementById('logs-table');
   const footer = document.getElementById('logs-footer');
   if (!logs.length) {
@@ -938,27 +924,95 @@ function renderLogs(logs) {
     footer.textContent = '';
     return;
   }
-  let sumHours=0, sumAmount=0;
-  tbody.innerHTML = logs.map(l => {
-    const isPaid  = l.payment_status === 'paid';
-    const hours = parseFloat(l.hours || 0);
 
-    let amount = parseFloat(l.amount || 0);
-    if (!amount && hours && currentHourlyRate) amount = hours * currentHourlyRate;
+  // Group logs into collapsible monthly parent sections
+  const grouped = {};
+  logs.forEach(l => {
+    const dStr = l.date || l.createdAt || '';
+    const key = dStr.length >= 7 ? dStr.slice(0, 7) : 'Other';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(l);
+  });
 
-    sumHours  += hours;
-    sumAmount += amount;
-    const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
-    return `
-      <tr class="${!isPaid?'row-unpaid':''}">
-        <td>${new Date(l.date).toLocaleDateString()}</td>
-        <td class="mono"><strong>${hours}h</strong></td>
-        <td class="mono">${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
-        <td>${badge}</td>
-        <td>${l.task_description || ''}</td>
+  const sortedKeys = Object.keys(grouped).sort().reverse();
+  let matrixHtml = '';
+  let sumHours = 0, sumAmount = 0;
+
+  sortedKeys.forEach((monthKey, idx) => {
+    const monthLogs = grouped[monthKey];
+    let grpHours = 0, grpAmount = 0;
+
+    monthLogs.forEach(l => {
+      const h = parseFloat(l.hours || 0);
+      let amt = parseFloat(l.amount || 0);
+      if (!amt && h && currentHourlyRate) amt = h * currentHourlyRate;
+      grpHours += h;
+      grpAmount += amt;
+    });
+
+    sumHours += grpHours;
+    sumAmount += grpAmount;
+
+    let groupLabel = monthKey;
+    if (monthKey !== 'Other') {
+      const dObj = new Date(monthKey + '-02');
+      groupLabel = dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+
+    const groupId = 'portal-grp-' + idx;
+
+    // Parent Matrix Header Row (Default Collapsed: toggle shows right arrow '▶' and child rows have display:none)
+    matrixHtml += `
+      <tr class="group-row" onclick="toggleGroup('${groupId}')">
+        <td colspan="5">
+          <span class="group-toggle" id="${groupId}-toggle">▶</span>
+          📅 ${groupLabel} &nbsp;<span style="font-size:0.75rem;font-weight:normal;color:var(--ink-3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'} &nbsp;·&nbsp; ${grpHours.toFixed(1)}h &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
+        </td>
       </tr>`;
-  }).join('');
+
+    // Child Rows (Default style="display:none" to keep them collapsed initially)
+    monthLogs.forEach(l => {
+      const isPaid  = l.payment_status === 'paid';
+      const hours = parseFloat(l.hours || 0);
+      let amount = parseFloat(l.amount || 0);
+      if (!amount && hours && currentHourlyRate) amount = hours * currentHourlyRate;
+
+      const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
+      const dateStr = l.date || l.createdAt;
+      const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString() : '—';
+      const rowClass = !isPaid ? 'row-unpaid' : '';
+
+      matrixHtml += `
+        <tr class="${groupId} child-row ${rowClass}" style="display: none;">
+          <td>${formattedDate}</td>
+          <td class="mono"><strong>${hours}h</strong></td>
+          <td class="mono">${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+          <td>${badge}</td>
+          <td>${l.task_description || ''}</td>
+        </tr>`;
+    });
+  });
+
+  tbody.innerHTML = matrixHtml;
   footer.innerHTML = `<strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong>`;
+}
+
+function toggleGroup(groupId) {
+  const rows = document.querySelectorAll('.' + groupId);
+  const toggle = document.getElementById(groupId + '-toggle');
+  let isHidden = false;
+
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = '';
+      isHidden = false;
+    } else {
+      r.style.display = 'none';
+      isHidden = true;
+    }
+  });
+
+  if (toggle) toggle.textContent = isHidden ? '▶' : '▼';
 }
 
 async function bookSession(e) {
