@@ -36,11 +36,9 @@
     body { font-family: var(--sans); background: var(--bg); color: var(--ink); transition: background .3s ease, color .3s ease; }
     .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-    @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } html { scroll-behavior: auto; } }
 
     .dashboard { display: flex; min-height: 100vh; }
 
-    /* ── SIDEBAR ── */
     .sidebar {
       width: 232px !important; background: var(--navy-950) !important;
       position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important;
@@ -64,7 +62,6 @@
     .sidebar-nav a.active { color: white !important; background: rgba(201,149,42,0.12) !important; border-right-color: var(--gold-500) !important; }
     .sidebar-user { padding: 1.1rem 1.4rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; }
 
-    /* ── MOBILE HEADER ── */
     .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--navy-950); padding: 0.75rem 1rem; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(13,35,83,0.2); }
     .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
     .mobile-logo img { height: 30px; background: white; border-radius: 6px; padding: 2px; }
@@ -77,14 +74,12 @@
     .theme-toggle { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .95rem; transition: all .2s; flex-shrink: 0; }
     .theme-toggle:hover { background: rgba(255,255,255,.22); }
 
-    /* ── COMPACT HERO ── */
     .hero { background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius); padding: 0.85rem 1.2rem; color: white; margin-bottom: 0.9rem; box-shadow: 0 4px 16px rgba(13,35,83,0.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
     .eyebrow { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
     .hero h1 { margin: 0.1rem 0 0; font-family: var(--serif); font-style: italic; font-size: 1.25rem; font-weight: 700; line-height: 1.15; }
     .hero-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .engagement-pill { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
 
-    /* ── PANELS & FORM STYLES ── */
     .ledger-panel-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.4rem; padding: 1.1rem 1.2rem 1.3rem; }
     .panel-heading { font-size: .68rem; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .7rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
 
@@ -96,7 +91,6 @@
     }
     select:focus, input[type=date]:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,111,237,.12); }
 
-    /* ── BADGES & BUTTONS ── */
     .badge { display: inline-block; padding: .2rem .65rem; border-radius: 100px; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
     .bg-g { background: var(--gbg); color: var(--green); }
     .bg-a { background: var(--abg); color: var(--amber); }
@@ -172,15 +166,15 @@
 
   <main class="main-content">
 
-    <!-- Compact Hero Header with dynamic Client Name -->
     <div class="hero">
       <div>
         <span class="eyebrow">Client Workspace</span>
         <h1 id="page-main-title">Book a Session</h1>
       </div>
       <div class="hero-actions">
-        <span class="engagement-pill">
-          <span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Live Availability
+        <span class="engagement-pill" id="freelancer-status-pill">
+          <span id="pill-dot" style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> 
+          <span id="pill-text">Checking availability...</span>
         </span>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
       </div>
@@ -298,12 +292,35 @@ let clientName = '';
   document.getElementById('user-name').textContent = clientName;
   if (u && u.company) document.getElementById('user-company').textContent = u.company;
   
-  // Update header text to include client name greeting format
   const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
   document.getElementById('page-main-title').textContent = titlePrefix + 'Book a Session';
 
   document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
+  
+  checkFreelancerLiveStatus();
+  setInterval(checkFreelancerLiveStatus, 30000);
 })();
+
+async function checkFreelancerLiveStatus() {
+  const dot = document.getElementById('pill-dot');
+  const text = document.getElementById('pill-text');
+  try {
+    const res = await fetch(API + '/timer/status', { headers: auth.headers() });
+    if (res.ok) {
+      const timers = await res.json();
+      if (timers && timers.length > 0 && !timers[0].is_paused) {
+        dot.style.background = '#f59e0b';
+        text.textContent = 'Currently in a session';
+        return;
+      }
+    }
+    dot.style.background = '#22c55e';
+    text.textContent = 'Available';
+  } catch(e) {
+    dot.style.background = '#22c55e';
+    text.textContent = 'Available';
+  }
+}
 
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
