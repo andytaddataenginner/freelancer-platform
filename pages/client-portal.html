@@ -184,24 +184,24 @@
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- Floating Minimizable Live Tracker Widget -->
-<div id="live-tracker-widget" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(13,35,83,0.18); width: 280px; overflow: hidden; font-family: var(--sans); animation: slideUp 0.3s ease;">
-  <!-- Widget Header / Minimizable Bar -->
-  <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.65rem 0.9rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleTrackerWidget()">
+<!-- Floating Minimizable Availability & Live Tracker Widget -->
+<div id="live-tracker-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 999; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(13,35,83,0.18); width: 280px; overflow: hidden; font-family: var(--sans);">
+  <!-- Widget Header -->
+  <div id="widget-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.65rem 0.9rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleTrackerWidget()">
     <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <span style="position: relative; display: flex; width: 8px; height: 8px;">
-        <span style="position: absolute; inset: 0; border-radius: 50%; background: white; opacity: 0.75; animation: ping 1s infinite;"></span>
+      <span id="widget-dot" style="position: relative; display: flex; width: 8px; height: 8px;">
         <span style="position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: white;"></span>
       </span>
-      <strong style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Live Session Active</strong>
+      <strong id="widget-title" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Freelancer Available</strong>
     </div>
     <button id="widget-toggle-btn" style="background: none; border: none; color: white; font-size: 0.85rem; cursor: pointer; padding: 0 0.2rem;">−</button>
   </div>
   
   <!-- Widget Body Content -->
   <div id="widget-body" style="padding: 0.85rem; font-size: 0.82rem; color: var(--ink);">
-    <div style="font-weight: 600; color: var(--ink); margin-bottom: 0.2rem;">Freelancer is working</div>
-    <div id="widget-session-desc" style="color: var(--ink-2); font-size: 0.76rem; margin-bottom: 0.7rem; line-height: 1.3;">Active working session in progress.</div>
-    <a href="client-schedule.html" style="display: block; text-align: center; background: var(--bg2); color: var(--ink); padding: 0.4rem; border-radius: 6px; font-weight: 600; font-size: 0.75rem; text-decoration: none; transition: background 0.15s;">View Schedule →</a>
+    <div id="widget-status-text" style="font-weight: 600; color: var(--ink); margin-bottom: 0.2rem;">Ready for new tasks</div>
+    <div id="widget-session-desc" style="color: var(--ink-2); font-size: 0.76rem; margin-bottom: 0.7rem; line-height: 1.3;">Online and accepting bookings.</div>
+    <a href="client-schedule.html" style="display: block; text-align: center; background: var(--bg2); color: var(--ink); padding: 0.4rem; border-radius: 6px; font-weight: 600; font-size: 0.75rem; text-decoration: none; transition: background 0.15s;">Book a Session →</a>
   </div>
 </div>
 
@@ -560,31 +560,47 @@ function toggleTrackerWidget() {
 }
 
 // Check freelancer live agency status on client portal login & poll periodically
+// Check freelancer live agency status and auto-sync UI seamlessly
 async function checkFreelancerAgencyStatus() {
-  const widget = document.getElementById('live-tracker-widget');
+  const header = document.getElementById('widget-header');
+  const title = document.getElementById('widget-title');
+  const dot = document.getElementById('widget-dot');
+  const statusText = document.getElementById('widget-status-text');
   const descEl = document.getElementById('widget-session-desc');
-  if (!widget) return;
-
+  
   try {
     const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
     if (res.ok) {
       const data = await res.json();
+      
       if (data && data.is_busy) {
-        widget.style.display = 'block';
+        // STATE 1: In Session (Orange Header with Pulsing Dot)
+        header.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+        title.textContent = 'Live Session Active';
+        statusText.textContent = 'Freelancer is working';
+        dot.innerHTML = `<span style="position: absolute; inset: 0; border-radius: 50%; background: white; opacity: 0.75; animation: ping 1s infinite;"></span><span style="position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: white;"></span>`;
+        
         if (data.active_session && data.active_session.description) {
           descEl.textContent = `Task: ${data.active_session.description}`;
         } else {
           descEl.textContent = 'Active working session in progress.';
         }
-        return;
+      } else {
+        // STATE 2: Available / Free (Green Header)
+        header.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        title.textContent = 'Freelancer Available';
+        statusText.textContent = 'Ready for new tasks';
+        dot.innerHTML = `<span style="position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: white;"></span>`;
+        descEl.textContent = 'Online and ready for booking.';
       }
     }
-    widget.style.display = 'none';
   } catch (e) {
-    console.error('Error checking freelancer status:', e);
-    widget.style.display = 'none';
+    console.error('Error auto-syncing freelancer status:', e);
   }
 }
+
+// Poll automatically every 5 seconds to sync state without refreshing
+setInterval(checkFreelancerAgencyStatus, 5000);
 
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
