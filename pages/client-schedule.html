@@ -305,6 +305,7 @@ async function checkFreelancerLiveStatus() {
   const dot = document.getElementById('pill-dot');
   const text = document.getElementById('pill-text');
   try {
+    // 1. Check active global hourly timers
     const res = await fetch(API + '/timer/status', { headers: auth.headers() });
     if (res.ok) {
       const timers = await res.json();
@@ -314,6 +315,21 @@ async function checkFreelancerLiveStatus() {
         return;
       }
     }
+
+    // 2. Check if there is an active fixed-price client log or check-in for today
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const logsRes = await fetch(API + `/timelogs?from=${todayStr}&limit=50`, { headers: auth.headers() });
+    if (logsRes.ok) {
+      const logs = await logsRes.json();
+      // If any log entry was recorded today for a fixed-rate client, mark busy
+      const hasFixedWorkToday = logs.some(l => l.rate_type === 'fixed' && l.date && l.date.slice(0,10) === todayStr);
+      if (hasFixedWorkToday) {
+        dot.style.background = '#f59e0b';
+        text.textContent = 'Active on fixed project';
+        return;
+      }
+    }
+
     dot.style.background = '#22c55e';
     text.textContent = 'Available';
   } catch(e) {
