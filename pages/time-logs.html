@@ -171,6 +171,12 @@
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: var(--table-hover); }
 
+    /* Collapsible Group Rows Matrix Styling */
+    .group-row td { background: var(--bg2) !important; cursor: pointer; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--bg2); }
+    .group-row:hover td { background: var(--table-hover) !important; }
+    .group-toggle { display: inline-block; width: 18px; font-size: 0.8rem; text-align: center; margin-right: 0.35rem; transition: transform 0.2s; }
+    .child-row td { padding-left: 1.6rem; }
+
     /* ── BADGES ── */
     .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
     .badge-green { background: var(--green-bg); color: var(--green); }
@@ -635,34 +641,92 @@ async function loadLogs() {
 
     if (!logs.length) {
       tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">No logs found.</td></tr>';
-    } else {
-      tbody.innerHTML = logs.map(l => {
-        const isPaid = l.payment_status === 'paid';
-        const amount = parseFloat(l.amount || 0);
-        if (isPaid) totalPaid += amount; else totalUnpaid += amount;
-        totalHours += parseFloat(l.hours || 0);
-        const badge  = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
-        const payBtn = isPaid
-          ? `<button class="btn btn-outline" onclick="togglePayment(${l.id},'unpaid')">Undo</button>`
-          : `<button class="btn btn-green" onclick="togglePayment(${l.id},'paid')">Paid ✓</button>`;
-        const checked = selectedIds.has(l.id) ? 'checked' : '';
-        const cl = allClients.find(c => c.id === l.client_id) || {};
-        return `<tr>
-          <td><input type="checkbox" class="row-check" value="${l.id}" ${checked} onchange="updateSel(${l.id},this.checked)"/></td>
-          <td><strong>${l.client_name}</strong></td>
-          <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
-          <td>${fmtHours(parseFloat(l.hours))}</td>
-          <td><span class="badge ${l.rate_type==='fixed'?'badge-blue':'badge-green'}">${l.rate_type||'hourly'}</span></td>
-          <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
-          <td>${badge}</td>
-          <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
-          <td style="display:flex;gap:0.3rem;flex-wrap:wrap">
-            ${payBtn}
-            <button class="btn btn-outline" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${l.client_id},'${l.rate_type||'hourly'}',${cl.hourly_rate||0})">✏️</button>
+      document.getElementById('total-paid').textContent   = '$0.00';
+      document.getElementById('total-unpaid').textContent = '$0.00';
+      document.getElementById('total-hours').textContent  = '0min';
+      document.getElementById('total-entries').textContent = '0';
+      updateBulkBar();
+      return;
+    }
+
+    // Compute stats first
+    logs.forEach(l => {
+      const isPaid = l.payment_status === 'paid';
+      const amount = parseFloat(l.amount || 0);
+      if (isPaid) totalPaid += amount; else totalUnpaid += amount;
+      totalHours += parseFloat(l.hours || 0);
+    });
+
+    // Group logs into collapsible monthly parent sections
+    const grouped = {};
+    logs.forEach(l => {
+      const dStr = l.date || l.createdAt || '';
+      const key = dStr.length >= 7 ? dStr.slice(0, 7) : 'Other';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(l);
+    });
+
+    const sortedKeys = Object.keys(grouped).sort().reverse();
+    let matrixHtml = '';
+
+    sortedKeys.forEach((monthKey, idx) => {
+      const monthLogs = grouped[monthKey];
+      let grpHours = 0, grpAmount = 0;
+
+      monthLogs.forEach(l => {
+        const h = parseFloat(l.hours || 0);
+        let amt = parseFloat(l.amount || 0);
+        grpHours += h;
+        grpAmount += amt;
+      });
+
+      let groupLabel = monthKey;
+      if (monthKey !== 'Other') {
+        const dObj = new Date(monthKey + '-02');
+        groupLabel = dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+      }
+
+      const groupId = 'log-grp-' + idx;
+
+      // Parent Matrix Row (Default Collapsed: shows right arrow '▶' and child rows hidden)
+      matrixHtml += `
+        <tr class="group-row" onclick="toggleGroup('${groupId}')">
+          <td colspan="9">
+            <span class="group-toggle" id="${groupId}-toggle">▶</span>
+            📅 ${groupLabel} &nbsp;<span style="font-size:0.75rem;font-weight:normal;color:var(--ink3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'} &nbsp;·&nbsp; ${fmtHours(grpHours)} &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
           </td>
         </tr>`;
-      }).join('');
-    }
+
+      // Child Rows (Default style="display:none")
+      monthLogs.forEach(l => {
+        const isPaid = l.payment_status === 'paid';
+        const amount = parseFloat(l.amount || 0);
+        const badge  = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
+        const payBtn = isPaid
+          ? `<button class="btn btn-outline" onclick="togglePayment(${l.id},'unpaid'); event.stopPropagation();">Undo</button>`
+          : `<button class="btn btn-green" onclick="togglePayment(${l.id},'paid'); event.stopPropagation();">Paid ✓</button>`;
+        const checked = selectedIds.has(l.id) ? 'checked' : '';
+        const cl = allClients.find(c => c.id === l.client_id) || {};
+        
+        matrixHtml += `
+          <tr class="${groupId} child-row" style="display: none;">
+            <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" value="${l.id}" ${checked} onchange="updateSel(${l.id},this.checked)"/></td>
+            <td><strong>${l.client_name}</strong></td>
+            <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
+            <td>${fmtHours(parseFloat(l.hours))}</td>
+            <td><span class="badge ${l.rate_type==='fixed'?'badge-blue':'badge-green'}">${l.rate_type||'hourly'}</span></td>
+            <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+            <td>${badge}</td>
+            <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
+            <td style="display:flex;gap:0.3rem;flex-wrap:wrap" onclick="event.stopPropagation()">
+              ${payBtn}
+              <button class="btn btn-outline" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${l.client_id},'${l.rate_type||'hourly'}',${cl.hourly_rate||0})">✏️</button>
+            </td>
+          </tr>`;
+      });
+    });
+
+    tbody.innerHTML = matrixHtml;
 
     document.getElementById('total-paid').textContent   = '$' + totalPaid.toFixed(2);
     document.getElementById('total-unpaid').textContent = '$' + totalUnpaid.toFixed(2);
@@ -670,6 +734,24 @@ async function loadLogs() {
     document.getElementById('total-entries').textContent = logs.length;
     updateBulkBar();
   } catch(e) { console.error(e); }
+}
+
+function toggleGroup(groupId) {
+  const rows = document.querySelectorAll('.' + groupId);
+  const toggle = document.getElementById(groupId + '-toggle');
+  let isHidden = false;
+
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = '';
+      isHidden = false;
+    } else {
+      r.style.display = 'none';
+      isHidden = true;
+    }
+  });
+
+  if (toggle) toggle.textContent = isHidden ? '▶' : '▼';
 }
 
 function fmtHours(h) {
