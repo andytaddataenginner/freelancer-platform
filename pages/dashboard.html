@@ -957,7 +957,11 @@ function tSetUI(state){
 }
 
 async function timerStart(){
-  if(timerState !== 'idle') return;
+  // 1. If another timer is currently active, cancel it first to prevent multi-timer overlap
+  if(activeClientId && timerState !== 'idle') {
+    await syncBackendTimerAction('cancel', { client_id: activeClientId });
+  }
+
   const cid = document.getElementById('tc').value;
   const task = document.getElementById('tt').value.trim();
   if(!cid){ alert('Please select a client first.'); return; }
@@ -970,6 +974,9 @@ async function timerStart(){
   if(tiv) clearInterval(tiv);
   tiv = setInterval(tDisp, 1000);
   tDisp();
+
+  // Save clean state to localStorage
+  localStorage.setItem('qfa_timer_v2', JSON.stringify({ clientId: cid, taskText: task, startTime: startTimestamp, accumulated: 0, state: 'running' }));
 
   await syncBackendTimerAction('start', { client_id: cid, description: task || 'Timed session' });
 }
@@ -1060,6 +1067,7 @@ async function timerReset(){
     } catch(e) {}
   }
 
+  // Fully wipe local state and localStorage so reload doesn't resurrect old timers
   accumulatedMs = 0; 
   startTimestamp = null; 
   activeClientId = null;
@@ -1067,6 +1075,11 @@ async function timerReset(){
   tSetUI('idle');
   tDisp();
   document.getElementById('tt').value = '';
+
+  // Clear any leftover active timer records on backend
+  try {
+    await fetch(API + '/timer/cancel', { method: 'POST', headers: auth.hdrs(), body: JSON.stringify({}) });
+  } catch(e) {}
 }
 
 async function initFloatingTimer(){
@@ -1074,8 +1087,13 @@ async function initFloatingTimer(){
     const res = await fetch(API + '/timer/status', { headers: auth.hdrs() });
     if(res.ok) {
       const timers = await res.json();
+      // Only restore if there is a valid, non-cancelled active timer
       if(timers && timers.length > 0) {
         const t = timers[0];
+        if (t.is_cancelled) {
+          localStorage.removeItem('qfa_timer_v2');
+          return;
+        }
         activeClientId = t.client_id;
         document.getElementById('tc').value = t.client_id;
         if(t.description) document.getElementById('tt').value = t.description;
@@ -1090,6 +1108,8 @@ async function initFloatingTimer(){
           tiv = setInterval(tDisp, 1000);
         }
         tDisp();
+      } else {
+        localStorage.removeItem('qfa_timer_v2');
       }
     }
   } catch(_) {}
