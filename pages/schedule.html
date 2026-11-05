@@ -3,16 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Schedule — QFA</title>
+  <title>Schedule & Availability — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="stylesheet" href="../css/chatbot-widget.css">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
-    html {
-      overflow-y: scroll;
-    }
+    html { overflow-y: scroll; }
 
     :root {
       --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff; --gold: #c9952a; --gold2: #f5c842;
@@ -45,7 +43,6 @@
 
     body { font-family: var(--sans); background: var(--bg); color: var(--ink); transition: background 0.3s, color 0.3s; }
 
-    /* ── MOBILE TOP BAR ── */
     .mob-bar {
       display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px;
       background: var(--navy); z-index: 200;
@@ -57,11 +54,9 @@
     .mob-brand span { color: #fff; font-size: 0.82rem; font-weight: 700; }
     .mob-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     
-    /* ── BLUR OVERLAY ── */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 149; backdrop-filter: blur(2px); }
     .overlay.on { display: block; }
 
-    /* ── SIDEBAR SYSTEM FRAMEWORK ── */
     .sidebar { width: 240px; background: var(--navy); position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 150; }
     .sb-brand { padding: 1.1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 0.7rem; }
     .sb-logo { width: 36px; height: 36px; background: #fff; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
@@ -79,21 +74,27 @@
     .sb-user span { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
     .sb-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
-    /* ── MAIN WORKSPACE PANEL ── */
     .main { margin-left: 240px; min-height: 100vh; overflow-x: hidden; }
     .topbar { background: var(--topbar-bg); border-bottom: 1px solid var(--border-color); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; transition: background 0.3s; }
     .topbar h2 { font-family: var(--serif); font-size: 1.4rem; letter-spacing: -0.02em; color: var(--ink); }
     .topbar p { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
     .content { padding: 1.5rem; }
 
-    /* ── CARDS ── */
+    /* Live Availability Banner */
+    .availability-banner {
+      background: var(--card-bg); border-radius: var(--radius); padding: 1rem 1.4rem;
+      box-shadow: var(--shadow); border: 1px solid var(--border-color);
+      margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem; border-left: 4px solid var(--green);
+    }
+    .availability-banner.busy { border-left-color: var(--amber); }
+
     .card {
       background: var(--card-bg); border-radius: var(--radius); padding: 1.2rem;
       box-shadow: var(--shadow); border: 1px solid var(--border-color);
       margin-bottom: 1.2rem; transition: background 0.3s, border-color 0.3s;
     }
 
-    /* ── STATS CARDS ── */
     .stat-card {
       background: var(--card-bg); border-radius: var(--radius); padding: 1.2rem;
       box-shadow: var(--shadow); border: 1px solid var(--border-color);
@@ -102,14 +103,12 @@
     .stat-num { font-size: 1.8rem; font-weight: 600; color: var(--ink); line-height: 1.2; }
     .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.04em; }
 
-    /* ── BADGES ── */
     .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
     .badge-green { background: var(--green-bg); color: var(--green); }
     .badge-amber { background: var(--amber-bg); color: var(--amber); }
     .badge-blue  { background: #dbeafe; color: #1e40af; }
     .badge-gray  { background: var(--gray-bg); color: var(--gray); }
 
-    /* ── BUTTONS ── */
     .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
     .btn-green  { background: var(--green-bg); color: var(--green); }
     .btn-green:hover { background: var(--green); color: white; }
@@ -118,35 +117,20 @@
     .btn-outline { background: transparent; border: 1.5px solid var(--border-color); color: var(--ink2); padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; }
     .btn-outline:hover { border-color: var(--accent); color: var(--ink); }
     
-    /* ── ACTIVE FILTER STYLING ── */
-    .btn-filter-toggle.active {
-      background: var(--accent) !important;
-      color: white !important;
-      border-color: var(--accent) !important;
-    }
+    .btn-filter-toggle.active { background: var(--accent) !important; color: white !important; border-color: var(--accent) !important; }
 
-    /* ── DATE INPUT CUSTOM DESIGN ── */
     .date-picker-input {
-      border: 1.5px solid var(--border-color);
-      padding: 0.3rem 0.5rem;
-      font-size: 0.75rem;
-      border-radius: 5px;
-      font-family: var(--sans);
-      color: var(--ink2);
-      background: var(--card-bg);
-      outline: none;
+      border: 1.5px solid var(--border-color); padding: 0.3rem 0.5rem;
+      font-size: 0.75rem; border-radius: 5px; font-family: var(--sans);
+      color: var(--ink2); background: var(--card-bg); outline: none;
     }
-    .date-picker-input:focus {
-      border-color: var(--accent);
-    }
+    .date-picker-input:focus { border-color: var(--accent); }
 
-    /* ── TABLES ── */
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
     th { padding: 0.8rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); border-bottom: 1px solid var(--bg2); }
     td { padding: 0.9rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
 
-    /* ── THEME TOGGLE BUTTON ── */
     .theme-toggle-btn {
       background: rgba(255,255,255,0.1); border: 1.5px solid var(--border-color); color: var(--ink2);
       padding: 0.35rem 0.7rem; font-size: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 600;
@@ -154,15 +138,12 @@
     }
     .theme-toggle-btn:hover { border-color: var(--accent); color: var(--ink); }
 
-    /* ── BREAKPOINTS RESPONSIVE ENGINE ── */
     @media (max-width: 768px) {
       .mob-bar { display: flex; }
       .sidebar { transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; }
       .sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(0,0,0,0.3); }
       .main { margin-left: 0; padding-top: 52px; }
-      
       .topbar { position: static !important; padding: 1.2rem 1rem 0.8rem !important; } 
-      
       .content { padding: 1rem; }
       .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; display: grid !important; }
     }
@@ -197,10 +178,10 @@
     <a href="clients.html">👥 Clients</a>
     <a href="contracts.html">📜 Contracts</a>
     <a href="schedule.html" class="active">📅 Schedule</a>
-     <a href="reports.html">📈 Reports</a>
+    <a href="reports.html">📈 Reports</a>
     <a href="fixed-invoices.html">📄 Invoices</a>
     <a href="portfolio-admin.html">🖼 Portfolio</a>
-     <a href="notes.html">📝 Client Notes</a>
+    <a href="notes.html">📝 Client Notes</a>
     <a href="projects.html">📋 Projects</a>
     <a href="../index.html" target="_blank">🌐 Public Site</a>
   </nav>
@@ -214,8 +195,8 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <h2>Schedule</h2>
-      <p>View and manage client booking requests.</p>
+      <h2>Schedule & Availability</h2>
+      <p>Track your live status and manage client booking requests[cite: 9].</p>
     </div>
     <div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()">🌙 Dark Mode</button>
@@ -223,6 +204,19 @@
   </div>
 
   <div class="content">
+    
+    <!-- Live Availability Status Widget -->
+    <div class="availability-banner" id="availability-banner">
+      <div style="display:flex; align-items:center; gap:0.9rem;">
+        <span id="avail-dot" style="width:12px; height:12px; background:#22c55e; border-radius:50%; display:inline-block; box-shadow:0 0 8px rgba(34,197,94,0.6); animation: pulse 2s infinite;"></span>
+        <div>
+          <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink3); font-weight:700;">Current System Status</div>
+          <div id="avail-text" style="font-size:1rem; font-weight:600; color:var(--ink);">Checking availability...</div>
+        </div>
+      </div>
+      <div style="font-size:0.8rem; color:var(--ink3);" id="avail-time-info">Auto-synced with active timers & bookings</div>
+    </div>
+
     <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
       <div class="stat-card">
         <span class="stat-num" id="s-pending">—</span>
@@ -279,6 +273,14 @@
   </div>
 </div>
 
+<style>
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+</style>
+
 <script>
 const API = 'https://freelancer-platform-9jut.onrender.com/api';
 const auth = {
@@ -300,11 +302,12 @@ async function apiFetch(path, options = {}) {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   document.getElementById('user-name').textContent = auth.user()?.name || '';
   initTheme();
+  checkLiveAvailability();
+  setInterval(checkLiveAvailability, 30000); // Check every 30s
 })();
 
 function logout() { auth.clear(); window.location.href = 'login.html'; }
 
-// Dark Mode Handling
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'light';
   if (savedTheme === 'dark') {
@@ -344,6 +347,54 @@ document.querySelectorAll('.sb-nav a').forEach(a=>
 let allBookings = [];
 let activeTab = 'all';
 
+async function checkLiveAvailability() {
+  const banner = document.getElementById('availability-banner');
+  const dot = document.getElementById('avail-dot');
+  const text = document.getElementById('avail-text');
+  const timeInfo = document.getElementById('avail-time-info');
+
+  try {
+    // 1. Check if active timer is running
+    const timerRes = await fetch(API + '/timer/status', { headers: auth.headers() });
+    if (timerRes.ok) {
+      const timers = await timerRes.json();
+      if (timers && timers.length > 0 && !timers[0].is_paused) {
+        const t = timers[0];
+        banner.className = 'availability-banner busy';
+        dot.style.background = '#f59e0b';
+        dot.style.boxShadow = '0 0 8px rgba(245,158,11,0.6)';
+        text.textContent = `Currently working with ${t.client_name || 'Client'} (Timed Session)`;
+        timeInfo.textContent = `Active timer running since ${new Date(t.started_at || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        return;
+      }
+    }
+
+    // 2. Check if a confirmed booking is happening right now today
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayBookings = allBookings.filter(b => b && b.date && b.date.slice(0,10) === todayStr && b.status === 'confirmed');
+    
+    if (todayBookings.length > 0) {
+      const currentBooking = todayBookings[0];
+      banner.className = 'availability-banner busy';
+      dot.style.background = '#f59e0b';
+      dot.style.boxShadow = '0 0 8px rgba(245,158,11,0.6)';
+      text.textContent = `In a scheduled session with ${currentBooking.client_name || 'Client'}`;
+      timeInfo.textContent = `Scheduled at ${currentBooking.time} (${currentBooking.duration}h)`;
+      return;
+    }
+
+    // 3. Otherwise Available
+    banner.className = 'availability-banner';
+    dot.style.background = '#22c55e';
+    dot.style.boxShadow = '0 0 8px rgba(34,197,94,0.6)';
+    text.textContent = 'Available & Ready for Requests';
+    timeInfo.textContent = 'No active timers or ongoing sessions right now';
+
+  } catch(e) {
+    console.error('Availability check error:', e);
+  }
+}
+
 async function loadBookings() {
   try {
     const fromVal = document.getElementById('date-from').value;
@@ -372,6 +423,7 @@ async function loadBookings() {
     }).length;
     
     filterBookings(activeTab);
+    checkLiveAvailability();
   } catch(e) { 
     console.error(e);
     document.getElementById('bookings-table').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--red)">Failed to load data. Please check connection.</td></tr>`;
@@ -448,6 +500,6 @@ async function updateStatus(id, status) {
 
 loadBookings();
 </script>
-  <script src="../chatbot-widget.js"></script>
+<script src="../chatbot-widget.js"></script>
 </body>
 </html>
