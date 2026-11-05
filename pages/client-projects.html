@@ -68,38 +68,38 @@
     .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    .main-content { margin-left: 232px; flex: 1; padding: 1.6rem 2rem 2.5rem; position: relative; max-width: 1180px; }
+    .main-content { margin-left: 232px; flex: 1; padding: 1.2rem 1.8rem 2rem; position: relative; max-width: 1180px; }
 
-    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; flex-shrink:0; }
+    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.95rem; transition:all .2s; flex-shrink:0; }
     .theme-toggle:hover{ background:rgba(255,255,255,.22); }
-    /* REPLACE old .hero CSS with this compact version */
-.hero { 
-  background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); 
-  border-radius: var(--radius); /* changed from var(--radius-lg) */
-  padding: 0.85rem 1.2rem;     /* reduced padding */
-  color: white; 
-  margin-bottom: 0.9rem;      /* reduced bottom margin */
-  box-shadow: 0 4px 16px rgba(13,35,83,0.14); 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;        /* centered alignment */
-  flex-wrap: wrap; 
-  gap: 0.6rem; 
-}
-.hero h1 { 
-  margin: 0.1rem 0 0; 
-  font-family: var(--serif); 
-  font-style: italic; 
-  font-size: 1.25rem;         /* compact header font size */
-  font-weight: 700; 
-  line-height: 1.15; 
-}
-    .eyebrow{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
-    .hero-rule{ width:58px; height:0; border-top:2.5px solid var(--gold-500); position:relative; margin:.55rem 0 .6rem; }
-    .hero-rule::after{ content:''; position:absolute; top:4px; left:0; width:32px; border-top:1px solid var(--gold-500); opacity:.55; }
-    .hero-sub{ color: rgba(255,255,255,0.68); font-size: 0.85rem; max-width: 30em; }
+    
+    /* Compact Hero Styling */
+    .hero { 
+      background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); 
+      border-radius: var(--radius); 
+      padding: 0.85rem 1.2rem;     
+      color: white; 
+      margin-bottom: 0.9rem;      
+      box-shadow: 0 4px 16px rgba(13,35,83,0.14); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;        
+      flex-wrap: wrap; 
+      gap: 0.6rem; 
+    }
+    .hero h1 { 
+      margin: 0.1rem 0 0; 
+      font-family: var(--serif); 
+      font-style: italic; 
+      font-size: 1.25rem;         
+      font-weight: 700; 
+      line-height: 1.15; 
+    }
+    .eyebrow{ font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
+    .hero-actions{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
 
-    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:1.5rem; }
+    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:1.1rem 1.2rem 1.3rem; }
     .qfa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
     .qfa-card { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 1.2rem; }
     .qfa-card-title { font-weight: 600; font-size: 1rem; color: var(--ink); margin-bottom: 0.4rem; }
@@ -114,8 +114,9 @@
       .sidebar { transform: translateX(-100%) !important; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 74px !important; }
+      .main-content { margin-left: 0 !important; padding: 0.8rem !important; padding-top: 68px !important; }
       .mobile-header { display: flex !important; }
+      .hero h1{ font-size:1.15rem; }
     }
   </style>
 </head>
@@ -161,18 +162,19 @@
   </aside>
 
   <main class="main-content">
-   <div class="hero">
-  <div>
-    <span class="eyebrow">Client Workspace</span>
-    <h1 id="page-main-title">My Project Ledger</h1>
-  </div>
-  <div class="hero-actions">
-    <span id="engagement-badge-container">
-      <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
-    </span>
-    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-  </div>
-</div>
+    <!-- Compact Hero Header -->
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Client Workspace</span>
+        <h1 id="page-main-title">My Projects</h1>
+      </div>
+      <div class="hero-actions">
+        <span id="engagement-badge-container">
+          <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
+        </span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+      </div>
+    </div>
 
     <div class="ledger-panel-wrap">
       <div style="font-size:.68rem;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.1rem">Assigned Projects</div>
@@ -204,20 +206,21 @@ function toggleTheme(){
   localStorage.setItem('qfa_theme', next);
 }
 initTheme();
+
 let clientName = '';
 if (!auth.isLoggedIn()) { window.location.href = 'login.html'; }
 const u = auth.user();
 if (u) {
-  clientName = u ? u.name : ''; // Capture client name
+  clientName = u ? u.name : ''; 
   document.getElementById('user-name').textContent = u.name;
   if (u.company) document.getElementById('user-company').textContent = u.company;
 }
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 async function fetchProjects() {
-
   const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
-  document.getElementById('page-main-title').textContent = titlePrefix + 'My Project Ledger';
+  document.getElementById('page-main-title').textContent = titlePrefix + 'My Projects';
+  
   try {
     const res = await fetch(`${API}/projects/client-view`, {
       headers: auth.headers()
@@ -237,7 +240,6 @@ async function fetchProjects() {
         tasks = typeof p.tasks === 'string' ? JSON.parse(p.tasks) : (p.tasks || []);
       } catch(e) { tasks = []; }
 
-      // Use the project's aggregate done_tasks count or calculate from tasks array safely
       const totalTasks = p.total_tasks !== undefined ? p.total_tasks : tasks.length;
       const completedCount = p.done_tasks !== undefined ? p.done_tasks : tasks.filter(t => t.status === 'done' || t.completed).length;
       const percent = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
@@ -245,7 +247,6 @@ async function fetchProjects() {
       let tasksHtml = '';
       if (totalTasks > 0) {
         const listItems = tasks.map((t, idx) => {
-          // If the backend didn't supply an explicit task status string, fallback safely to index mapping based on done_tasks aggregate count
           const isDone = (t.status === 'done') || (t.completed) || (p.done_tasks !== undefined && idx < p.done_tasks);
           const isInProgress = t.status === 'in_progress';
           const isBlocked = t.status === 'blocked';
