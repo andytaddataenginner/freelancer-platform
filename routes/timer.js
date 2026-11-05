@@ -230,16 +230,30 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 });
 
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
+// ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT * FROM active_timers WHERE is_running = TRUE AND is_paused = FALSE`
+      `SELECT t.*, u.name AS freelancer_name 
+       FROM active_timers t
+       JOIN users u ON u.id = t.freelancer_id
+       WHERE t.is_running = TRUE AND t.is_paused = FALSE 
+       LIMIT 1`
     );
     
-    res.json({
-      is_busy: rows.length > 0,
-      active_session: rows[0] || null
-    });
+    if (rows.length > 0) {
+      res.json({
+        is_available: false,
+        is_busy: true,
+        active_session: rows[0]
+      });
+    } else {
+      res.json({
+        is_available: true,
+        is_busy: false,
+        active_session: null
+      });
+    }
   } catch (err) {
     next(err);
   }
