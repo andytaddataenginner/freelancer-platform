@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer, requireAuth } = require('../middleware/auth');
+const { applyFundsToUnpaidLogs } = require('../utils/creditleadger');
 const verifyToken = requireAuth;
 
 const sseClients = new Map();
@@ -95,79 +96,22 @@ router.post('/resume', requireFreelancer, async (req, res, next) => {
     res.json({ message: 'Timer resumed', timer });
   } catch (e) { next(e); }
 });
-/*
-// ── POST /api/timer/stop (Stop & Save) ───────────────────────────────────────  
-router.post('/stop', requireFreelancer, async (req, res, next) => {
-  try {
-    // 1. Accept description from req.body alongside client_id and elapsed_sec
-    let { client_id, elapsed_sec, description } = req.body;
-    if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
-    const clientCheck = await pool.query(
-      `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
-      [client_id]
-    );
-    if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
-    const actualUserId = clientCheck.rows[0].id;
-
-    const check = await pool.query(`
-      SELECT * FROM active_timers
-      WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE
-    `, [req.user.id, actualUserId]);
-
-    if (!check.rows.length) return res.status(404).json({ error: 'No running timer found for this client' });
-    const timer = check.rows[0];
-
-    let totalSecs = parseInt(elapsed_sec) || 0;
-    const hours = Math.round((totalSecs / 3600) * 10000) / 10000;
-
-    const rateRes = await pool.query(
-      `SELECT hourly_rate FROM clients WHERE user_id = $1 OR id = $1 LIMIT 1`,
-      [actualUserId]
-    );
-    const hourlyRate = parseFloat(rateRes.rows[0]?.hourly_rate || 20);
-    const amount = Math.round((hours * hourlyRate) * 100) / 100;
-
-    // 2. Prioritize what you typed in the frontend task box, 
-    //    falling back to the timer's stored description or 'Timed session'
-    const finalDescription = description || timer.description || 'Timed session';
-
-    if (hours > 0) {
-      // ✅ CORRECT (8 column names matching 8 values):
-        await pool.query(`
-          INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
-          VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
-        `, [actualUserId, req.user.id, hours, amount, finalDescription]);
-    }
-
-    await pool.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
-
-    pushToClient(actualUserId, { event: 'stopped', elapsed_sec: totalSecs });
-
-    res.json({
-      message:     'Timer stopped and saved',
-      elapsed_sec: totalSecs,
-      hours:       hours,
-      amount:      amount
-    });
-  } catch (e) { next(e); }
-});
-
-*/
 // ── POST /api/timer/stop (Stop & Save) ───────────────────────────────────────
 router.post('/stop', requireFreelancer, async (req, res, next) => {
+  const dbClient = await pool.connect();
   try {
     let { client_id, elapsed_sec, description } = req.body;
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
-    const clientCheck = await pool.query(
+    const clientCheck = await dbClient.query(
       `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
       [client_id]
     );
     if (!clientCheck.rows.length) return res.status(404).json({ error: 'Client user not found' });
     const actualUserId = clientCheck.rows[0].id;
 
-    const check = await pool.query(`
+    const check = await dbClient.query(`
       SELECT * FROM active_timers
       WHERE freelancer_id = $1 AND client_id = $2 AND is_running = TRUE
     `, [req.user.id, actualUserId]);
@@ -179,7 +123,7 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     const hours = Math.round((totalSecs / 3600) * 10000) / 10000;
 
     // Fetch rate_type and hourly_rate
-    const rateRes = await pool.query(
+    const rateRes = await dbClient.query(
       `SELECT hourly_rate, rate_type FROM clients WHERE user_id = $1 OR id = $1 LIMIT 1`,
       [actualUserId]
     );
@@ -192,14 +136,21 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
 
     const finalDescription = description || timer.description || 'Timed session';
 
+    await dbClient.query('BEGIN');
+
     if (hours > 0) {
-      await pool.query(`
+      await dbClient.query(`
         INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
         VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
       `, [actualUserId, req.user.id, hours, amount, finalDescription]);
+
+      // Automatically apply any available credit balance to settle unpaid logs
+      await applyFundsToUnpaidLogs(dbClient, actualUserId, 0);
     }
 
-    await pool.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
+    await dbClient.query(`DELETE FROM active_timers WHERE id = $1`, [timer.id]);
+
+    await dbClient.query('COMMIT');
 
     pushToClient(actualUserId, { event: 'stopped', elapsed_sec: totalSecs });
 
@@ -209,7 +160,12 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
       hours: hours,
       amount: amount
     });
-  } catch (e) { next(e); }
+  } catch (e) {
+    await dbClient.query('ROLLBACK');
+    next(e);
+  } finally {
+    dbClient.release();
+  }
 });
 
 // ── GET /api/timer/status — freelancer active timers ──────────────────────────
@@ -293,7 +249,5 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
     next(err);
   }
 });
-
-
 
 module.exports = router;
