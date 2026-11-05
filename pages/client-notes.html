@@ -72,10 +72,29 @@
 
     .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; flex-shrink:0; }
     .theme-toggle:hover{ background:rgba(255,255,255,.22); }
-
-    .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius-lg); padding: 1.5rem 1.8rem; color: white; margin-bottom: 1.4rem; box-shadow: 0 6px 24px rgba(13,35,83,0.18); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+    /* REPLACE old .hero CSS with this compact version */
+.hero { 
+  background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); 
+  border-radius: var(--radius); /* changed from var(--radius-lg) */
+  padding: 0.85rem 1.2rem;     /* reduced padding */
+  color: white; 
+  margin-bottom: 0.9rem;      /* reduced bottom margin */
+  box-shadow: 0 4px 16px rgba(13,35,83,0.14); 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;        /* centered alignment */
+  flex-wrap: wrap; 
+  gap: 0.6rem; 
+}
+.hero h1 { 
+  margin: 0.1rem 0 0; 
+  font-family: var(--serif); 
+  font-style: italic; 
+  font-size: 1.25rem;         /* compact header font size */
+  font-weight: 700; 
+  line-height: 1.15; 
+}
     .eyebrow{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
-    .hero h1{ margin: .3rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.7rem; font-weight: 700; line-height: 1.15; }
     .hero-rule{ width:58px; height:0; border-top:2.5px solid var(--gold-500); position:relative; margin:.55rem 0 .6rem; }
     .hero-rule::after{ content:''; position:absolute; top:4px; left:0; width:32px; border-top:1px solid var(--gold-500); opacity:.55; }
     .hero-sub{ color: rgba(255,255,255,0.68); font-size: 0.85rem; max-width: 30em; }
@@ -140,17 +159,19 @@
   </aside>
 
   <main class="main-content">
+
     <div class="hero">
-      <div>
-        <span class="eyebrow">Engagement Workspace</span>
-        <h1>Project Notes & Guidelines</h1>
-        <div class="hero-rule"></div>
-        <p class="hero-sub">Important rules, architectural guidelines, and instructions provided for your engagement.</p>
-      </div>
-      <div class="hero-actions">
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-      </div>
-    </div>
+  <div>
+    <span class="eyebrow">Client Workspace</span>
+    <h1 id="page-main-title">My Project Ledger</h1>
+  </div>
+  <div class="hero-actions">
+    <span id="engagement-badge-container">
+      <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
+    </span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+  </div>
+</div>
 
     <div class="ledger-panel-wrap">
       <div style="font-size:.68rem;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.1rem">Reference Notes</div>
@@ -182,16 +203,20 @@ function toggleTheme(){
   localStorage.setItem('qfa_theme', next);
 }
 initTheme();
-
+let clientName = '';
 if (!auth.isLoggedIn()) { window.location.href = 'login.html'; }
 const u = auth.user();
 if (u) {
+  clientName = u ? u.name : ''; // Capture client name
   document.getElementById('user-name').textContent = u.name;
   if (u.company) document.getElementById('user-company').textContent = u.company;
 }
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 async function fetchNotes() {
+const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+document.getElementById('page-main-title').textContent = titlePrefix + 'Project Notes & Guidelines';
+  
   try {
     const res = await fetch(`${API}/client/notes`, {
       headers: auth.headers()
