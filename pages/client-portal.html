@@ -183,6 +183,28 @@
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
+<!-- Floating Minimizable Live Tracker Widget -->
+<div id="live-tracker-widget" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(13,35,83,0.18); width: 280px; overflow: hidden; font-family: var(--sans); animation: slideUp 0.3s ease;">
+  <!-- Widget Header / Minimizable Bar -->
+  <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.65rem 0.9rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleTrackerWidget()">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <span style="position: relative; display: flex; width: 8px; height: 8px;">
+        <span style="position: absolute; inset: 0; border-radius: 50%; background: white; opacity: 0.75; animation: ping 1s infinite;"></span>
+        <span style="position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: white;"></span>
+      </span>
+      <strong style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Live Session Active</strong>
+    </div>
+    <button id="widget-toggle-btn" style="background: none; border: none; color: white; font-size: 0.85rem; cursor: pointer; padding: 0 0.2rem;">−</button>
+  </div>
+  
+  <!-- Widget Body Content -->
+  <div id="widget-body" style="padding: 0.85rem; font-size: 0.82rem; color: var(--ink);">
+    <div style="font-weight: 600; color: var(--ink); margin-bottom: 0.2rem;">Freelancer is working</div>
+    <div id="widget-session-desc" style="color: var(--ink-2); font-size: 0.76rem; margin-bottom: 0.7rem; line-height: 1.3;">Active working session in progress.</div>
+    <a href="client-schedule.html" style="display: block; text-align: center; background: var(--bg2); color: var(--ink); padding: 0.4rem; border-radius: 6px; font-weight: 600; font-size: 0.75rem; text-decoration: none; transition: background 0.15s;">View Schedule →</a>
+  </div>
+</div>
+
 <div class="dashboard">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -225,21 +247,6 @@
         </span>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" id="hero-theme-btn">🌙</button>
       </div>
-    </div>
-
-    <!-- Live Freelancer Availability Notification Banner -->
-    <div id="freelancer-status-banner" style="display: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.8rem 1.2rem; border-radius: var(--radius); margin-bottom: 1rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 1rem; animation: fadeIn 0.3s ease;">
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <span style="position: relative; display: flex; width: 12px; height: 12px;">
-          <span style="position: absolute; inset: 0; border-radius: 50%; background: white; opacity: 0.75; animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
-          <span style="position: relative; display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: white;"></span>
-        </span>
-        <div>
-          <strong style="font-size: 0.9rem; display: block; letter-spacing: 0.02em;">Freelancer Currently in a Live Session</strong>
-          <span id="banner-session-desc" style="font-size: 0.78rem; opacity: 0.9;">Active working session in progress.</span>
-        </div>
-      </div>
-      <a href="client-schedule.html" class="btn" style="background: white; color: #92400e; font-size: 0.78rem; padding: 0.4rem 0.8rem; border-radius: 6px; text-decoration: none; font-weight: 700;">View Schedule →</a>
     </div>
 
     <!-- Ledger summary strip -->
@@ -539,38 +546,52 @@ async function clientChangePassword(e) {
   }
 }
 
-// Check freelancer live agency status on client portal login
+// Toggle minimizable floating window state
+function toggleTrackerWidget() {
+  const body = document.getElementById('widget-body');
+  const btn = document.getElementById('widget-toggle-btn');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    btn.textContent = '−';
+  } else {
+    body.style.display = 'none';
+    btn.textContent = '+';
+  }
+}
+
+// Check freelancer live agency status on client portal login & poll periodically
 async function checkFreelancerAgencyStatus() {
-  const banner = document.getElementById('freelancer-status-banner');
-  const descEl = document.getElementById('banner-session-desc');
-  if (!banner) return;
+  const widget = document.getElementById('live-tracker-widget');
+  const descEl = document.getElementById('widget-session-desc');
+  if (!widget) return;
 
   try {
     const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
     if (res.ok) {
       const data = await res.json();
       if (data && data.is_busy) {
-        banner.style.display = 'flex';
+        widget.style.display = 'block';
         if (data.active_session && data.active_session.description) {
-          descEl.textContent = `Working on: ${data.active_session.description}`;
+          descEl.textContent = `Task: ${data.active_session.description}`;
         } else {
           descEl.textContent = 'Active working session in progress.';
         }
         return;
       }
     }
-    banner.style.display = 'none';
+    widget.style.display = 'none';
   } catch (e) {
     console.error('Error checking freelancer status:', e);
-    banner.style.display = 'none';
+    widget.style.display = 'none';
   }
 }
 
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
 
-    // Trigger live availability check on login / portal load
+    // Trigger live availability check on login / portal load & set recurring interval check every 30 seconds
     checkFreelancerAgencyStatus();
+    setInterval(checkFreelancerAgencyStatus, 30000);
 
     try {
         const [stats, logs, bookings] = await Promise.all([
