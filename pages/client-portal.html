@@ -227,6 +227,21 @@
       </div>
     </div>
 
+    <!-- Live Freelancer Availability Notification Banner -->
+    <div id="freelancer-status-banner" style="display: none; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.8rem 1.2rem; border-radius: var(--radius); margin-bottom: 1rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 1rem; animation: fadeIn 0.3s ease;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="position: relative; display: flex; width: 12px; height: 12px;">
+          <span style="position: absolute; inset: 0; border-radius: 50%; background: white; opacity: 0.75; animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+          <span style="position: relative; display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: white;"></span>
+        </span>
+        <div>
+          <strong style="font-size: 0.9rem; display: block; letter-spacing: 0.02em;">Freelancer Currently in a Live Session</strong>
+          <span id="banner-session-desc" style="font-size: 0.78rem; opacity: 0.9;">Active working session in progress.</span>
+        </div>
+      </div>
+      <a href="client-schedule.html" class="btn" style="background: white; color: #92400e; font-size: 0.78rem; padding: 0.4rem 0.8rem; border-radius: 6px; text-decoration: none; font-weight: 700;">View Schedule →</a>
+    </div>
+
     <!-- Ledger summary strip -->
     <div class="ledger-strip">
       <div class="lstat"><span class="lstat-value mono" id="s-paid">$0.00</span><span class="lstat-label">Total paid</span></div>
@@ -524,8 +539,38 @@ async function clientChangePassword(e) {
   }
 }
 
+// Check freelancer live agency status on client portal login
+async function checkFreelancerAgencyStatus() {
+  const banner = document.getElementById('freelancer-status-banner');
+  const descEl = document.getElementById('banner-session-desc');
+  if (!banner) return;
+
+  try {
+    const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.is_busy) {
+        banner.style.display = 'flex';
+        if (data.active_session && data.active_session.description) {
+          descEl.textContent = `Working on: ${data.active_session.description}`;
+        } else {
+          descEl.textContent = 'Active working session in progress.';
+        }
+        return;
+      }
+    }
+    banner.style.display = 'none';
+  } catch (e) {
+    console.error('Error checking freelancer status:', e);
+    banner.style.display = 'none';
+  }
+}
+
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
+
+    // Trigger live availability check on login / portal load
+    checkFreelancerAgencyStatus();
 
     try {
         const [stats, logs, bookings] = await Promise.all([
