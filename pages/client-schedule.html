@@ -307,8 +307,8 @@ async function checkFreelancerLiveStatus() {
   if (!dot || !text) return;
 
   try {
-    // Check agency-wide freelancer status endpoint
-    const res = await fetch(API + '/agency/status', { headers: auth.headers() });
+    // Correctly prefixed with /api/timer
+    const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
     if (res.ok) {
       const data = await res.json();
       if (data && data.is_busy) {
@@ -326,6 +326,8 @@ async function checkFreelancerLiveStatus() {
     text.textContent = 'Available';
   }
 }
+
+  
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 function openSidebar() {
