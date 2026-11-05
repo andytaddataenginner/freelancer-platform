@@ -220,4 +220,23 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// Public or client-accessible freelancer status endpoint
+router.get('/agency/status', authenticateToken, async (req, res) => {
+  try {
+    // Query active unpaused timers belonging to ANY freelancer in the system
+    const activeTimers = await db.query(
+      `SELECT * FROM active_timers WHERE is_paused = false AND (is_cancelled = false OR is_cancelled IS NULL)`
+    );
+    
+    res.json({
+      is_busy: activeTimers.rows.length > 0,
+      active_session: activeTimers.rows[0] || null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
 module.exports = router;
