@@ -300,19 +300,17 @@ let clientName = '';
   checkFreelancerLiveStatus();
   setInterval(checkFreelancerLiveStatus, 30000);
 })();
-
 async function checkFreelancerLiveStatus() {
   const dot = document.getElementById('pill-dot');
   const text = document.getElementById('pill-text');
   if (!dot || !text) return;
 
   try {
-    // 1. Check if an active hourly timer is currently running
+    // 1. Check if an active hourly timer is currently running agency-wide
     const timerRes = await fetch(API + '/timer/status', { headers: auth.headers() });
     if (timerRes.ok) {
       const timers = await timerRes.json();
       if (timers && timers.length > 0) {
-        // Look for any active unpaused timer
         const activeTimer = timers.find(t => !t.is_paused);
         if (activeTimer) {
           dot.style.background = '#f59e0b';
@@ -322,21 +320,20 @@ async function checkFreelancerLiveStatus() {
       }
     }
 
-    // 2. Check if any time log entries were recorded today for fixed or active work
+    // 2. Fallback check: If any time logs or updates were recorded today, mark active
     const todayStr = new Date().toISOString().slice(0, 10);
-    const logsRes = await fetch(API + `/timelogs?from=${todayStr}&limit=20`, { headers: auth.headers() });
+    const logsRes = await fetch(API + `/timelogs?from=${todayStr}&limit=10`, { headers: auth.headers() });
     if (logsRes.ok) {
       const logs = await logsRes.json();
-      // If a log entry was recorded today, consider active
-      const hasRecentWorkToday = logs.some(l => l.date && l.date.slice(0, 10) === todayStr);
-      if (hasRecentWorkToday) {
+      const hasWorkToday = logs.some(l => l.date && l.date.slice(0, 10) === todayStr);
+      if (hasWorkToday) {
         dot.style.background = '#f59e0b';
         text.textContent = 'Active on project';
         return;
       }
     }
 
-    // 3. Default to Available if no active timers or recent work are found
+    // 3. Default to Available if no active timers or today's logs are found
     dot.style.background = '#22c55e';
     text.textContent = 'Available';
   } catch (e) {
