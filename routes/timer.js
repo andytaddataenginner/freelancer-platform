@@ -221,7 +221,7 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 });
 
 // Public or client-accessible freelancer status endpoint
-router.get('/agency/status', authenticateToken, async (req, res) => {
+router.get('/agency/status', verifyToken, async (req, res) => {
   try {
     // Query active unpaused timers belonging to ANY freelancer in the system
     const activeTimers = await db.query(
