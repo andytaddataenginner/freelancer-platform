@@ -72,31 +72,27 @@
     .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    /* Standardized max-width and margin layout matching all other pages */
-    .main-content { margin-left: 232px; flex: 1; padding: 1.6rem 2rem 2.5rem; position: relative; max-width: 1180px; }
+    .main-content { margin-left: 232px; flex: 1; padding: 1.2rem 1.8rem 2rem; position: relative; max-width: 1180px; }
 
-    .theme-toggle { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all .2s; flex-shrink: 0; }
+    .theme-toggle { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .95rem; transition: all .2s; flex-shrink: 0; }
     .theme-toggle:hover { background: rgba(255,255,255,.22); }
 
-    /* ── HERO ── */
-    .hero { background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius-lg); padding: 1.5rem 1.8rem; color: white; margin-bottom: 1.3rem; box-shadow: 0 6px 24px rgba(13,35,83,0.18); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
-    .eyebrow { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
-    .hero h1 { margin: .3rem 0 0; font-family: var(--serif); font-style: italic; font-size: 1.7rem; font-weight: 700; line-height: 1.15; }
-    .hero-rule { width: 58px; height: 0; border-top: 2.5px solid var(--gold-500); position: relative; margin: .55rem 0 .6rem; }
-    .hero-rule::after { content: ''; position: absolute; top: 4px; left: 0; width: 32px; border-top: 1px solid var(--gold-500); opacity: .55; }
-    .hero-sub { color: rgba(255,255,255,0.68); font-size: 0.85rem; max-width: 32em; }
-    .hero-actions { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
-    .engagement-pill { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.45rem; }
+    /* ── COMPACT HERO ── */
+    .hero { background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius); padding: 0.85rem 1.2rem; color: white; margin-bottom: 0.9rem; box-shadow: 0 4px 16px rgba(13,35,83,0.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+    .eyebrow { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
+    .hero h1 { margin: 0.1rem 0 0; font-family: var(--serif); font-style: italic; font-size: 1.25rem; font-weight: 700; line-height: 1.15; }
+    .hero-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .engagement-pill { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
 
     /* ── PANELS & FORM STYLES ── */
-    .ledger-panel-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.4rem; padding: 1.5rem; }
-    .panel-heading { font-size: .68rem; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1.1rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+    .ledger-panel-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.4rem; padding: 1.1rem 1.2rem 1.3rem; }
+    .panel-heading { font-size: .68rem; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .7rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
 
     .fg { display: flex; flex-direction: column; gap: .35rem; }
     .fg label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
     
     select, input[type=date], textarea {
-      width: 100%; padding: .65rem .85rem; border: 1.5px solid var(--line); border-radius: 9px; background: var(--panel); font-family: var(--sans); font-size: .87rem; color: var(--ink); transition: border-color .2s, box-shadow .2s;
+      width: 100%; padding: .5rem .75rem; border: 1.5px solid var(--line); border-radius: 9px; background: var(--panel); font-family: var(--sans); font-size: .85rem; color: var(--ink); transition: border-color .2s, box-shadow .2s;
     }
     select:focus, input[type=date]:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,111,237,.12); }
 
@@ -107,7 +103,7 @@
     .bg-gray { background: var(--bg2); color: var(--ink-3); }
 
     .btn-primary {
-      background: var(--navy-900); color: white; padding: 0.75rem 1.4rem; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; border-radius: 9px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--navy-900); color: white; padding: 0.6rem 1.2rem; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
     }
     .btn-primary:hover { background: var(--navy-700); }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -119,7 +115,7 @@
     .session-item { padding: 1rem 1.1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); margin-bottom: 0.8rem; transition: background 0.2s; }
     .session-item:hover { background: var(--panel); }
 
-    .form-status { font-size: 0.85rem; margin-top: 0.6rem; font-weight: 600; }
+    .form-status { font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600; }
     .form-status.success { color: var(--green); }
     .form-status.error { color: var(--red); }
 
@@ -127,9 +123,9 @@
       .sidebar { transform: translateX(-100%) !important; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 74px !important; }
+      .main-content { margin-left: 0 !important; padding: 0.8rem !important; padding-top: 68px !important; }
       .mobile-header { display: flex !important; }
-      .hero h1 { font-size: 1.4rem; }
+      .hero h1 { font-size: 1.15rem; }
     }
   </style>
 </head>
@@ -161,7 +157,7 @@
     </div>
     <nav class="sidebar-nav">
       <a href="client-portal.html">📊 My Overview</a>
-      <a href="client-logs.html">⏱ My Work Logs</a>
+      <a href="client-logs.html">⏱ My Time Logs</a>
       <a href="client-projects.html">📁 My Projects</a>
       <a href="client-notes.html">📌 Guidelines & Notes</a>
       <a href="client-schedule.html" class="active">📅 Book a Session</a>
@@ -176,12 +172,11 @@
 
   <main class="main-content">
 
+    <!-- Compact Hero Header with dynamic Client Name -->
     <div class="hero">
       <div>
         <span class="eyebrow">Client Workspace</span>
-        <h1>Book a Session</h1>
-        <div class="hero-rule"></div>
-        <p class="hero-sub">Request a meeting or working session. I'll review and confirm your slot within 24 hours.</p>
+        <h1 id="page-main-title">Book a Session</h1>
       </div>
       <div class="hero-actions">
         <span class="engagement-pill">
@@ -293,12 +288,20 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
+let clientName = '';
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   const u = auth.user();
   if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
-  document.getElementById('user-name').textContent = u ? u.name : '';
+  
+  clientName = u ? u.name : '';
+  document.getElementById('user-name').textContent = clientName;
   if (u && u.company) document.getElementById('user-company').textContent = u.company;
+  
+  // Update header text to include client name greeting format
+  const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+  document.getElementById('page-main-title').textContent = titlePrefix + 'Book a Session';
+
   document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
 })();
 
