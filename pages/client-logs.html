@@ -308,7 +308,6 @@ async function loadLogs() {
     const contractStatus = clientStats.contractStatus || 'active';
     allLogs = logs || [];
 
-    // Dynamically set client name into page header
     const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
 
     if (isFixedClient) {
@@ -512,7 +511,7 @@ function renderLogsMatrix(logs) {
     return;
   }
 
-  // Group logs into collapsible monthly parent sections
+  // Group logs into monthly parent sections
   const grouped = {};
   logs.forEach(l => {
     const dStr = l.date || l.createdAt || '';
@@ -546,16 +545,16 @@ function renderLogsMatrix(logs) {
     const groupId = 'm-grp-' + idx;
     const hoursSummary = !isFixedClient ? ` &nbsp;·&nbsp; ${grpHours.toFixed(1)}h` : '';
 
-    // Parent Matrix Header Row
+    // Parent Matrix Header Row (Default Collapsed: toggle shows right arrow '▶' and child rows have display:none)
     matrixHtml += `
       <tr class="group-row" onclick="toggleGroup('${groupId}')">
         <td colspan="5">
-          <span class="group-toggle" id="${groupId}-toggle">▼</span>
+          <span class="group-toggle" id="${groupId}-toggle">▶</span>
           📅 ${groupLabel} &nbsp;<span style="font-size:0.78rem;font-weight:normal;color:var(--ink-3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'}${hoursSummary} &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
         </td>
       </tr>`;
 
-    // Child Rows
+    // Child Rows (Default style="display:none" to keep them collapsed initially)
     monthLogs.forEach(l => {
       const isPaid  = l.payment_status === 'paid';
       const amount  = parseFloat(l.amount || 0);
@@ -568,7 +567,7 @@ function renderLogsMatrix(logs) {
 
       if (isFixedClient) {
         matrixHtml += `
-          <tr class="${groupId} child-row ${rowClass}">
+          <tr class="${groupId} child-row ${rowClass}" style="display: none;">
             <td>${formattedDate}</td>
             <td><strong>${l.title || 'Milestone Phase'}</strong></td>
             <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
@@ -577,7 +576,7 @@ function renderLogsMatrix(logs) {
           </tr>`;
       } else {
         matrixHtml += `
-          <tr class="${groupId} child-row ${rowClass}">
+          <tr class="${groupId} child-row ${rowClass}" style="display: none;">
             <td>${formattedDate}</td>
             <td class="mono"><strong>${hrs}h</strong></td>
             <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
