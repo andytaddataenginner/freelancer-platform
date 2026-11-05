@@ -561,12 +561,15 @@ function toggleTrackerWidget() {
 
 // Check freelancer live agency status on client portal login & poll periodically
 // Check freelancer live agency status and auto-sync UI seamlessly
+// Check freelancer live agency status and auto-sync UI seamlessly
 async function checkFreelancerAgencyStatus() {
+  const widget = document.getElementById('live-tracker-widget');
   const header = document.getElementById('widget-header');
   const title = document.getElementById('widget-title');
   const dot = document.getElementById('widget-dot');
   const statusText = document.getElementById('widget-status-text');
   const descEl = document.getElementById('widget-session-desc');
+  if (!widget) return;
   
   try {
     const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
@@ -575,6 +578,7 @@ async function checkFreelancerAgencyStatus() {
       
       if (data && data.is_busy) {
         // STATE 1: In Session (Orange Header with Pulsing Dot)
+        widget.style.display = 'block'; // Ensure floating widget is visible
         header.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
         title.textContent = 'Live Session Active';
         statusText.textContent = 'Freelancer is working';
@@ -586,7 +590,10 @@ async function checkFreelancerAgencyStatus() {
           descEl.textContent = 'Active working session in progress.';
         }
       } else {
-        // STATE 2: Available / Free (Green Header)
+        // STATE 2: Available / Free (Green Header) — Or hide floating widget if you only want it to pop up when busy!
+        // If you want it to show "Available" always, leave widget.style.display = 'block'. 
+        // If you only want it to pop up when working, change this to widget.style.display = 'none'.
+        widget.style.display = 'block'; 
         header.style.background = 'linear-gradient(135deg, #10b981, #059669)';
         title.textContent = 'Freelancer Available';
         statusText.textContent = 'Ready for new tasks';
@@ -595,10 +602,9 @@ async function checkFreelancerAgencyStatus() {
       }
     }
   } catch (e) {
-    console.error('Error auto-syncing freelancer status:', e);
+    console.error('Error auto-syncin freelancer status:', e);
   }
 }
-
 // Poll automatically every 5 seconds to sync state without refreshing
 setInterval(checkFreelancerAgencyStatus, 5000);
 
