@@ -539,6 +539,8 @@ async function clientChangePassword(e) {
 }
 
 async function loadPortal() {
+    const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+  document.getElementById('page-main-title').textContent = titlePrefix + 'My Project Ledger';
     const badgeContainer = document.getElementById('engagement-badge-container');
 
     try {
