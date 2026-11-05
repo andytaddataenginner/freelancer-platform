@@ -300,18 +300,19 @@ let clientName = '';
   checkFreelancerLiveStatus();
   setInterval(checkFreelancerLiveStatus, 30000);
 })();
+
 async function checkFreelancerLiveStatus() {
   const dot = document.getElementById('pill-dot');
   const text = document.getElementById('pill-text');
   if (!dot || !text) return;
 
   try {
-    // 1. Check if an active hourly timer is currently running agency-wide
-    const timerRes = await fetch(API + '/timer/status', { headers: auth.headers() });
-    if (timerRes.ok) {
-      const timers = await timerRes.json();
+    // Queries the agency freelancer active timer status
+    const res = await fetch(API + '/timer/status', { headers: auth.headers() });
+    if (res.ok) {
+      const timers = await res.json();
       if (timers && timers.length > 0) {
-        const activeTimer = timers.find(t => !t.is_paused);
+        const activeTimer = timers.find(t => !t.is_paused && !t.is_cancelled);
         if (activeTimer) {
           dot.style.background = '#f59e0b';
           text.textContent = 'Currently in a session';
@@ -320,24 +321,9 @@ async function checkFreelancerLiveStatus() {
       }
     }
 
-    // 2. Fallback check: If any time logs or updates were recorded today, mark active
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const logsRes = await fetch(API + `/timelogs?from=${todayStr}&limit=10`, { headers: auth.headers() });
-    if (logsRes.ok) {
-      const logs = await logsRes.json();
-      const hasWorkToday = logs.some(l => l.date && l.date.slice(0, 10) === todayStr);
-      if (hasWorkToday) {
-        dot.style.background = '#f59e0b';
-        text.textContent = 'Active on project';
-        return;
-      }
-    }
-
-    // 3. Default to Available if no active timers or today's logs are found
     dot.style.background = '#22c55e';
     text.textContent = 'Available';
   } catch (e) {
-    console.error('Error checking live availability status:', e);
     dot.style.background = '#22c55e';
     text.textContent = 'Available';
   }
