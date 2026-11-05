@@ -217,7 +217,7 @@
     <div class="hero">
       <div>
         <span class="eyebrow">Client Workspace</span>
-        <h1 id="page-main-title">My Project Ledger</h1>
+        <h1 id="page-main-title">My Overview</h1>
       </div>
       <div class="hero-actions">
         <span id="engagement-badge-container">
@@ -546,7 +546,7 @@ async function loadPortal() {
         currentCreditBalance = parseFloat(stats.creditBalance || 0);
 
         const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
-        document.getElementById('page-main-title').textContent = titlePrefix + 'My Project Ledger';
+        document.getElementById('page-main-title').textContent = titlePrefix + 'My Overview';
 
         if (contractStatus === 'paused') {
           badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
