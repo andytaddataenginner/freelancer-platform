@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer, requireAuth } = require('../middleware/auth');
-const { applyFundsToUnpaidLogs } = require('../utils/creditleadger');
+const { applyFundsToUnpaidLogs } = require('./creditLedger');
 const verifyToken = requireAuth;
 
 const sseClients = new Map();
@@ -122,7 +122,6 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     let totalSecs = parseInt(elapsed_sec) || 0;
     const hours = Math.round((totalSecs / 3600) * 10000) / 10000;
 
-    // Fetch rate_type and hourly_rate
     const rateRes = await dbClient.query(
       `SELECT hourly_rate, rate_type FROM clients WHERE user_id = $1 OR id = $1 LIMIT 1`,
       [actualUserId]
@@ -131,9 +130,7 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     const rateType = clientData.rate_type || 'hourly';
     const hourlyRate = parseFloat(clientData.hourly_rate || 0);
 
-    // Fixed-price clients track hours but have $0 monetary amount per time log
     const amount = rateType === 'fixed' ? 0 : Math.round((hours * hourlyRate) * 100) / 100;
-
     const finalDescription = description || timer.description || 'Timed session';
 
     await dbClient.query('BEGIN');
@@ -144,7 +141,7 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
         VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
       `, [actualUserId, req.user.id, hours, amount, finalDescription]);
 
-      // Automatically apply any available credit balance to settle unpaid logs
+      // Trigger the credit ledger allocation to auto-settle using existing credit balance
       await applyFundsToUnpaidLogs(dbClient, actualUserId, 0);
     }
 
@@ -211,7 +208,6 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
     let { client_id } = req.body;
     
     if (client_id) {
-      // Resolve client_id to actual users.id if provided
       const clientCheck = await pool.query(
         `SELECT id FROM users WHERE id = $1 OR id = (SELECT user_id FROM clients WHERE id = $1) LIMIT 1`,
         [client_id]
@@ -222,7 +218,6 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
         pushToClient(actualUserId, { event: 'stopped', elapsed_sec: 0 });
       }
     } else {
-      // Fallback: If no client_id was sent, wipe ALL active timers for this freelancer and notify all affected clients
       const activeTimers = await pool.query(`SELECT client_id FROM active_timers WHERE freelancer_id = $1`, [req.user.id]);
       for (const row of activeTimers.rows) {
         pushToClient(row.client_id, { event: 'stopped', elapsed_sec: 0 });
