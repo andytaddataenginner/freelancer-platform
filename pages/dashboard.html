@@ -215,6 +215,13 @@
     td{padding:.8rem .9rem;border-bottom:1px solid var(--hairline);color:var(--ink2);vertical-align:middle;font-variant-numeric:tabular-nums}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:var(--table-hover)}
+
+    /* Collapsible Group Rows Matrix Styling */
+    .group-row td { background: var(--bg2) !important; cursor: pointer; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--hairline); }
+    .group-row:hover td { background: var(--table-hover) !important; }
+    .group-toggle { display: inline-block; width: 18px; font-size: 0.8rem; text-align: center; margin-right: 0.35rem; transition: transform 0.2s; }
+    .child-row td { padding-left: 1.6rem; }
+
     .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .68rem;border-radius:100px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
     .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.75;flex-shrink:0}
     .bg-g{background:var(--gbg);color:var(--green)}
@@ -762,15 +769,85 @@ async function load(){
     if(!lg.length){
       rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
     }else{
-      rt.innerHTML=lg.map(l=>{
-        const ip=l.payment_status==='paid';
-        const badge=ip?'<span class="badge bg-g">✓ Paid</span>':'<span class="badge bg-a">Unpaid</span>';
-        const pb=ip?`<button class="btn btn-o btn-sm" onclick="pay(${l.id},'unpaid')">Undo</button>`:`<button class="btn btn-g btn-sm" onclick="pay(${l.id},'paid')">Mark paid</button>`;
-        const cl2=cl.find(c=>c.id===l.client_id)||{};
-        return`<tr><td><strong>${l.client_name}</strong></td><td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td><td>${fmtH(parseFloat(l.hours))}</td><td>${parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—'}</td><td>${badge}</td><td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td><td style="display:flex;gap:.3rem;flex-wrap:wrap">${pb}<button class="btn btn-o btn-sm" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${cl2.hourly_rate||0})">✏️</button></td></tr>`;
-      }).join('');
+      // Group recent logs into collapsible monthly parent sections
+      const grouped = {};
+      lg.forEach(l => {
+        const dStr = l.date || l.createdAt || '';
+        const key = dStr.length >= 7 ? dStr.slice(0, 7) : 'Other';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(l);
+      });
+
+      const sortedKeys = Object.keys(grouped).sort().reverse();
+      let matrixHtml = '';
+
+      sortedKeys.forEach((monthKey, idx) => {
+        const monthLogs = grouped[monthKey];
+        let grpHours = 0, grpAmount = 0;
+
+        monthLogs.forEach(l => {
+          const h = parseFloat(l.hours || 0);
+          let amt = parseFloat(l.amount || 0);
+          grpHours += h;
+          grpAmount += amt;
+        });
+
+        let groupLabel = monthKey;
+        if (monthKey !== 'Other') {
+          const dObj = new Date(monthKey + '-02');
+          groupLabel = dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        const groupId = 'dash-grp-' + idx;
+
+        matrixHtml += `
+          <tr class="group-row" onclick="toggleDashboardGroup('${groupId}')">
+            <td colspan="7">
+              <span class="group-toggle" id="${groupId}-toggle">▶</span>
+              📅 ${groupLabel} &nbsp;<span style="font-size:0.75rem;font-weight:normal;color:var(--ink3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'} &nbsp;·&nbsp; ${fmtH(grpHours)} &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
+            </td>
+          </tr>`;
+
+        monthLogs.forEach(l => {
+          const ip=l.payment_status==='paid';
+          const badge=ip?'<span class="badge bg-g">✓ Paid</span>':'<span class="badge bg-a">Unpaid</span>';
+          const pb=ip?`<button class="btn btn-o btn-sm" onclick="pay(${l.id},'unpaid'); event.stopPropagation();">Undo</button>`:`<button class="btn btn-g btn-sm" onclick="pay(${l.id},'paid'); event.stopPropagation();">Mark paid</button>`;
+          const cl2=cl.find(c=>c.id===l.client_id)||{};
+
+          matrixHtml += `
+            <tr class="${groupId} child-row" style="display: none;">
+              <td><strong>${l.client_name}</strong></td>
+              <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
+              <td>${fmtH(parseFloat(l.hours))}</td>
+              <td>${parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—'}</td>
+              <td>${badge}</td>
+              <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
+              <td style="display:flex;gap:.3rem;flex-wrap:wrap" onclick="event.stopPropagation()">${pb}<button class="btn btn-o btn-sm" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${cl2.hourly_rate||0})">✏️</button></td>
+            </tr>`;
+        });
+      });
+
+      rt.innerHTML = matrixHtml;
     }
   }catch(e){console.error(e);}
+}
+
+function toggleDashboardGroup(groupId) {
+  const rows = document.querySelectorAll('.' + groupId);
+  const toggle = document.getElementById(groupId + '-toggle');
+  let isHidden = false;
+
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = '';
+      isHidden = false;
+    } else {
+      r.style.display = 'none';
+      isHidden = true;
+    }
+  });
+
+  if (toggle) toggle.textContent = isHidden ? '▶' : '▼';
 }
 
 async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
@@ -807,9 +884,6 @@ async function saveEdit(){
 }
 
  /* ────────────────────────────────────────────────────────────────────────
-   LIVE TIMER (Synchronized with Backend & Client Portal)
-   ──────────────────────────────────────────────────────────────────────── */
-  /* ────────────────────────────────────────────────────────────────────────
    LIVE TIMER (Synchronized with Backend & Client Portal)
    ──────────────────────────────────────────────────────────────────────── */
 let tiv = null;
@@ -854,9 +928,7 @@ function tSetUI(state){
   timerState = state;
   const el = id => document.getElementById(id);
   const disp = el('tdisp'), status = el('t-status');
-  ['t-start','t-pause','t-resume','t-stop'].forEach(id => el('t-'+id.replace('t-','')).style.display = 'none'); // safe selector fix below
   
-  // Reset explicit button visibility safely
   el('t-start').style.display = 'none';
   el('t-pause').style.display = 'none';
   el('t-resume').style.display = 'none';
@@ -865,7 +937,6 @@ function tSetUI(state){
   const sel = el('tc');
   const taskInput = el('tt');
   sel.disabled = (state !== 'idle');
-  // NOTE: taskInput is NOT disabled anymore so you can type or change descriptions anytime!
   taskInput.disabled = false; 
 
   if(state === 'idle'){
@@ -941,7 +1012,6 @@ async function timerStop(){
   const elapsedMs = wasRunning ? accumulatedMs + (Date.now() - startTimestamp) : accumulatedMs;
   const elapsedSec = Math.max(1, Math.round(elapsedMs / 1000));
   
-  // Ensure hours calculation preserves small test sessions (e.g., minimum 0.01h if > 0 seconds)
   let hours = parseFloat((elapsedSec / 3600).toFixed(4));
   if (hours <= 0 && elapsedSec > 0) hours = 0.01;
 
@@ -1089,8 +1159,6 @@ function toggleMinimize(){
   document.getElementById('float-timer-min-btn').textContent = collapsed ? '+' : '–';
   localStorage.setItem('qfa_timer_collapsed', collapsed ? '1' : '0');
 }
-
-  
 
 async function submitLog(e){
   e.preventDefault();
