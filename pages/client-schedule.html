@@ -307,28 +307,25 @@ async function checkFreelancerLiveStatus() {
   if (!dot || !text) return;
 
   try {
-    // Queries the agency freelancer active timer status
-    const res = await fetch(API + '/timer/status', { headers: auth.headers() });
+    // Check agency-wide freelancer status endpoint
+    const res = await fetch(API + '/agency/status', { headers: auth.headers() });
     if (res.ok) {
-      const timers = await res.json();
-      if (timers && timers.length > 0) {
-        const activeTimer = timers.find(t => !t.is_paused && !t.is_cancelled);
-        if (activeTimer) {
-          dot.style.background = '#f59e0b';
-          text.textContent = 'Currently in a session';
-          return;
-        }
+      const data = await res.json();
+      if (data && data.is_busy) {
+        dot.style.background = '#f59e0b';
+        text.textContent = 'Currently in a session';
+        return;
       }
     }
 
     dot.style.background = '#22c55e';
     text.textContent = 'Available';
   } catch (e) {
+    console.error('Error checking freelancer live availability:', e);
     dot.style.background = '#22c55e';
     text.textContent = 'Available';
   }
 }
-
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 function openSidebar() {
