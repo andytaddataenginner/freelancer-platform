@@ -72,25 +72,23 @@
     .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
 
-    .main-content { margin-left: 232px; flex: 1; padding: 1.6rem 2rem 2.5rem; position: relative; max-width: 1180px; }
+    .main-content { margin-left: 232px; flex: 1; padding: 1.2rem 1.8rem 2rem; position: relative; max-width: 1180px; }
 
-    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; flex-shrink:0; }
+    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.95rem; transition:all .2s; flex-shrink:0; }
     .theme-toggle:hover{ background:rgba(255,255,255,.22); }
 
-    .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius-lg); padding: 1.5rem 1.8rem; color: white; margin-bottom: 1.1rem; box-shadow: 0 6px 24px rgba(13,35,83,0.18); display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
-    .eyebrow{ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold-300); font-weight: 700; }
-    .hero h1{ margin: .3rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.7rem; font-weight: 700; line-height: 1.15; }
-    .hero-rule{ width:58px; height:0; border-top:2.5px solid var(--gold-500); position:relative; margin:.55rem 0 .6rem; }
-    .hero-rule::after{ content:''; position:absolute; top:4px; left:0; width:32px; border-top:1px solid var(--gold-500); opacity:.55; }
-    .hero-sub{ color: rgba(255,255,255,0.68); font-size: 0.85rem; max-width: 32em; }
-    .hero-actions{ display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; }
-    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.45rem; }
+    /* Compact Hero Styling */
+    .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius); padding: 0.85rem 1.2rem; color: white; margin-bottom: 0.9rem; box-shadow: 0 4px 16px rgba(13,35,83,0.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+    .eyebrow{ font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
+    .hero h1{ margin: 0.1rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.25rem; font-weight: 700; line-height: 1.15; }
+    .hero-actions{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
 
-    .ledger-strip{ display:flex; flex-wrap:wrap; background:var(--panel); border-radius:var(--radius-lg); box-shadow:var(--shadow); border:1px solid var(--line); overflow:hidden; margin-bottom:1.3rem; }
-    .lstat{ flex:1 1 20%; min-width:120px; padding:.85rem 1.1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:.28rem; }
+    .ledger-strip{ display:flex; flex-wrap:wrap; background:var(--panel); border-radius:var(--radius-lg); box-shadow:var(--shadow); border:1px solid var(--line); overflow:hidden; margin-bottom:1rem; }
+    .lstat{ flex:1 1 20%; min-width:120px; padding:.7rem 1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:.2rem; }
     .lstat:last-child{ border-right:none; }
-    .lstat-value{ font-size:1.28rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .lstat-label{ font-size:.63rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
+    .lstat-value{ font-size:1.15rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lstat-label{ font-size:.6rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
     @media (max-width: 860px){
       .ledger-strip{ border-bottom:none; }
       .lstat{ flex:1 1 50%; border-right:1px solid var(--line); }
@@ -98,16 +96,22 @@
       .lstat:last-child{ border-bottom:none; }
     }
 
-    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; margin-bottom:1.4rem; padding:1.3rem 1.4rem 1.5rem; }
-    .panel-heading{ font-size:.68rem; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:.9rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
+    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; margin-bottom:1.4rem; padding:1.1rem 1.2rem 1.3rem; }
+    .panel-heading{ font-size:.68rem; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:.7rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
 
-    .subcard{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem; margin-bottom:1.1rem; }
+    .subcard{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.75rem .9rem; margin-bottom:.9rem; }
     table{width:100%;border-collapse:collapse;font-size:.85rem}
     th{padding:.65rem .85rem;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
     td{padding:.75rem .85rem;border-bottom:1px solid var(--bg2);color:var(--ink-2);vertical-align:middle}
     tr:last-child td{border-bottom:none}
     tr:hover td{background:var(--table-hover)}
     .row-unpaid td{background:rgba(245,158,11,.06)}
+
+    /* Collapsible Group Rows Matrix Styling */
+    .group-row td { background: var(--bg2) !important; cursor: pointer; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--line); }
+    .group-row:hover td { background: var(--table-hover) !important; }
+    .group-toggle { display: inline-block; width: 18px; font-size: 0.8rem; text-align: center; margin-right: 0.35rem; transition: transform 0.2s; }
+    .child-row td { padding-left: 1.6rem; }
     
     .badge{display:inline-block;padding:.2rem .65rem;border-radius:100px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
     .bg-g{background:var(--gbg);color:var(--green)}
@@ -116,19 +120,19 @@
 
     .fg{display:flex;flex-direction:column;gap:.35rem}
     .fg label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
-    select{width:100%;padding:.6rem .8rem;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);font-family:var(--sans);font-size:.87rem;color:var(--ink);transition:border-color .2s}
+    select{width:100%;padding:.5rem .75rem;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);font-family:var(--sans);font-size:.85rem;color:var(--ink);transition:border-color .2s}
     select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
 
-    .tab-btn{padding:.45rem 1.1rem;border-radius:6px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.82rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+    .tab-btn{padding:.4rem .95rem;border-radius:6px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.8rem;font-weight:600;color:var(--ink-2);transition:all .15s}
     .tab-btn.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900)}
 
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%) !important; }
       .sidebar.is-open { transform: translateX(0) !important; }
       .sidebar-overlay.visible { display: block !important; }
-      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 74px !important; }
+      .main-content { margin-left: 0 !important; padding: 0.8rem !important; padding-top: 68px !important; }
       .mobile-header { display: flex !important; }
-      .hero h1{ font-size:1.4rem; }
+      .hero h1{ font-size:1.15rem; }
     }
   </style>
 </head>
@@ -176,12 +180,11 @@
 
   <main class="main-content">
 
+    <!-- Compact Hero Header -->
     <div class="hero">
       <div>
         <span class="eyebrow">Client Workspace</span>
-        <h1 id="page-main-title">My Work Logs</h1>
-        <div class="hero-rule"></div>
-        <p class="hero-sub" id="page-subtitle">Track project activity, monitor accumulated totals, and verify billing payment statuses.</p>
+        <h1 id="page-main-title">Work Logs</h1>
       </div>
       <div class="hero-actions">
         <span id="engagement-badge-container">
@@ -274,11 +277,13 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
+let clientName = '';
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   const u = auth.user();
   if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
-  document.getElementById('user-name').textContent = u ? u.name : '';
+  clientName = u ? u.name : '';
+  document.getElementById('user-name').textContent = clientName;
   if (u && u.company) document.getElementById('user-company').textContent = u.company;
 })();
 
@@ -303,6 +308,9 @@ async function loadLogs() {
     const contractStatus = clientStats.contractStatus || 'active';
     allLogs = logs || [];
 
+    // Dynamically set client name into page header
+    const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+
     if (isFixedClient) {
       if (contractStatus === 'paused') {
         badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
@@ -313,8 +321,7 @@ async function loadLogs() {
       }
 
       document.getElementById('sidebar-logs-link').textContent = '📋 My Milestones';
-      document.getElementById('page-main-title').textContent = 'My Project Milestones';
-      document.getElementById('page-subtitle').textContent = 'Track milestone phases, verify contract status, and review deliverables.';
+      document.getElementById('page-main-title').textContent = titlePrefix + 'Project Milestones';
       document.getElementById('table-title').textContent = 'All Milestone Deliverables';
 
       document.getElementById('table-header-row').innerHTML = `
@@ -328,6 +335,8 @@ async function loadLogs() {
       document.getElementById('stat-hours-col').style.display = 'none';
     } else {
       const rate = parseFloat(clientStats.hourlyRate || 0);
+      document.getElementById('page-main-title').textContent = titlePrefix + 'Work Logs';
+
       if (contractStatus === 'paused') {
         badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
       } else if (contractStatus === 'terminated') {
@@ -429,7 +438,7 @@ function applyFilters() {
   document.getElementById('s-entries').textContent = entryCount;
 
   const filteredByTab = currentTab === 'all' ? targetLogs : targetLogs.filter(l => l.payment_status === currentTab);
-  renderLogs(filteredByTab);
+  renderLogsMatrix(filteredByTab);
 }
 
 function switchTab(tab) {
@@ -446,7 +455,7 @@ function switchTab(tab) {
   applyFilters();
 }
 
-function renderLogs(logs) {
+function renderLogsMatrix(logs) {
   const tbody  = document.getElementById('logs-table');
   const footer = document.getElementById('table-footer');
   const isFiltered = !!document.getElementById('month-dropdown').value;
@@ -503,46 +512,107 @@ function renderLogs(logs) {
     return;
   }
 
+  // Group logs into collapsible monthly parent sections
+  const grouped = {};
+  logs.forEach(l => {
+    const dStr = l.date || l.createdAt || '';
+    const key = dStr.length >= 7 ? dStr.slice(0, 7) : 'Other';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(l);
+  });
+
+  const sortedKeys = Object.keys(grouped).sort().reverse();
+  let matrixHtml = '';
   let sumHours = 0, sumAmount = 0;
-  tbody.innerHTML = logs.map(l => {
-    const isPaid  = l.payment_status === 'paid';
-    const amount  = parseFloat(l.amount || 0);
-    const hrs     = parseFloat(l.hours || 0);
-    sumHours  += hrs;
-    sumAmount += amount;
 
-    const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
-    const dateStr = l.date || l.createdAt;
-    const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString() : '—';
-    const desc = l.task_description || l.title || l.description || 'Milestone deliverable item';
-    const rowClass = !isPaid ? 'row-unpaid' : '';
+  sortedKeys.forEach((monthKey, idx) => {
+    const monthLogs = grouped[monthKey];
+    let grpHours = 0, grpAmount = 0;
 
-    if (isFixedClient) {
-      return `
-        <tr class="${rowClass}">
-          <td>${formattedDate}</td>
-          <td><strong>${l.title || 'Milestone Phase'}</strong></td>
-          <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
-          <td>${badge}</td>
-          <td>${desc}</td>
-        </tr>`;
-    } else {
-      return `
-        <tr class="${rowClass}">
-          <td>${formattedDate}</td>
-          <td class="mono"><strong>${hrs}h</strong></td>
-          <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
-          <td>${badge}</td>
-          <td>${desc}</td>
-        </tr>`;
+    monthLogs.forEach(l => {
+      grpHours += parseFloat(l.hours || 0);
+      grpAmount += parseFloat(l.amount || 0);
+    });
+
+    sumHours += grpHours;
+    sumAmount += grpAmount;
+
+    let groupLabel = monthKey;
+    if (monthKey !== 'Other') {
+      const dObj = new Date(monthKey + '-02');
+      groupLabel = dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
     }
-  }).join('');
+
+    const groupId = 'm-grp-' + idx;
+    const hoursSummary = !isFixedClient ? ` &nbsp;·&nbsp; ${grpHours.toFixed(1)}h` : '';
+
+    // Parent Matrix Header Row
+    matrixHtml += `
+      <tr class="group-row" onclick="toggleGroup('${groupId}')">
+        <td colspan="5">
+          <span class="group-toggle" id="${groupId}-toggle">▼</span>
+          📅 ${groupLabel} &nbsp;<span style="font-size:0.78rem;font-weight:normal;color:var(--ink-3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'}${hoursSummary} &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
+        </td>
+      </tr>`;
+
+    // Child Rows
+    monthLogs.forEach(l => {
+      const isPaid  = l.payment_status === 'paid';
+      const amount  = parseFloat(l.amount || 0);
+      const hrs     = parseFloat(l.hours || 0);
+      const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
+      const dateStr = l.date || l.createdAt;
+      const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString() : '—';
+      const desc = l.task_description || l.title || l.description || 'Milestone deliverable item';
+      const rowClass = !isPaid ? 'row-unpaid' : '';
+
+      if (isFixedClient) {
+        matrixHtml += `
+          <tr class="${groupId} child-row ${rowClass}">
+            <td>${formattedDate}</td>
+            <td><strong>${l.title || 'Milestone Phase'}</strong></td>
+            <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
+            <td>${badge}</td>
+            <td>${desc}</td>
+          </tr>`;
+      } else {
+        matrixHtml += `
+          <tr class="${groupId} child-row ${rowClass}">
+            <td>${formattedDate}</td>
+            <td class="mono"><strong>${hrs}h</strong></td>
+            <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
+            <td>${badge}</td>
+            <td>${desc}</td>
+          </tr>`;
+      }
+    });
+  });
+
+  tbody.innerHTML = matrixHtml;
 
   if (isFixedClient) {
     footer.innerHTML = `Showing <strong>${logs.length}</strong> milestones &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong> total value`;
   } else {
     footer.innerHTML = `Showing <strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> total &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong> total`;
   }
+}
+
+function toggleGroup(groupId) {
+  const rows = document.querySelectorAll('.' + groupId);
+  const toggle = document.getElementById(groupId + '-toggle');
+  let isHidden = false;
+
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = '';
+      isHidden = false;
+    } else {
+      r.style.display = 'none';
+      isHidden = true;
+    }
+  });
+
+  if (toggle) toggle.textContent = isHidden ? '▶' : '▼';
 }
 
 function openSidebar() {
