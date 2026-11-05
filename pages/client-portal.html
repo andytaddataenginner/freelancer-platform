@@ -183,28 +183,6 @@
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-<!-- Floating Minimizable Live Tracker Widget -->
-<!-- Floating Minimizable Availability & Live Tracker Widget -->
-<div id="live-tracker-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 999; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(13,35,83,0.18); width: 280px; overflow: hidden; font-family: var(--sans);">
-  <!-- Widget Header -->
-  <div id="widget-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.65rem 0.9rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleTrackerWidget()">
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <span id="widget-dot" style="position: relative; display: flex; width: 8px; height: 8px;">
-        <span style="position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: white;"></span>
-      </span>
-      <strong id="widget-title" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Freelancer Available</strong>
-    </div>
-    <button id="widget-toggle-btn" style="background: none; border: none; color: white; font-size: 0.85rem; cursor: pointer; padding: 0 0.2rem;">−</button>
-  </div>
-  
-  <!-- Widget Body Content -->
-  <div id="widget-body" style="padding: 0.85rem; font-size: 0.82rem; color: var(--ink);">
-    <div id="widget-status-text" style="font-weight: 600; color: var(--ink); margin-bottom: 0.2rem;">Ready for new tasks</div>
-    <div id="widget-session-desc" style="color: var(--ink-2); font-size: 0.76rem; margin-bottom: 0.7rem; line-height: 1.3;">Online and accepting bookings.</div>
-    <a href="client-schedule.html" style="display: block; text-align: center; background: var(--bg2); color: var(--ink); padding: 0.4rem; border-radius: 6px; font-weight: 600; font-size: 0.75rem; text-decoration: none; transition: background 0.15s;">Book a Session →</a>
-  </div>
-</div>
-
 <div class="dashboard">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -234,6 +212,15 @@
   </aside>
 
   <main class="main-content">
+
+    <!-- Top Minimizable Freelancer Availability Bar -->
+    <div id="top-availability-bar" style="background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0.6rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); font-family: var(--sans);">
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <span id="top-bar-dot" style="width: 9px; height: 9px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+        <span id="top-bar-text" style="font-size: 0.82rem; font-weight: 600; color: var(--ink);">Checking freelancer availability…</span>
+      </div>
+      <button onclick="toggleTopBar()" id="top-bar-toggle-btn" style="background: none; border: none; font-size: 0.75rem; color: var(--ink-3); cursor: pointer; font-weight: 600;">Minimize ▲</button>
+    </div>
 
     <!-- Compact Hero Header -->
     <div class="hero">
@@ -546,74 +533,55 @@ async function clientChangePassword(e) {
   }
 }
 
-// Toggle minimizable floating window state
-function toggleTrackerWidget() {
-  const body = document.getElementById('widget-body');
-  const btn = document.getElementById('widget-toggle-btn');
-  if (body.style.display === 'none') {
-    body.style.display = 'block';
-    btn.textContent = '−';
+// Top availability bar minimization toggle
+function toggleTopBar() {
+  const textEl = document.getElementById('top-bar-text');
+  const dotEl = document.getElementById('top-bar-dot');
+  const btn = document.getElementById('top-bar-toggle-btn');
+  if (textEl.style.display === 'none') {
+    textEl.style.display = 'inline';
+    dotEl.style.display = 'inline-block';
+    btn.textContent = 'Minimize ▲';
   } else {
-    body.style.display = 'none';
-    btn.textContent = '+';
+    textEl.style.display = 'none';
+    dotEl.style.display = 'none';
+    btn.textContent = 'Expand ▼';
   }
 }
 
-// Check freelancer live agency status on client portal login & poll periodically
-// Check freelancer live agency status and auto-sync UI seamlessly
-// Check freelancer live agency status and auto-sync UI seamlessly
-async function checkFreelancerAgencyStatus() {
-  const widget = document.getElementById('live-tracker-widget');
-  const header = document.getElementById('widget-header');
-  const title = document.getElementById('widget-title');
-  const dot = document.getElementById('widget-dot');
-  const statusText = document.getElementById('widget-status-text');
-  const descEl = document.getElementById('widget-session-desc');
-  if (!widget) return;
-  
+// Poll agency status automatically for top bar
+async function updateTopAvailabilityBar() {
+  const textEl = document.getElementById('top-bar-text');
+  const dotEl = document.getElementById('top-bar-dot');
+  if (!textEl) return;
+
   try {
     const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
     if (res.ok) {
       const data = await res.json();
-      
       if (data && data.is_busy) {
-        // STATE 1: In Session (Orange Header with Pulsing Dot)
-        widget.style.display = 'block'; // Ensure floating widget is visible
-        header.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-        title.textContent = 'Live Session Active';
-        statusText.textContent = 'Freelancer is working';
-        dot.innerHTML = `<span style="position: absolute; inset: 0; border-radius: 50%; background: white; opacity: 0.75; animation: ping 1s infinite;"></span><span style="position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: white;"></span>`;
-        
+        dotEl.style.background = '#f59e0b'; // Busy/Working
         if (data.active_session && data.active_session.description) {
-          descEl.textContent = `Task: ${data.active_session.description}`;
+          textEl.textContent = `🔴 Freelancer is currently active in a session: "${data.active_session.description}"`;
         } else {
-          descEl.textContent = 'Active working session in progress.';
+          textEl.textContent = '🔴 Freelancer is currently busy in a live session.';
         }
       } else {
-        // STATE 2: Available / Free (Green Header) — Or hide floating widget if you only want it to pop up when busy!
-        // If you want it to show "Available" always, leave widget.style.display = 'block'. 
-        // If you only want it to pop up when working, change this to widget.style.display = 'none'.
-        widget.style.display = 'block'; 
-        header.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-        title.textContent = 'Freelancer Available';
-        statusText.textContent = 'Ready for new tasks';
-        dot.innerHTML = `<span style="position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: white;"></span>`;
-        descEl.textContent = 'Online and ready for booking.';
+        dotEl.style.background = '#10b981'; // Available/Free
+        textEl.textContent = '🟢 Freelancer is available and ready for new tasks & bookings.';
       }
     }
   } catch (e) {
-    console.error('Error auto-syncin freelancer status:', e);
+    console.error('Failed to update availability bar', e);
   }
 }
-// Poll automatically every 5 seconds to sync state without refreshing
-setInterval(checkFreelancerAgencyStatus, 5000);
 
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
 
-    // Trigger live availability check on login / portal load & set recurring interval check every 30 seconds
-    checkFreelancerAgencyStatus();
-    setInterval(checkFreelancerAgencyStatus, 30000);
+    // Trigger status bar update on load & poll every 10 seconds automatically
+    updateTopAvailabilityBar();
+    setInterval(updateTopAvailabilityBar, 10000);
 
     try {
         const [stats, logs, bookings] = await Promise.all([
