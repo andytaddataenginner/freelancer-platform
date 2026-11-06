@@ -576,7 +576,22 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 function go(p){window.location.href=p;}
-function logout(){auth.clear();go('login.html');}
+async function logout() {
+  try {
+    // Call backend endpoint to set is_online = FALSE in the database
+    await fetch(API + '/auth/logout', { 
+      method: 'POST', 
+      headers: auth.hdrs() 
+    });
+  } catch (e) {
+    console.error('Logout network notification failed:', e);
+  } finally {
+    // Clear local storage and redirect to login
+    auth.clear();
+    go('login.html');
+  }
+}
+  
 function show(id){document.getElementById(id).classList.add('on');}
 function hide(id){document.getElementById(id).classList.remove('on');}
 function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
