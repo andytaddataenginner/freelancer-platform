@@ -231,16 +231,16 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
-// GET /api/timer/agency/status
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // 1. Check if there is an active running timer
+    // 1. Check if there is an active running timer for this freelancer-client relationship
     const timerRes = await pool.query(
       `SELECT t.*, u.name AS freelancer_name 
        FROM active_timers t
        JOIN users u ON u.id = t.freelancer_id
-       WHERE t.is_running = TRUE AND t.is_paused = FALSE 
-       LIMIT 1`
+       WHERE t.client_id = $1 AND t.is_running = TRUE AND t.is_paused = FALSE 
+       LIMIT 1`,
+      [req.user.id]
     );
 
     if (timerRes.rows.length > 0) {
@@ -252,17 +252,27 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       });
     }
 
-    // 2. Check if the freelancer is online
+    // 2. Dynamically find the exact freelancer assigned to this logged-in client
     const freelancerRes = await pool.query(
-      `SELECT id, name, is_online 
-       FROM users 
-       WHERE role = 'freelancer' 
-       ORDER BY id DESC 
-       LIMIT 1`
+      `SELECT u.id, u.name, u.is_online 
+       FROM clients c
+       JOIN users u ON u.id = c.freelancer_id
+       WHERE c.user_id = $1
+       LIMIT 1`,
+      [req.user.id]
     );
 
-    const freelancer = freelancerRes.rows[0];
-    const isOnline = freelancer ? freelancer.is_online : false;
+    // Fallback if the user is a freelancer testing or if no client link exists yet
+    let isOnline = false;
+    if (freelancerRes.rows.length > 0) {
+      isOnline = freelancerRes.rows[0].is_online;
+    } else {
+      // Fallback: check if any freelancer is online if accessed directly
+      const fallbackRes = await pool.query(
+        `SELECT is_online FROM users WHERE role = 'freelancer' AND is_online = TRUE LIMIT 1`
+      );
+      isOnline = fallbackRes.rows.length > 0;
+    }
 
     if (isOnline) {
       return res.json({
