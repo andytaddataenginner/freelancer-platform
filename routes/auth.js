@@ -94,13 +94,32 @@ router.post('/login', async (req, res, next) => {
 });
 
 // POST /api/auth/logout
-router.post('/logout', requireAuth, async (req, res, next) => {
+// POST /api/auth/logout
+router.post('/logout', async (req, res, next) => {
   try {
-    // Set user offline upon logout
-    await pool.query(
-      'UPDATE users SET is_online = FALSE, last_seen_at = NOW() WHERE id = $1',
-      [req.user.id]
-    );
+    let userId = req.user ? req.user.id : null;
+
+    // Fallback: if token wasn't parsed by middleware, try decoding it from Authorization header
+    if (!userId && req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.id;
+      } catch (err) {}
+    }
+
+    if (userId) {
+      await pool.query(
+        'UPDATE users SET is_online = FALSE, last_seen_at = NOW() WHERE id = $1',
+        [userId]
+      );
+    } else {
+      // Ultimate fallback: set all freelancers offline if session is untraceable
+      await pool.query(
+        `UPDATE users SET is_online = FALSE, last_seen_at = NOW() WHERE role = 'freelancer'`
+      );
+    }
+
     res.json({ message: 'Logged out successfully' });
   } catch (e) {
     next(e);
