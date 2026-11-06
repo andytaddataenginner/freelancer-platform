@@ -38,8 +38,8 @@ async function handleSignup(req, res, next) {
     const userRole = role || 'freelancer';
 
     const { rows: newRows } = await pool.query(
-      `INSERT INTO users (name, email, phone, password_hash, role, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      `INSERT INTO users (name, email, phone, password_hash, role, is_online, last_seen_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, TRUE, NOW(), NOW(), NOW())
        RETURNING id, name, email, role, company`,
       [name, cleanEmail, phone || null, password_hash, userRole]
     );
@@ -77,7 +77,12 @@ router.post('/login', async (req, res, next) => {
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
     const { token, sessionId } = issueToken(user);
-    await pool.query('UPDATE users SET session_id = $1 WHERE id = $2', [sessionId, user.id]);
+    
+    // Set user online upon successful login
+    await pool.query(
+      'UPDATE users SET session_id = $1, is_online = TRUE, last_seen_at = NOW() WHERE id = $2', 
+      [sessionId, user.id]
+    );
 
     res.json({
       token,
@@ -85,6 +90,20 @@ router.post('/login', async (req, res, next) => {
     });
   } catch (e) { 
     next(e); 
+  }
+});
+
+// POST /api/auth/logout
+router.post('/logout', requireAuth, async (req, res, next) => {
+  try {
+    // Set user offline upon logout
+    await pool.query(
+      'UPDATE users SET is_online = FALSE, last_seen_at = NOW() WHERE id = $1',
+      [req.user.id]
+    );
+    res.json({ message: 'Logged out successfully' });
+  } catch (e) {
+    next(e);
   }
 });
 
