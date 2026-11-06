@@ -239,7 +239,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       `SELECT t.*, u.name AS freelancer_name 
        FROM active_timers t
        JOIN users u ON u.id = t.freelancer_id
-       WHERE t.is_running = TRUE 
+       WHERE t.is_running = TRUE AND t.is_paused = FALSE 
        LIMIT 1`
     );
 
@@ -252,16 +252,17 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       });
     }
 
-    // 2. Check if the freelancer is logged in (using is_online flag or heartbeat within last 15 min)
+    // 2. Check if the freelancer is online
     const freelancerRes = await pool.query(
-      `SELECT id, name, is_online, last_seen_at 
+      `SELECT id, name, is_online 
        FROM users 
        WHERE role = 'freelancer' 
+       ORDER BY id DESC 
        LIMIT 1`
     );
 
     const freelancer = freelancerRes.rows[0];
-    const isOnline = freelancer && freelancer.is_online;
+    const isOnline = freelancer ? freelancer.is_online : false;
 
     if (isOnline) {
       return res.json({
