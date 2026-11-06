@@ -559,16 +559,19 @@ async function updateTopAvailabilityBar() {
     const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
     if (res.ok) {
       const data = await res.json();
-      if (data && data.is_busy) {
-        dotEl.style.background = '#f59e0b'; // Busy/Working
+      if (data.status === 'busy') {
+        dotEl.style.background = '#f59e0b'; // Orange/Busy
         if (data.active_session && data.active_session.description) {
           textEl.textContent = `🔴 Freelancer is currently active in a session: "${data.active_session.description}"`;
         } else {
           textEl.textContent = '🔴 Freelancer is currently busy in a live session.';
         }
+      } else if (data.status === 'available') {
+        dotEl.style.background = '#10b981'; // Green/Available
+        textEl.textContent = '🟢 Freelancer is online, available, and ready for new tasks & bookings.';
       } else {
-        dotEl.style.background = '#10b981'; // Available/Free
-        textEl.textContent = '🟢 Freelancer is available and ready for new tasks & bookings.';
+        dotEl.style.background = '#9ca3af'; // Gray/Offline
+        textEl.textContent = '⚪ Freelancer is currently offline / away. You can still leave a booking request!';
       }
     }
   } catch (e) {
