@@ -563,7 +563,9 @@ async function updateTopAvailabilityBar() {
       // Check the explicit status returned by the backend route
       if (data.status === 'busy') {
         dotEl.style.background = '#f59e0b'; // Orange/Busy
-        if (data.active_session && data.active_session.description) {
+        if (data.is_paused) {
+          textEl.textContent = '⏸ Freelancer is currently on a brief break / paused.';
+        } else if (data.active_session && data.active_session.description) {
           textEl.textContent = `🔴 Freelancer is currently active in a session: "${data.active_session.description}"`;
         } else {
           textEl.textContent = '🔴 Freelancer is currently busy in a live session.';
@@ -580,7 +582,6 @@ async function updateTopAvailabilityBar() {
     console.error('Failed to update availability bar', e);
   }
 }
-
 async function loadPortal() {
     const badgeContainer = document.getElementById('engagement-badge-container');
 
