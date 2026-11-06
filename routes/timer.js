@@ -231,28 +231,34 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
+// ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // 1. Check if there is an active running timer for this freelancer-client relationship
+    // 1. Check if there is an active timer (running OR paused) for this client relationship
     const timerRes = await pool.query(
       `SELECT t.*, u.name AS freelancer_name 
        FROM active_timers t
        JOIN users u ON u.id = t.freelancer_id
-       WHERE t.client_id = $1 AND t.is_running = TRUE AND t.is_paused = FALSE 
+       WHERE t.client_id = $1 AND t.is_running = TRUE 
        LIMIT 1`,
       [req.user.id]
     );
 
     if (timerRes.rows.length > 0) {
+      const activeTimer = timerRes.rows[0];
+      
+      // Optional: you can distinguish between running and paused if you want, 
+      // but both will correctly show as busy/not available!
       return res.json({
         status: 'busy',
         is_available: false,
         is_busy: true,
-        active_session: timerRes.rows[0]
+        is_paused: activeTimer.is_paused,
+        active_session: activeTimer
       });
     }
 
-    // 2. Dynamically find the exact freelancer assigned to this logged-in client
+    // 2. If no timer exists at all, check if the freelancer is logged in (Available vs Offline)
     const freelancerRes = await pool.query(
       `SELECT u.id, u.name, u.is_online 
        FROM clients c
@@ -262,12 +268,10 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       [req.user.id]
     );
 
-    // Fallback if the user is a freelancer testing or if no client link exists yet
     let isOnline = false;
     if (freelancerRes.rows.length > 0) {
       isOnline = freelancerRes.rows[0].is_online;
     } else {
-      // Fallback: check if any freelancer is online if accessed directly
       const fallbackRes = await pool.query(
         `SELECT is_online FROM users WHERE role = 'freelancer' AND is_online = TRUE LIMIT 1`
       );
