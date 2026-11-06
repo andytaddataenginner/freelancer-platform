@@ -231,10 +231,10 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
-// ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    const { rows } = await pool.query(
+    // 1. Check if there is an active running timer
+    const timerRes = await pool.query(
       `SELECT t.*, u.name AS freelancer_name 
        FROM active_timers t
        JOIN users u ON u.id = t.freelancer_id
@@ -242,15 +242,35 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
        LIMIT 1`
     );
     
-    if (rows.length > 0) {
-      res.json({
+    if (timerRes.rows.length > 0) {
+      return res.json({
+        status: 'busy',
         is_available: false,
         is_busy: true,
-        active_session: rows[0]
+        active_session: timerRes.rows[0]
+      });
+    }
+
+    // 2. Check if the freelancer is online (using your users table 'is_online' or recent activity)
+    // Assuming your users table has an 'is_online' boolean column or similar indicator:
+    const freelancerRes = await pool.query(
+      `SELECT id, name, is_online FROM users WHERE role = 'freelancer' LIMIT 1`
+    );
+
+    const freelancer = freelancerRes.rows[0];
+    const isOnline = freelancer ? freelancer.is_online : false;
+
+    if (isOnline) {
+      res.json({
+        status: 'available',
+        is_available: true,
+        is_busy: false,
+        active_session: null
       });
     } else {
       res.json({
-        is_available: true,
+        status: 'offline',
+        is_available: false,
         is_busy: false,
         active_session: null
       });
