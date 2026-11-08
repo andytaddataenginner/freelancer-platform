@@ -307,26 +307,31 @@ async function checkFreelancerLiveStatus() {
   if (!dot || !text) return;
 
   try {
-    // Correctly prefixed with /api/timer
     const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
     if (res.ok) {
       const data = await res.json();
-      if (data && data.is_busy) {
-        dot.style.background = '#f59e0b';
-        text.textContent = 'Currently in a session';
-        return;
+      
+      if (data.status === 'busy') {
+        dot.style.background = '#f59e0b'; // Orange
+        if (data.is_paused) {
+          text.textContent = 'On a brief break';
+        } else {
+          text.textContent = 'Currently in a session';
+        }
+      } else if (data.status === 'available') {
+        dot.style.background = '#22c55e'; // Green
+        text.textContent = 'Available';
+      } else {
+        dot.style.background = '#9ca3af'; // Gray
+        text.textContent = 'Offline';
       }
     }
-
-    dot.style.background = '#22c55e';
-    text.textContent = 'Available';
   } catch (e) {
     console.error('Error checking freelancer live availability:', e);
-    dot.style.background = '#22c55e';
-    text.textContent = 'Available';
+    dot.style.background = '#9ca3af';
+    text.textContent = 'Offline';
   }
 }
-
   
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
