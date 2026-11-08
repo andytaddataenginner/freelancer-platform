@@ -121,26 +121,69 @@
     .btn-ghost{background:transparent;border:1.5px solid var(--hairline-strong);color:var(--ink2)}
     .btn-ghost:hover{border-color:var(--navy);color:var(--ink)}
 
+    /* ── TOOLBAR ── */
+    .notes-toolbar {
+      display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+      padding: 1rem 1.4rem; border-bottom: 1px solid var(--hairline);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 320px; }
+    .search-wrap input {
+      width: 100%; padding: .55rem .9rem .55rem 2.2rem;
+      border: 1.5px solid var(--hairline-strong); border-radius: 8px;
+      background: var(--bg); font-family: var(--sans); font-size: .85rem; color: var(--ink);
+    }
+    .search-wrap input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
+    .search-wrap::before {
+      content: '🔍'; position: absolute; left: .6rem; top: 50%;
+      transform: translateY(-50%); font-size: .8rem; pointer-events: none;
+    }
+    .notes-count { font-size: .78rem; color: var(--ink3); margin-left: auto; white-space: nowrap; }
+
     /* Category tabs */
-    .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.2rem; }
+    .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; padding: .9rem 1.4rem; border-bottom: 1px solid var(--hairline); }
     .cat-tab {
-      padding: 6px 14px; border-radius: 20px; font-size: .8rem; cursor: pointer;
+      padding: 5px 14px; border-radius: 20px; font-size: .78rem; cursor: pointer;
       border: 1.5px solid var(--hairline-strong); background: var(--bg2); color: var(--ink2);
       font-weight: 600; transition: all .15s;
     }
     .cat-tab.active, .cat-tab:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
 
-    /* Note card styling */
-    .notes-grid { display: grid; gap: 1rem; }
-    .note-card {
-      background: var(--bg); border: 1.5px solid var(--hairline);
-      border-radius: 12px; padding: 1.1rem 1.3rem; position: relative;
-      transition: border-color .2s;
+    /* ── CLIENT GROUP ── */
+    .client-group { margin-bottom: 2rem; }
+    .client-group-header {
+      display: flex; align-items: center; gap: .7rem;
+      margin-bottom: .9rem; padding-bottom: .5rem;
+      border-bottom: 2px solid var(--hairline);
     }
-    .note-card.pinned { border-color: var(--gold); background: rgba(201,149,42,0.04); }
-    .note-card .nc-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: .6rem; }
+    .client-group-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--navy), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: .85rem;
+    }
+    .client-group-name { font-weight: 700; font-size: .95rem; color: var(--ink); }
+    .client-group-meta { font-size: .75rem; color: var(--ink3); margin-left: auto; }
+
+    /* ── NOTE CARDS GRID ── */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .note-card {
+      background: var(--card-bg); border: 1.5px solid var(--hairline);
+      border-radius: 14px; padding: 1.1rem 1.3rem; position: relative;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+      display: flex; flex-direction: column;
+    }
+    .note-card:hover { box-shadow: var(--sh-md); transform: translateY(-1px); }
+    .note-card.pinned {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, rgba(201,149,42,0.04), var(--card-bg));
+    }
+    .note-card .nc-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: .55rem; }
     .note-card .nc-badge {
-      font-size: .65rem; padding: 3px 8px; border-radius: 12px; font-weight: 700;
+      font-size: .62rem; padding: 3px 8px; border-radius: 12px; font-weight: 700;
       text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; flex-shrink: 0;
     }
     .badge-basic        { background: #dbeafe; color: #1e40af; }
@@ -149,12 +192,32 @@
     .badge-tip          { background: var(--abg); color: var(--amber); }
     .badge-general      { background: var(--bg2); color: var(--ink3); }
 
-    .note-card .nc-title { font-weight: 700; font-size: .95rem; color: var(--ink); flex: 1; }
-    .note-card .nc-content { color: var(--ink2); font-size: .85rem; line-height: 1.55; white-space: pre-wrap; }
-    .note-card .nc-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
-    
-    .btn-icon { background: var(--card-bg); border: 1.5px solid var(--hairline-strong); color: var(--ink2);
-                border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: .78rem; font-weight: 600;
+    .note-card .nc-title { font-weight: 700; font-size: .9rem; color: var(--ink); flex: 1; line-height: 1.4; }
+    .note-card .nc-pin-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--gold);
+      flex-shrink: 0; margin-top: 5px;
+    }
+
+    /* collapsible content */
+    .nc-body { flex: 1; }
+    .nc-content-wrap { position: relative; }
+    .nc-content {
+      color: var(--ink2); font-size: .82rem; line-height: 1.6; white-space: pre-wrap;
+      overflow: hidden; max-height: 4.8em; /* ~3 lines */
+      transition: max-height .3s ease;
+    }
+    .nc-content.expanded { max-height: 600px; }
+    .nc-read-more {
+      background: none; border: none; cursor: pointer; padding: 0;
+      font-size: .78rem; font-weight: 600; color: var(--accent);
+      margin-top: 4px; display: none;
+    }
+    .nc-read-more:hover { text-decoration: underline; }
+
+    .note-card .nc-actions { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--hairline); }
+
+    .btn-icon { background: var(--bg); border: 1.5px solid var(--hairline-strong); color: var(--ink2);
+                border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: .75rem; font-weight: 600;
                 transition: all .15s; }
     .btn-icon:hover { background: var(--bg2); color: var(--ink); }
     .btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: var(--rbg); }
@@ -194,6 +257,7 @@
       .main{margin-left:0;padding-top:52px!important}
       .mob-bar{display:flex}
       .form-row{grid-template-columns:1fr}
+      .notes-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -253,40 +317,50 @@
   </div>
 
   <div class="content">
-    <div class="card">
-      <div class="ch">
-        <h3>Select Client &amp; Guidelines</h3>
-      </div>
-      <div class="cb">
-        <!-- Client selector -->
-        <div class="fg" style="max-width:320px; margin-bottom:1.4rem;">
-          <label>Client</label>
-          <select id="clientSelect">
-            <option value="">— Select a client —</option>
+    <div class="card" style="padding:0; overflow:hidden;">
+
+      <!-- ── TOOLBAR ── -->
+      <div class="notes-toolbar">
+        <!-- Search -->
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="Search notes…" oninput="renderAllNotes()" />
+        </div>
+        <!-- Client filter -->
+        <div class="fg" style="margin:0; min-width:180px; max-width:240px;">
+          <select id="clientSelect" onchange="renderAllNotes()">
+            <option value="">All Clients</option>
           </select>
         </div>
+        <!-- Add note button -->
+        <button class="btn btn-primary" id="addBtn" style="display:none; white-space:nowrap" onclick="toggleAdd()">+ Add Note</button>
+        <!-- count -->
+        <span class="notes-count" id="notesCount"></span>
+      </div>
 
-        <!-- Category filter tabs -->
-        <div class="cat-tabs" id="catTabs">
-          <div class="cat-tab active" data-cat="all">All</div>
-          <div class="cat-tab" data-cat="mandatory">Mandatory</div>
-          <div class="cat-tab" data-cat="basic">Basic</div>
-          <div class="cat-tab" data-cat="business_rule">Business Rules</div>
-          <div class="cat-tab" data-cat="tip">Tips</div>
-          <div class="cat-tab" data-cat="general">General</div>
-        </div>
+      <!-- ── CATEGORY TABS ── -->
+      <div class="cat-tabs" id="catTabs">
+        <div class="cat-tab active" data-cat="all">All</div>
+        <div class="cat-tab" data-cat="mandatory">Mandatory</div>
+        <div class="cat-tab" data-cat="basic">Basic</div>
+        <div class="cat-tab" data-cat="business_rule">Business Rules</div>
+        <div class="cat-tab" data-cat="tip">Tips</div>
+        <div class="cat-tab" data-cat="general">General</div>
+      </div>
 
-        <!-- Notes list -->
-        <div id="notesList" class="notes-grid">
-          <div class="empty">Select a client to view notes.</div>
-        </div>
+      <!-- ── NOTES BOARD ── -->
+      <div style="padding:1.4rem;">
+        <div id="notesList"></div>
 
         <!-- Add note form -->
-        <div id="addCard" class="card" style="margin-top:1.5rem; display:none; background:var(--bg);">
+        <div id="addCard" class="card" style="margin-top:1.2rem; display:none; background:var(--bg);">
           <div class="ch"><h3>New Note / Guideline</h3></div>
           <div class="cb">
             <div class="form-row">
-              <div class="fg" style="margin:0"><label>Title</label><input type="text" id="noteTitle" placeholder="e.g., Coding Standards" /></div>
+              <div class="fg" style="margin:0"><label>Client</label>
+                <select id="noteClient">
+                  <option value="">— Select client —</option>
+                </select>
+              </div>
               <div class="fg" style="margin:0"><label>Category</label>
                 <select id="noteCat">
                   <option value="general">General</option>
@@ -297,7 +371,10 @@
                 </select>
               </div>
             </div>
-            <div class="form-row single" style="margin-top:1rem;">
+            <div class="form-row">
+              <div class="fg" style="margin:0"><label>Title</label><input type="text" id="noteTitle" placeholder="e.g., Coding Standards" /></div>
+            </div>
+            <div class="form-row single" style="margin-top:0;">
               <div class="fg" style="margin:0"><label>Content</label><textarea id="noteContent" placeholder="Note content…"></textarea></div>
             </div>
             <div class="row-actions">
@@ -306,9 +383,8 @@
             </div>
           </div>
         </div>
-
-        <button class="btn btn-primary" id="addBtn" style="margin-top:1.2rem; display:none" onclick="toggleAdd()">+ Add Note</button>
       </div>
+
     </div>
   </div>
 </div>
@@ -346,216 +422,295 @@ const API = document.querySelector('meta[name="api-base"]').content;
 const token = () => localStorage.getItem('token');
 const hdr   = () => ({ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` });
 
-// ── Theme Management ───────────────────────────────────────────────────────
+// ── Theme ─────────────────────────────────────────────────────────────────
 function initTheme() {
-  const savedTheme = localStorage.getItem('qfa_theme') || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  updateThemeButton(savedTheme);
+  const t = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  updateThemeButton(t);
 }
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('qfa_theme', next);
   updateThemeButton(next);
 }
-function updateThemeButton(theme) {
+function updateThemeButton(t) {
   const btn = document.getElementById('theme-btn');
-  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
 }
 initTheme();
 
-// ── Sidebar & Auth ─────────────────────────────────────────────────────────
+// ── Auth / Sidebar ────────────────────────────────────────────────────────
 if (!token()) location.href = '../index.html';
-try {
-  const u = JSON.parse(localStorage.getItem('user'));
-  if (u && u.name) document.getElementById('uname').textContent = u.name;
-} catch(e){}
-
+try { const u = JSON.parse(localStorage.getItem('user')); if (u?.name) document.getElementById('uname').textContent = u.name; } catch(e){}
 function logout() { localStorage.clear(); location.href = '../index.html'; }
 function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
 function sbClose(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
-function toggleSubmenu(e,groupId){
-  e.preventDefault();
-  const g=document.getElementById(groupId);
-  if(!g)return;
-  g.classList.toggle('open');
+function toggleSubmenu(e,gId){e.preventDefault();document.getElementById(gId)?.classList.toggle('open');}
+
+// ── State ─────────────────────────────────────────────────────────────────
+let clientsMap   = {};  // userId → { name, company }
+let notesByClient = {}; // clientId → notes[]
+let activeCat    = 'all';
+let editingNote  = null; // { id, clientId }
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-let currentClientId = null;
-let allNotes        = [];
-let activeCat       = 'all';
-let editingNoteId   = null;
-
 function toast(msg, dur=2500) {
   const el = document.getElementById('toast');
   el.textContent = msg; el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), dur);
 }
 
-async function loadClients() {
+// ── Load all clients, then all their notes in parallel ────────────────────
+async function init() {
+  document.getElementById('notesList').innerHTML = '<div class="loader">Loading notes…</div>';
   try {
     const r = await fetch(`${API}/api/clients`, { headers: hdr() });
     const clients = await r.json();
-    const sel = document.getElementById('clientSelect');
+
+    // Build clientsMap and populate both dropdowns
+    const selFilter = document.getElementById('clientSelect');
+    const selAdd    = document.getElementById('noteClient');
     clients.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.user_id || c.id;
-      opt.textContent = c.name + (c.company ? ` (${c.company})` : '');
-      sel.appendChild(opt);
+      const id   = String(c.user_id || c.id);
+      const label = c.name + (c.company ? ` (${c.company})` : '');
+      clientsMap[id] = { name: c.name, company: c.company || '' };
+
+      const o1 = document.createElement('option');
+      o1.value = id; o1.textContent = label;
+      selFilter.appendChild(o1);
+
+      const o2 = document.createElement('option');
+      o2.value = id; o2.textContent = label;
+      selAdd.appendChild(o2);
     });
-  } catch (e) { console.error(e); }
-}
 
-document.getElementById('clientSelect').addEventListener('change', function() {
-  currentClientId = this.value;
-  if (currentClientId) {
+    // Show add button now that we have clients
     document.getElementById('addBtn').style.display = '';
-    loadNotes();
-  } else {
-    document.getElementById('addBtn').style.display = 'none';
-    document.getElementById('addCard').style.display = 'none';
-    document.getElementById('notesList').innerHTML = '<div class="empty">Select a client to view notes.</div>';
-  }
-});
 
-async function loadNotes() {
-  if (!currentClientId) return;
-  document.getElementById('notesList').innerHTML = '<div class="loader">Loading…</div>';
-  try {
-    const r = await fetch(`${API}/api/client-notes/${currentClientId}`, { headers: hdr() });
-    allNotes = await r.json();
-    renderNotes();
-  } catch (e) { console.error(e); }
+    // Fetch notes for all clients in parallel
+    const fetches = clients.map(c => {
+      const id = String(c.user_id || c.id);
+      return fetch(`${API}/api/client-notes/${id}`, { headers: hdr() })
+        .then(r => r.json())
+        .then(notes => { notesByClient[id] = Array.isArray(notes) ? notes : []; })
+        .catch(() => { notesByClient[id] = []; });
+    });
+    await Promise.all(fetches);
+
+    renderAllNotes();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('notesList').innerHTML = '<div class="empty">Failed to load notes.</div>';
+  }
 }
 
-function renderNotes() {
-  const filtered = activeCat === 'all' ? allNotes : allNotes.filter(n => n.category === activeCat);
-  const el = document.getElementById('notesList');
-  if (!filtered.length) {
-    el.innerHTML = `<div class="empty">No ${activeCat === 'all' ? '' : activeCat.replace('_',' ') + ' '}notes yet for this client.</div>`;
-    return;
+// ── Render board grouped by client ───────────────────────────────────────
+function renderAllNotes() {
+  const filterClientId = document.getElementById('clientSelect').value;
+  const searchQ        = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const el             = document.getElementById('notesList');
+
+  // Build flat list of { clientId, note } pairs to count matches
+  let totalVisible = 0;
+  let html = '';
+
+  const clientIds = filterClientId
+    ? [filterClientId]
+    : Object.keys(notesByClient);
+
+  for (const cid of clientIds) {
+    const clientInfo = clientsMap[cid] || { name: 'Unknown', company: '' };
+    const notes      = notesByClient[cid] || [];
+
+    // Filter by category then search
+    const filtered = notes
+      .filter(n => activeCat === 'all' || n.category === activeCat)
+      .filter(n => {
+        if (!searchQ) return true;
+        return (n.title + ' ' + n.content + ' ' + n.category).toLowerCase().includes(searchQ);
+      })
+      // pinned first
+      .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+
+    if (!filtered.length) continue;
+    totalVisible += filtered.length;
+
+    const initials = clientInfo.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    html += `
+      <div class="client-group" data-client="${esc(cid)}">
+        <div class="client-group-header">
+          <div class="client-group-avatar">${esc(initials)}</div>
+          <span class="client-group-name">${esc(clientInfo.name)}${clientInfo.company ? ` · ${esc(clientInfo.company)}` : ''}</span>
+          <span class="client-group-meta">${filtered.length} note${filtered.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="notes-grid">
+          ${filtered.map(n => noteCardHTML(n, cid)).join('')}
+        </div>
+      </div>`;
   }
-  el.innerHTML = filtered.map(n => `
+
+  if (!html) {
+    el.innerHTML = `<div class="empty">No notes found${searchQ ? ` for "${searchQ}"` : ''}.</div>`;
+    document.getElementById('notesCount').textContent = '';
+  } else {
+    el.innerHTML = html;
+    document.getElementById('notesCount').textContent = `${totalVisible} note${totalVisible !== 1 ? 's' : ''}`;
+    // Wire up read-more toggles after render
+    el.querySelectorAll('.nc-content').forEach(contentEl => {
+      const btn = contentEl.nextElementSibling;
+      if (contentEl.scrollHeight > contentEl.clientHeight + 4) {
+        btn.style.display = 'inline-block';
+      }
+    });
+  }
+}
+
+function noteCardHTML(n, cid) {
+  const TRUNCATE_LINES = 3;
+  return `
     <div class="note-card ${n.is_pinned ? 'pinned' : ''}">
       <div class="nc-top">
         <span class="nc-badge badge-${n.category}">${n.category.replace('_',' ')}</span>
         <span class="nc-title">${esc(n.title)}</span>
+        ${n.is_pinned ? '<span class="nc-pin-dot" title="Pinned"></span>' : ''}
       </div>
-      <div class="nc-content">${esc(n.content)}</div>
+      <div class="nc-body">
+        <div class="nc-content-wrap">
+          <div class="nc-content" id="nc-${n.id}">${esc(n.content)}</div>
+          <button class="nc-read-more" id="rm-${n.id}"
+                  onclick="toggleReadMore(${n.id})">Read more ▾</button>
+        </div>
+      </div>
       <div class="nc-actions">
         <button class="btn-icon ${n.is_pinned ? 'pin-on' : ''}"
-                onclick="togglePin(${n.id})" title="${n.is_pinned ? 'Unpin' : 'Pin'}">
-          ${n.is_pinned ? '📌 Pinned' : '📌 Pin'}
+                onclick="togglePin('${cid}', ${n.id})" title="${n.is_pinned ? 'Unpin' : 'Pin'}">
+          📌 ${n.is_pinned ? 'Pinned' : 'Pin'}
         </button>
-        <button class="btn-icon" onclick="openEdit(${n.id})">Edit</button>
-        <button class="btn-icon danger" onclick="deleteNote(${n.id})">Delete</button>
+        <button class="btn-icon" onclick="openEdit('${cid}', ${n.id})">Edit</button>
+        <button class="btn-icon danger" onclick="deleteNote('${cid}', ${n.id})">Delete</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
 }
 
-function esc(s) {
-  return String(s||'')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+function toggleReadMore(noteId) {
+  const content = document.getElementById(`nc-${noteId}`);
+  const btn     = document.getElementById(`rm-${noteId}`);
+  const expanded = content.classList.toggle('expanded');
+  btn.textContent = expanded ? 'Show less ▴' : 'Read more ▾';
 }
 
+// ── Category tabs ─────────────────────────────────────────────────────────
 document.getElementById('catTabs').addEventListener('click', e => {
   const tab = e.target.closest('.cat-tab');
   if (!tab) return;
   document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
   activeCat = tab.dataset.cat;
-  renderNotes();
+  renderAllNotes();
 });
 
+// ── Add note form ─────────────────────────────────────────────────────────
 function toggleAdd() {
   const card = document.getElementById('addCard');
-  card.style.display = card.style.display === 'none' ? '' : 'none';
-  if (card.style.display === '') {
-    document.getElementById('noteTitle').focus();
-  }
+  const isHidden = card.style.display === 'none';
+  card.style.display = isHidden ? '' : 'none';
+  if (isHidden) document.getElementById('noteTitle').focus();
 }
 
 async function saveNote() {
-  const title   = document.getElementById('noteTitle').value.trim();
-  const content = document.getElementById('noteContent').value.trim();
+  const clientId = document.getElementById('noteClient').value;
+  const title    = document.getElementById('noteTitle').value.trim();
+  const content  = document.getElementById('noteContent').value.trim();
   const category = document.getElementById('noteCat').value;
+  if (!clientId) { toast('Please select a client'); return; }
   if (!title || !content) { toast('Title and content required'); return; }
   try {
-    const r = await fetch(`${API}/api/client-notes/${currentClientId}`, {
+    const r = await fetch(`${API}/api/client-notes/${clientId}`, {
       method: 'POST', headers: hdr(),
       body: JSON.stringify({ title, content, category })
     });
     if (!r.ok) { const d = await r.json(); toast(d.error || 'Error'); return; }
-    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteTitle').value   = '';
     document.getElementById('noteContent').value = '';
     document.getElementById('addCard').style.display = 'none';
     toast('Note saved ✓');
-    loadNotes();
+    // Refresh only this client's notes then re-render
+    await refreshClient(clientId);
   } catch (e) { toast('Network error'); }
 }
 
-async function togglePin(noteId) {
+// ── Refresh one client's notes from server ────────────────────────────────
+async function refreshClient(clientId) {
   try {
-    await fetch(`${API}/api/client-notes/${currentClientId}/${noteId}/pin`, {
+    const r = await fetch(`${API}/api/client-notes/${clientId}`, { headers: hdr() });
+    notesByClient[clientId] = await r.json();
+  } catch (e) { console.error(e); }
+  renderAllNotes();
+}
+
+// ── Pin / Delete ──────────────────────────────────────────────────────────
+async function togglePin(clientId, noteId) {
+  try {
+    await fetch(`${API}/api/client-notes/${clientId}/${noteId}/pin`, {
       method: 'PATCH', headers: hdr()
     });
-    loadNotes();
+    await refreshClient(clientId);
   } catch (e) { toast('Error'); }
 }
 
-async function deleteNote(noteId) {
+async function deleteNote(clientId, noteId) {
   if (!confirm('Delete this note?')) return;
   try {
-    const r = await fetch(`${API}/api/client-notes/${currentClientId}/${noteId}`, {
+    const r = await fetch(`${API}/api/client-notes/${clientId}/${noteId}`, {
       method: 'DELETE', headers: hdr()
     });
     if (!r.ok) { toast('Error deleting'); return; }
     toast('Deleted');
-    loadNotes();
+    await refreshClient(clientId);
   } catch (e) { toast('Network error'); }
 }
 
-function openEdit(noteId) {
-  const note = allNotes.find(n => n.id === noteId);
+// ── Edit modal ────────────────────────────────────────────────────────────
+function openEdit(clientId, noteId) {
+  const note = (notesByClient[clientId] || []).find(n => n.id === noteId);
   if (!note) return;
-  editingNoteId = noteId;
+  editingNote = { id: noteId, clientId };
   document.getElementById('editTitle').value   = note.title;
   document.getElementById('editContent').value = note.content;
   document.getElementById('editCat').value     = note.category;
   document.getElementById('editModal').classList.add('open');
 }
-
 function closeEdit() {
-  editingNoteId = null;
+  editingNote = null;
   document.getElementById('editModal').classList.remove('open');
 }
-
 async function submitEdit() {
-  if (!editingNoteId) return;
+  if (!editingNote) return;
   const title    = document.getElementById('editTitle').value.trim();
   const content  = document.getElementById('editContent').value.trim();
   const category = document.getElementById('editCat').value;
   if (!title || !content) { toast('Title and content required'); return; }
   try {
-    const r = await fetch(`${API}/api/client-notes/${currentClientId}/${editingNoteId}`, {
+    const r = await fetch(`${API}/api/client-notes/${editingNote.clientId}/${editingNote.id}`, {
       method: 'PUT', headers: hdr(),
       body: JSON.stringify({ title, content, category })
     });
     if (!r.ok) { const d = await r.json(); toast(d.error || 'Error'); return; }
+    const cid = editingNote.clientId;
     closeEdit();
     toast('Updated ✓');
-    loadNotes();
+    await refreshClient(cid);
   } catch (e) { toast('Network error'); }
 }
-
 document.getElementById('editModal').addEventListener('click', function(e) {
   if (e.target === this) closeEdit();
 });
 
-loadClients();
+init();
 </script>
 <script src="../chatbot-widget.js"></script>
 </body>
