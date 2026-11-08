@@ -101,7 +101,6 @@
 
     .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:1.1rem 1.2rem 1.3rem; }
     
-    /* Category tabs */
     .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.2rem; }
     .cat-tab {
       padding: 6px 14px; border-radius: 20px; font-size: .8rem; cursor: pointer;
@@ -110,7 +109,6 @@
     }
     .cat-tab.active, .cat-tab:hover { background: var(--navy-900); color: #fff; border-color: var(--navy-900); }
 
-    /* Note card styling */
     .notes-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
     .note-card {
       background: var(--bg); border: 1.5px solid var(--line);
@@ -237,7 +235,6 @@
 
   <main class="main-content">
 
-    <!-- Compact Hero Header -->
     <div class="hero">
       <div>
         <span class="eyebrow">Client Workspace</span>
@@ -255,7 +252,6 @@
     <div class="ledger-panel-wrap">
       <div style="font-size:.68rem;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.1rem">Reference Notes & Guidelines</div>
       
-      <!-- Category filter tabs -->
       <div class="cat-tabs" id="catTabs">
         <div class="cat-tab active" data-cat="all">All</div>
         <div class="cat-tab" data-cat="mandatory">Mandatory</div>
@@ -265,12 +261,10 @@
         <div class="cat-tab" data-cat="general">General</div>
       </div>
 
-      <!-- Notes grid list -->
       <div id="notesList" class="notes-grid">
         <p style="color:var(--ink-3);font-size:0.88rem;">Loading notes…</p>
       </div>
 
-      <!-- Add note form card -->
       <div id="addCard" class="card" style="margin-top:1.5rem; display:none; background:var(--bg); border:1px solid var(--line); padding:1.2rem; border-radius:12px;">
         <div style="font-weight:700;font-size:.95rem;margin-bottom:1rem;color:var(--ink)">New Note / Guideline</div>
         <div class="form-row">
@@ -299,7 +293,6 @@
   </main>
 </div>
 
-<!-- Edit modal -->
 <div class="modal-overlay" id="editModal">
   <div class="modal">
     <h2>Edit Note</h2>
@@ -380,7 +373,6 @@ function toast(msg, dur=2500) {
   setTimeout(() => el.classList.remove('show'), dur);
 }
 
-// Live availability check to replace the static status text
 async function checkFreelancerLiveStatus() {
   const dot = document.getElementById('pill-dot');
   const text = document.getElementById('pill-text');
@@ -411,7 +403,7 @@ setInterval(checkFreelancerLiveStatus, 30000);
 
 async function fetchNotes() {
   try {
-    const res = await fetch(`${API}/client/notes`, { headers: auth.headers() });
+    const res = await fetch(`${API}/client-notes`, { headers: auth.headers() });
     if (!res.ok) throw new Error('Failed to load notes');
     allNotes = await res.json();
     renderNotes();
@@ -472,7 +464,7 @@ async function saveNote() {
   if (!title || !content) { toast('Title and content are required'); return; }
 
   try {
-    const res = await fetch(`${API}/client/notes`, {
+    const res = await fetch(`${API}/client-notes`, {
       method: 'POST',
       headers: auth.headers(),
       body: JSON.stringify({ title, content, category })
@@ -488,7 +480,7 @@ async function saveNote() {
 
 async function togglePin(noteId) {
   try {
-    await fetch(`${API}/client/notes/${noteId}/pin`, {
+    await fetch(`${API}/client-notes/${noteId}/pin`, {
       method: 'PATCH',
       headers: auth.headers()
     });
@@ -499,7 +491,7 @@ async function togglePin(noteId) {
 async function deleteNote(noteId) {
   if (!confirm('Are you sure you want to delete this note?')) return;
   try {
-    const res = await fetch(`${API}/client/notes/${noteId}`, {
+    const res = await fetch(`${API}/client-notes/${noteId}`, {
       method: 'DELETE',
       headers: auth.headers()
     });
@@ -532,7 +524,7 @@ async function submitEdit() {
   if (!title || !content) { toast('Title and content are required'); return; }
 
   try {
-    const res = await fetch(`${API}/client/notes/${editingNoteId}`, {
+    const res = await fetch(`${API}/client-notes/${editingNoteId}`, {
       method: 'PUT',
       headers: auth.headers(),
       body: JSON.stringify({ title, content, category })
