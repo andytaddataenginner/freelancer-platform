@@ -631,13 +631,16 @@ function switchView(v) {
     projView.style.display = 'none';
     kanbanView.style.display = 'block';
 
-    // Auto-select single project if no project is explicitly selected
-    if (!currentProj && allProjects.length === 1) {
+    // If switching to board via the top toggle without an active project, pick the first one available
+    if (!currentProj && allProjects.length > 0) {
       currentProj = allProjects[0];
     }
 
     if (currentProj) {
-      openBoard(currentProj.id);
+      document.getElementById('kanbanTitle').textContent = currentProj.name;
+      document.getElementById('kanbanSubtitle').textContent = `Client: ${currentProj.client_name}${currentProj.client_company ? ' (' + currentProj.client_company + ')' : ''}`;
+      document.getElementById('addTaskBtn').style.display = 'inline-flex';
+      loadTasks();
     } else {
       document.getElementById('kanbanTitle').textContent = 'Select a project';
       document.getElementById('kanbanSubtitle').textContent = 'Choose a project from the Projects view to view its kanban board.';
@@ -655,7 +658,12 @@ async function openBoard(projId) {
     return;
   }
   
-  switchView('kanban');
+  // Directly update view states without invoking switchView() recursively
+  currentView = 'kanban';
+  document.querySelectorAll('.vt-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'kanban'));
+  document.getElementById('projectsView').style.display = 'none';
+  document.getElementById('kanbanView').style.display = 'block';
+
   document.getElementById('kanbanTitle').textContent = currentProj.name;
   document.getElementById('kanbanSubtitle').textContent = `Client: ${currentProj.client_name}${currentProj.client_company ? ' (' + currentProj.client_company + ')' : ''}`;
   document.getElementById('addTaskBtn').style.display = 'inline-flex';
