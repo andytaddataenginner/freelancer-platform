@@ -49,7 +49,7 @@ export function PublicHome() {
   return <main className="public-home">
     <nav className="public-nav">
       <a className="public-brand" href="#top"><img src={ASSETS+'QFA_Logo.png'} alt="QFA logo"/><span>Quick Freelancing Agency</span></a>
-      <div className="public-nav-links"><a href="#work">Our work</a><a href="#skills">Expertise</a><a href="#resume">Resume</a><a href="#services">Services</a><a href="#contact">Contact</a><button className="public-theme-toggle" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label="Toggle colour theme">{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button><Link className="public-login-link" to="/login?mode=signup">Create Account</Link><Link className="public-login-link" to="/login">Client & Team Login <ArrowRight size={15}/></Link></div>
+      <div className="public-nav-links"><a href="#work">Our work</a><a href="#skills">Expertise</a><a href="#resume">Resume</a><a href="#services">Services</a><a href="#contact">Contact</a><button className="public-theme-toggle" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label="Toggle colour theme">{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button><Link className="public-login-link" to="/login?mode=signup">Create Account</Link><Link className="public-login-link" to="/login?role=client">Client Login <ArrowRight size={15}/></Link></div>
     </nav>
     <header className="public-hero" id="top">
       <div className="public-hero-copy">
