@@ -403,7 +403,7 @@
 .page-heading h1,.module-intro h1{font-size:27px;line-height:1.12}.page-heading p,.module-intro>p{font-size:11px;margin-top:5px}.page-heading .eyebrow{margin-bottom:5px;font-size:8px}
 .dashboard-heading{margin-bottom:10px}.dashboard-page .dashboard-kpis{margin-top:0}.dashboard-page .dashboard-chart-grid{margin-top:12px}
 .dashboard-page .dashboard-kpi{padding:10px 11px}.dashboard-page .dashboard-kpi .metric-icon{margin-bottom:5px}.dashboard-page .dashboard-kpi .metric-value{font-size:19px}
-.qfa-floating-timer{width:225px;top:82px!important;right:18px!important;bottom:auto!important;z-index:600}.qfa-floating-timer.is-collapsed{width:205px}
+.qfa-floating-timer{width:225px;z-index:600}.qfa-floating-timer.is-collapsed{width:205px}
 .qfa-timer-head{padding:8px 10px}.qfa-timer-body{padding:9px;gap:7px}.qfa-timer-clock{font-size:25px;padding:6px}.qfa-timer-actions button{font-size:9px;padding:8px}.qfa-timer-actions button.reset{background:#fff4d8;color:#916400}
 .theme-dark .metric-card,.theme-dark .dashboard-page .dashboard-kpi,.theme-dark .dashboard-page .dashboard-chart-card,.theme-dark .dashboard-page .dashboard-recent,.theme-dark .panel-card{background:#18243a!important;border-color:#34435d!important;color:#e8edf6}
 .theme-dark .metric-label,.theme-dark .metric-foot,.theme-dark .dashboard-page .metric-label,.theme-dark .dashboard-page .metric-foot{color:#b5c1d4!important}
@@ -423,7 +423,7 @@
 .theme-dark .public-nav-links .public-login-link{background:#1a5cff;color:#fff!important}.theme-dark .public-theme-toggle{background:#263650!important;border-color:#435674!important}
 .theme-dark .public-home{background:#101827;color:#e8edf6}.theme-dark .public-home h2,.theme-dark .public-home h3{color:#f0f4fb}.theme-dark .public-home p{color:#b5c1d4}
 .theme-dark .portfolio-sample-card,.theme-dark .client-note-card,.theme-dark .notes-editor-card,.theme-dark .notes-summary article{background:#18243a!important;border-color:#34435d!important}
-@media(max-width:760px){.page-content{padding-top:14px}.page-heading h1,.module-intro h1{font-size:24px}.qfa-floating-timer{top:72px!important;right:10px!important;width:205px}}
+@media(max-width:760px){.page-content{padding-top:14px}.page-heading h1,.module-intro h1{font-size:24px}.qfa-floating-timer{width:205px;max-width:calc(100vw - 20px)}}
 
 /* Login page: fixed light-only split layout, landing-page return and promotional copy */
 .login-screen{position:relative;min-height:100vh;display:grid;grid-template-columns:minmax(320px,1fr) minmax(390px,480px);align-items:center;gap:clamp(35px,7vw,110px);padding:74px clamp(28px,8vw,130px);background:linear-gradient(135deg,#f4f7fc 0%,#edf2fb 52%,#f8f9fc 100%)!important;color:#263957!important}
@@ -617,3 +617,69 @@
 .client-portal-page .portal-overview-card .panel-heading{display:flex}
 .client-portal-page .portal-overview-card .panel-heading h2{display:flex;align-items:center;gap:7px}
 @media(max-width:850px){.client-portal-page .portal-header{position:sticky;top:0;width:auto;height:64px;margin:0;padding:0 14px;flex-direction:row}.client-portal-page .portal-tabs{position:sticky!important;top:64px;left:auto;bottom:auto;width:auto;flex-direction:row;align-items:center;padding:8px 10px!important;margin:0 -15px 15px;overflow-x:auto}.client-sidebar-brand{display:none}}
+
+
+/* QFA migration follow-up: keep the floating timer genuinely draggable. */
+.qfa-floating-timer{position:fixed!important;top:auto;left:auto;right:18px;bottom:18px;z-index:9996;touch-action:none}
+.qfa-floating-timer[style*="left"]{right:auto!important;bottom:auto!important}
+.qfa-timer-head{cursor:grab;touch-action:none}
+.qfa-timer-head:active{cursor:grabbing}
+@media(max-width:760px){.qfa-floating-timer{right:10px;bottom:10px;max-width:calc(100vw - 20px)}}
+
+/* Sidebar collapse: keep the original logo clear of the collapse control. */
+.sidebar-collapsed .brand-lockup{min-height:82px;flex-direction:column;justify-content:flex-start;gap:7px;padding:0 0 12px}
+.sidebar-collapsed .brand-logo-image{width:34px;height:34px}
+.sidebar-collapsed .sidebar-collapse{position:static!important;transform:none!important;margin:0 auto!important;width:28px;height:25px;box-shadow:none!important}
+
+/* Compact, consistent page headings and dashboard filters. */
+.module-page>.page-heading{margin-bottom:16px}
+.heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.month-filter{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted,#8290a7)}
+.month-filter input{min-width:142px}
+
+/* Time logs are the primary operational record: improve scanability and density. */
+.time-logs-page .panel-card{margin-bottom:14px}
+.time-logs-page .inline-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));align-items:end;gap:12px}
+.time-logs-page .inline-form label,.time-logs-page .filter-panel label{display:grid;gap:6px;min-width:0}
+.time-logs-page .filter-panel{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:15px 18px;border:1px solid var(--line);border-radius:13px;background:var(--panel);margin:14px 0}
+.time-logs-page .filter-panel label{min-width:145px;flex:1}
+.time-logs-page .metric-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.time-logs-page .metric-card{padding:15px 17px}
+.time-logs-page .metric-value{font-size:22px}
+.time-logs-page .log-month{border:1px solid var(--line);border-radius:11px;margin:9px 0;overflow:hidden;background:var(--panel)}
+.time-logs-page .log-month>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;font-size:12px;font-weight:700;cursor:pointer;list-style:none}
+.time-logs-page .log-month>summary::-webkit-details-marker{display:none}
+.time-logs-page .log-month>summary:after{content:'⌄';color:#c9952a;font-size:17px}
+.time-logs-page .log-month>summary span{font-size:10px;font-weight:500;color:var(--muted,#8290a7);margin-left:auto}
+.time-logs-page table{min-width:920px}
+.time-logs-page .task-cell{max-width:250px;white-space:normal;line-height:1.4}
+.time-logs-page .timer-controls{display:grid;grid-template-columns:minmax(140px,1fr) minmax(180px,2fr) auto auto auto;gap:9px;align-items:center}
+.time-logs-page .timer-clock{font-variant-numeric:tabular-nums;font-size:22px;letter-spacing:.05em}
+@media(max-width:900px){.time-logs-page .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.time-logs-page .timer-controls{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.time-logs-page .filter-panel{align-items:stretch}.time-logs-page .filter-panel label{min-width:100%}.time-logs-page .log-month>summary{align-items:flex-start;flex-direction:column}.time-logs-page .log-month>summary span{margin:0}.time-logs-page .timer-controls{grid-template-columns:1fr}}
+
+/* Invoice hub and fixed-invoice filters/KPIs: avoid oversized stretched cards. */
+.invoice-kpis{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1120px;gap:12px;margin:14px 0 18px}
+.invoice-kpis .metric-card{padding:15px 16px}
+.invoice-kpis .metric-value{font-size:21px}
+.invoice-filter{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:14px;align-items:end;padding:16px 18px;margin-bottom:12px}
+.invoice-filter label{display:grid;gap:6px;font-size:10px;color:var(--muted,#8290a7)}
+.fixed-invoice-kpis{grid-template-columns:repeat(3,minmax(0,1fr));max-width:900px;gap:12px;margin:14px 0}
+.fixed-invoice-kpis .metric-card{padding:15px 17px}
+.fixed-invoice-kpis .metric-value{font-size:21px}
+.fixed-invoices-page .panel-card{margin-bottom:14px}
+.fixed-invoices-page .inline-form{display:flex;align-items:end;gap:14px;flex-wrap:wrap}
+.fixed-invoices-page .inline-form label{display:grid;gap:6px;min-width:190px}
+@media(max-width:850px){.invoice-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.invoice-filter{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.invoice-kpis,.fixed-invoice-kpis{grid-template-columns:1fr 1fr}.invoice-filter{grid-template-columns:1fr}}
+
+/* Dark-mode project cards and project overview surfaces. */
+.theme-dark .project-overview-card,.theme-dark .project-toolbar,.theme-dark .project-progress-panel,.theme-dark .project-board-heading>div,
+.theme-dark .qfa-modal,.theme-dark .qfa-modal-overlay .qfa-modal{background:#18243a!important;border-color:#34435d!important;color:#e8edf6}
+.theme-dark .project-card-title,.theme-dark .project-board-heading h2,.theme-dark .project-card-top,
+.theme-dark .project-overview-card strong,.theme-dark .project-progress-label{color:#edf2fa!important}
+.theme-dark .project-card-description,.theme-dark .project-card-client,.theme-dark .project-card-foot,
+.theme-dark .project-board-heading p{color:#aab7cb!important}
+.theme-dark .project-toolbar input,.theme-dark .project-toolbar select,.theme-dark .qfa-modal input,
+.theme-dark .qfa-modal select,.theme-dark .qfa-modal textarea{background:#17243a!important;color:#e8edf6!important;border-color:#435674!important}
+.theme-dark .project-icon-action{color:#dce5f3}
