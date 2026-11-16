@@ -16,20 +16,26 @@ export async function apiRequest(path, options = {}) {
   });
 
   if (response.status === 401) {
-    // Preserve the account type before clearing the session. Otherwise client
-    // requests incorrectly send the user back to the default freelancer login.
-    const role = String(auth.user()?.role || '').trim().toLowerCase();
-    const loginRole = role === 'client' ? 'client' : 'freelancer';
-    auth.clear();
-    if (window.location.pathname !== '/login') {
-      window.location.assign('/login?role=' + loginRole + '&reason=expired');
+    // A 401 from the login endpoint means invalid credentials, not an expired session.
+    const isLoginRequest = /\/auth\/login(?:\?|$)/.test(path);
+    if (!isLoginRequest) {
+      const role = String(auth.user()?.role || '').trim().toLowerCase();
+      const loginRole = role === 'client' ? 'client' : 'freelancer';
+      auth.clear();
+      if (window.location.pathname !== '/login') {
+        window.location.assign('/login?role=' + loginRole + '&reason=expired');
+      }
+      throw new Error('Your session has expired. Please sign in again.');
     }
-    throw new Error('Your session has expired. Please sign in again.');
   }
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || payload.message || `Request failed (${response.status})`);
+    const message = payload.error || payload.message || `Request failed (${response.status})`;
+    if (response.status === 401 && /\/auth\/login(?:\?|$)/.test(path)) {
+      throw new Error('Incorrect email or password. Please check your details and try again.');
+    }
+    throw new Error(message);
   }
 
   if (response.status === 204) return null;
