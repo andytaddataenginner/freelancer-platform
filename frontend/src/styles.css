@@ -499,3 +499,53 @@
 .route-not-found{min-height:100vh;display:grid;align-content:center;justify-items:center;gap:10px;padding:24px;text-align:center;background:#f5f7fb;color:#233653}
 .route-not-found h1{font:700 30px 'Playfair Display',serif;color:#0d2353;margin:0}.route-not-found p{font-size:12px;color:#77849a}.route-not-found a{color:#1a5cff;font-size:12px;font-weight:700}
 @media(max-width:520px){.login-card-compact{padding:27px 21px 23px}.login-footer-links{align-items:flex-start;flex-direction:column}.login-background-caption{font-size:7px}.login-background-caption span{display:block;margin:5px 0 0}}
+
+/* Client workspace: restore the original QFA fixed-sidebar ledger layout */
+.client-portal-page{min-height:100vh;background:#eef1f7;color:#0d2353;font-family:'Outfit',sans-serif}
+.client-portal-page .portal-header{position:fixed;inset:0 auto 0 0;width:232px;height:100vh;z-index:100;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:22px 15px;background:#081431;border:0;border-radius:0;box-shadow:8px 0 30px rgba(8,20,49,.08)}
+.client-portal-page .portal-brand{display:flex;align-items:center;gap:11px;padding:8px 9px 23px;border-bottom:1px solid rgba(255,255,255,.1);color:#fff;text-decoration:none}
+.client-portal-page .portal-brand>span{width:38px;height:38px;border-radius:9px;background:#fff;color:#0d2353;display:grid;place-items:center;font:700 21px 'Playfair Display',serif}
+.client-portal-page .portal-brand strong{display:block;font:700 17px 'Playfair Display',serif;color:#fff}
+.client-portal-page .portal-brand small{display:block;margin-top:3px;font-size:8px;letter-spacing:.13em;color:#aab7d0}
+.client-portal-page .portal-header-actions{margin-top:auto;display:flex;flex-direction:column;align-items:stretch;gap:11px}
+.client-portal-page .portal-availability{font-size:10px;color:#b8c5dc;white-space:normal}
+.client-portal-page .portal-header-actions .icon-button,.client-portal-page .portal-header-actions .button-secondary{justify-content:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);color:#f4f6fb}
+.client-portal-page .portal-content{margin-left:232px;max-width:1500px;padding:22px 28px 45px}
+.client-portal-page .portal-title-row{padding:17px 20px;margin-bottom:15px;border-radius:12px;background:linear-gradient(135deg,#081431,#1a3a7a);color:#fff;box-shadow:0 5px 20px rgba(13,35,83,.13)}
+.client-portal-page .portal-title-row .eyebrow{color:#f0c34a;font-size:9px;letter-spacing:.13em}
+.client-portal-page .portal-title-row h1{font:700 23px/1.2 'Playfair Display',serif;color:#fff;margin:4px 0}
+.client-portal-page .portal-title-row p{font-size:10px;color:#c6d1e5;margin:4px 0 0}
+.client-portal-page .portal-title-row .button-secondary{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff}
+.client-portal-page .portal-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin-bottom:15px}
+.client-portal-page .metric-card{background:#fff;border:1px solid rgba(13,35,83,.09);border-radius:10px;padding:12px 14px;box-shadow:0 3px 15px rgba(13,35,83,.045)}
+.client-portal-page .metric-label{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#8592b3}
+.client-portal-page .portal-metric-value{font-size:20px;font-weight:700;color:#0d2353;margin-top:6px}
+.client-portal-page .portal-tabs{display:flex;gap:5px;overflow-x:auto;padding:0 0 0 2px;margin:0 0 -1px}
+.client-portal-page .portal-tabs button{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:10px 13px;border:1px solid rgba(13,35,83,.1);border-bottom:0;border-radius:9px 9px 0 0;background:#e4e9f4;color:#48557a;font-size:10px;font-weight:600;white-space:nowrap}
+.client-portal-page .portal-tabs button.active{background:#fff;color:#0d2353;border-top:2px solid #c9952a}
+.client-portal-page .panel-card{background:#fff;border:1px solid rgba(13,35,83,.1);border-radius:0 12px 12px 12px;padding:18px;box-shadow:0 3px 18px rgba(13,35,83,.05)}
+.client-portal-page .portal-grid{gap:14px}
+.client-portal-page .panel-heading h2{font:700 15px 'Playfair Display',serif;color:#0d2353}
+.client-portal-page .panel-heading p{font-size:10px;color:#8592b3}
+.client-portal-page .portal-project{padding:14px;margin:12px 0;background:#f6f8fc;border:1px solid #e3e9f2;border-radius:10px}
+.client-portal-page .portal-progress{height:7px;border-radius:9px;background:#e1e7f1;overflow:hidden;margin:10px 0 6px}
+.client-portal-page .portal-progress i{display:block;height:100%;background:linear-gradient(90deg,#1a5cff,#c9952a);border-radius:9px}
+.client-portal-page .portal-note-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.client-portal-page .portal-note-readonly{padding:15px;background:#f7f9fc;border:1px solid #e3e9f2;border-radius:10px}
+.client-portal-page .portal-note-readonly.is-pinned{border-color:#c9952a;background:#fffaf0}
+.client-portal-page .portal-note-readonly h3{font:700 14px 'Playfair Display',serif;margin:10px 0 6px;color:#0d2353}
+.client-portal-page .portal-note-readonly p{font-size:11px;line-height:1.7;color:#52617a;white-space:pre-wrap}
+.client-portal-page .portal-note-readonly small{display:block;margin-top:12px;color:#8a96a9;font-size:9px}
+.client-portal-page .portal-note-meta{display:flex;justify-content:space-between;align-items:center}
+.client-portal-page .portal-pinned-label{font-size:9px;color:#a8781f;font-weight:700}
+.client-portal-page.portal-dark{background:#080c17;color:#eef1f8}
+.client-portal-page.portal-dark .portal-content{color:#eef1f8}
+.client-portal-page.portal-dark .metric-card,.client-portal-page.portal-dark .panel-card{background:#0e1526;border-color:rgba(255,255,255,.1);color:#eef1f8}
+.client-portal-page.portal-dark .portal-tabs button{background:#111a2e;color:#aab6d6;border-color:rgba(255,255,255,.09)}
+.client-portal-page.portal-dark .portal-tabs button.active{background:#0e1526;color:#fff;border-top-color:#e0ac35}
+.client-portal-page.portal-dark .portal-metric-value,.client-portal-page.portal-dark .panel-heading h2,.client-portal-page.portal-dark .portal-note-readonly h3{color:#eef1f8}
+.client-portal-page.portal-dark .portal-project,.client-portal-page.portal-dark .portal-note-readonly{background:#111a2e;border-color:#2a3852}
+.client-portal-page.portal-dark .portal-note-readonly.is-pinned{background:#292316;border-color:#9a762c}
+.client-portal-page.portal-dark .portal-note-readonly p,.client-portal-page.portal-dark .portal-project p{color:#b4c0d4}
+.client-portal-page.portal-dark .portal-note-readonly small{color:#8e9bb1}
+@media(max-width:850px){.client-portal-page .portal-header{position:sticky;top:0;width:auto;height:auto;min-height:64px;flex-direction:row;align-items:center;padding:10px 14px}.client-portal-page .portal-brand{padding:0;border:0}.client-portal-page .portal-header-actions{margin:0;flex-direction:row;align-items:center}.client-portal-page .portal-content{margin:0;padding:15px}.client-portal-page .portal-availability{display:none}.client-portal-page .portal-title-row{padding:14px}.client-portal-page .portal-title-row h1{font-size:20px}}
