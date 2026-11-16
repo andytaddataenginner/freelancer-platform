@@ -21,7 +21,7 @@ export function LoginPage(){
    const token=result.token||result.accessToken,user=result.user||result.data?.user;
    if(!token||!user)throw new Error('The server response did not contain the expected session details.');
    auth.save(token,user);
-   navigate(user.role==='client'?'/client-portal':'/dashboard',{replace:true});
+   navigate(String(user.role||'').toLowerCase()==='client'?'/client-portal':'/dashboard',{replace:true});
   }catch(e){setError(e.message||'Unable to continue. Please try again.');}
   finally{setBusy(false);}
  }
