@@ -4,7 +4,6 @@ import { LoginPage } from './pages/LoginPage';
 import { PublicHome } from './pages/PublicHome';
 import { AppShell } from './components/AppShell';
 import { DashboardPage } from './pages/DashboardPage';
-import { ModulePlaceholder } from './pages/ModulePlaceholder';
 import { ClientPortalPage } from './pages/ClientPortalPage';
 import { ClientsPage } from './pages/ClientsPage';
 import { TimeLogsPage } from './pages/TimeLogsPage';
@@ -23,10 +22,6 @@ function Protected({ children }) {
   return children;
 }
 
-const modules = [
-
-];
-
 export default function App() {
   return (
     <Routes>
@@ -44,7 +39,6 @@ export default function App() {
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/notes" element={<NotesPage />} />
-
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
