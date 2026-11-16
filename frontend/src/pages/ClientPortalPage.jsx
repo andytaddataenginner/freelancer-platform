@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useState} from 'react';
 import {auth} from '../services/auth';
+import {ChatbotLoader} from '../components/ChatbotLoader';
 import {apiRequest} from '../services/api';
 import {BookOpen,CalendarDays,Clock3,FolderKanban,LogOut,Moon,Sun,RefreshCw,ShieldCheck,Wallet,CheckCircle2,XCircle} from 'lucide-react';
 
@@ -45,6 +46,7 @@ export function ClientPortalPage(){
  const nav=[['overview','Overview',FolderKanban],['logs','Time & Logs',Clock3],['billing','Billing History',Wallet],['book','Book a Session',CalendarDays],['notes','Notes & Guidelines',BookOpen],['security','Security',ShieldCheck]];
  const statusLabel=data.availability?.status==='busy'?(data.availability?.is_paused?'Freelancer on a brief break':'Freelancer in a session'):data.availability?.status==='available'?'Freelancer available':'Availability not available';
  return <main className={'client-portal-page '+(dark?'portal-dark':'')}>
+  <ChatbotLoader />
   <header className="portal-header"><a className="portal-brand" href="/"><img src="/QFA_Logo.png" alt="QFA"/><div><strong>QFA</strong><small>CLIENT PORTAL</small></div></a><div className="portal-header-actions"><span className="portal-availability"><i className={data.availability?.status==='available'?'available':data.availability?.status==='busy'?'busy':''}/>{statusLabel}</span><button className="icon-button" onClick={()=>setDark(x=>!x)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button><button className="button-secondary" onClick={logout}><LogOut size={15}/> Sign out</button></div></header>
   <section className="portal-content">
    <div className="portal-title-row"><div><div className="eyebrow">YOUR QFA WORKSPACE</div><h1>Welcome, {user?.name||'Client'}.</h1><p>View your work, account activity and communication with your freelancer.</p></div><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15} className={loading?'spin':''}/> Refresh</button></div>
