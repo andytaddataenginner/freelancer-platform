@@ -398,3 +398,29 @@
 @media(max-width:1200px){.dashboard-page .dashboard-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.dashboard-chart-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){.notes-layout,.portfolio-workspace-grid{grid-template-columns:1fr}.portfolio-showcase{grid-template-columns:1fr}.portfolio-showcase-art{display:none}}
 @media(max-width:700px){.dashboard-chart-grid{grid-template-columns:1fr}.dashboard-page .dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.notes-summary{grid-template-columns:1fr 1fr}.notes-card-grid,.portfolio-sample-grid{grid-template-columns:1fr}.notes-filters{flex-direction:column}.notes-client-picker{width:100%}}
+
+.page-content{padding-top:17px}.page-heading{margin-bottom:15px;align-items:center}
+.page-heading h1,.module-intro h1{font-size:27px;line-height:1.12}.page-heading p,.module-intro>p{font-size:11px;margin-top:5px}.page-heading .eyebrow{margin-bottom:5px;font-size:8px}
+.dashboard-heading{margin-bottom:10px}.dashboard-page .dashboard-kpis{margin-top:0}.dashboard-page .dashboard-chart-grid{margin-top:12px}
+.dashboard-page .dashboard-kpi{padding:10px 11px}.dashboard-page .dashboard-kpi .metric-icon{margin-bottom:5px}.dashboard-page .dashboard-kpi .metric-value{font-size:19px}
+.qfa-floating-timer{width:225px;top:82px!important;right:18px!important;bottom:auto!important;z-index:600}.qfa-floating-timer.is-collapsed{width:205px}
+.qfa-timer-head{padding:8px 10px}.qfa-timer-body{padding:9px;gap:7px}.qfa-timer-clock{font-size:25px;padding:6px}.qfa-timer-actions button{font-size:9px;padding:8px}.qfa-timer-actions button.reset{background:#fff4d8;color:#916400}
+.theme-dark .metric-card,.theme-dark .dashboard-page .dashboard-kpi,.theme-dark .dashboard-page .dashboard-chart-card,.theme-dark .dashboard-page .dashboard-recent,.theme-dark .panel-card{background:#18243a!important;border-color:#34435d!important;color:#e8edf6}
+.theme-dark .metric-label,.theme-dark .metric-foot,.theme-dark .dashboard-page .metric-label,.theme-dark .dashboard-page .metric-foot{color:#b5c1d4!important}
+.theme-dark .metric-value,.theme-dark .dashboard-page .metric-value,.theme-dark .dashboard-page .panel-heading h2{color:#f2f5fb!important}
+.theme-dark .metric-icon.blue{background:#203c72;color:#9dbaff}.theme-dark .metric-icon.gold{background:#4b3c1a;color:#f5d66e}.theme-dark .metric-icon.violet{background:#382c60;color:#c5b5ff}.theme-dark .metric-icon.green{background:#174936;color:#7ee0b6}.theme-dark .metric-icon.amber{background:#4b391d;color:#ffd27a}
+.theme-dark .dashboard-page .dashboard-log-project,.theme-dark .dashboard-page .dashboard-log-task{background:#152139!important;border-color:#34435d!important}
+.theme-dark .dashboard-page .dashboard-log-project>summary>span,.theme-dark .dashboard-page .dashboard-log-task>summary,.theme-dark .dashboard-page .dashboard-pay-legend b,.theme-dark .dashboard-page .activity-row strong{color:#edf2fa!important}
+.theme-dark .dashboard-page .activity-row small,.theme-dark .dashboard-page .empty-state,.theme-dark .dashboard-page .panel-heading p{color:#aab7cb!important}
+.theme-dark .kanban-column{background:#17243a!important;border-color:#34435d!important}.theme-dark .kanban-column-heading,.theme-dark .kanban-column-heading strong{color:#e8edf6!important}
+.theme-dark .kanban-column-heading>span{background:#263650;color:#dbe4f2}.theme-dark .kanban-task-card{background:#202f49!important;border-color:#3a4c68!important}
+.theme-dark .kanban-task-card>strong{color:#f0f4fb!important}.theme-dark .kanban-task-card>p,.theme-dark .kanban-task-bottom{color:#aab7cb!important}
+.theme-dark .kanban-task-card select{background:#17243a;color:#e8edf6;border:1px solid #435674}.theme-dark .kanban-empty{border-color:#435674;color:#aab7cb}
+.theme-dark .project-progress-panel>div:first-child>span,.theme-dark .project-progress-panel>div:first-child>strong,.theme-dark .project-progress-stats{color:#dce5f3!important}
+.theme-dark .page-heading h1,.theme-dark .module-intro h1{color:#f0f4fb!important}.theme-dark .page-heading p,.theme-dark .module-intro>p,.theme-dark .eyebrow{color:#aab7cb!important}
+.theme-dark .topbar{background:#18243a!important}.theme-dark .breadcrumb,.theme-dark .breadcrumb strong{color:#dbe4f2!important}
+.theme-dark .public-nav{background:rgba(15,25,43,.96)!important;border-bottom:1px solid #34435d}.theme-dark .public-brand,.theme-dark .public-nav-links a,.theme-dark .public-nav-links button{color:#f1f5fb!important}
+.theme-dark .public-nav-links .public-login-link{background:#1a5cff;color:#fff!important}.theme-dark .public-theme-toggle{background:#263650!important;border-color:#435674!important}
+.theme-dark .public-home{background:#101827;color:#e8edf6}.theme-dark .public-home h2,.theme-dark .public-home h3{color:#f0f4fb}.theme-dark .public-home p{color:#b5c1d4}
+.theme-dark .portfolio-sample-card,.theme-dark .client-note-card,.theme-dark .notes-editor-card,.theme-dark .notes-summary article{background:#18243a!important;border-color:#34435d!important}
+@media(max-width:760px){.page-content{padding-top:14px}.page-heading h1,.module-intro h1{font-size:24px}.qfa-floating-timer{top:72px!important;right:10px!important;width:205px}}
