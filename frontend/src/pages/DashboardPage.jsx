@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, ArrowUpRight, BriefcaseBusiness, CalendarDays, CircleDollarSign, Clock3, RefreshCw, Users } from 'lucide-react';
 import { apiRequest } from '../services/api';
+import { FloatingTimer } from '../components/FloatingTimer';
 
 const money = value => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(Number(value)||0);
 const monthNow = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); };
@@ -28,6 +29,7 @@ export function DashboardPage() {
     finally{setLoading(false);}
   }
   useEffect(()=>{load();},[month]);
+  useEffect(()=>{const refresh=()=>load();window.addEventListener('qfa:timer-saved',refresh);return()=>window.removeEventListener('qfa:timer-saved',refresh);},[month]);
   const stats=data.stats||{};
   const breakdown=Array.isArray(stats.clientBreakdown)?stats.clientBreakdown:[];
   const activeClients=data.clients.filter(c=>!['paused','terminated','inactive'].includes(String(c.contract_status||'active').toLowerCase()) && c.is_active!==false);
@@ -49,7 +51,7 @@ export function DashboardPage() {
     </section>
     <div className="dashboard-lower">
       <section className="panel-card"><div className="panel-heading"><div><h2>Recent time logs</h2><p>Latest recorded work in {monthTitle}</p></div><span className="panel-icon"><Clock3 size={18}/></span></div>{loading?<p className="empty-state">Loading recent activity…</p>:!data.logs.length?<p className="empty-state">No time entries recorded for this month.</p>:<div className="activity-list">{data.logs.slice(0,8).map((log,i)=><div className="activity-row" key={log.id||i}><span className="activity-dot"/><div><strong>{log.task_description||log.description||'Time entry'}</strong><small>{log.client_name||log.client||'Client'} · {String(log.date||'').slice(0,10)}</small></div><b>{Number(log.hours||0).toFixed(2)}h</b></div>)}</div>}</section>
-      <section className="panel-card"><div className="panel-heading"><div><h2>Active clients</h2><p>Current hours and available credits</p></div><BriefcaseBusiness size={18}/></div>{loading?<p className="empty-state">Loading clients…</p>:!activeClients.length?<p className="empty-state">No active clients found.</p>:<div className="client-list">{activeClients.map((client,i)=>{const row=breakdown.find(x=>String(x.client_id||'')===String(client.id))||breakdown.find(x=>x.client_name===client.name);return <div className="client-row" key={client.id||i}><span className="client-avatar">{(client.name||'C').slice(0,1).toUpperCase()}</span><div><strong>{client.name||'Unnamed client'}</strong><small>{Number(row?.hours||0).toFixed(2)}h this month · {client.rate_type||'hourly'}</small></div><span className="client-credit">{money(client.credit_balance||0)} credit</span></div>})}</div>}</section>
+      <section className="panel-card"><div className="panel-heading"><div><h2>Active clients</h2><p>Current hours and available credits</p></div><BriefcaseBusiness size={18}/></div>{loading?<p className="empty-state">Loading clients…</p>:!activeClients.length?<p className="empty-state">No active clients found.</p>:<div className="client-list">{activeClients.map((client,i)=>{const row=breakdown.find(x=>x.client_name===client.name);return <div className="client-row" key={client.id||i}><span className="client-avatar">{(client.name||'C').slice(0,1).toUpperCase()}</span><div><strong>{client.name||'Unnamed client'}</strong><small>{Number(row?.hours||0).toFixed(2)}h this month · {client.rate_type||'hourly'}</small></div><span className="client-credit">{money(client.credit_balance||0)} credit</span></div>})}</div>}</section>
     </div>
   </div>;
 }
