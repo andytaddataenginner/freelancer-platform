@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X } from 'lucide-react';
+import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X, NotebookPen } from 'lucide-react';
 import { auth } from '../services/auth';
 
 const navigation = [
@@ -13,6 +13,7 @@ const navigation = [
   { to: '/contracts', label: 'Contracts', icon: FileText },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/portfolio', label: 'Portfolio', icon: BriefcaseBusiness },
+  { to: '/notes', label: 'Client Notes', icon: NotebookPen },
 ];
 
 export function AppShell() {
