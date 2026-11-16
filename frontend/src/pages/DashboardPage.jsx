@@ -6,7 +6,7 @@ import {FloatingTimer} from '../components/FloatingTimer';
 const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(v)||0);
 const monthNow=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
 const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
-const rangeFor=m=>{const safe=validMonth(m)?m:monthNow();const [y,mo]=safe.split('-').map(Number);const end=new Date(y,mo,0).getDate();return {month:safe,from:safe+'-01',to:safe+'-'+String(end).padStart(2,'0')};};};
+const rangeFor=m=>{const safe=validMonth(m)?m:monthNow();const [y,mo]=safe.split('-').map(Number);const end=new Date(y,mo,0).getDate();return {month:safe,from:safe+'-01',to:safe+'-'+String(end).padStart(2,'0')};};
 const palette=['#1a5cff','#c9952a','#16a36a','#8b5cf6','#0ea5a4','#e0784b'];
 export function DashboardPage(){
  const [month,setMonth]=useState(monthNow()),[data,setData]=useState({stats:null,clients:[],logs:[]}),[loading,setLoading]=useState(true),[error,setError]=useState('');
