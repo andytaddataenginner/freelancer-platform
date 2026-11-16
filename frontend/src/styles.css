@@ -683,3 +683,87 @@
 .theme-dark .project-toolbar input,.theme-dark .project-toolbar select,.theme-dark .qfa-modal input,
 .theme-dark .qfa-modal select,.theme-dark .qfa-modal textarea{background:#17243a!important;color:#e8edf6!important;border-color:#435674!important}
 .theme-dark .project-icon-action{color:#dce5f3}
+
+
+/* Client portal: use the available viewport width and a dashboard-style collapsible rail. */
+.client-portal-page .portal-content{max-width:none!important;width:auto;padding:24px 34px 48px}
+.client-portal-page .portal-header{margin-left:232px}
+.client-portal-page .portal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.client-portal-page .portal-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0 0 16px}
+.client-portal-page .portal-chart-card{min-width:0;padding:18px}
+.client-portal-page .portal-chart-card .recharts-responsive-container{min-height:210px}
+.client-portal-page .portal-collapse{margin-left:auto;display:grid;place-items:center;width:28px;height:28px;border:1px solid #ffffff30;border-radius:7px;background:#ffffff12;color:#f5c842;cursor:pointer}
+.client-portal-page .portal-tabs button span{display:inline}
+.client-portal-page.portal-sidebar-collapsed .portal-header{margin-left:76px}
+.client-portal-page.portal-sidebar-collapsed .portal-content{margin-left:76px}
+.client-portal-page.portal-sidebar-collapsed .portal-tabs{width:76px}
+.client-portal-page.portal-sidebar-collapsed .client-sidebar-brand{justify-content:center;padding:4px 0 16px}
+.client-portal-page.portal-sidebar-collapsed .client-sidebar-brand span{display:none}
+.client-portal-page.portal-sidebar-collapsed .client-sidebar-brand img{width:38px;height:38px}
+.client-portal-page.portal-sidebar-collapsed .portal-collapse{position:absolute;top:62px;left:24px;margin:0}
+.client-portal-page.portal-sidebar-collapsed .portal-tabs button{justify-content:center;padding:12px 6px;font-size:0}
+.client-portal-page.portal-sidebar-collapsed .portal-tabs button span{display:none}
+.client-portal-page.portal-sidebar-collapsed .portal-tabs button svg{width:19px;height:19px}
+.client-portal-page.portal-dark{background:#080d18!important;color:#edf2fb!important;min-height:100vh}
+.client-portal-page.portal-dark .portal-content{color:#edf2fb!important}
+.client-portal-page.portal-dark .portal-title-row,
+.client-portal-page.portal-dark .portal-header{background:#101a2c!important;border-color:#263650!important}
+.client-portal-page.portal-dark .portal-title-row h1,
+.client-portal-page.portal-dark .portal-title-row p,
+.client-portal-page.portal-dark .portal-header-actions,
+.client-portal-page.portal-dark .portal-availability{color:#edf2fb!important}
+.client-portal-page.portal-dark .panel-card,
+.client-portal-page.portal-dark .metric-card,
+.client-portal-page.portal-dark .portal-overview-card,
+.client-portal-page.portal-dark .portal-chart-card{background:#111c30!important;border-color:#2c3c56!important;color:#edf2fb!important}
+.client-portal-page.portal-dark .panel-heading h2,
+.client-portal-page.portal-dark .panel-heading p,
+.client-portal-page.portal-dark .metric-label,
+.client-portal-page.portal-dark .portal-metric-value,
+.client-portal-page.portal-dark .portal-project-head strong,
+.client-portal-page.portal-dark .portal-note-readonly h3{color:#edf2fb!important}
+.client-portal-page.portal-dark .portal-project,
+.client-portal-page.portal-dark .portal-note,
+.client-portal-page.portal-dark .portal-note-readonly,
+.client-portal-page.portal-dark .portal-task,
+.client-portal-page.portal-dark .activity-row{background:#17243a!important;border-color:#31425f!important;color:#e8eef8!important}
+.client-portal-page.portal-dark .portal-project p,
+.client-portal-page.portal-dark .portal-note p,
+.client-portal-page.portal-dark .portal-note-readonly p,
+.client-portal-page.portal-dark .activity-row small,
+.client-portal-page.portal-dark .empty-state{color:#b6c3d8!important}
+.client-portal-page.portal-dark input,
+.client-portal-page.portal-dark select,
+.client-portal-page.portal-dark textarea{background:#0c1729!important;color:#edf2fb!important;border-color:#3a4b68!important}
+.client-portal-page.portal-dark .button-secondary{background:#1a2a43!important;color:#edf2fb!important;border-color:#3a4b68!important}
+.client-portal-page.portal-dark .portal-tabs{background:linear-gradient(180deg,#081431,#101e39)!important}
+.client-portal-page .portal-note-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px;margin:0 0 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
+.client-portal-page .portal-note-editor label{display:grid;gap:6px;font-size:11px}
+.client-portal-page .portal-note-editor-wide,.client-portal-page .portal-note-editor-actions{grid-column:1/-1}
+.client-portal-page .portal-note-editor-actions{display:flex;gap:9px}
+.client-portal-page .portal-note-edit{margin-left:auto;padding:5px 8px;font-size:10px}
+@media(max-width:1100px){.client-portal-page .portal-content{padding:20px}.client-portal-page .portal-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.client-portal-page .portal-content{margin:0!important;padding:15px!important}.client-portal-page .portal-header{margin:0!important}.client-portal-page .portal-tabs{width:auto!important}.client-portal-page .portal-collapse{display:none}.client-portal-page .portal-grid,.client-portal-page .portal-chart-grid{grid-template-columns:1fr}.client-portal-page .portal-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.client-portal-page.portal-sidebar-collapsed .portal-tabs button{font-size:10px}.client-portal-page.portal-sidebar-collapsed .portal-tabs button span{display:inline}.client-portal-page.portal-sidebar-collapsed .client-sidebar-brand{display:none}}
+@media(max-width:560px){.client-portal-page .portal-note-editor{grid-template-columns:1fr}.client-portal-page .portal-note-editor-wide,.client-portal-page .portal-note-editor-actions{grid-column:auto}}
+
+/* Portfolio cards reveal each project summary on hover/focus instead of long vertical descriptions. */
+.portfolio-sample-grid{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:18px}
+.portfolio-sample-card{position:relative;transition:transform .22s ease,box-shadow .22s ease}
+.portfolio-sample-card:hover,.portfolio-sample-card:focus-within{transform:translateY(-5px);box-shadow:0 18px 38px #0d235322}
+.portfolio-sample-visual{height:205px}
+.portfolio-hover-details{position:absolute;inset:auto 0 0;z-index:2;padding:16px 17px 18px;background:linear-gradient(180deg,rgba(8,18,42,.94),rgba(8,18,42,.98));color:#fff;transform:translateY(102%);opacity:0;transition:transform .24s ease,opacity .24s ease;pointer-events:none}
+.portfolio-sample-card:hover .portfolio-hover-details,.portfolio-sample-card:focus-within .portfolio-hover-details{transform:translateY(0);opacity:1}
+.portfolio-hover-details span{font-size:9px;font-weight:800;letter-spacing:.12em;color:#f5c842}
+.portfolio-hover-details p{font-size:11px;line-height:1.6;margin:8px 0 0;color:#f3f5fa;min-height:0}
+.portfolio-sample-copy p{display:none}
+.portfolio-sample-copy{padding:15px 16px 17px}
+.portfolio-sample-copy h3{margin:6px 0 0}
+@media(max-width:1000px){.portfolio-sample-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.portfolio-sample-grid{grid-template-columns:1fr}}
+
+/* Project board actions: keep labels balanced and edit controls visible in dark theme. */
+.projects-module .project-card-actions .button-primary{font-weight:600;letter-spacing:0;font-size:10px;padding:9px 12px}
+.theme-dark .projects-module .project-icon-action{display:inline-grid;place-items:center;min-width:30px;min-height:30px;background:#23334d!important;border:1px solid #435674!important;color:#f0f4fb!important;border-radius:8px}
+.theme-dark .projects-module .project-icon-action:hover{background:#304666!important;color:#fff!important}
+.theme-dark .projects-module .project-card-actions .button-secondary{background:#23334d!important;color:#f1f4fa!important;border-color:#435674!important}
+.theme-dark .projects-module .project-board-actions .button-secondary{background:#23334d!important;color:#f1f4fa!important;border-color:#435674!important}
