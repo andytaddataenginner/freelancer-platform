@@ -15,7 +15,11 @@ export const auth = {
   isValid: () => {
     if (!localStorage.getItem('token')) return false;
     const signedInAt = Number(localStorage.getItem('login_time') || 0);
-    if (!signedInAt || (Date.now() - signedInAt) / 3600000 > SESSION_HOURS) {
+    if (!signedInAt) {
+      localStorage.setItem('login_time', String(Date.now()));
+      return true;
+    }
+    if ((Date.now() - signedInAt) / 3600000 > SESSION_HOURS) {
       auth.clear();
       return false;
     }
