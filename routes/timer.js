@@ -185,7 +185,7 @@ router.get('/status', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/client-status — client status poll ─────────────────────────
 router.get('/client-status', verifyToken, async (req, res, next) => {
   try {
-    if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
+    if (String(req.user.role || '').trim().toLowerCase() !== 'client') return res.status(403).json({ error: 'Clients only' });
 
     const { rows } = await pool.query(`
       SELECT t.started_at, t.description, t.is_running, t.is_paused, t.accumulated_seconds,
