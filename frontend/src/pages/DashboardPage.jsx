@@ -32,8 +32,8 @@ export function DashboardPage() {
   const stats = data.stats || {};
   const cards = [
     {label:'Total clients',value:data.clients.length,icon:Users,accent:'blue'},
-    {label:'Monthly revenue',value:money(stats.total_revenue ?? stats.revenue ?? 0),icon:CircleDollarSign,accent:'gold'},
-    {label:'Tracked hours',value:Number(stats.total_hours ?? stats.hours ?? 0).toFixed(1),icon:Clock3,accent:'violet'},
+    {label:'Monthly revenue',value:money(stats.totalEarned ?? 0),icon:CircleDollarSign,accent:'gold'},
+    {label:'Tracked hours',value:Number(stats.hoursThisMonth ?? 0).toFixed(1),icon:Clock3,accent:'violet'},
     {label:'Recent time entries',value:data.logs.length,icon:Activity,accent:'green'},
   ];
 
