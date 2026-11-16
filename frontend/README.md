@@ -30,7 +30,7 @@ Set `VITE_API_BASE_URL` to the existing Render API URL. The current default poin
 - Login: connected to the existing `POST /auth/login` endpoint; token and user response fields were verified against `routes/auth.js`.
 - Dashboard: connected to the existing freelancer stats, clients and time-log endpoints; metric names match `routes/stats.js`.
 - Client management: client listing, search, create, profile update, tracked rate changes (through the existing contracts endpoint), and delete are migrated.
-- Client portal: read-only dashboard loads the existing stats, projects, time logs, bookings and notes endpoints.
+- Client portal: overview, project/task progress, time-log filters, billing history, booking requests/cancellation, freelancer availability and password changes.
 - Time Logs: manual log review, filters, monthly grouping, paid/unpaid updates, bulk payment status, edit/delete, payment remittance and timer controls.
 - Schedule: booking list and status management.
 - Reports: monthly revenue, outstanding balances and time-log summaries.
@@ -42,4 +42,4 @@ Set `VITE_API_BASE_URL` to the existing Render API URL. The current default poin
 
 ## Safety
 
-The existing root backend `package.json`, `server.js`, database schema, Supabase RLS policies and existing Render API service are unchanged. One additive, freelancer-authenticated `GET /api/portfolio/manage` endpoint is included so the React admin page can list draft and published portfolio items without changing the public portfolio endpoint. Never expose Supabase service-role credentials in Vite variables. Deploy the frontend as a separate Render Static Site from `feature/react-migration`; leave Render Root Directory blank so the build can copy the existing logo, founder photo and resume files into `frontend/dist`. Do not change the existing API service. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the exact settings.
+The existing root backend `package.json`, `server.js`, database schema, Supabase RLS policies and existing Render API service are unchanged. Additive authenticated endpoints are included for portfolio management (`GET /api/portfolio/manage`) and client billing/booking (`GET /api/client/fixed-payments`, `GET /api/client/payments`, `POST /api/client/bookings`, `PATCH /api/client/bookings/:id/cancel`). Existing public portfolio behavior and existing database schema are unchanged. Never expose Supabase service-role credentials in Vite variables. Deploy the frontend as a separate Render Static Site from `feature/react-migration`; leave Render Root Directory blank so the build can copy the existing logo, founder photo and resume files into `frontend/dist`. Do not change the existing API service. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the exact settings.
