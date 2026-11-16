@@ -139,3 +139,24 @@
 @media(max-width:720px){.portal-header{padding:0 16px}.portal-availability{display:none}.portal-content{padding:25px 16px 45px}.portal-title-row{align-items:flex-start}.portal-title-row h1{font-size:29px}.portal-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.portal-grid{grid-template-columns:1fr}.portal-booking-form{grid-template-columns:1fr}.portal-form-wide{grid-column:auto}.portal-filter-row{align-items:stretch}.portal-filter-row label{flex:1}.portal-month summary{flex-direction:column}.portal-header-actions{gap:6px}.portal-header-actions .button-secondary{padding:9px 10px;font-size:10px}}
 
 .portal-note-manage{display:grid;gap:10px}.portal-note-manage .row-actions{padding-top:8px}.portal-note-manage .row-actions .button-secondary{font-size:9px;padding:7px 10px}
+
+
+/* Migration parity refinements */
+.sidebar{position:sticky;top:0;height:100vh;align-self:flex-start;flex-shrink:0;overflow-y:auto}
+.dashboard-kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.heading-actions{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.month-filter{display:grid;gap:6px;font-size:10px;font-weight:700;color:#697790}
+.month-filter input{min-width:150px;padding:10px;border:1px solid #e0e7f1;border-radius:8px;background:#fff;color:#263957}
+.dashboard-breakdown{margin-bottom:18px}
+.dashboard-breakdown .table-sub{display:block;color:#8793a7;font-size:10px;margin-top:3px}
+.dashboard-breakdown table{min-width:760px}
+.dashboard-breakdown td,.dashboard-breakdown th{padding:13px 14px}
+.client-credit{font-size:10px;font-weight:700;color:#1a5cff;white-space:nowrap}
+.notes-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.note-card{margin:0;padding:18px}
+.note-card .note-content{white-space:pre-wrap;line-height:1.75;color:#596780;font-size:12px;margin:12px 0 18px}
+.note-editor{display:grid;gap:15px}
+.note-editor>label{display:grid;gap:6px;font-size:10px;font-weight:700;color:#697790}
+.text-link{border:0;background:transparent;color:#1a5cff;font-weight:700;cursor:pointer;padding:0}
+@media(max-width:1100px){.dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.sidebar{position:fixed;left:0;top:0;height:100dvh;transform:translateX(-100%);z-index:40}.sidebar.sidebar-mobile-open{transform:translateX(0)}.dashboard-kpis,.notes-grid{grid-template-columns:1fr}.heading-actions{width:100%;align-items:stretch}.month-filter{flex:1}.month-filter input{width:100%}}
