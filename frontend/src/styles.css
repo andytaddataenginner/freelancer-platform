@@ -195,3 +195,23 @@
 .login-feedback{margin:12px 0;padding:13px 14px;font-size:12px;line-height:1.55}
 @media(max-width:1000px){.invoice-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.invoice-kpis{grid-template-columns:1fr 1fr}.invoice-filter{align-items:stretch}.invoice-filter label,.invoice-filter input,.invoice-filter select{width:100%;min-width:0}.invoice-actions{min-width:190px}}
+
+/* Dashboard visual hierarchy refinement */
+.dashboard-page .page-heading{padding:25px 28px;border-radius:16px;background:linear-gradient(118deg,#0d2353 0%,#173c83 68%,#1a5cff 100%);align-items:center;margin-bottom:20px;box-shadow:0 16px 36px #0d235322}
+.dashboard-page .page-heading .eyebrow{color:#e7c76b}
+.dashboard-page .page-heading h1{color:#fff;font-size:31px}
+.dashboard-page .page-heading p{color:#d0dcf3}
+.dashboard-page .month-filter{color:#e3eaf8}
+.dashboard-page .month-filter input{border:1px solid #ffffff45;background:#ffffff;color:#203354}
+.dashboard-page .refresh-button{background:#ffffff;color:#0d2353;border-color:#ffffff}
+.dashboard-kpis .metric-card{position:relative;overflow:hidden;padding:20px 21px;border-radius:15px;box-shadow:0 8px 24px #1c35510c;transition:transform .18s,box-shadow .18s}
+.dashboard-kpis .metric-card:hover{transform:translateY(-3px);box-shadow:0 14px 28px #1c355116}
+.dashboard-kpis .metric-value{font-size:29px;color:#10234c}
+.dashboard-breakdown,.dashboard-lower .panel-card{border-radius:15px;box-shadow:0 8px 25px #1c35510a}
+.dashboard-breakdown .panel-heading h2,.dashboard-lower .panel-heading h2{font-size:15px}
+.dashboard-breakdown table thead th{background:#f4f6fb;color:#72809a}
+.dashboard-breakdown table tbody tr:hover td{background:#f7f9fe}
+.dashboard-page .status-tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:20px;font-size:9px;font-weight:700}
+.dashboard-page .status-paid{background:#e7f8f1;color:#16845e}
+.dashboard-page .status-unpaid{background:#fff4dd;color:#a16a08}
+@media(max-width:760px){.dashboard-page .page-heading{padding:20px;align-items:stretch}.dashboard-page .page-heading h1{font-size:27px}.dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
