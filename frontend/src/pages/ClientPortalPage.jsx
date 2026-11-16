@@ -19,7 +19,6 @@ export function ClientPortalPage(){
  const [noteForm,setNoteForm]=useState({title:'',content:'',category:'general'}),[editingNote,setEditingNote]=useState(null),[noteBusy,setNoteBusy]=useState(false);
  const [dark,setDark]=useState(()=>localStorage.getItem('qfa_theme')==='dark');
  const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
- const [editingNote,setEditingNote]=useState(null);
  const user=auth.user();
  async function load(){
   setLoading(true);setError('');
