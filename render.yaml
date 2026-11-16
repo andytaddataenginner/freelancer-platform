@@ -3,9 +3,8 @@ services:
     name: qfa-react-preview
     runtime: static
     branch: feature/react-migration
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    buildCommand: cd frontend && npm install && npm run build && cp ../QFA_Logo.png ../anduamlak.png ../resume-preview.jpg ../Anduamlak_Tadesse_Resume.pdf dist/
+    staticPublishPath: frontend/dist
     autoDeploy: true
     envVars:
       - key: VITE_API_BASE_URL
