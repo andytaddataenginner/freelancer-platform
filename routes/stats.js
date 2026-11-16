@@ -17,7 +17,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
     const freelancerId = req.user.id;
     const rawMonthParam = req.query.month;
     // Never pass partial month-picker values (e.g. 2026-0) into PostgreSQL date casts.
-    const monthParam = typeof rawMonthParam === 'string' && /^\\d{4}-(0[1-9]|1[0-2])$/.test(rawMonthParam)
+    const monthParam = typeof rawMonthParam === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(rawMonthParam)
       ? rawMonthParam
       : null;
     let firstOfMonth, lastOfMonth;
