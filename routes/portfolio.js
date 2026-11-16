@@ -2,6 +2,18 @@ const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
+// GET /api/portfolio/manage — all portfolio items owned by this freelancer (including drafts)
+// Kept separate from the public GET route, which intentionally returns published items only.
+router.get('/manage', requireFreelancer, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM portfolio_items WHERE freelancer_id = $1 ORDER BY sort_order, created_at DESC`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
 // GET /api/portfolio — public, but needs freelancer context
 // If ?freelancer_id is passed show that freelancer's portfolio
 // Otherwise show the first/main freelancer (for public homepage)
