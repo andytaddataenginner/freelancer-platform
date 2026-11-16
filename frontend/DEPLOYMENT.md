@@ -10,9 +10,9 @@ Create a new **Static Site** and connect the existing GitHub repository:
 |---|---|
 | Repository | `andytaddataenginner/freelancer-platform` |
 | Branch | `feature/react-migration` |
-| Root Directory | `frontend` |
-| Build Command | `npm install && npm run build` |
-| Publish Directory | `dist` |
+| Root Directory | Leave blank (repository root) |
+| Build Command | `cd frontend && npm install && npm run build && cp ../QFA_Logo.png ../anduamlak.png ../resume-preview.jpg ../Anduamlak_Tadesse_Resume.pdf dist/` |
+| Publish Directory | `frontend/dist` |
 
 Add this environment variable:
 
@@ -34,7 +34,7 @@ This is required so direct visits and browser refreshes on routes such as `/dash
 
 ## Optional Blueprint deployment
 
-A root `render.yaml` is included on this branch. You can use Render's Blueprint flow to create the separate static site from this branch. Review the proposed resource before applying it; it defines a new static site named `qfa-react-preview` and does not replace the existing API service.
+A root `render.yaml` is included on this branch. You can use Render's Blueprint flow to create the separate static site from this branch. Review the proposed resource before applying it; it defines a new static site named `qfa-react-preview` and does not replace the existing API service. The build copies the existing logo, founder photo and resume assets from the repository root into the generated `dist/` folder so the preview works even when the GitHub repository is private.
 
 ## Before testing
 
