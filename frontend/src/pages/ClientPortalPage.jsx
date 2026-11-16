@@ -20,7 +20,8 @@ export function ClientPortalPage(){
  async function load(){
   setLoading(true);setError('');
   const paths=['/client/stats','/client/projects','/client/timelogs','/client/bookings','/client/notes','/client/fixed-payments','/client/payments','/timer/agency/status'];
-  const results=await Promise.allSettled(paths.map(p=>apiRequest(p)));
+  let results;
+  try { results=await Promise.allSettled(paths.map(p=>apiRequest(p))); } catch(e) { setError(e.message||'Unable to connect to the portal.'); setLoading(false); return; }
   const value=i=>results[i].status==='fulfilled'?results[i].value:null;
   setData({stats:value(0),projects:value(1)||[],logs:value(2)||[],bookings:value(3)||[],notes:value(4)||[],fixed:value(5)||[],payments:value(6)||[],availability:value(7)});
   if(results.slice(0,7).every(x=>x.status==='rejected'))setError('We could not load your portal information. Please refresh or contact your freelancer.');
