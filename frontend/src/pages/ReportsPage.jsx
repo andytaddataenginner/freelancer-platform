@@ -5,7 +5,7 @@ import {ResponsiveContainer,BarChart,Bar,XAxis,YAxis,Tooltip,Legend,CartesianGri
 
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n)||0);
 const monthKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-const validMonth=m=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
+const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
 const shiftMonth=(key,offset)=>{const safe=validMonth(key)?key:monthKey(new Date());const [y,m]=safe.split('-').map(Number);const d=new Date(y,m-1+offset,1);return monthKey(d);};
 const monthTitle=key=>validMonth(key)?new Date(key+'-02T00:00:00').toLocaleDateString(undefined,{month:'short',year:'2-digit'}):'—';
 const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
