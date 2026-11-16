@@ -10,7 +10,7 @@ const monthLabel=m=>{const d=new Date(m+'-02T00:00:00');return Number.isNaN(d.ge
 
 export function TimeLogsPage(){
  const [clients,setClients]=useState([]),[logs,setLogs]=useState([]),[fixed,setFixed]=useState([]);
- const [filterClient,setFilterClient]=useState(''),[payment,setPayment]=useState(''),[from,setFrom]=useState(weekAgo),[to,setTo]=useState(today);
+ const [filterClient,setFilterClient]=useState(''),[payment,setPayment]=useState(''),[from,setFrom]=useState(''),[to,setTo]=useState('');
  const [selected,setSelected]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[showAllLogs,setShowAllLogs]=useState(false);
  const [edit,setEdit]=useState(null),[remit,setRemit]=useState({client_id:'',amount_remitted:'',date:today()}),[busy,setBusy]=useState(false);
  const [timer,setTimer]=useState({client_id:'',description:'',active:null,elapsed:0});
