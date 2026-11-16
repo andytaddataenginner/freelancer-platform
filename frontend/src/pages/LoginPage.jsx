@@ -5,7 +5,7 @@ import {apiRequest} from '../services/api';
 import {auth} from '../services/auth';
 
 export function LoginPage(){
- const [params]=useSearchParams();
+ const [params,setParams]=useSearchParams();
  const [mode,setMode]=useState(params.get('mode')==='signup'?'signup':'login');
  const [loginRole,setLoginRole]=useState(params.get('role')==='client'?'client':'freelancer');
  const [name,setName]=useState(''),[phone,setPhone]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState('');
@@ -18,7 +18,7 @@ export function LoginPage(){
     if(password.length<8||!/\d/.test(password))throw new Error('Password must be at least 8 characters and include a number.');
     if(password!==confirm)throw new Error('Passwords do not match.');
    }
-   const result=await apiRequest(mode==='signup'?'/auth/signup/initiate':'/auth/login',{method:'POST',body:JSON.stringify(mode==='signup'?{name,email,phone,password,role:'freelancer'}:{email,password})});
+   const result=await apiRequest(mode==='signup'?'/auth/signup/initiate':'/auth/login',{method:'POST',body:JSON.stringify(mode==='signup'?{name,email,phone,password,role:'freelancer'}:{email,password,requestedRole:loginRole})});
    const token=result.token||result.accessToken,user=result.user||result.data?.user;
    if(!token||!user)throw new Error('The server response did not contain the expected session details.');
    const actualRole=String(user.role||'').trim().toLowerCase();
@@ -29,7 +29,7 @@ export function LoginPage(){
   finally{setBusy(false);}
  }
  return <main className="login-screen"><section className="login-card"><div className="login-brand"><span>Q</span><div><strong>QFA</strong><small>QUICK FREELANCING AGENCY</small></div></div><div className="eyebrow">{mode==='signup'?'FREELANCER REGISTRATION':'WORKSPACE ACCESS'}</div><h1>{mode==='signup'?'Create your account.':'Welcome back.'}</h1><p className="login-subtitle">{mode==='signup'?'Set up your freelancer workspace to manage clients, time and billing.':'Sign in to access your QFA workspace.'}</p>
- {mode==='login'&&<div className="login-role-switch" role="group" aria-label="Account type"><button type="button" className={loginRole==='freelancer'?'active':''} onClick={()=>{setLoginRole('freelancer');setError('');}}>Freelancer login</button><button type="button" className={loginRole==='client'?'active':''} onClick={()=>{setLoginRole('client');setError('');}}>Client login</button></div>}
+ {mode==='login'&&<div className="login-role-switch" role="group" aria-label="Account type"><button type="button" className={loginRole==='freelancer'?'active':''} onClick={()=>{setLoginRole('freelancer');setParams({role:'freelancer'});setError('');}}>Freelancer login</button><button type="button" className={loginRole==='client'?'active':''} onClick={()=>{setLoginRole('client');setParams({role:'client'});setError('');}}>Client login</button></div>}
  <form onSubmit={submit}>
  {mode==='signup'&&<><label>Full name</label><div className="field-wrap"><User size={17}/><input value={name} onChange={e=>setName(e.target.value)} autoComplete="name" required placeholder="Your full name"/></div><label>Phone (optional)</label><div className="field-wrap"><Phone size={17}/><input value={phone} onChange={e=>setPhone(e.target.value)} autoComplete="tel" placeholder="Phone number"/></div></>}
  <label>Email address</label><div className="field-wrap"><Mail size={17}/><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" autoComplete="username" required/></div>
