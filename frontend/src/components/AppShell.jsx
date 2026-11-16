@@ -42,7 +42,7 @@ export function AppShell() {
       {mobileOpen && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
       <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'sidebar-mobile-open' : ''}`}>
         <div className="brand-lockup">
-          <div className="brand-mark">Q</div>
+          <img className="brand-logo-image" src="/QFA_Logo.png" alt="QFA"/>
           {!collapsed && <div><strong>QFA</strong><span>QUICK FREELANCING AGENCY</span></div>}
           <button className="icon-button sidebar-collapse" onClick={() => setCollapsed(!collapsed)} aria-label="Toggle sidebar">{collapsed ? <ChevronRight size={17}/> : <ChevronLeft size={17}/>}</button>
         </div>
