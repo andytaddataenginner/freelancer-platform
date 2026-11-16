@@ -10,6 +10,7 @@ import { TimeLogsPage } from './pages/TimeLogsPage';
 import { SchedulePage } from './pages/SchedulePage';
 import { ReportsPage } from './pages/ReportsPage';
 import { FixedInvoicesPage } from './pages/FixedInvoicesPage';
+import { InvoicesPage } from './pages/InvoicesPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { PortfolioPage } from './pages/PortfolioPage';
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/fixed-invoices" element={<FixedInvoicesPage />} />
+        <Route path="/invoices" element={<InvoicesPage />} />
         <Route path="/contracts" element={<ContractsPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
