@@ -46,7 +46,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
           AND COALESCE(cc.fixed_price, c.fixed_price) IS NOT NULL
           AND cc.effective_from <= $3::date
           AND (cc.effective_to IS NULL OR cc.effective_to >= $3::date)
-          AND $1 >= to_char(u.created_at, 'YYYY-MM')
+          AND ($1 || '-01')::date >= date_trunc('month', u.created_at)::date
         ON CONFLICT (client_id, month) DO NOTHING
       `, [currentMonth, freelancerId, firstOfMonth]);
     } catch (genErr) {
@@ -126,7 +126,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
       WHERE f.freelancer_id = $1 AND f.month = $2
         AND cc.status = 'active'
         AND cc.rate_type = 'fixed'
-        AND $2 >= to_char(u.created_at, 'YYYY-MM')
+        AND ($2 || '-01')::date >= date_trunc('month', u.created_at)::date
       ORDER BY u.name
     `, [freelancerId, currentMonth]);
 
