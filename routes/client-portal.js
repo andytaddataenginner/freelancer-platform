@@ -110,6 +110,26 @@ router.get('/notes', requireClient, async (req, res, next) => {
 });
 
 
+// PUT /api/client/notes/:id — client may edit the notes assigned to their own account
+router.put('/notes/:id', requireClient, async (req, res, next) => {
+  try {
+    const { title, content, category } = req.body || {};
+    if (typeof title !== 'string' || !title.trim() || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ error: 'A title and note content are required.' });
+    }
+    const { rows } = await pool.query(
+      `UPDATE client_notes
+       SET title = $1, content = $2, category = COALESCE($3, category)
+       WHERE id = $4 AND client_id = $5
+       RETURNING id, title, content, category, is_pinned, created_at`,
+      [title.trim(), content.trim(), typeof category === 'string' ? category : null, req.params.id, req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Note not found for this client account.' });
+    res.json(rows[0]);
+  } catch (e) { next(e); }
+});
+
+
 // GET /api/client/timelogs
 router.get('/timelogs', requireClient, async (req, res, next) => {
     try {
