@@ -5,6 +5,7 @@ import { PublicHome } from './pages/PublicHome';
 import { AppShell } from './components/AppShell';
 import { DashboardPage } from './pages/DashboardPage';
 import { ModulePlaceholder } from './pages/ModulePlaceholder';
+import { ClientPortalPage } from './pages/ClientPortalPage';
 
 function Protected({ children }) {
   if (!auth.isValid()) return <Navigate to="/login" replace />;
@@ -29,6 +30,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<PublicHome />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/client-portal" element={auth.isValid() && auth.user()?.role === "client" ? <ClientPortalPage /> : <Navigate to="/login" replace />} />
       <Route element={<Protected><AppShell /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
         {modules.map(([path, title, description]) => (
