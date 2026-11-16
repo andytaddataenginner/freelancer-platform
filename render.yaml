@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: qfa-react-preview
+    runtime: static
+    branch: feature/react-migration
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://freelancer-platform-9jut.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
