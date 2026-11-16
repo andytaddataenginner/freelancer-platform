@@ -424,3 +424,41 @@
 .theme-dark .public-home{background:#101827;color:#e8edf6}.theme-dark .public-home h2,.theme-dark .public-home h3{color:#f0f4fb}.theme-dark .public-home p{color:#b5c1d4}
 .theme-dark .portfolio-sample-card,.theme-dark .client-note-card,.theme-dark .notes-editor-card,.theme-dark .notes-summary article{background:#18243a!important;border-color:#34435d!important}
 @media(max-width:760px){.page-content{padding-top:14px}.page-heading h1,.module-intro h1{font-size:24px}.qfa-floating-timer{top:72px!important;right:10px!important;width:205px}}
+
+/* Login page: fixed light-only split layout, landing-page return and promotional copy */
+.login-screen{position:relative;min-height:100vh;display:grid;grid-template-columns:minmax(320px,1fr) minmax(390px,480px);align-items:center;gap:clamp(35px,7vw,110px);padding:74px clamp(28px,8vw,130px);background:linear-gradient(135deg,#f4f7fc 0%,#edf2fb 52%,#f8f9fc 100%)!important;color:#263957!important}
+.login-home-link{position:absolute;top:25px;left:clamp(28px,8vw,130px);display:inline-flex;align-items:center;gap:8px;color:#52627d!important;text-decoration:none;font-size:12px;font-weight:600;z-index:2}
+.login-promo{max-width:610px;min-height:470px;display:flex;flex-direction:column;justify-content:space-between;padding:28px 0}
+.login-promo-brand{display:flex;align-items:center;gap:12px;color:#71809a;font-size:9px;font-weight:800;letter-spacing:.16em}
+.login-promo-brand img{width:52px;height:52px;object-fit:contain}
+.login-promo-copy>span{font-size:9px;font-weight:800;letter-spacing:.18em;color:#a27b28}
+.login-promo-copy h2{max-width:590px;margin:18px 0;font:700 clamp(42px,5.2vw,68px)/1.08 'Playfair Display',serif;letter-spacing:-.035em;color:#0d2353}
+.login-promo-copy h2 em{color:#1a5cff;font-style:normal}
+.login-promo-copy p{max-width:490px;font-size:14px;line-height:1.9;color:#687991}
+.login-promo-foot{display:flex;align-items:center;gap:12px;color:#8b98ad;font-size:8px;font-weight:800;letter-spacing:.13em}.login-promo-foot i{width:4px;height:4px;border-radius:50%;background:#d4a83d}
+.login-card{width:100%;max-width:480px;padding:38px;background:#fff;border:1px solid #e4eaf3;border-radius:18px;box-shadow:0 22px 65px #18345b12;color:#263957}
+.login-brand{margin-bottom:23px}.login-brand img{width:39px;height:39px;object-fit:contain}
+.login-card h1{font-size:29px}.login-role-switch{margin-bottom:8px}
+.login-screen .login-card,.login-screen .login-card *{color:inherit}
+.login-screen .login-card .login-brand strong,.login-screen .login-card h1{color:#0d2353}
+.login-screen .login-card .login-brand small,.login-screen .login-subtitle,.login-screen .login-footnote{color:#8994a7}
+.login-screen .login-card form>label{color:#53617a}
+.login-screen .field-wrap{background:#fff;border-color:#e2e8f1;color:#98a4b6}
+.login-screen .field-wrap input{background:transparent;color:#233653}
+.login-screen .login-role-switch button{background:#f2f5fa;color:#64738b;border-color:#e3e9f2}
+.login-screen .login-role-switch button.active{background:#0d2353;color:#fff;border-color:#0d2353}
+.login-screen .login-card .text-link{color:#1a5cff}
+@media(max-width:900px){.login-screen{grid-template-columns:1fr;gap:20px;padding:80px 24px 35px}.login-promo{min-height:unset;padding:12px 0 20px}.login-promo-copy h2{font-size:40px}.login-promo-foot{display:none}.login-card{max-width:560px;margin:auto}}
+@media(max-width:520px){.login-screen{padding:70px 15px 24px}.login-promo-copy h2{font-size:34px}.login-promo-copy p{font-size:12px}.login-card{padding:25px 20px}.login-home-link{left:18px;top:20px}}
+/* Explicit light-mode landing navigation contrast and alignment */
+.public-home{background:#fff;color:#243653}
+.public-nav{position:relative;z-index:20;background:#fff!important;color:#263957!important;border-bottom:1px solid #e8edf4;min-height:78px}
+.public-nav .public-brand{display:flex;align-items:center;gap:10px;color:#0d2353!important;text-decoration:none;white-space:nowrap}
+.public-nav .public-brand img{width:36px;height:36px;object-fit:contain}
+.public-nav .public-brand span{width:auto;height:auto;background:transparent;color:#0d2353;display:inline;font:700 15px 'Playfair Display',serif}
+.public-nav .public-nav-links{display:flex;align-items:center;gap:clamp(10px,1.8vw,24px);color:#52627d}
+.public-nav .public-nav-links a:not(.public-login-link){color:#52627d!important;text-decoration:none}
+.public-nav .public-nav-links button{color:#52627d}
+.public-nav .public-login-link{display:inline-flex;align-items:center;gap:6px;background:#0d2353;color:#fff!important;padding:10px 13px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;white-space:nowrap}
+.public-nav .public-theme-toggle{display:grid;place-items:center;width:34px;height:34px;border:1px solid #e0e7f0;border-radius:8px;background:#f7f9fc;color:#52627d}
+@media(max-width:850px){.public-nav{height:auto;padding:14px 18px;gap:12px;flex-wrap:wrap}.public-nav .public-nav-links{width:100%;overflow-x:auto;padding:5px 0 3px;gap:16px}.public-nav .public-nav-links a{white-space:nowrap}}
