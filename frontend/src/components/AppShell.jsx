@@ -2,7 +2,6 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X, NotebookPen, Receipt } from 'lucide-react';
 import { auth } from '../services/auth';
-import { ChatbotLoader } from './ChatbotLoader';
 import { apiRequest } from '../services/api';
 
 const navigation = [
@@ -40,7 +39,6 @@ export function AppShell() {
 
   return (
     <div className={`app-frame ${dark ? 'theme-dark' : ''}`}>
-      <ChatbotLoader />
       {mobileOpen && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
       <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'sidebar-mobile-open' : ''}`}>
         <div className="brand-lockup">
