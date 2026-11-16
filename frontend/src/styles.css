@@ -277,3 +277,32 @@
 .portal-tabs button{flex:0 0 auto}
 .portal-dark .portal-tabs{background:#0b1426}
 .public-nav{position:sticky;top:0;z-index:120;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);box-shadow:0 4px 18px #0d23530d}
+
+/* Client portal workspace shell — persistent left navigation and clear section structure */
+.client-portal-page{min-height:100vh;background:#f1f4f9}
+.portal-header{height:70px;margin-left:232px;padding:0 28px;background:#fff;border-bottom:1px solid #e5eaf2;display:flex;align-items:center;justify-content:flex-end}
+.portal-header .portal-brand{display:none}
+.portal-header-actions{display:flex;align-items:center;gap:12px}
+.portal-content{margin-left:232px;max-width:none;padding:28px 30px 60px}
+.portal-tabs{position:fixed!important;left:0;top:0;bottom:0;width:232px;z-index:150;display:flex!important;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:5px;padding:90px 13px 20px!important;background:linear-gradient(180deg,#0d2353,#142f66)!important;overflow-y:auto;box-shadow:5px 0 22px #0d23531c}
+.portal-tabs:before{content:'QFA  ·  CLIENT WORKSPACE';position:absolute;top:25px;left:20px;color:#f5c842;font-size:11px;font-weight:800;letter-spacing:.1em}
+.portal-tabs button{width:100%;display:flex;justify-content:flex-start;align-items:center;gap:12px;padding:12px 13px;border:0!important;border-radius:9px!important;background:transparent!important;color:#d1dbee!important;text-align:left;font-size:11px;font-weight:600;cursor:pointer}
+.portal-tabs button:hover{background:#ffffff12!important;color:#fff!important}
+.portal-tabs button.active{background:linear-gradient(90deg,#ffffff20,#c9952a30)!important;color:#fff!important;box-shadow:inset 3px 0 #f5c842}
+.portal-title-row{padding:2px 0 20px}
+.portal-title-row h1{font-family:'Playfair Display',serif;font-size:31px;color:#0d2353}
+.portal-metrics{grid-template-columns:repeat(5,minmax(0,1fr));gap:13px;margin-bottom:18px}
+.portal-metrics .metric-card{border:1px solid #e7ebf2;border-radius:13px;box-shadow:0 5px 18px #0d23530b;padding:16px}
+.portal-grid{gap:16px}
+.portal-grid .panel-card,.portal-content>.panel-card{border:1px solid #e7ebf2;border-radius:14px;box-shadow:0 5px 20px #0d23530a}
+.portal-dark .portal-tabs{background:linear-gradient(180deg,#081431,#101f3c)!important}
+.portal-dark .portal-header{background:#101a2d;border-color:#263650}
+.portal-dark .portal-content{color:#eaf0fb}
+@media(max-width:850px){
+ .portal-header{margin-left:0;padding:0 16px}
+ .portal-content{margin-left:0;padding:22px 16px 45px}
+ .portal-tabs{position:sticky!important;top:70px;left:auto;bottom:auto;width:auto;flex-direction:row;align-items:center;padding:8px 10px!important;margin:0 -16px 18px;overflow-x:auto;box-shadow:0 5px 14px #0d235310}
+ .portal-tabs:before{display:none}
+ .portal-tabs button{width:auto;white-space:nowrap;flex:0 0 auto;padding:10px 12px}
+ .portal-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
