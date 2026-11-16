@@ -112,7 +112,7 @@ router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
         AND cc.fixed_price IS NOT NULL
         AND cc.effective_from <= $2::date
         AND (cc.effective_to IS NULL OR cc.effective_to >= $2::date)
-        AND $2::text >= to_char(u.created_at, 'YYYY-MM')
+        AND $2::date >= date_trunc('month', u.created_at)::date
     `, [req.user.id, month]);
 
     await Promise.all(clients.rows.map(cl =>
