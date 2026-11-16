@@ -7,7 +7,7 @@ export function FloatingTimer(){
  const [clients,setClients]=useState([]),[clientId,setClientId]=useState(''),[description,setDescription]=useState('');
  const [elapsed,setElapsed]=useState(0),[state,setState]=useState('idle'),[busy,setBusy]=useState(false);
  const [collapsed,setCollapsed]=useState(()=>localStorage.getItem('qfa_timer_collapsed')==='1');
- const [pos,setPos]=useState(()=>{try{return JSON.parse(localStorage.getItem('qfa_timer_pos')||'null')||{right:22,bottom:22};}catch{return {right:22,bottom:22};}});
+ const [pos,setPos]=useState(()=>{try{return JSON.parse(localStorage.getItem('qfa_timer_pos')||'null')||{right:18,top:82};}catch{return {right:22,bottom:22};}});
  const [dragging,setDragging]=useState(false);const drag=useRef(null);const base=useRef(0);const tick=useRef(null);
  useEffect(()=>{apiRequest('/clients').then(v=>{const a=Array.isArray(v)?v:[];setClients(a);if(a[0])setClientId(String(a[0].user_id||a[0].id));}).catch(()=>{});apiRequest('/timer/status').then(v=>{if(Array.isArray(v)&&v[0]){const t=v[0];setClientId(String(t.client_id));setDescription(t.description||'');setElapsed(Number(t.elapsed_sec)||0);setState(t.is_paused?'paused':'running');}}).catch(()=>{});},[]);
  useEffect(()=>{if(state!=='running')return;const start=Date.now();const initial=elapsed;tick.current=setInterval(()=>setElapsed(initial+Math.floor((Date.now()-start)/1000)),1000);return()=>clearInterval(tick.current);},[state]);
