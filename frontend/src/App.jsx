@@ -7,6 +7,14 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ModulePlaceholder } from './pages/ModulePlaceholder';
 import { ClientPortalPage } from './pages/ClientPortalPage';
 import { ClientsPage } from './pages/ClientsPage';
+import { TimeLogsPage } from './pages/TimeLogsPage';
+import { SchedulePage } from './pages/SchedulePage';
+import { ReportsPage } from './pages/ReportsPage';
+import { FixedInvoicesPage } from './pages/FixedInvoicesPage';
+import { ContractsPage } from './pages/ContractsPage';
+import { ProjectsPage } from './pages/ProjectsPage';
+import { PortfolioPage } from './pages/PortfolioPage';
+import { NotesPage } from './pages/NotesPage';
 
 function Protected({ children }) {
   if (!auth.isValid()) return <Navigate to="/login" replace />;
@@ -16,14 +24,7 @@ function Protected({ children }) {
 }
 
 const modules = [
-  
-  ['time-logs', 'Time Logs', 'Track billable work, review entries and manage payment status.'],
-  ['schedule', 'Schedule', 'Manage bookings, availability and live work sessions.'],
-  ['reports', 'Reports', 'Review revenue, utilization and client performance.'],
-  ['fixed-invoices', 'Fixed Invoices', 'Manage monthly fixed-fee invoices and payment status.'],
-  ['contracts', 'Contracts', 'Review contract history, pauses, resumptions and terminations.'],
-  ['portfolio', 'Portfolio', 'Manage the public QFA portfolio and project entries.'],
-  ['projects', 'Projects', 'Track projects, tasks and delivery progress.'],
+
 ];
 
 export default function App() {
@@ -35,9 +36,15 @@ export default function App() {
       <Route element={<Protected><AppShell /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/clients" element={<ClientsPage />} />
-        {modules.map(([path, title, description]) => (
-          <Route key={path} path={`/${path}`} element={<ModulePlaceholder title={title} description={description} />} />
-        ))}
+        <Route path="/time-logs" element={<TimeLogsPage />} />
+        <Route path="/schedule" element={<SchedulePage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/fixed-invoices" element={<FixedInvoicesPage />} />
+        <Route path="/contracts" element={<ContractsPage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
+        <Route path="/notes" element={<NotesPage />} />
+
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
