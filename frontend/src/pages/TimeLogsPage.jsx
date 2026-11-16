@@ -2,7 +2,8 @@ import { useEffect,useMemo,useState } from 'react';
 import { apiRequest } from '../services/api';
 import { Check,Clock3,Filter,Pause,Play,Plus,RefreshCw,Save,Trash2,X } from 'lucide-react';
 
-const today=()=>new Date().toISOString().slice(0,10);\nconst weekAgo=()=>{const d=new Date();d.setDate(d.getDate()-6);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const today=()=>new Date().toISOString().slice(0,10);
+const weekAgo=()=>{const d=new Date();d.setDate(d.getDate()-6);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0);
 const fmtHours=n=>{const h=Math.floor(Number(n)||0),m=Math.round(((Number(n)||0)-h)*60);return h?m?h+'h '+m+'m':h+'h':m+'m';};
 const monthLabel=m=>{const d=new Date(m+'-02T00:00:00');return Number.isNaN(d.getTime())?m:d.toLocaleDateString(undefined,{month:'long',year:'numeric'});};
