@@ -1,29 +1,37 @@
-import { useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { apiRequest } from '../services/api';
-import { auth } from '../services/auth';
+import {useState} from 'react';
+import {ArrowLeft,Eye,EyeOff,LockKeyhole,Mail,User,Phone} from 'lucide-react';
+import {Link,useNavigate,useSearchParams} from 'react-router-dom';
+import {apiRequest} from '../services/api';
+import {auth} from '../services/auth';
 
-export function LoginPage() {
-  const [email,setEmail] = useState('');
-  const [password,setPassword] = useState('');
-  const [showPassword,setShowPassword] = useState(false);
-  const [error,setError] = useState('');
-  const [busy,setBusy] = useState(false);
-  const navigate = useNavigate();
-
-  async function submit(event) {
-    event.preventDefault(); setError(''); setBusy(true);
-    try {
-      const result = await apiRequest('/auth/login', { method:'POST', body:JSON.stringify({ email, password }) });
-      const token = result.token || result.accessToken;
-      const user = result.user || result.data?.user;
-      if (!token || !user) throw new Error('The login response did not contain the expected session details. Existing login response needs verification.');
-      auth.save(token,user);
-      navigate(user.role === 'client' ? '/client-portal' : '/dashboard',{replace:true});
-    } catch (e) { setError(e.message || 'Unable to sign in. Please try again.'); }
-    finally { setBusy(false); }
-  }
-
-  return <main className="login-screen"><Link to="/" className="back-home"><ArrowLeft size={16}/> Back to QFA</Link><section className="login-card"><div className="login-brand"><span>Q</span><div><strong>QFA</strong><small>QUICK FREELANCING AGENCY</small></div></div><div className="eyebrow">WORKSPACE ACCESS</div><h1>Welcome back.</h1><p className="login-subtitle">Sign in to manage your freelance operations.</p><form onSubmit={submit}><label>Email address</label><div className="field-wrap"><Mail size={17}/><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" autoComplete="username" required/></div><label>Password</label><div className="field-wrap"><LockKeyhole size={17}/><input type={showPassword?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required/><button type="button" onClick={()=>setShowPassword(!showPassword)} aria-label={showPassword?'Hide password':'Show password'}>{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></div>{error&&<div className="form-error" role="alert">{error}</div>}<button className="button-primary login-submit" disabled={busy}>{busy?'Signing in…':'Sign in'} <ArrowLeft className="login-arrow" size={17}/></button></form><p className="login-footnote">Your existing QFA account is used. No new account or database migration is required.</p></section></main>;
+export function LoginPage(){
+ const [params]=useSearchParams();
+ const [mode,setMode]=useState(params.get('mode')==='signup'?'signup':'login');
+ const [name,setName]=useState(''),[phone,setPhone]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState('');
+ const [showPassword,setShowPassword]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ const navigate=useNavigate();
+ async function submit(event){
+  event.preventDefault();setError('');setBusy(true);
+  try{
+   if(mode==='signup'){
+    if(password.length<8||!/\d/.test(password))throw new Error('Password must be at least 8 characters and include a number.');
+    if(password!==confirm)throw new Error('Passwords do not match.');
+   }
+   const result=await apiRequest(mode==='signup'?'/auth/signup/initiate':'/auth/login',{method:'POST',body:JSON.stringify(mode==='signup'?{name,email,phone,password,role:'freelancer'}:{email,password})});
+   const token=result.token||result.accessToken,user=result.user||result.data?.user;
+   if(!token||!user)throw new Error('The server response did not contain the expected session details.');
+   auth.save(token,user);
+   navigate(user.role==='client'?'/client-portal':'/dashboard',{replace:true});
+  }catch(e){setError(e.message||'Unable to continue. Please try again.');}
+  finally{setBusy(false);}
+ }
+ return <main className="login-screen"><Link to="/" className="back-home"><ArrowLeft size={16}/> Back to QFA</Link><section className="login-card"><div className="login-brand"><span>Q</span><div><strong>QFA</strong><small>QUICK FREELANCING AGENCY</small></div></div><div className="eyebrow">{mode==='signup'?'FREELANCER REGISTRATION':'WORKSPACE ACCESS'}</div><h1>{mode==='signup'?'Create your account.':'Welcome back.'}</h1><p className="login-subtitle">{mode==='signup'?'Set up your freelancer workspace to manage clients, time and billing.':'Sign in to access your QFA workspace.'}</p>
+ <form onSubmit={submit}>
+ {mode==='signup'&&<><label>Full name</label><div className="field-wrap"><User size={17}/><input value={name} onChange={e=>setName(e.target.value)} autoComplete="name" required placeholder="Your full name"/></div><label>Phone (optional)</label><div className="field-wrap"><Phone size={17}/><input value={phone} onChange={e=>setPhone(e.target.value)} autoComplete="tel" placeholder="Phone number"/></div></>}
+ <label>Email address</label><div className="field-wrap"><Mail size={17}/><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" autoComplete="username" required/></div>
+ <label>Password</label><div className="field-wrap"><LockKeyhole size={17}/><input type={showPassword?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete={mode==='signup'?'new-password':'current-password'} required/><button type="button" onClick={()=>setShowPassword(!showPassword)} aria-label="Toggle password visibility">{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></div>
+ {mode==='signup'&&<><label>Confirm password</label><div className="field-wrap"><LockKeyhole size={17}/><input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password" required placeholder="Confirm your password"/></div><p className="login-footnote">Use at least 8 characters and include a number. Registration creates a freelancer account.</p></>}
+ {error&&<div className="form-error" role="alert">{error}</div>}<button className="button-primary login-submit" disabled={busy}>{busy?(mode==='signup'?'Creating account…':'Signing in…'):(mode==='signup'?'Create account':'Sign in')}</button></form>
+ <p className="login-footnote">{mode==='signup'?'Already have an account? ':'New to QFA? '}<button type="button" className="text-link" onClick={()=>{setMode(mode==='signup'?'login':'signup');setError('');}}>{mode==='signup'?'Sign in':'Create a freelancer account'}</button></p>
+ </section></main>;
 }
