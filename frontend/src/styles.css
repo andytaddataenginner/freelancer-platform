@@ -180,3 +180,18 @@
 .login-role-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;margin:0 0 18px;background:#f0f3f8;border-radius:10px}
 .login-role-switch button{border:0;border-radius:7px;padding:10px 8px;background:transparent;color:#66748b;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
 .login-role-switch button.active{background:#0d2353;color:#fff;box-shadow:0 3px 10px #0d235326}
+
+/* Invoice Hub — original QFA navy, blue and gold visual language */
+.invoice-filter{display:flex;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding:18px 20px}
+.invoice-filter label{display:grid;gap:7px;min-width:170px;font-size:10px;font-weight:700;color:#697790}
+.invoice-filter input,.invoice-filter select{padding:11px 12px;border:1px solid #e0e7f1;border-radius:9px;background:#fff;color:#263957;min-width:190px}
+.invoice-kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}
+.invoice-actions{display:flex;gap:8px;flex-wrap:wrap}
+.invoice-actions .button-secondary,.invoice-actions .button-whatsapp{font-size:10px;padding:9px 11px;white-space:nowrap}
+.button-whatsapp{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:9px;padding:10px 13px;background:linear-gradient(135deg,#25d366,#128c7e);color:white;font-size:11px;font-weight:700;cursor:pointer}
+.button-whatsapp:hover{filter:brightness(1.06)}
+.invoice-due{color:#a36a00}
+.invoice-help{font-size:11px;color:#8793a7;line-height:1.7;margin:14px 2px}
+.login-feedback{margin:12px 0;padding:13px 14px;font-size:12px;line-height:1.55}
+@media(max-width:1000px){.invoice-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.invoice-kpis{grid-template-columns:1fr 1fr}.invoice-filter{align-items:stretch}.invoice-filter label,.invoice-filter input,.invoice-filter select{width:100%;min-width:0}.invoice-actions{min-width:190px}}
