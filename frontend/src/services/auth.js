@@ -1,4 +1,4 @@
-const SESSION_HOURS = 8;
+const SESSION_HOURS = 24 * 30;
 
 export const auth = {
   token: () => localStorage.getItem('token'),
