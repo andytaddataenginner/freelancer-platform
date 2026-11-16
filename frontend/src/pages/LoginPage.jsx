@@ -16,10 +16,11 @@ export function LoginPage(){
   event.preventDefault();if(busy)return;setError('');setBusy(true);
   try{
    if(mode==='signup'){if(password.length<8||! /\d/.test(password))throw new Error('Password must be at least 8 characters and include a number.');if(password!==confirm)throw new Error('Passwords do not match.');}
-   const result=await apiRequest(mode==='signup'?'/auth/signup/initiate':'/auth/login',{method:'POST',body:JSON.stringify(mode==='signup'?{name,email,phone,password,role:'freelancer'}:{email,password})});
+   const result=await apiRequest(mode==='signup'?'/auth/signup/initiate':'/auth/login',{method:'POST',body:JSON.stringify(mode==='signup'?{name,email:email.trim(),phone,password,role:'freelancer'}:{email:email.trim(),password})});
    const token=result?.token||result?.accessToken,user=result?.user||result?.data?.user;
    if(!token||!user)throw new Error('The server response did not contain the expected session details.');
    const actualRole=String(user.role||'').trim().toLowerCase();
+   if(!['client','freelancer'].includes(actualRole))throw new Error('Your account has an unsupported role. Please contact QFA support.');
    if(mode==='login'&&actualRole!==loginRole)throw new Error(loginRole==='client'?'This account is not registered as a client. Please select Freelancer login or check the account details.':'This account is not registered as a freelancer. Please select Client login or check the account details.');
    auth.save(token,{...user,role:actualRole});navigate(actualRole==='client'?'/client-portal':'/dashboard',{replace:true});
   }catch(e){setError(e.message||'Unable to sign in. Please try again.');}finally{setBusy(false);}
