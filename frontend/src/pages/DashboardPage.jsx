@@ -1,58 +1,39 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Activity, ArrowUpRight, BriefcaseBusiness, CalendarDays, CircleDollarSign, Clock3, RefreshCw, Users } from 'lucide-react';
-import { apiRequest } from '../services/api';
-import { FloatingTimer } from '../components/FloatingTimer';
-
-const money = value => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(Number(value)||0);
-const monthNow = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); };
-const monthRange = month => { const [y,m]=month.split('-').map(Number); return {from:month+'-01',to:y+'-'+String(m).padStart(2,'0')+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0')}; };
-
-export function DashboardPage() {
-  const [month,setMonth]=useState(monthNow());
-  const [data,setData]=useState({stats:null,clients:[],logs:[]});
-  const [loading,setLoading]=useState(true),[error,setError]=useState('');
-  async function load(){
-    setLoading(true);setError('');
-    try{
-      const range=monthRange(month);
-      const results=await Promise.allSettled([
-        apiRequest('/stats/freelancer?month='+month),
-        apiRequest('/clients'),
-        apiRequest('/timelogs?from='+range.from+'&to='+range.to+'&limit=8')
-      ]);
-      const [s,c,l]=results;
-      if(results.every(x=>x.status==='rejected')) throw s.reason;
-      setData({stats:s.status==='fulfilled'?s.value:null,clients:c.status==='fulfilled'&&Array.isArray(c.value)?c.value:[],logs:l.status==='fulfilled'&&Array.isArray(l.value)?l.value:[]});
-      const failed=results.filter(x=>x.status==='rejected');
-      if(failed.length)setError('Some dashboard data could not be loaded. '+failed.map(x=>x.reason?.message).filter(Boolean).join(' · '));
-    }catch(e){setError(e.message||'Unable to load dashboard data.');}
-    finally{setLoading(false);}
-  }
-  useEffect(()=>{load();},[month]);
-  useEffect(()=>{const refresh=()=>load();window.addEventListener('qfa:timer-saved',refresh);return()=>window.removeEventListener('qfa:timer-saved',refresh);},[month]);
-  const stats=data.stats||{};
-  const breakdown=Array.isArray(stats.clientBreakdown)?stats.clientBreakdown:[];
-  const activeClients=data.clients.filter(c=>!['paused','terminated','inactive'].includes(String(c.contract_status||'active').toLowerCase()) && c.is_active!==false);
-  const cards=[
-    {label:'Paid this month',value:money(stats.totalEarned),sub:'Payments received',icon:CircleDollarSign,accent:'green'},
-    {label:'Unpaid this month',value:money(stats.totalUnpaid),sub:'Outstanding balance',icon:Activity,accent:'amber'},
-    {label:'Total expected',value:money(stats.totalExpected),sub:'Paid + outstanding',icon:ArrowUpRight,accent:'blue'},
-    {label:'Active clients',value:activeClients.length,sub:'Current relationships',icon:Users,accent:'violet'},
-    {label:'Hours this month',value:Number(stats.hoursThisMonth||0).toFixed(2)+'h',sub:(stats.tasksThisMonth||0)+' time entries',icon:Clock3,accent:'gold'},
-    {label:'Upcoming bookings',value:Number(stats.upcomingBookings||0),sub:'Scheduled sessions',icon:CalendarDays,accent:'blue'}
-  ];
-  const monthTitle=new Date(month+'-02T00:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'});
-  return <div className="dashboard-page">
-    <div className="page-heading"><div><div className="eyebrow">YOUR BUSINESS AT A GLANCE</div><h1>Dashboard</h1><p>Payment position, active clients and recent work for {monthTitle}.</p></div><div className="heading-actions"><label className="month-filter">Selected month<input type="month" value={month} onChange={e=>setMonth(e.target.value)}/></label><button className="button-secondary refresh-button" onClick={load} disabled={loading}><RefreshCw size={16}/> Refresh</button></div></div>
-    {error&&<div className="notice-error" role="alert">{error}</div>}
-    <div className="metric-grid dashboard-kpis">{cards.map(({label,value,sub,icon:Icon,accent})=><article className="metric-card" key={label}><div className={'metric-icon '+accent}><Icon size={19}/></div><div className="metric-label">{label}</div><div className="metric-value">{loading?'—':value}</div><div className="metric-foot"><span>{sub}</span><ArrowUpRight size={14}/></div></article>)}</div>
-    <section className="panel-card dashboard-breakdown"><div className="panel-heading"><div><h2>Payment breakdown</h2><p>{monthTitle} · hourly and fixed contracts</p></div><span className="panel-icon"><CircleDollarSign size={18}/></span></div>
-      {loading?<p className="empty-state">Loading payment breakdown…</p>:!breakdown.length?<p className="empty-state">No payment activity found for this month.</p>:<div className="table-scroll"><table><thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Expected</th><th>Paid</th><th>Unpaid</th><th>Status</th></tr></thead><tbody>{breakdown.map((r,i)=><tr key={r.client_name+'-'+i}><td><strong>{r.client_name}</strong><small className="table-sub">{r.company||''}</small></td><td>{r.rate_type||'hourly'}</td><td>{Number(r.hours||0).toFixed(2)}h</td><td>{money(r.total)}</td><td>{money(r.paid)}</td><td>{money(r.unpaid)}</td><td><span className={'status-tag '+(Number(r.unpaid)>0?'status-unpaid':'status-paid')}>{Number(r.unpaid)>0?'Outstanding':'Paid'}</span></td></tr>)}</tbody></table></div>}
-    </section>
-    <div className="dashboard-lower">
-      <section className="panel-card"><div className="panel-heading"><div><h2>Recent time logs</h2><p>Latest recorded work in {monthTitle}</p></div><span className="panel-icon"><Clock3 size={18}/></span></div>{loading?<p className="empty-state">Loading recent activity…</p>:!data.logs.length?<p className="empty-state">No time entries recorded for this month.</p>:<div className="activity-list">{data.logs.slice(0,8).map((log,i)=><div className="activity-row" key={log.id||i}><span className="activity-dot"/><div><strong>{log.task_description||log.description||'Time entry'}</strong><small>{log.client_name||log.client||'Client'} · {String(log.date||'').slice(0,10)}</small></div><b>{Number(log.hours||0).toFixed(2)}h</b></div>)}</div>}</section>
-      <section className="panel-card"><div className="panel-heading"><div><h2>Active clients</h2><p>Current hours and available credits</p></div><BriefcaseBusiness size={18}/></div>{loading?<p className="empty-state">Loading clients…</p>:!activeClients.length?<p className="empty-state">No active clients found.</p>:<div className="client-list">{activeClients.map((client,i)=>{const row=breakdown.find(x=>x.client_name===client.name);return <div className="client-row" key={client.id||i}><span className="client-avatar">{(client.name||'C').slice(0,1).toUpperCase()}</span><div><strong>{client.name||'Unnamed client'}</strong><small>{Number(row?.hours||0).toFixed(2)}h this month · {client.rate_type||'hourly'}</small></div><span className="client-credit">{money(client.credit_balance||0)} credit</span></div>})}</div>}</section>
-    </div>
-    <FloatingTimer />
-  </div>;
+import {useEffect,useMemo,useState} from 'react';
+import {Activity,ArrowUpRight,BriefcaseBusiness,CalendarDays,CircleDollarSign,Clock3,RefreshCw,Users,ChevronDown,TrendingUp} from 'lucide-react';
+import {ResponsiveContainer,BarChart,Bar,XAxis,YAxis,Tooltip,CartesianGrid,LineChart,Line,PieChart,Pie,Cell,Legend} from 'recharts';
+import {apiRequest} from '../services/api';
+import {FloatingTimer} from '../components/FloatingTimer';
+const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(v)||0);
+const monthNow=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+const rangeFor=m=>{const [y,mo]=m.split('-').map(Number);return {from:m+'-01',to:y+'-'+String(mo).padStart(2,'0')+'-'+String(new Date(y,mo,0).getDate()).padStart(2,'0')};};
+const palette=['#1a5cff','#c9952a','#16a36a','#8b5cf6','#0ea5a4','#e0784b'];
+export function DashboardPage(){
+ const [month,setMonth]=useState(monthNow()),[data,setData]=useState({stats:null,clients:[],logs:[]}),[loading,setLoading]=useState(true),[error,setError]=useState('');
+ async function load(){setLoading(true);setError('');const r=rangeFor(month);const results=await Promise.allSettled([apiRequest('/stats/freelancer?month='+month),apiRequest('/clients'),apiRequest('/timelogs?from='+r.from+'&to='+r.to+'&limit=200')]);const val=i=>results[i].status==='fulfilled'?results[i].value:null;setData({stats:val(0),clients:Array.isArray(val(1))?val(1):[],logs:Array.isArray(val(2))?val(2):[]});const failed=results.filter(x=>x.status==='rejected');if(failed.length)setError(failed.map(x=>x.reason?.message).filter(Boolean).join(' · ')||'Some dashboard data could not be loaded.');setLoading(false);}
+ useEffect(()=>{load();},[month]);useEffect(()=>{const f=()=>load();window.addEventListener('qfa:timer-saved',f);return()=>window.removeEventListener('qfa:timer-saved',f);},[month]);
+ const stats=data.stats||{},breakdown=Array.isArray(stats.clientBreakdown)?stats.clientBreakdown:[];
+ // A client is active for the selected month only when that month has recorded work or a fixed-fee record.
+ const activeClients=useMemo(()=>breakdown.map(row=>{const client=data.clients.find(c=>c.name===row.client_name);return {...row,id:client?.id,credit_balance:client?.credit_balance||0};}),[breakdown,data.clients]);
+ const groupedLogs=useMemo(()=>{const g={};data.logs.forEach(log=>{const project=log.project_name||log.project||'General work';const task=log.task_description||log.description||'Unspecified task';(g[project]??={total:0,logs:{}}).total+=Number(log.hours||0);(g[project].logs[task]??=[]).push(log);});return Object.entries(g).sort((a,b)=>b[1].total-a[1].total);},[data.logs]);
+ const paid=Number(stats.totalEarned)||0,unpaid=Number(stats.totalUnpaid)||0;
+ const cards=[{label:'Paid this month',value:money(paid),sub:'Payments received',icon:CircleDollarSign,accent:'green'},{label:'Unpaid this month',value:money(unpaid),sub:'Outstanding balance',icon:Activity,accent:'amber'},{label:'Total expected',value:money(stats.totalExpected),sub:'Paid + outstanding',icon:ArrowUpRight,accent:'blue'},{label:'Active this month',value:activeClients.length,sub:'Clients with monthly activity',icon:Users,accent:'violet'},{label:'Hours this month',value:Number(stats.hoursThisMonth||0).toFixed(1)+'h',sub:(stats.tasksThisMonth||0)+' time entries',icon:Clock3,accent:'gold'},{label:'Upcoming bookings',value:Number(stats.upcomingBookings||0),sub:'Scheduled sessions',icon:CalendarDays,accent:'blue'}];
+ const payData=[{name:'Paid',value:paid},{name:'Outstanding',value:unpaid}].filter(x=>x.value>0);
+ const monthTitle=new Date(month+'-02T00:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ const chartRows=activeClients.slice().sort((a,b)=>Number(b.total||0)-Number(a.total||0)).slice(0,8).map(x=>({client:x.client_name,paid:Number(x.paid)||0,unpaid:Number(x.unpaid)||0,hours:Number(x.hours)||0}));
+ return <div className="dashboard-page">
+  <div className="page-heading dashboard-heading"><div><div className="eyebrow">YOUR BUSINESS AT A GLANCE</div><h1>Dashboard</h1><p>{monthTitle} · Payments, client activity and delivery progress</p></div><div className="heading-actions"><label className="month-filter">Selected month<input type="month" value={month} onChange={e=>setMonth(e.target.value)}/></label><button className="button-secondary refresh-button" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button></div></div>
+  {error&&<div className="notice-error" role="alert">{error}</div>}
+  <div className="metric-grid dashboard-kpis">{cards.map(({label,value,sub,icon:Icon,accent})=><article className="metric-card dashboard-kpi" key={label}><div className={'metric-icon '+accent}><Icon size={17}/></div><div className="metric-label">{label}</div><div className="metric-value">{loading?'—':value}</div><div className="metric-foot"><span>{sub}</span></div></article>)}</div>
+  <div className="dashboard-chart-grid">
+   <section className="panel-card dashboard-chart-card"><div className="panel-heading"><div><h2>Revenue by client</h2><p>Paid and outstanding · {monthTitle}</p></div><TrendingUp size={17}/></div>{chartRows.length?<ResponsiveContainer width="100%" height={220}><BarChart data={chartRows} margin={{top:8,right:8,left:0,bottom:4}}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="client" tick={{fontSize:10}} interval={0} angle={-12} textAnchor="end" height={48}/><YAxis tick={{fontSize:10}}/><Tooltip formatter={v=>money(v)}/><Legend/><Bar dataKey="paid" name="Paid" fill="#1a5cff" radius={[4,4,0,0]}/><Bar dataKey="unpaid" name="Outstanding" fill="#c9952a" radius={[4,4,0,0]}/></BarChart></ResponsiveContainer>:<p className="empty-state">No client revenue for this month.</p>}</section>
+   <section className="panel-card dashboard-chart-card"><div className="panel-heading"><div><h2>Payment position</h2><p>Paid versus outstanding</p></div><CircleDollarSign size={17}/></div>{payData.length?<><ResponsiveContainer width="100%" height={180}><PieChart><Pie data={payData} dataKey="value" nameKey="name" innerRadius={48} outerRadius={72} paddingAngle={4}>{payData.map((v,i)=><Cell key={v.name} fill={i===0?'#16a36a':'#c9952a'}/>)}</Pie><Tooltip formatter={v=>money(v)}/></PieChart></ResponsiveContainer><div className="dashboard-pay-legend"><span><i className="paid-dot"/> Paid <b>{money(paid)}</b></span><span><i className="unpaid-dot"/> Outstanding <b>{money(unpaid)}</b></span></div></>:<p className="empty-state">No payment data for this month.</p>}</section>
+   <section className="panel-card dashboard-chart-card"><div className="panel-heading"><div><h2>Hours by client</h2><p>Time recorded in {monthTitle}</p></div><Clock3 size={17}/></div>{chartRows.some(x=>x.hours>0)?<ResponsiveContainer width="100%" height={205}><BarChart data={chartRows} margin={{top:8,right:8,left:0,bottom:4}}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="client" tick={{fontSize:10}}/><YAxis tick={{fontSize:10}}/><Tooltip formatter={v=>Number(v).toFixed(2)+' hours'}/><Bar dataKey="hours" name="Hours" fill="#8b5cf6" radius={[5,5,0,0]}/></BarChart></ResponsiveContainer>:<p className="empty-state">No hours recorded for this month.</p>}</section>
+   <section className="panel-card dashboard-chart-card"><div className="panel-heading"><div><h2>Monthly activity</h2><p>Recorded work by day</p></div><Activity size={17}/></div>{data.logs.length?<ResponsiveContainer width="100%" height={205}><LineChart data={Object.values(data.logs.reduce((a,l)=>{const d=String(l.date||'').slice(0,10);(a[d]??={day:d,hours:0}).hours+=Number(l.hours)||0;return a;},{})).sort((a,b)=>a.day.localeCompare(b.day))}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="day" tick={{fontSize:9}}/><YAxis tick={{fontSize:10}}/><Tooltip formatter={v=>Number(v).toFixed(2)+' hours'}/><Line type="monotone" dataKey="hours" stroke="#0ea5a4" strokeWidth={2.5} dot={{r:3}}/></LineChart></ResponsiveContainer>:<p className="empty-state">No time entries for this month.</p>}</section>
+  </div>
+  <div className="dashboard-lower">
+   <section className="panel-card dashboard-recent"><div className="panel-heading"><div><h2>Recent work logs</h2><p>{data.logs.length} entries · grouped by project and task</p></div><Clock3 size={17}/></div>{loading?<p className="empty-state">Loading activity…</p>:!groupedLogs.length?<p className="empty-state">No time entries recorded for this month.</p>:<div className="dashboard-log-groups">{groupedLogs.map(([project,group])=><details className="dashboard-log-project" key={project}><summary><span><BriefcaseBusiness size={14}/><strong>{project}</strong></span><small>{group.logs&&Object.values(group.logs).reduce((n,a)=>n+a.length,0)} entries · {group.total.toFixed(2)}h</small><ChevronDown size={15}/></summary>{Object.entries(group.logs).map(([task,logs])=><details className="dashboard-log-task" key={task}><summary><span>{task}</span><small>{logs.length} logs · {logs.reduce((n,l)=>n+Number(l.hours||0),0).toFixed(2)}h</small></summary>{logs.map((log,i)=><div className="activity-row" key={log.id||i}><div><strong>{log.client_name||log.client||'Client'}</strong><small>{String(log.date||'').slice(0,10)} · {log.payment_status||'unpaid'}</small></div><b>{Number(log.hours||0).toFixed(2)}h</b></div>)}</details>)}</details>)}</div>}</section>
+   <section className="panel-card"><div className="panel-heading"><div><h2>Clients active in {monthTitle}</h2><p>Only clients with work or fixed billing in this month</p></div><Users size={17}/></div>{!activeClients.length?<p className="empty-state">No clients active during this month.</p>:<div className="client-list">{activeClients.map((client,i)=>{const c=data.clients.find(x=>x.name===client.client_name);return <div className="client-row" key={client.client_name+i}><span className="client-avatar">{(client.client_name||'C').slice(0,1).toUpperCase()}</span><div><strong>{client.client_name}</strong><small>{Number(client.hours||0).toFixed(2)}h · {client.rate_type||'hourly'}</small></div><span className="client-credit">{money(c?.credit_balance||0)} credit</span></div>})}</div>}</section>
+  </div>
+  <FloatingTimer/>
+ </div>;
 }
