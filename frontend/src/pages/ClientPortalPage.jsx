@@ -19,7 +19,7 @@ export function ClientPortalPage(){
  const user=auth.user();
  async function load(){
   setLoading(true);setError('');
-  const paths=['/client/stats','/projects/client-view','/client/timelogs','/client/bookings','/client-notes','/client/fixed-payments','/client/payments','/timer/agency/status'];
+  const paths=['/client/stats','/client/projects','/client/timelogs','/client/bookings','/client/notes','/client/fixed-payments','/client/payments','/timer/agency/status'];
   const results=await Promise.allSettled(paths.map(p=>apiRequest(p)));
   const value=i=>results[i].status==='fulfilled'?results[i].value:null;
   setData({stats:value(0),projects:value(1)||[],logs:value(2)||[],bookings:value(3)||[],notes:value(4)||[],fixed:value(5)||[],payments:value(6)||[],availability:value(7)});
@@ -36,9 +36,9 @@ export function ClientPortalPage(){
  const upcoming=data.bookings.filter(b=>String(b.date).slice(0,10)>=today()&&b.status!=='cancelled');
  async function book(e){e.preventDefault();setBookingBusy(true);setNotice('');try{await apiRequest('/client/bookings',{method:'POST',body:JSON.stringify(booking)});setNotice('Your booking request has been sent. Your freelancer will confirm it.');setBooking(emptyBooking);await load();}catch(e){setError(e.message);}finally{setBookingBusy(false);}}
  async function cancelBooking(id){if(!confirm('Cancel this upcoming session request?'))return;try{await apiRequest('/client/bookings/'+id+'/cancel',{method:'PATCH'});await load();}catch(e){setError(e.message);}}
- async function saveNote(e){e.preventDefault();setNoteBusy(true);try{if(editingNote)await apiRequest('/client-notes/'+editingNote,{method:'PUT',body:JSON.stringify(noteForm)});else await apiRequest('/client-notes',{method:'POST',body:JSON.stringify(noteForm)});setNoteForm({title:'',content:'',category:'general'});setEditingNote(null);await load();}catch(e){setError(e.message);}finally{setNoteBusy(false);}}
- async function toggleNotePin(id){try{await apiRequest('/client-notes/'+id+'/pin',{method:'PATCH'});await load();}catch(e){setError(e.message);}}
- async function deleteNote(id){if(!confirm('Delete this note?'))return;try{await apiRequest('/client-notes/'+id,{method:'DELETE'});await load();}catch(e){setError(e.message);}}
+ async function saveNote(e){e.preventDefault();setNoteBusy(true);try{if(editingNote)await apiRequest('/client/notes/'+editingNote,{method:'PUT',body:JSON.stringify(noteForm)});else await apiRequest('/client/notes',{method:'POST',body:JSON.stringify(noteForm)});setNoteForm({title:'',content:'',category:'general'});setEditingNote(null);await load();}catch(e){setError(e.message);}finally{setNoteBusy(false);}}
+ async function toggleNotePin(id){try{await apiRequest('/client/notes/'+id+'/pin',{method:'PATCH'});await load();}catch(e){setError(e.message);}}
+ async function deleteNote(id){if(!confirm('Delete this note?'))return;try{await apiRequest('/client/notes/'+id,{method:'DELETE'});await load();}catch(e){setError(e.message);}}
  async function changePassword(e){e.preventDefault();setPasswordMessage('');if(password.newPassword!==password.confirmPassword){setPasswordMessage('New passwords do not match.');return;}if(password.newPassword.length<8||!/\d/.test(password.newPassword)){setPasswordMessage('Use at least 8 characters and include a number.');return;}setPasswordBusy(true);try{const r=await apiRequest('/auth/client/change-password',{method:'POST',body:JSON.stringify({currentPassword:password.currentPassword,newPassword:password.newPassword})});setPasswordMessage(r.message||'Password updated successfully.');setPassword({currentPassword:'',newPassword:'',confirmPassword:''});}catch(e){setPasswordMessage(e.message);}finally{setPasswordBusy(false);}}
  async function logout(){try{await apiRequest('/auth/logout',{method:'POST'});}catch{}auth.clear();window.location.assign('/login');}
  const nav=[['overview','Overview',FolderKanban],['logs','Time & Logs',Clock3],['billing','Billing History',Wallet],['book','Book a Session',CalendarDays],['notes','Notes & Guidelines',BookOpen],['security','Security',ShieldCheck]];
