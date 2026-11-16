@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import React from 'react';
+import { Navigate, Route, Routes, Link } from 'react-router-dom';
 import { auth } from './services/auth';
 import { LoginPage } from './pages/LoginPage';
 import { PublicHome } from './pages/PublicHome';
@@ -16,6 +17,12 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { NotesPage } from './pages/NotesPage';
 
+class PortalErrorBoundary extends React.Component {
+  constructor(props){super(props);this.state={failed:false};}
+  static getDerivedStateFromError(){return {failed:true};}
+  componentDidCatch(error){console.error('QFA portal render error:',error);}
+  render(){return this.state.failed?<main className="portal-fatal-error"><section><h1>We could not display your workspace</h1><p>Your sign-in may be valid, but a portal section encountered an error.</p><button onClick={()=>window.location.reload()}>Try again</button> <Link to="/login?role=client">Return to client sign in</Link></section></main>:this.props.children;}
+}
 function Protected({ children }) {
   if (!auth.isValid()) return <Navigate to="/login" replace />;
   const user = auth.user();
@@ -28,7 +35,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<PublicHome />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/client-portal" element={auth.isValid() && String(auth.user()?.role || '').trim().toLowerCase() === 'client' ? <ClientPortalPage /> : <Navigate to="/login" replace />} />
+      <Route path="/client-portal" element={auth.isValid() && String(auth.user()?.role || '').trim().toLowerCase() === 'client' ? <PortalErrorBoundary><ClientPortalPage /></PortalErrorBoundary> : <Navigate to="/login?role=client" replace />} />
       <Route element={<Protected><AppShell /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/clients" element={<ClientsPage />} />
