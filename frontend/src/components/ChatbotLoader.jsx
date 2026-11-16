@@ -1,0 +1,2 @@
+import {useEffect} from 'react';
+export function ChatbotLoader(){useEffect(()=>{let css=document.querySelector('link[data-qfa-chatbot]');if(!css){css=document.createElement('link');css.rel='stylesheet';css.href='/chatbot-widget.css';css.dataset.qfaChatbot='true';document.head.appendChild(css);}if(!document.querySelector('script[data-qfa-chatbot]')){const script=document.createElement('script');script.src='/chatbot-widget.js';script.dataset.qfaChatbot='true';script.async=true;document.body.appendChild(script);}return()=>{};},[]);return null;}
