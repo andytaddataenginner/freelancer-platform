@@ -27,10 +27,11 @@ Set `VITE_API_BASE_URL` to the existing Render API URL. The current default poin
 
 - React/Vite application shell and route structure: scaffolded.
 - Public website: initial React landing page; full original content, portfolio feed, contact form, resume links, and theme behavior still require parity work.
-- Login: connected to the existing `POST /auth/login` endpoint; verify the exact response shape against the backend before production use.
-- Dashboard: initial reads from existing freelancer stats, clients, and time-log endpoints; field mapping and totals need verification against actual API responses.
-- Clients, time logs, schedule, reports, fixed invoices, contracts, projects, and portfolio: routes are mapped but their existing CRUD and business workflows are not yet migrated.
-- Client portal: route and role-specific flow still need migration.
+- Login: connected to the existing `POST /auth/login` endpoint; token and user response fields were verified against `routes/auth.js`.
+- Dashboard: connected to the existing freelancer stats, clients and time-log endpoints; metric names match `routes/stats.js`.
+- Client management: client listing, search, create, profile update, tracked rate changes (through the existing contracts endpoint), and delete are migrated.
+- Client portal: read-only dashboard loads the existing stats, projects, time logs, bookings and notes endpoints.
+- Time Logs, Schedule, Reports, Fixed Invoices, Contracts, Projects, and Portfolio: routes are mapped but their existing CRUD and business workflows are not yet migrated.
 
 ## Safety
 
