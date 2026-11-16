@@ -22,11 +22,11 @@ const demoPortfolio = [
 
 export function PublicHome() {
   const [portfolio,setPortfolio]=useState(demoPortfolio);
-  const [theme,setTheme]=useState(()=>localStorage.getItem('theme')||'light');
+  const [theme,setTheme]=useState(()=>localStorage.getItem('qfa_theme')||'light');
   const [form,setForm]=useState({name:'',email:'',service:'',message:''});
   const [sending,setSending]=useState(false);
   const [status,setStatus]=useState({type:'',message:''});
-  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('theme',theme);},[theme]);
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('qfa_theme',theme);},[theme]);
   useEffect(()=>{
     let active=true;
     fetch(apiBaseUrl+'/portfolio').then(r=>{if(!r.ok)throw new Error('Portfolio unavailable');return r.json();})
