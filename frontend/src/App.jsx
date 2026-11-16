@@ -18,7 +18,7 @@ import { NotesPage } from './pages/NotesPage';
 function Protected({ children }) {
   if (!auth.isValid()) return <Navigate to="/login" replace />;
   const user = auth.user();
-  if (user?.role && user.role !== 'freelancer') return <Navigate to="/client-portal" replace />;
+  if (user?.role && String(user.role).toLowerCase() !== 'freelancer') return <Navigate to="/client-portal" replace />;
   return children;
 }
 
@@ -27,7 +27,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<PublicHome />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/client-portal" element={auth.isValid() && auth.user()?.role === "client" ? <ClientPortalPage /> : <Navigate to="/login" replace />} />
+      <Route path="/client-portal" element={auth.isValid() && String(auth.user()?.role || '').toLowerCase() === 'client' ? <ClientPortalPage /> : <Navigate to="/login" replace />} />
       <Route element={<Protected><AppShell /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/clients" element={<ClientsPage />} />
