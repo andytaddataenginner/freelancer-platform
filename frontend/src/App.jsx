@@ -6,6 +6,7 @@ import { AppShell } from './components/AppShell';
 import { DashboardPage } from './pages/DashboardPage';
 import { ModulePlaceholder } from './pages/ModulePlaceholder';
 import { ClientPortalPage } from './pages/ClientPortalPage';
+import { ClientsPage } from './pages/ClientsPage';
 
 function Protected({ children }) {
   if (!auth.isValid()) return <Navigate to="/login" replace />;
@@ -15,7 +16,7 @@ function Protected({ children }) {
 }
 
 const modules = [
-  ['clients', 'Clients', 'Manage client profiles, pricing models and account status.'],
+  
   ['time-logs', 'Time Logs', 'Track billable work, review entries and manage payment status.'],
   ['schedule', 'Schedule', 'Manage bookings, availability and live work sessions.'],
   ['reports', 'Reports', 'Review revenue, utilization and client performance.'],
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/client-portal" element={auth.isValid() && auth.user()?.role === "client" ? <ClientPortalPage /> : <Navigate to="/login" replace />} />
       <Route element={<Protected><AppShell /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/clients" element={<ClientsPage />} />
         {modules.map(([path, title, description]) => (
           <Route key={path} path={`/${path}`} element={<ModulePlaceholder title={title} description={description} />} />
         ))}
