@@ -94,7 +94,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
 // GET /api/projects/client-view — client sees their projects + task list (read-only)
 router.get('/client-view', verifyToken, async (req, res, next) => {
   try {
-    if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
+    if (String(req.user.role || '').trim().toLowerCase() !== 'client') return res.status(403).json({ error: 'Clients only' });
 
     const { rows: projects } = await pool.query(`
       SELECT p.id, p.name, p.description, p.status, p.deadline, p.created_at,
