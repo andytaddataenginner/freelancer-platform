@@ -20,7 +20,7 @@ class PortalErrorBoundary extends React.Component {
  constructor(props){super(props);this.state={failed:false};}
  static getDerivedStateFromError(){return {failed:true};}
  componentDidCatch(error){console.error('QFA portal render error:',error);}
- render(){return this.state.failed?<main className="portal-fatal-error"><section><h1>We could not display your workspace</h1><p>Your sign-in may be valid, but a portal section encountered an error.</p><button onClick={()=>window.location.reload()}>Try again</button> <Link to="/login?role=client">Return to client sign in</Link></section></main>:this.props.children;}
+ render(){return this.state.failed?<main className="portal-fatal-error"><section><h1>We could not display your workspace</h1><p>A page component encountered an error. Your account credentials are not necessarily the cause.</p><button onClick={()=>window.location.reload()}>Try again</button> <Link to="/login">Return to sign in</Link></section></main>:this.props.children;}
 }
 function Protected({children}){if(!auth.isValid())return <Navigate to="/login?role=freelancer" replace/>;const role=String(auth.user()?.role||'').trim().toLowerCase();if(role==='client')return <Navigate to="/client-portal" replace/>;if(role!=='freelancer')return <Navigate to="/login?role=freelancer" replace/>;return children;}
 function ClientProtected({children}){if(!auth.isValid())return <Navigate to="/login?role=client" replace/>;const role=String(auth.user()?.role||'').trim().toLowerCase();if(role!=='client')return <Navigate to="/login?role=client" replace/>;return <PortalErrorBoundary>{children}</PortalErrorBoundary>;}
