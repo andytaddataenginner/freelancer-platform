@@ -7,12 +7,12 @@ export function FloatingTimer(){
  const [clients,setClients]=useState([]),[clientId,setClientId]=useState(''),[description,setDescription]=useState('');
  const [elapsed,setElapsed]=useState(0),[state,setState]=useState('idle'),[busy,setBusy]=useState(false);
  const [collapsed,setCollapsed]=useState(()=>localStorage.getItem('qfa_timer_collapsed')==='1');
- const [pos,setPos]=useState(()=>{try{return JSON.parse(localStorage.getItem('qfa_timer_pos')||'null')||{right:18,top:82};}catch{return {right:22,bottom:22};}});
+ const [pos,setPos]=useState(()=>{try{return JSON.parse(localStorage.getItem('qfa_timer_pos_v2')||'null')||{right:18,top:82};}catch{return {right:22,bottom:22};}});
  const [dragging,setDragging]=useState(false);const drag=useRef(null);const base=useRef(0);const tick=useRef(null);
  useEffect(()=>{apiRequest('/clients').then(v=>{const a=Array.isArray(v)?v:[];setClients(a);if(a[0])setClientId(String(a[0].user_id||a[0].id));}).catch(()=>{});apiRequest('/timer/status').then(v=>{if(Array.isArray(v)&&v[0]){const t=v[0];setClientId(String(t.client_id));setDescription(t.description||'');setElapsed(Number(t.elapsed_sec)||0);setState(t.is_paused?'paused':'running');}}).catch(()=>{});},[]);
  useEffect(()=>{if(state!=='running')return;const start=Date.now();const initial=elapsed;tick.current=setInterval(()=>setElapsed(initial+Math.floor((Date.now()-start)/1000)),1000);return()=>clearInterval(tick.current);},[state]);
  useEffect(()=>{localStorage.setItem('qfa_timer_collapsed',collapsed?'1':'0');},[collapsed]);
- useEffect(()=>{localStorage.setItem('qfa_timer_pos',JSON.stringify(pos));},[pos]);
+ useEffect(()=>{localStorage.setItem('qfa_timer_pos_v2',JSON.stringify(pos));},[pos]);
  async function action(path,body){setBusy(true);try{const r=await apiRequest('/timer/'+path,{method:'POST',body:JSON.stringify(body)});return r;}finally{setBusy(false);}}
  async function start(){if(!clientId){alert('Select a client first.');return;}try{await action('start',{client_id:clientId,description});setElapsed(0);setState('running');}catch(e){alert(e.message);}}
  async function pause(){try{await action('pause',{client_id:clientId});setState('paused');}catch(e){alert(e.message);}}
