@@ -21,9 +21,9 @@ export function LoginPage(){
    const result=await apiRequest(mode==='signup'?'/auth/signup/initiate':'/auth/login',{method:'POST',body:JSON.stringify(mode==='signup'?{name,email,phone,password,role:'freelancer'}:{email,password})});
    const token=result.token||result.accessToken,user=result.user||result.data?.user;
    if(!token||!user)throw new Error('The server response did not contain the expected session details.');
-   const actualRole=String(user.role||'').toLowerCase();
+   const actualRole=String(user.role||'').trim().toLowerCase();
    if(mode==='login'&&actualRole!==loginRole)throw new Error(loginRole==='client'?'This account is not registered as a client. Select Freelancer login or check the account credentials.':'This account is not registered as a freelancer. Select Client login or check the account credentials.');
-   auth.save(token,user);
+   auth.save(token,{...user,role:actualRole});
    navigate(actualRole==='client'?'/client-portal':'/dashboard',{replace:true});
   }catch(e){setError(e.message||'Unable to continue. Please try again.');}
   finally{setBusy(false);}
@@ -35,7 +35,7 @@ export function LoginPage(){
  <label>Email address</label><div className="field-wrap"><Mail size={17}/><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" autoComplete="username" required/></div>
  <label>Password</label><div className="field-wrap"><LockKeyhole size={17}/><input type={showPassword?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete={mode==='signup'?'new-password':'current-password'} required/><button type="button" onClick={()=>setShowPassword(!showPassword)} aria-label="Toggle password visibility">{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></div>
  {mode==='signup'&&<><label>Confirm password</label><div className="field-wrap"><LockKeyhole size={17}/><input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password" required placeholder="Confirm your password"/></div><p className="login-footnote">Use at least 8 characters and include a number. Registration creates a freelancer account.</p></>}
- {error&&<div className="form-error" role="alert">{error}</div>}<button className="button-primary login-submit" disabled={busy}>{busy?(mode==='signup'?'Creating account…':'Signing in…'):(mode==='signup'?'Create account':'Sign in')}</button></form>
+ {error&&<div className="form-error login-feedback" role="alert" aria-live="assertive">{error}</div>}<button type="submit" className="button-primary login-submit" disabled={busy}>{busy?(mode==='signup'?'Creating account…':'Signing in…'):(mode==='signup'?'Create account':'Sign in')}</button></form>
  <p className="login-footnote">{mode==='signup'?'Already have an account? ':'New to QFA? '}<button type="button" className="text-link" onClick={()=>{setMode(mode==='signup'?'login':'signup');setError('');}}>{mode==='signup'?'Sign in':'Create a freelancer account'}</button></p>
  </section></main>;
 }
