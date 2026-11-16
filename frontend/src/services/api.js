@@ -16,8 +16,14 @@ export async function apiRequest(path, options = {}) {
   });
 
   if (response.status === 401) {
+    // Preserve the account type before clearing the session. Otherwise client
+    // requests incorrectly send the user back to the default freelancer login.
+    const role = String(auth.user()?.role || '').trim().toLowerCase();
+    const loginRole = role === 'client' ? 'client' : 'freelancer';
     auth.clear();
-    if (window.location.pathname !== '/login') window.location.assign('/login?reason=expired');
+    if (window.location.pathname !== '/login') {
+      window.location.assign('/login?role=' + loginRole + '&reason=expired');
+    }
     throw new Error('Your session has expired. Please sign in again.');
   }
 
