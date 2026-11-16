@@ -462,3 +462,10 @@
 .public-nav .public-login-link{display:inline-flex;align-items:center;gap:6px;background:#0d2353;color:#fff!important;padding:10px 13px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;white-space:nowrap}
 .public-nav .public-theme-toggle{display:grid;place-items:center;width:34px;height:34px;border:1px solid #e0e7f0;border-radius:8px;background:#f7f9fc;color:#52627d}
 @media(max-width:850px){.public-nav{height:auto;padding:14px 18px;gap:12px;flex-wrap:wrap}.public-nav .public-nav-links{width:100%;overflow-x:auto;padding:5px 0 3px;gap:16px}.public-nav .public-nav-links a{white-space:nowrap}}
+
+.portal-fatal-error{min-height:100vh;display:grid;place-items:center;padding:24px;background:#f3f6fb;color:#243653}
+.portal-fatal-error section{width:min(100%,520px);padding:32px;background:#fff;border:1px solid #e3eaf3;border-radius:16px;box-shadow:0 20px 55px #16345a12}
+.portal-fatal-error h1{font:700 25px 'Playfair Display',serif;color:#0d2353;margin:0 0 10px}
+.portal-fatal-error p{font-size:12px;line-height:1.7;color:#71809a}
+.portal-fatal-error button{border:0;border-radius:8px;background:#0d2353;color:#fff;padding:10px 14px;cursor:pointer}
+.portal-fatal-error a{display:inline-block;margin-left:12px;color:#1a5cff;font-size:11px}
