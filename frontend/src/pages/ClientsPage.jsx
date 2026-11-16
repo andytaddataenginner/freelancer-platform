@@ -18,7 +18,7 @@ export function ClientsPage(){
  function add(){setEditing(null);setForm(emptyForm);setNotice('');setModal('add');}
  function edit(c){setEditing(c);setForm({name:c.name||'',email:c.email||'',company:c.company||'',phone:c.phone||'',password:'',notes:c.notes||'',rate_type:c.rate_type||'hourly',hourly_rate:c.hourly_rate??'',fixed_price:c.fixed_price??''});setNotice('');setModal('edit');}
  async function submit(e){e.preventDefault();setSaving(true);setNotice('');try{
-   if(modal==='add'){const payload={...form};delete payload.notes;await apiRequest('/clients',{method:'POST',body:JSON.stringify(payload)});}
+   if(modal==='add'){const payload={...form};await apiRequest('/clients',{method:'POST',body:JSON.stringify(payload)});}
    else {const changed=editing&&(form.rate_type!==(editing.rate_type||'hourly')||String(form.hourly_rate||'')!==String(editing.hourly_rate??'')||String(form.fixed_price||'')!==String(editing.fixed_price??''));
      if(changed)await apiRequest('/contracts/'+editing.id+'/change',{method:'POST',body:JSON.stringify({rate_type:form.rate_type,hourly_rate:form.hourly_rate||null,fixed_price:form.fixed_price||null,effective_from:new Date().toISOString().slice(0,10),note:'Updated from React client manager'})});
      await apiRequest('/clients/'+editing.id,{method:'PUT',body:JSON.stringify({name:form.name,company:form.company,phone:form.phone,notes:form.notes,rate_type:form.rate_type,hourly_rate:form.hourly_rate||null,fixed_price:form.fixed_price||null,is_active:editing.is_active,status:editing.contract_status})});
