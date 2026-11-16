@@ -15,7 +15,7 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
       WHERE f.client_id = $1 AND f.freelancer_id = $2
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND f.month >= to_char(u.created_at, 'YYYY-MM')
+        AND f.month >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC
     `, [req.params.clientId, req.user.id]);
     res.json(rows);
@@ -133,7 +133,7 @@ router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= ($2 || '-01')::date)
       WHERE f.freelancer_id = $1 AND f.month = $2
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND f.month >= to_char(u.created_at, 'YYYY-MM')
+        AND f.month >= date_trunc('month', u.created_at)::date
       ORDER BY u.name
     `, [req.user.id, month]);
 
@@ -165,7 +165,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
       WHERE f.freelancer_id = $1
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND f.month >= to_char(u.created_at, 'YYYY-MM')
+        AND f.month >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC, u.name
     `, [req.user.id]);
     res.json(rows);
