@@ -3,7 +3,7 @@ import { ArrowRight, BarChart3, Cloud, Database, Download, Github, Linkedin, Mai
 import { Link } from 'react-router-dom';
 import { apiBaseUrl } from '../services/api';
 
-const ASSETS = 'https://raw.githubusercontent.com/andytaddataenginner/freelancer-platform/main/';
+const ASSETS = '/';
 const skills = [
   ['SQL Server & T-SQL',98],['Power BI & Data Visualization',95],['Data Warehouse Design',92],['Database Performance Tuning',90],
   ['Azure Data Platform',88],['Microsoft Fabric',85],['Python for Data Engineering',82],['Databricks & Snowflake',80]
