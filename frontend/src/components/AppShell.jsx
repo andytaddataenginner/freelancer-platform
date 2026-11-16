@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X, NotebookPen } from 'lucide-react';
 import { auth } from '../services/auth';
+import { apiRequest } from '../services/api';
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -29,7 +30,8 @@ export function AppShell() {
     localStorage.setItem('qfa_theme', next ? 'dark' : 'light');
     document.documentElement.dataset.theme = next ? 'dark' : 'light';
   }
-  function logout() {
+  async function logout() {
+    try { await apiRequest('/auth/logout', { method: 'POST' }); } catch {}
     auth.clear();
     navigate('/login', { replace: true });
   }
