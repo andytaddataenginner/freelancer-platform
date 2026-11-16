@@ -175,3 +175,8 @@
 .report-chart-card .recharts-responsive-container{font-size:10px}
 @media(max-width:950px){.report-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.report-chart-grid{grid-template-columns:1fr}.report-chart{height:260px}.report-kpis{grid-template-columns:1fr 1fr}}
+
+
+.login-role-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;margin:0 0 18px;background:#f0f3f8;border-radius:10px}
+.login-role-switch button{border:0;border-radius:7px;padding:10px 8px;background:transparent;color:#66748b;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.login-role-switch button.active{background:#0d2353;color:#fff;box-shadow:0 3px 10px #0d235326}
