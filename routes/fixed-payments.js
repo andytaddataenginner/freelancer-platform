@@ -11,11 +11,11 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
       JOIN users u ON u.id = f.client_id
       LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
         AND cc.freelancer_id = f.freelancer_id
-        AND cc.effective_from <= (f.month || '-01')::date
-        AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+        AND cc.effective_from <= f.month::date
+        AND (cc.effective_to IS NULL OR cc.effective_to >= f.month::date)
       WHERE f.client_id = $1 AND f.freelancer_id = $2
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND f.month >= date_trunc('month', u.created_at)::date
+        AND f.month::date >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC
     `, [req.params.clientId, req.user.id]);
     res.json(rows);
@@ -129,11 +129,11 @@ router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
       JOIN users u ON u.id = f.client_id
       LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
         AND cc.freelancer_id = f.freelancer_id
-        AND cc.effective_from <= ($2 || '-01')::date
-        AND (cc.effective_to IS NULL OR cc.effective_to >= ($2 || '-01')::date)
-      WHERE f.freelancer_id = $1 AND f.month = $2
+        AND cc.effective_from <= to_date($2::text || '-01', 'YYYY-MM-DD')
+        AND (cc.effective_to IS NULL OR cc.effective_to >= to_date($2::text || '-01', 'YYYY-MM-DD'))
+      WHERE f.freelancer_id = $1 AND to_char(f.month::date, 'YYYY-MM') = $2::text
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND f.month >= date_trunc('month', u.created_at)::date
+        AND f.month::date >= date_trunc('month', u.created_at)::date
       ORDER BY u.name
     `, [req.user.id, month]);
 
@@ -161,11 +161,11 @@ router.get('/', requireFreelancer, async (req, res, next) => {
       JOIN users u ON u.id = f.client_id
       LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
         AND cc.freelancer_id = f.freelancer_id
-        AND cc.effective_from <= (f.month || '-01')::date
-        AND (cc.effective_to IS NULL OR cc.effective_to >= (f.month || '-01')::date)
+        AND cc.effective_from <= f.month::date
+        AND (cc.effective_to IS NULL OR cc.effective_to >= f.month::date)
       WHERE f.freelancer_id = $1
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND f.month >= date_trunc('month', u.created_at)::date
+        AND f.month::date >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC, u.name
     `, [req.user.id]);
     res.json(rows);
