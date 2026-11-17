@@ -40,7 +40,9 @@ export function ReportsPage(){
    const fixedRows=Array.isArray(fixedPayments)?fixedPayments:[];
    setLogs(logRows);
    const latestMonth=results[4].status==='fulfilled'?results[4].value?.latest_month:null;
-   if(validMonth(latestMonth))setMonth(currentMonth=>currentMonth===latestMonth?currentMonth:latestMonth);
+   const activityMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(validMonth))].sort();
+   const latest=validMonth(latestMonth)?latestMonth:activityMonths[activityMonths.length-1];
+   if(latest)setMonth(currentMonth=>currentMonth===latest?currentMonth:latest);
   }catch(e){setError(e.message||'Unable to load report data.');}
   finally{setLoading(false);}
  }
