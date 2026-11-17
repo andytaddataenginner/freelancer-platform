@@ -64,7 +64,6 @@ export function ClientPortalPage(){
   const billingMix=[{name:'Paid',value:paidAmount},{name:'Outstanding',value:unpaidAmount}].filter(x=>x.value>0);
   const paymentCompletion=paidAmount+unpaidAmount>0?Math.round(paidAmount/(paidAmount+unpaidAmount)*100):0;
   const availabilityTone=data.availability?.status==='busy'?'busy':data.availability?.status==='available'?'available':'offline';
-  const availabilityMessage=availabilityTone==='busy'?'Your freelancer is currently working with another client.':availabilityTone==='available'?'Your freelancer is online and available.':availabilityTone==='offline'?'Your freelancer is currently offline.':'Checking your freelancer’s availability…';
  const statusLabel=data.availability?.status==='busy'?(data.availability?.is_other_client||!data.availability?.active_session?'Busy · working with another client':data.availability?.is_paused?'Working with you · paused':'Working with you'):data.availability?.status==='available'?'Online · available':data.availability?.status==='offline'?'Offline':'Checking availability…';
  const timerSeconds=data.liveTimer?Math.max(0,Number(data.liveTimer.elapsed_sec||0)+(data.liveTimer.is_paused?0:Math.floor((timerNow-timerObservedAt)/1000))):0;
  const timerClock=[Math.floor(timerSeconds/3600),Math.floor(timerSeconds%3600/60),timerSeconds%60].map(v=>String(v).padStart(2,'0')).join(':');
