@@ -63,3 +63,78 @@
  .client-portal-page .portal-metrics,.client-portal-page .billing-summary-grid{grid-template-columns:minmax(0,1fr)!important}
  .client-portal-page .portal-header-actions{gap:3px!important}
 }
+
+/* Match the Freelancer workspace mobile drawer pattern in the Client Portal. */
+@media(max-width:760px){
+ .client-portal-page{display:block!important;min-height:100dvh!important;overflow-x:clip!important}
+ .client-portal-page .client-sidebar{
+  position:fixed!important;left:0!important;top:0!important;right:auto!important;bottom:0!important;
+  width:270px!important;max-width:calc(100vw - 48px)!important;height:100dvh!important;min-height:100dvh!important;
+  flex:0 0 270px!important;padding:24px 15px 16px!important;
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  background:var(--navy,#0d2353)!important;color:#fff!important;
+  transform:translateX(-105%)!important;transition:transform .22s ease!important;
+  z-index:40!important;box-shadow:none!important;overflow-y:auto!important;
+ }
+ .client-portal-page.portal-mobile-nav-open .client-sidebar{transform:translateX(0)!important;box-shadow:18px 0 45px #07152e33!important}
+ .client-portal-page .client-sidebar-brand{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:11px!important;
+  min-height:54px!important;padding:2px 8px 30px!important;border:0!important;
+ }
+ .client-portal-page .client-sidebar-brand img{width:39px!important;height:39px!important;object-fit:contain!important;flex:0 0 39px!important}
+ .client-portal-page .client-sidebar-brand>div{display:block!important;min-width:0!important}
+ .client-portal-page .client-sidebar-brand>div strong{display:block!important;color:#fff!important;font-size:17px!important;letter-spacing:.04em!important}
+ .client-portal-page .client-sidebar-brand>div small{display:block!important;color:#aebbd4!important;font-size:8px!important;letter-spacing:.1em!important;margin-top:3px!important;white-space:nowrap!important}
+ .client-portal-page .client-sidebar-brand .portal-collapse{display:none!important}
+ .client-portal-page .client-sidebar-nav{
+  display:grid!important;grid-template-columns:1fr!important;gap:5px!important;
+  padding:0!important;margin:0!important;overflow:visible!important;
+ }
+ .client-portal-page .client-sidebar-nav:before{
+  content:"WORKSPACE";display:block;padding:0 12px 12px;color:#8091b3;
+  font-size:9px;font-weight:700;letter-spacing:.16em;
+ }
+ .client-portal-page .client-sidebar-nav button{
+  width:100%!important;height:44px!important;min-height:44px!important;
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:13px!important;
+  padding:0 12px!important;border:0!important;border-radius:10px!important;
+  background:transparent!important;color:#b9c5db!important;text-align:left!important;
+  font-size:13px!important;font-weight:500!important;
+ }
+ .client-portal-page .client-sidebar-nav button span{display:inline!important;white-space:nowrap!important}
+ .client-portal-page .client-sidebar-nav button.active{
+  background:rgba(255,255,255,.1)!important;color:#fff!important;
+  box-shadow:inset 3px 0 #f5c842!important;
+ }
+ .client-portal-page .client-sidebar-nav button:hover{background:rgba(255,255,255,.1)!important;color:#fff!important}
+ .client-portal-page .client-sidebar-footer{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  justify-content:flex-start!important;margin-top:auto!important;
+  border-top:1px solid rgba(255,255,255,.12)!important;padding:17px 5px 0!important;
+ }
+ .client-portal-page .client-sidebar-footer>span:not(.client-avatar){
+  display:inline!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  white-space:nowrap!important;color:#fff!important;font-size:11px!important;
+ }
+ .client-portal-page .client-sidebar-footer .client-avatar{
+  width:34px!important;height:34px!important;flex:0 0 34px!important;
+  background:#f5c842!important;color:#14234a!important;
+ }
+ .client-portal-page .client-mobile-scrim{
+  display:block!important;position:fixed!important;inset:0!important;
+  z-index:39!important;background:#08152c80!important;border:0!important;
+ }
+ .client-portal-page .client-mobile-menu{
+  display:grid!important;place-items:center!important;flex:0 0 40px!important;
+  width:40px!important;height:40px!important;border:0!important;border-radius:9px!important;
+  background:transparent!important;color:#52617a!important;
+ }
+ .client-portal-page .portal-header{
+  position:sticky!important;top:0!important;z-index:10!important;
+  display:flex!important;align-items:center!important;gap:8px!important;
+  width:100%!important;height:62px!important;min-height:62px!important;
+  margin:0!important;padding:0 16px!important;
+ }
+ .client-portal-page .client-main{width:100%!important;min-width:0!important;margin:0!important}
+ .client-portal-page .portal-content{width:100%!important;max-width:none!important;padding:25px 16px 40px!important}
+}
