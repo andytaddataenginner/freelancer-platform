@@ -1,6 +1,6 @@
 import { auth } from './auth';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://freelancer-platform-9jut.onrender.com/api').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://freelancer-platform-1-b825.onrender.com/api').replace(/\/$/, '');
 
 export async function apiRequest(path, options = {}) {
   const token = auth.token();
