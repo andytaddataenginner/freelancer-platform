@@ -173,3 +173,32 @@
  .sidebar .freelancer-nav-status.status-offline i{background:#98a2b3!important}
  .sidebar .freelancer-nav-status.status-checking i{background:#8aa0c3!important}
 }
+
+
+/* Client live timer inside the mobile navigation drawer. */
+@media(max-width:760px){
+ .client-portal-page .client-sidebar .client-mobile-live-monitor{
+  display:flex!important;flex-direction:column!important;gap:8px!important;
+  margin:16px 2px 12px!important;padding:13px 12px!important;
+  border:1px solid rgba(255,255,255,.14)!important;border-radius:12px!important;
+  background:rgba(255,255,255,.08)!important;color:#fff!important;
+ }
+ .client-portal-page .client-sidebar .client-mobile-live-heading{
+  display:flex!important;align-items:center!important;gap:7px!important;
+  color:#8ee0b2!important;font-size:9px!important;font-weight:800!important;letter-spacing:.1em!important;
+ }
+ .client-portal-page .client-sidebar .client-mobile-live-dot{
+  display:inline-block!important;width:7px!important;height:7px!important;flex:0 0 7px!important;
+  border-radius:50%!important;background:#36c98f!important;box-shadow:0 0 0 4px #36c98f22!important;
+ }
+ .client-portal-page .client-sidebar .client-mobile-live-monitor>strong{
+  color:#fff!important;font-size:12px!important;line-height:1.4!important;overflow-wrap:anywhere!important;
+ }
+ .client-portal-page .client-sidebar .client-mobile-live-clock{
+  display:flex!important;align-items:center!important;gap:8px!important;
+  color:#f5c842!important;font:700 22px/1.2 'IBM Plex Mono',monospace!important;font-variant-numeric:tabular-nums!important;
+ }
+ .client-portal-page .client-sidebar .client-mobile-live-monitor>small{
+  color:#aebbd4!important;font-size:9px!important;line-height:1.4!important;
+ }
+}
