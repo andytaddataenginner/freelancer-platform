@@ -1353,3 +1353,33 @@
  .qfa-timer-actions:has(.stop){gap:5px!important}
  .qfa-timer-actions:has(.stop) button{gap:4px!important;padding:8px 3px!important;font-size:8px!important}
 }
+
+
+/* Mobile client live-session monitor: keep the timer visible above the phone safe area. */
+@media(max-width:760px){
+ .client-portal-page .client-live-popout{
+  position:fixed!important;
+  left:12px!important;
+  right:12px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom, 0px))!important;
+  top:auto!important;
+  width:auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  z-index:20000!important;
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  box-sizing:border-box!important;
+ }
+ .client-portal-page .client-live-popout.is-minimized{
+  left:auto!important;
+  right:12px!important;
+  width:min(230px,calc(100vw - 24px))!important;
+  min-width:0!important;
+  min-height:48px!important;
+  display:flex!important;
+ }
+ .client-portal-page .client-live-popout-clock{font-size:23px!important}
+ .client-portal-page .client-live-popout-caption{font-size:10px!important}
+}
