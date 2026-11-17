@@ -164,6 +164,7 @@
     <div class="qfa-head-right">
       <button id="qfaMenuToggle" class="qfa-icon-btn" title="Show menu">☰</button>
       <button id="qfaClear"      class="qfa-icon-btn" title="Clear chat">🗑</button>
+      <button id="qfaMinimize" class="qfa-icon-btn" title="Minimize assistant" aria-label="Minimize assistant">—</button>
       <button id="qfaClose"      class="qfa-icon-btn" title="Close">✕</button>
     </div>
   </div>
@@ -203,6 +204,7 @@
   const fab         = document.getElementById('qfaFab');
   const panel       = document.getElementById('qfaPanel');
   const closeBtn    = document.getElementById('qfaClose');
+  const minimizeBtn = document.getElementById('qfaMinimize');
   const clearBtn    = document.getElementById('qfaClear');
   const menuToggle  = document.getElementById('qfaMenuToggle');
   const menuEl      = document.getElementById('qfaMenu');
@@ -260,6 +262,7 @@
     
     isOpen = true;
     panel.classList.add('open');
+    fab.setAttribute('aria-expanded','true');
     fab.classList.add('active');
     badge.style.display = 'none';
     
@@ -271,10 +274,12 @@
     isOpen = false;
     panel.classList.remove('open');
     fab.classList.remove('active');
+    fab.setAttribute('aria-expanded','false');
   }
 
   fab.addEventListener('click', () => isOpen ? closePanel() : openPanel());
   closeBtn.addEventListener('click', closePanel);
+  minimizeBtn.addEventListener('click', closePanel);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closePanel(); });
 
   menuToggle.addEventListener('click', () => menuEl.classList.toggle('open'));
