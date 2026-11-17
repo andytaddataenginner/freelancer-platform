@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X, NotebookPen, Receipt } from 'lucide-react';
+import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X, NotebookPen, Receipt, KeyRound } from 'lucide-react';
 import { auth } from '../services/auth';
 import { apiRequest } from '../services/api';
 
@@ -16,6 +16,7 @@ const navigation = [
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/portfolio', label: 'Portfolio', icon: BriefcaseBusiness },
   { to: '/notes', label: 'Client Notes', icon: NotebookPen },
+  { to: '/change-password', label: 'Change Password', icon: KeyRound },
 ];
 
 export function AppShell() {
