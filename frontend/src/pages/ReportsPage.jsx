@@ -18,8 +18,10 @@ export function ReportsPage(){
  const [logs,setLogs]=useState([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
- const [earliestYear,setEarliestYear]=useState(new Date().getFullYear());
- const yearOptions=Array.from({length:Math.max(1,new Date().getFullYear()-earliestYear+1)},(_,i)=>String(earliestYear+i));
+ const [availableMonths,setAvailableMonths]=useState([]);
+ const yearOptions=[...new Set(availableMonths.map(m=>m.slice(0,4)))].sort();
+ const monthOptions=availableMonths.filter(m=>m.slice(0,4)===month.slice(0,4));
+ const visibleMonthOptions=monthOptions.length?monthOptions:[month];
  const months=useMemo(()=>Array.from({length:12},(_,i)=>shiftMonth(month,-11+i)),[month]);
 
  async function load(){
@@ -28,17 +30,22 @@ export function ReportsPage(){
    const results=await Promise.all([
     Promise.all(months.map(m=>apiRequest('/stats/freelancer?month='+m))),
     apiRequest('/stats/freelancer?month='+month),
-    apiRequest('/timelogs?limit=5000')
+    apiRequest('/timelogs?limit=5000'),
+    apiRequest('/fixed-payments')
    ]);
-   const [monthStats,current,allLogs]=results;
+   const [monthStats,current,allLogs,fixedPayments]=results;
    setMonthly(monthStats.map((s,i)=>({month:months[i],label:monthTitle(months[i]),paid:Number(s.totalEarned)||0,unpaid:Number(s.totalUnpaid)||0,expected:Number(s.totalExpected)||0,hours:Number(s.hoursThisMonth)||0})));
    setStats(current);
-   setLogs(Array.isArray(allLogs)?allLogs:[]);
+   const logRows=Array.isArray(allLogs)?allLogs:[];
+   const fixedRows=Array.isArray(fixedPayments)?fixedPayments:[];
+   setLogs(logRows);
+   const activeMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(x)&&Number(x.slice(0,4))<=new Date().getFullYear()))].sort();
+   setAvailableMonths(activeMonths);
+   if(activeMonths.length)setMonth(currentMonth=>activeMonths.includes(currentMonth)?currentMonth:activeMonths[activeMonths.length-1]);
   }catch(e){setError(e.message||'Unable to load report data.');}
   finally{setLoading(false);}
  }
  useEffect(()=>{load();},[month]);
- useEffect(()=>{let live=true;Promise.allSettled([apiRequest('/timelogs?limit=1&order=asc'),apiRequest('/fixed-payments')]).then(results=>{if(!live)return;const dates=[];if(results[0].status==='fulfilled'&&Array.isArray(results[0].value))dates.push(...results[0].value.map(x=>x.date));if(results[1].status==='fulfilled'&&Array.isArray(results[1].value))dates.push(...results[1].value.map(x=>x.month));const years=dates.map(x=>Number(String(x||'').slice(0,4))).filter(y=>Number.isInteger(y)&&y>=1900&&y<=new Date().getFullYear());if(years.length)setEarliestYear(Math.min(...years));});return()=>{live=false;};},[]);
 
  const selectedClients=useMemo(()=>Array.isArray(stats?.clientBreakdown)?stats.clientBreakdown.map(c=>({name:c.client_name||'Unknown client',paid:Number(c.paid)||0,unpaid:Number(c.unpaid)||0,total:Number(c.total)||0,hours:Number(c.hours)||0})).sort((a,b)=>b.total-a.total):[],[stats]);
  const paymentMix=useMemo(()=>[{name:'Paid',value:selectedClients.reduce((a,c)=>a+c.paid,0)},{name:'Outstanding',value:selectedClients.reduce((a,c)=>a+c.unpaid,0)}].filter(x=>x.value>0),[selectedClients]);
@@ -64,7 +71,7 @@ export function ReportsPage(){
  return <div className="module-page">
   <div className="page-heading"><div><div className="eyebrow">BUSINESS PERFORMANCE</div><h1>Reports & Analytics</h1><p>Revenue trends, client contribution, payment distribution and an exportable balance sheet.</p></div><div className="heading-actions"><button className="button-secondary" onClick={exportBalanceSheet} disabled={loading}><Download size={15}/> Export balance sheet</button><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button></div></div>
   {error&&<div className="notice-error" role="alert">{error}</div>}
-  <section className="panel-card report-filter"><div className="report-month-picker"><label>Selected month</label><div className="month-select-pair"><select aria-label="Report month" value={month.slice(5,7)} onChange={e=>setMonth(month.slice(0,4)+'-'+e.target.value)}>{monthNames.map((name,i)=><option key={name} value={String(i+1).padStart(2,'0')}>{name}</option>)}</select><select aria-label="Report year" value={month.slice(0,4)} onChange={e=>setMonth(e.target.value+'-'+month.slice(5,7))}>{yearOptions.map(y=><option key={y} value={y}>{y}</option>)}</select></div></div><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
+  <section className="panel-card report-filter"><div className="report-month-picker"><label>Selected month</label><div className="month-select-pair"><select aria-label="Report month" value={month.slice(5,7)} onChange={e=>setMonth(month.slice(0,4)+'-'+e.target.value)}>{visibleMonthOptions.map(m=><option key={m} value={m.slice(5,7)}>{new Date(m+'-02T00:00:00').toLocaleDateString(undefined,{month:'long'})}</option>)}</select><select aria-label="Report year" value={month.slice(0,4)} onChange={e=>{const nextYear=e.target.value;const months=availableMonths.filter(m=>m.startsWith(nextYear+'-'));setMonth(months.length?months[months.length-1]:month);}}>{(yearOptions.length?yearOptions:[month.slice(0,4)]).map(y=><option key={y} value={y}>{y}</option>)}</select></div></div><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
   <div className="metric-grid report-kpis">
    <article className="metric-card"><div className="metric-label"><TrendingUp size={15}/> Revenue received · 12 months</div><div className="metric-value">{loading?'—':money(allTimePaid)}</div></article>
    <article className="metric-card"><div className="metric-label"><Wallet size={15}/> Outstanding · 12 months</div><div className="metric-value">{loading?'—':money(allTimeOutstanding)}</div></article>
