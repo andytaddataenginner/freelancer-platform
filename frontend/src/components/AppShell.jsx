@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X, NotebookPen, Receipt, KeyRound } from 'lucide-react';
 import { auth } from '../services/auth';
 import { apiRequest } from '../services/api';
@@ -23,8 +23,32 @@ export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem('qfa_theme') === 'dark');
+  const [availability, setAvailability] = useState(null);
   const navigate = useNavigate();
   const user = auth.user();
+
+  useEffect(() => {
+    let active = true;
+    const refreshAvailability = async () => {
+      try {
+        const result = await apiRequest('/timer/agency/status');
+        if (active) setAvailability(result);
+      } catch {
+        if (active) setAvailability(null);
+      }
+    };
+    refreshAvailability();
+    const interval = setInterval(refreshAvailability, 15000);
+    return () => { active = false; clearInterval(interval); };
+  }, []);
+
+  const freelancerStatus = availability?.is_busy || availability?.status === 'busy'
+    ? (availability?.is_other_client ? 'Busy · another client' : 'Busy · working')
+    : availability?.is_available || availability?.status === 'available' ? 'Available'
+    : availability?.status === 'offline' ? 'Offline' : 'Checking status…';
+  const freelancerStatusTone = freelancerStatus.startsWith('Busy') ? 'busy'
+    : freelancerStatus === 'Available' ? 'available'
+    : freelancerStatus === 'Offline' ? 'offline' : 'checking';
 
   function toggleTheme() {
     const next = !dark;
@@ -57,7 +81,7 @@ export function AppShell() {
         </nav>
         <div className="sidebar-bottom">
           <div className="profile-avatar">{(user?.name || 'Q').slice(0,1).toUpperCase()}</div>
-          {!collapsed && <div className="profile-copy"><strong>{user?.name || 'QFA User'}</strong><span>Freelancer workspace</span></div>}
+          {!collapsed && <div className="profile-copy"><strong>{user?.name || 'QFA User'}</strong><span>Freelancer workspace</span><span className={`freelancer-nav-status status-${freelancerStatusTone}`}><i/> {freelancerStatus}</span></div>}
           <button className="icon-button" onClick={logout} title="Sign out" aria-label="Sign out"><LogOut size={17}/></button>
         </div>
       </aside>
