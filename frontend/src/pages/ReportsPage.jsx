@@ -27,13 +27,17 @@ export function ReportsPage(){
  async function load(){
   setLoading(true);setError('');
   try{
-   const results=await Promise.all([
+   const results=await Promise.allSettled([
     Promise.all(months.map(m=>apiRequest('/stats/freelancer?month='+m))),
     apiRequest('/stats/freelancer?month='+month),
     apiRequest('/timelogs?limit=5000'),
     apiRequest('/fixed-payments')
    ]);
-   const [monthStats,current,allLogs,fixedPayments]=results;
+   if(results[0].status==='rejected')throw results[0].reason;
+   if(results[1].status==='rejected')throw results[1].reason;
+   const monthStats=results[0].value,current=results[1].value;
+   const allLogs=results[2].status==='fulfilled'?results[2].value:[];
+   const fixedPayments=results[3].status==='fulfilled'?results[3].value:[];
    setMonthly(monthStats.map((s,i)=>({month:months[i],label:monthTitle(months[i]),paid:Number(s.totalEarned)||0,unpaid:Number(s.totalUnpaid)||0,expected:Number(s.totalExpected)||0,hours:Number(s.hoursThisMonth)||0})));
    setStats(current);
    const logRows=Array.isArray(allLogs)?allLogs:[];
