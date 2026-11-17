@@ -11,7 +11,7 @@ const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 
 export function InvoicesPage(){
  const [clients,setClients]=useState([]),[logs,setLogs]=useState([]),[fixed,setFixed]=useState([]);
- const [from,setFrom]=useState(monthNow()+'-01'),[to,setTo]=useState(new Date().toISOString().slice(0,10)),[clientId,setClientId]=useState('all');
+ const [from,setFrom]=useState(''),[to,setTo]=useState(''),[clientId,setClientId]=useState('all');
  const [loading,setLoading]=useState(true),[error,setError]=useState(''),[periodInitialized,setPeriodInitialized]=useState(false);
  async function load(){
   setLoading(true);setError('');
@@ -33,6 +33,7 @@ export function InvoicesPage(){
      setFrom(latest+'-01');
      setTo(latest+'-'+String(new Date(year,monthNumber,0).getDate()).padStart(2,'0'));
     }
+    if(!latest){const fallback=monthNow();setFrom(fallback+'-01');setTo(new Date().toISOString().slice(0,10));}
     setPeriodInitialized(true);
    }
    const failures=results.filter(x=>x.status==='rejected');
