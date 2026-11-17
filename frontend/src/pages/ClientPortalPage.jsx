@@ -39,6 +39,7 @@ export function ClientPortalPage(){
  useEffect(()=>{load();},[]);
  useEffect(()=>{let active=true;const refreshLive=async()=>{const [availability,timer]=await Promise.allSettled([apiRequest('/timer/agency/status'),apiRequest('/timer/client-status')]);if(!active)return;if(availability.status==='fulfilled')setData(d=>({...d,availability:availability.value}));if(timer.status==='fulfilled'){setData(d=>({...d,liveTimer:timer.value?.running?timer.value:null}));setTimerObservedAt(Date.now());}};refreshLive();const id=setInterval(refreshLive,3000);return()=>{active=false;clearInterval(id);};},[]);
  useEffect(()=>{const id=setInterval(()=>setTimerNow(Date.now()),1000);return()=>clearInterval(id);},[]);
+ useEffect(()=>{if(data.liveTimer?.started_at)setTimerPopupMinimized(false);},[data.liveTimer?.started_at]);
  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';document.body.dataset.theme=dark?'dark':'light';localStorage.setItem('qfa_theme',dark?'dark':'light');},[dark]);
  const s=data.stats||{};
  const filteredLogs=useMemo(()=>data.logs.filter(l=>(filter==='all'||l.payment_status===filter)&&(!from||String(l.date).slice(0,10)>=from)&&(!to||String(l.date).slice(0,10)<=to)),[data.logs,filter,from,to]);
@@ -46,7 +47,7 @@ export function ClientPortalPage(){
  const paidAmount=filteredLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.amount||0),0);
  const unpaidAmount=filteredLogs.filter(l=>l.payment_status!=='paid').reduce((a,l)=>a+Number(l.amount||0),0);
  const paidHours=filteredLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.hours||0),0);
- const recentLogs=useMemo(()=>showAllLogs?filteredLogs:filteredLogs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,8),[filteredLogs,showAllLogs]);
+ const recentLogs=useMemo(()=>{const sorted=filteredLogs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return showAllLogs?sorted:sorted.slice(0,8);},[filteredLogs,showAllLogs]);
  const groupedLogs=useMemo(()=>{const groups={};recentLogs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[recentLogs]);
  const upcoming=data.bookings.filter(b=>String(b.date).slice(0,10)>=today()&&b.status!=='cancelled');
  async function book(e){e.preventDefault();setBookingBusy(true);setNotice('');try{await apiRequest('/client/bookings',{method:'POST',body:JSON.stringify(booking)});setNotice('Your booking request has been sent. Your freelancer will confirm it.');setBooking(emptyBooking);await load();}catch(e){setError(e.message);}finally{setBookingBusy(false);}}
