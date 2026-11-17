@@ -12,17 +12,13 @@ router.get('/latest-month', requireFreelancer, async (req, res, next) => {
     // Historical records remain valid even when the client's contract later ends.
     // Use the freelancer_id stored on each source record, not current assignments
     // or the paginated/contract-filtered time-log endpoint.
+    // The selected work month must come from recorded work, not automatically
+    // generated fixed-monthly billing rows (stats can create a current-month row
+    // even when no work has been logged in that month).
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(MAX(activity_month), 'YYYY-MM') AS latest_month
-      FROM (
-        SELECT DATE_TRUNC('month', t.date)::date AS activity_month
-        FROM time_logs t
-        WHERE t.freelancer_id = $1
-        UNION ALL
-        SELECT DATE_TRUNC('month', f.month::date)::date AS activity_month
-        FROM fixed_monthly_payments f
-        WHERE f.freelancer_id = $1
-      ) activity
+      SELECT TO_CHAR(DATE_TRUNC('month', MAX(t.date)), 'YYYY-MM') AS latest_month
+      FROM time_logs t
+      WHERE t.freelancer_id = $1
     `, [req.user.id]);
     res.json({ latest_month: rows[0]?.latest_month || null });
   } catch (e) {
