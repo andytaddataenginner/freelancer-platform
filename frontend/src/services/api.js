@@ -22,8 +22,11 @@ export async function apiRequest(path, options = {}) {
       const role = String(auth.user()?.role || '').trim().toLowerCase();
       const loginRole = role === 'client' ? 'client' : 'freelancer';
       auth.clear();
-      if (window.location.pathname !== '/login') {
-        window.location.assign('/login?role=' + loginRole + '&reason=expired');
+      if (window.location.hash !== '#/login' && !window.location.hash.startsWith('#/login?')) {
+        // QFA uses HashRouter: send the browser to the app document first,
+        // then let the client router render the login screen without relying
+        // on a host-specific deep-link rewrite.
+        window.location.assign('/#/login?role=' + loginRole + '&reason=expired');
       }
       throw new Error('Your session has expired. Please sign in again.');
     }
