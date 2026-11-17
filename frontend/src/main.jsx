@@ -9,7 +9,7 @@ import './styles.css';
 // on the root document and avoids server-side deep-link resolution entirely.
 // Preserve existing bookmarked BrowserRouter URLs by converting them once.
 if (window.location.pathname !== '/' && !window.location.hash) {
-  const legacyPath = window.location.pathname.replace(/\\/+$/, '') || '/';
+  const legacyPath = window.location.pathname.replace(/\/+$/, '') || '/';
   const target = legacyPath + window.location.search + window.location.hash;
   window.history.replaceState(null, '', '/#' + target);
 }
