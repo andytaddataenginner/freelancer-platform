@@ -15,7 +15,7 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= f.month::date)
       WHERE f.client_id = $1 AND f.freelancer_id = $2
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND f.month::date >= date_trunc('month', u.created_at)::date
+        AND to_date(f.month::text || '-01', 'YYYY-MM-DD') >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC
     `, [req.params.clientId, req.user.id]);
     res.json(rows);
@@ -110,9 +110,9 @@ router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
         AND cc.rate_type = 'fixed' 
         AND cc.status = 'active'
         AND cc.fixed_price IS NOT NULL
-        AND cc.effective_from <= $2::date
-        AND (cc.effective_to IS NULL OR cc.effective_to >= $2::date)
-        AND $2::date >= date_trunc('month', u.created_at)::date
+        AND cc.effective_from <= to_date($2::text || '-01', 'YYYY-MM-DD')
+        AND (cc.effective_to IS NULL OR cc.effective_to >= to_date($2::text || '-01', 'YYYY-MM-DD'))
+        AND to_date($2::text || '-01', 'YYYY-MM-DD') >= date_trunc('month', u.created_at)::date
     `, [req.user.id, month]);
 
     await Promise.all(clients.rows.map(cl =>
