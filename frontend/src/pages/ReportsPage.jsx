@@ -12,6 +12,7 @@ const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
 
 export function ReportsPage(){
  const [month,setMonth]=useState('');
+ const [availableMonths,setAvailableMonths]=useState([]);
  const [monthly,setMonthly]=useState([]);
  const [stats,setStats]=useState(null);
  const [logs,setLogs]=useState([]);
@@ -39,14 +40,11 @@ export function ReportsPage(){
    const logRows=Array.isArray(allLogs)?allLogs:[];
    const fixedRows=Array.isArray(fixedPayments)?fixedPayments:[];
    setLogs(logRows);
-   const latestMonth=results[4].status==='fulfilled'?results[4].value?.latest_month:null;
-   const activityMonths=[...new Set(logRows.map(x=>String(x.date||'').slice(0,7)).filter(validMonth))].sort();
-   const latest=validMonth(latestMonth)?latestMonth:activityMonths[activityMonths.length-1];
-   if(latest)setMonth(currentMonth=>currentMonth===latest?currentMonth:latest);
+   // Keep the month explicitly selected by the user; do not reset it after every refresh.
   }catch(e){setError(e.message||'Unable to load report data.');}
   finally{setLoading(false);}
  }
- useEffect(()=>{let live=true;(async()=>{const results=await Promise.allSettled([apiRequest('/timelogs/latest-month'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments')]);if(!live)return;const direct=results[0].status==='fulfilled'?results[0].value?.latest_month:null;const logs=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];const fixed=results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[];const activity=[...new Set(logs.map(x=>String(x.date||'').slice(0,7)).filter(validMonth))].sort();setMonth(validMonth(direct)?direct:(activity[activity.length-1]||monthKey(new Date())));})();return()=>{live=false;};},[]);useEffect(()=>{if(month)load();},[month]);
+ useEffect(()=>{let live=true;(async()=>{const results=await Promise.allSettled([apiRequest('/timelogs/latest-month'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments'),apiRequest('/timelogs/months')]);if(!live)return;const direct=results[0].status==='fulfilled'?results[0].value?.latest_month:null;const logs=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];const fixed=results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[];const apiMonths=results[3].status==='fulfilled'&&Array.isArray(results[3].value?.months)?results[3].value.months:[];const activity=[...new Set([...apiMonths,...logs.map(x=>String(x.date||'').slice(0,7)),...fixed.map(x=>String(x.month||'').slice(0,7))].filter(validMonth))].sort().reverse();setAvailableMonths(activity);const latest=validMonth(direct)?direct:(activity[0]||monthKey(new Date()));setMonth(current=>current||latest);})();return()=>{live=false;};},[]);useEffect(()=>{if(month)load();},[month]);
 
  const selectedClients=useMemo(()=>Array.isArray(stats?.clientBreakdown)?stats.clientBreakdown.map(c=>({name:c.client_name||'Unknown client',paid:Number(c.paid)||0,unpaid:Number(c.unpaid)||0,total:Number(c.total)||0,hours:Number(c.hours)||0})).sort((a,b)=>b.total-a.total):[],[stats]);
  const paymentMix=useMemo(()=>[{name:'Paid',value:selectedClients.reduce((a,c)=>a+c.paid,0)},{name:'Outstanding',value:selectedClients.reduce((a,c)=>a+c.unpaid,0)}].filter(x=>x.value>0),[selectedClients]);
@@ -72,7 +70,7 @@ export function ReportsPage(){
  return <div className="module-page">
   <div className="page-heading"><div><div className="eyebrow">BUSINESS PERFORMANCE</div><h1>Reports & Analytics</h1><p>Revenue trends, client contribution, payment distribution and an exportable balance sheet.</p></div><div className="heading-actions"><button className="button-secondary" onClick={exportBalanceSheet} disabled={loading}><Download size={15}/> Export balance sheet</button><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button></div></div>
   {error&&<div className="notice-error" role="alert">{error}</div>}
-  <section className="panel-card report-filter"><div className="report-month-picker"><label>Latest active month</label><strong>{new Date(month+'-02T00:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'})}</strong></div><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
+  <section className="panel-card report-filter"><label className="report-month-picker"><span>Reporting month</span><select value={month} onChange={e=>setMonth(e.target.value)}>{[...new Set([month,...availableMonths].filter(Boolean))].sort().reverse().map(m=><option key={m} value={m}>{new Date(m+'-02T00:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'})}</option>)}</select></label><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
   <div className="metric-grid report-kpis">
    <article className="metric-card"><div className="metric-label"><TrendingUp size={15}/> Revenue received · 12 months</div><div className="metric-value">{loading?'—':money(allTimePaid)}</div></article>
    <article className="metric-card"><div className="metric-label"><Wallet size={15}/> Outstanding · 12 months</div><div className="metric-value">{loading?'—':money(allTimeOutstanding)}</div></article>
