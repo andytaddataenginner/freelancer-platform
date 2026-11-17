@@ -1275,7 +1275,7 @@
 .client-portal-page .portal-availability>strong{font-size:9px!important}
 .client-portal-page .portal-availability.status-unknown{background:#f1f3f6!important;border-color:#e2e7ee!important;color:#68768b!important}
 .client-portal-page.portal-dark .portal-availability.status-unknown{background:#202b3e!important;border-color:#34435d!important;color:#bdc8d8!important}
-.client-portal-page .client-sidebar{align-self:stretch!important;height:100vh!important;min-height:100vh!important}
+.client-portal-page .client-sidebar{position:relative!important;align-self:stretch!important;height:auto!important;min-height:100vh!important}
 .client-portal-page .client-premium-charts .portal-chart-card{min-height:252px!important;overflow:visible!important}
 .client-portal-page .client-payment-chart{height:218px!important;min-height:218px!important;overflow:visible!important}
 .client-portal-page .client-payment-chart .recharts-responsive-container{overflow:visible!important}
@@ -1299,5 +1299,5 @@
  .client-portal-page .portal-header-actions{gap:6px!important}
  .client-portal-page .portal-availability{max-width:220px!important;overflow:hidden!important}
  .client-portal-page .portal-availability>strong{overflow:hidden!important;text-overflow:ellipsis!important}
- .client-portal-page .client-sidebar{height:100vh!important;min-height:100vh!important}
+ .client-portal-page .client-sidebar{height:auto!important;min-height:100vh!important}
 }
