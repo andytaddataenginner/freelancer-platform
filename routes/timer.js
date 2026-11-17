@@ -245,6 +245,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
              FROM client_contracts cc
              WHERE cc.client_id = $1
                AND cc.effective_to IS NULL
+               AND cc.effective_from <= CURRENT_DATE
              ORDER BY cc.effective_from DESC NULLS LAST, cc.id DESC
              LIMIT 1
            ),
