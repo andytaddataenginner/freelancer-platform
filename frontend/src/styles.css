@@ -1263,3 +1263,41 @@
 .client-portal-page.portal-dark .billing-expand{background:#202e44;color:#c7d3e5}
 @media(max-width:950px){.client-portal-page .client-premium-charts{grid-template-columns:repeat(2,minmax(0,1fr))!important}.client-portal-page .client-project-chart{grid-column:1/-1!important}}
 @media(max-width:650px){.client-portal-page .client-premium-charts{grid-template-columns:1fr!important}.client-portal-page .client-project-chart{grid-column:auto!important}.client-portal-page .client-project-strip-grid{grid-template-columns:1fr}.client-portal-page .billing-month-card>summary{gap:8px;padding:11px}.client-portal-page .billing-month-total strong{font-size:12px}}
+
+
+/* QFA client portal refinement: compact shared status header, full-height navigation,
+   unclipped payment chart, and a single full-width billing history panel. */
+.client-portal-page .portal-header{min-height:52px!important;height:52px!important;padding:5px 24px!important}
+.client-portal-page .portal-header-actions{gap:9px!important}
+.client-portal-page .portal-availability{min-height:27px!important;padding:4px 8px!important;gap:6px!important;border-radius:8px!important;font-size:9px!important;line-height:1!important}
+.client-portal-page .portal-availability>svg{width:12px!important;height:12px!important}
+.client-portal-page .portal-availability>i{width:6px!important;height:6px!important;flex-basis:6px!important}
+.client-portal-page .portal-availability>strong{font-size:9px!important}
+.client-portal-page .portal-availability.status-unknown{background:#f1f3f6!important;border-color:#e2e7ee!important;color:#68768b!important}
+.client-portal-page.portal-dark .portal-availability.status-unknown{background:#202b3e!important;border-color:#34435d!important;color:#bdc8d8!important}
+.client-portal-page .client-sidebar{align-self:stretch!important;height:100vh!important;min-height:100vh!important}
+.client-portal-page .client-premium-charts .portal-chart-card{min-height:252px!important;overflow:visible!important}
+.client-portal-page .client-payment-chart{height:218px!important;min-height:218px!important;overflow:visible!important}
+.client-portal-page .client-payment-chart .recharts-responsive-container{overflow:visible!important}
+.client-portal-page .client-payment-center{top:43%!important}
+.client-portal-page .billing-history-layout{display:block!important;width:100%!important;min-width:0!important}
+.client-portal-page .billing-history-layout>.billing-breakdown-panel{width:100%!important;max-width:none!important;min-width:0!important}
+.client-portal-page .billing-breakdown-panel .billing-month-list,.client-portal-page .billing-breakdown-panel .billing-invoice-list{gap:10px!important}
+.client-portal-page .billing-month-card{border-radius:11px!important}
+.client-portal-page .billing-month-card>summary{min-height:58px!important;padding:12px 16px!important}
+.client-portal-page .billing-month-card .table-scroll{overflow-x:auto!important;padding:0 12px 12px!important}
+.client-portal-page .billing-month-card table{width:100%!important;min-width:680px!important;border-collapse:separate!important;border-spacing:0!important}
+.client-portal-page .billing-month-card th{position:static!important;padding:10px 12px!important;background:#f4f7fb!important;color:#63728a!important;font-size:9px!important;font-weight:800!important;letter-spacing:.04em!important;text-transform:uppercase!important}
+.client-portal-page .billing-month-card td{padding:11px 12px!important;border-bottom:1px solid #edf1f6!important;color:#465670!important;font-size:10px!important;vertical-align:middle!important}
+.client-portal-page .billing-month-card tbody tr:last-child td{border-bottom:0!important}
+.client-portal-page .billing-month-card td:nth-child(2),.client-portal-page .billing-month-card td:nth-child(3){white-space:nowrap!important;font-variant-numeric:tabular-nums!important}
+.client-portal-page .billing-month-card td:nth-child(4){max-width:420px!important}
+.client-portal-page.portal-dark .billing-month-card th{background:#19263b!important;color:#b6c3d7!important}
+.client-portal-page.portal-dark .billing-month-card td{border-color:#293b58!important;color:#c7d3e5!important}
+@media(max-width:760px){
+ .client-portal-page .portal-header{height:48px!important;min-height:48px!important;padding:4px 12px!important}
+ .client-portal-page .portal-header-actions{gap:6px!important}
+ .client-portal-page .portal-availability{max-width:220px!important;overflow:hidden!important}
+ .client-portal-page .portal-availability>strong{overflow:hidden!important;text-overflow:ellipsis!important}
+ .client-portal-page .client-sidebar{height:100vh!important;min-height:100vh!important}
+}
