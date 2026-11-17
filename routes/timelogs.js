@@ -9,27 +9,25 @@ const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 // cannot incorrectly fall back to the current calendar month.
 router.get('/latest-month', requireFreelancer, async (req, res, next) => {
   try {
+    // Historical records remain valid even when the client's contract later ends.
+    // Use the freelancer_id stored on each source record, not current assignments
+    // or the paginated/contract-filtered time-log endpoint.
     const { rows } = await pool.query(`
-      SELECT TO_CHAR(MAX(month_start), 'YYYY-MM') AS latest_month
+      SELECT TO_CHAR(MAX(activity_month), 'YYYY-MM') AS latest_month
       FROM (
-        SELECT DATE_TRUNC('month', date)::date AS month_start
-        FROM time_logs
-        WHERE freelancer_id = $1
+        SELECT DATE_TRUNC('month', t.date)::date AS activity_month
+        FROM time_logs t
+        WHERE t.freelancer_id = $1
         UNION ALL
-        SELECT TO_DATE(LEFT(f.month::text, 7) || '-01', 'YYYY-MM-DD') AS month_start
+        SELECT DATE_TRUNC('month', f.month::date)::date AS activity_month
         FROM fixed_monthly_payments f
-        WHERE EXISTS (
-          SELECT 1 FROM clients c
-          WHERE c.user_id = f.client_id AND c.freelancer_id = $1
-        )
-        OR EXISTS (
-          SELECT 1 FROM client_contracts cc
-          WHERE cc.client_id = f.client_id AND cc.freelancer_id = $1
-        )
+        WHERE f.freelancer_id = $1
       ) activity
     `, [req.user.id]);
     res.json({ latest_month: rows[0]?.latest_month || null });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
 
 // GET /api/timelogs — Filtered by active contract coverage
