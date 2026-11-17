@@ -55,8 +55,10 @@ export function ClientPortalPage(){
  const s=data.stats||{};
  const filteredLogs=useMemo(()=>data.logs.filter(l=>(filter==='all'||l.payment_status===filter)&&(!from||String(l.date).slice(0,10)>=from)&&(!to||String(l.date).slice(0,10)<=to)),[data.logs,filter,from,to]);
  const hours=filteredLogs.reduce((a,l)=>a+Number(l.hours||0),0);
- const paidAmount=filteredLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.amount||0),0);
- const unpaidAmount=filteredLogs.filter(l=>l.payment_status!=='paid').reduce((a,l)=>a+Number(l.amount||0),0);
+ const fixedForPeriod=data.fixed.filter(r=>{const month=String(r.month||'').slice(0,7);return (!from||month>=from.slice(0,7))&&(!to||month<=to.slice(0,7));});
+ const hourlyLogs=filteredLogs.filter(l=>String(l.rate_type||'hourly').toLowerCase()!=='fixed');
+ const paidAmount=hourlyLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>r.status==='paid').reduce((a,r)=>a+Number(r.amount||0),0);
+ const unpaidAmount=hourlyLogs.filter(l=>l.payment_status!=='paid').reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>r.status!=='paid').reduce((a,r)=>a+Number(r.amount||0),0);
  const paidHours=filteredLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.hours||0),0);
  const recentLogs=useMemo(()=>{const sorted=filteredLogs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return showAllLogs?sorted:sorted.slice(0,8);},[filteredLogs,showAllLogs]);
  const groupedLogs=useMemo(()=>{const groups={};recentLogs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[recentLogs]);
@@ -72,7 +74,7 @@ export function ClientPortalPage(){
  const nav=[['overview','Overview',LayoutDashboard],['logs','Time & Logs',Clock3],['billing','Billing History',Wallet],['book','Book a Session',CalendarDays],['notes','Notes & Guidelines',BookOpen],['security','Security',ShieldCheck]];
  const monthlyActivity=useMemo(()=>{const m={};data.logs.forEach(l=>{const key=String(l.date||'').slice(0,7);if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(key))return;(m[key]??={month:key,hours:0,amount:0}).hours+=Number(l.hours||0);m[key].amount+=Number(l.amount||0);});return Object.values(m).sort((a,b)=>a.month.localeCompare(b.month)).slice(-6);},[data.logs]);
  const projectProgress=useMemo(()=>data.projects.slice(0,6).map(p=>({name:p.name.length>18?p.name.slice(0,18)+'…':p.name,done:Number(p.done_tasks)||0,remaining:Math.max(0,(Number(p.total_tasks)||0)-(Number(p.done_tasks)||0))})),[data.projects]);
-  const billingMix=[{name:'Paid',value:paidAmount},{name:'Outstanding',value:unpaidAmount}].filter(x=>x.value>0);
+  const billingMix=[{name:'Paid',value:paidAmount},{name:'Outstanding',value:unpaidAmount}];
   const paymentCompletion=paidAmount+unpaidAmount>0?Math.round(paidAmount/(paidAmount+unpaidAmount)*100):0;
   const availabilityStatus=data.availability?.is_busy||data.availability?.status==='busy'?'busy':data.availability?.is_available||data.availability?.status==='available'?'available':data.availability?.status==='offline'?'offline':'checking';
  const availabilityTone=availabilityStatus==='checking'?'unknown':availabilityStatus;
