@@ -9,7 +9,7 @@ const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
 const shiftMonth=(key,offset)=>{const safe=validMonth(key)?key:monthKey(new Date());const [y,m]=safe.split('-').map(Number);const d=new Date(y,m-1+offset,1);return monthKey(d);};
 const monthTitle=key=>validMonth(key)?new Date(key+'-02T00:00:00').toLocaleDateString(undefined,{month:'short',year:'2-digit'}):'—';
 const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const yearOptions=Array.from({length:31},(_,i)=>String(new Date().getFullYear()-20+i));
+const yearOptions=Array.from({length:51},(_,i)=>String(new Date().getFullYear()-40+i));
 const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
 
 export function ReportsPage(){
