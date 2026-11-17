@@ -234,8 +234,9 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Resolve the client's assigned freelancer and their active timer in one
-    // query. The timer lookup is freelancer-wide, not scoped to this client.
+    // Resolve the assigned freelancer using the same client-to-freelancer
+    // relationship used by the original client module. Then check ALL of that
+    // freelancer's active timers, not only a timer belonging to this client.
     const assignment = await pool.query(
       `SELECT u.id, u.name, u.is_online,
               active.id AS active_timer_id,
@@ -245,18 +246,15 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
               active.is_paused AS active_is_paused,
               active.accumulated_seconds AS active_accumulated_seconds
        FROM clients c
-       LEFT JOIN client_contracts cc
-         ON cc.client_id = c.user_id AND cc.effective_to IS NULL
-       JOIN users u ON u.id = COALESCE(c.freelancer_id, cc.freelancer_id)
+       JOIN users u ON u.id = c.freelancer_id
        LEFT JOIN LATERAL (
          SELECT id, client_id, started_at, description, is_paused, accumulated_seconds
          FROM active_timers
-         WHERE freelancer_id = COALESCE(c.freelancer_id, cc.freelancer_id) AND is_running = TRUE
+         WHERE freelancer_id = u.id AND is_running = TRUE
          ORDER BY started_at DESC
          LIMIT 1
        ) active ON TRUE
-       WHERE c.user_id = $1 AND LOWER(TRIM(u.role)) = 'freelancer'
-       ORDER BY c.id DESC, cc.effective_from DESC
+       WHERE c.user_id = $1
        LIMIT 1`,
       [req.user.id]
     );
@@ -305,6 +303,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
 
     return res.json({
       status: 'offline',
+      availability_scope: 'freelancer-wide',
       is_available: false,
       is_busy: false,
       is_paused: false,
