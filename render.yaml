@@ -9,46 +9,8 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         value: https://freelancer-platform-9jut.onrender.com/api
+    # Rewrite every deep link to the React entry point for refresh-safe SPA routing.
     routes:
-      - type: rewrite
-        source: /login
-        destination: /index.html
-      - type: rewrite
-        source: /dashboard
-        destination: /index.html
-      - type: rewrite
-        source: /client-portal
-        destination: /index.html
-      - type: rewrite
-        source: /clients
-        destination: /index.html
-      - type: rewrite
-        source: /time-logs
-        destination: /index.html
-      - type: rewrite
-        source: /schedule
-        destination: /index.html
-      - type: rewrite
-        source: /reports
-        destination: /index.html
-      - type: rewrite
-        source: /fixed-invoices
-        destination: /index.html
-      - type: rewrite
-        source: /invoices
-        destination: /index.html
-      - type: rewrite
-        source: /contracts
-        destination: /index.html
-      - type: rewrite
-        source: /projects
-        destination: /index.html
-      - type: rewrite
-        source: /portfolio
-        destination: /index.html
-      - type: rewrite
-        source: /notes
-        destination: /index.html
       - type: rewrite
         source: /*
         destination: /index.html
