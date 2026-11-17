@@ -234,37 +234,39 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Resolve the assigned freelancer using the same client-to-freelancer
-    // relationship used by the original client module. Then check ALL of that
-    // freelancer's active timers, not only a timer belonging to this client.
+    // Resolve exactly one freelancer assigned to the requesting client.
+    // Historical/other client assignments must never be considered here.
     const assignment = await pool.query(
-      `SELECT u.id, u.name, u.is_online,
+      `WITH assigned AS (
+         SELECT freelancer_id
+         FROM clients
+         WHERE user_id = $1 AND freelancer_id IS NOT NULL
+         ORDER BY id DESC
+         LIMIT 1
+       )
+       SELECT u.id, u.name, u.is_online,
               active.id AS active_timer_id,
               active.client_id AS active_client_id,
               active.started_at AS active_started_at,
               active.description AS active_description,
               active.is_paused AS active_is_paused,
               active.accumulated_seconds AS active_accumulated_seconds
-       FROM clients c
-       JOIN users u ON u.id = c.freelancer_id
+       FROM assigned a
+       JOIN users u ON u.id = a.freelancer_id
        LEFT JOIN LATERAL (
          SELECT id, client_id, started_at, description, is_paused, accumulated_seconds
          FROM active_timers
-         WHERE freelancer_id = u.id AND is_running = TRUE
+         WHERE freelancer_id = a.freelancer_id AND is_running = TRUE
          ORDER BY started_at DESC
          LIMIT 1
-       ) active ON TRUE
-       WHERE c.user_id = $1
-       LIMIT 1`,
+       ) active ON TRUE`,
       [req.user.id]
     );
     const assigned = assignment.rows[0] || null;
-    const freelancer = assigned ? {id:assigned.id,name:assigned.name,is_online:assigned.is_online} : null;
-
-    if (!freelancer) {
+    if (!assigned) {
       return res.json({
         status: 'offline',
-        availability_scope: 'freelancer-wide',
+        availability_scope: 'client-assigned-freelancer',
         is_available: false,
         is_busy: false,
         is_paused: false,
@@ -276,7 +278,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       const isThisClient = String(assigned.active_client_id) === String(req.user.id);
       return res.json({
         status: 'busy',
-        availability_scope: 'freelancer-wide',
+        availability_scope: 'client-assigned-freelancer',
         is_available: false,
         is_busy: true,
         is_paused: Boolean(assigned.active_is_paused),
@@ -290,10 +292,10 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       });
     }
 
-    if (freelancer.is_online) {
+    if (assigned.is_online) {
       return res.json({
         status: 'available',
-        availability_scope: 'freelancer-wide',
+        availability_scope: 'client-assigned-freelancer',
         is_available: true,
         is_busy: false,
         is_paused: false,
@@ -303,7 +305,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
 
     return res.json({
       status: 'offline',
-      availability_scope: 'freelancer-wide',
+      availability_scope: 'client-assigned-freelancer',
       is_available: false,
       is_busy: false,
       is_paused: false,
