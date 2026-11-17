@@ -234,29 +234,27 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Resolve the freelancer assigned to this client first. Availability is
-    // freelancer-wide, not limited to a timer for the currently signed-in client.
-    let freelancer = null;
+    // Resolve this client's assigned freelancer explicitly. Never fall back to
+    // an unrelated online freelancer: that can incorrectly report availability.
     const relationship = await pool.query(
-      `SELECT u.id, u.name, u.is_online
+      `SELECT c.freelancer_id
        FROM clients c
-       JOIN users u ON u.id = c.freelancer_id
        WHERE c.user_id = $1
+       ORDER BY c.id DESC
        LIMIT 1`,
       [req.user.id]
     );
-
-    if (relationship.rows.length) {
-      freelancer = relationship.rows[0];
-    } else {
-      const fallback = await pool.query(
+    const freelancerId = relationship.rows[0]?.freelancer_id;
+    let freelancer = null;
+    if (freelancerId) {
+      const owner = await pool.query(
         `SELECT id, name, is_online
          FROM users
-         WHERE role = 'freelancer'
-         ORDER BY is_online DESC, last_seen_at DESC
-         LIMIT 1`
+         WHERE id = $1 AND LOWER(TRIM(role)) = 'freelancer'
+         LIMIT 1`,
+        [freelancerId]
       );
-      freelancer = fallback.rows[0] || null;
+      freelancer = owner.rows[0] || null;
     }
 
     if (!freelancer) {
