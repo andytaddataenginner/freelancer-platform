@@ -31,24 +31,30 @@ export function AppShell() {
     let active = true;
     const refreshAvailability = async () => {
       try {
-        const result = await apiRequest('/timer/agency/status');
-        if (active) setAvailability(result);
+        // Freelancer status is based on this freelancer's own active timer.
+        // /agency/status is a client-facing endpoint and must not be used here.
+        const timers = await apiRequest('/timer/status');
+        if (!active) return;
+        const running = Array.isArray(timers) ? timers[0] : null;
+        setAvailability(running
+          ? { status: 'busy', is_busy: true, active_session: running }
+          : { status: 'available', is_available: true, is_busy: false });
       } catch {
         if (active) setAvailability(null);
       }
     };
     refreshAvailability();
-    const interval = setInterval(refreshAvailability, 15000);
+    const interval = setInterval(refreshAvailability, 10000);
     return () => { active = false; clearInterval(interval); };
   }, []);
 
+  const activeClientName = availability?.active_session?.client_name;
   const freelancerStatus = availability?.is_busy || availability?.status === 'busy'
-    ? (availability?.is_other_client ? 'Busy · another client' : 'Busy · working')
-    : availability?.is_available || availability?.status === 'available' ? 'Available'
-    : availability?.status === 'offline' ? 'Offline' : 'Checking status…';
+    ? (activeClientName ? `Busy · ${activeClientName}` : 'Busy · working')
+    : availability?.status === 'available' ? 'Available'
+    : 'Checking status…';
   const freelancerStatusTone = freelancerStatus.startsWith('Busy') ? 'busy'
-    : freelancerStatus === 'Available' ? 'available'
-    : freelancerStatus === 'Offline' ? 'offline' : 'checking';
+    : freelancerStatus === 'Available' ? 'available' : 'checking';
 
   function toggleTheme() {
     const next = !dark;
