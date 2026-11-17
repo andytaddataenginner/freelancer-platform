@@ -82,6 +82,7 @@ export function ClientPortalPage(){
    <div className="metric-grid portal-metrics">
     {[{label:'Contract status',value:s.contractStatus||'—'},{label:'Total paid',value:money(s.totalPaid)},{label:'Outstanding',value:money(s.totalUnpaid)},{label:'Account credit',value:money(s.creditBalance)},{label:s.rateType==='fixed'?'Monthly fixed fee':'Hourly rate',value:s.rateType==='fixed'?money(s.fixedPrice)+'/mo':money(s.hourlyRate)+'/hr'}].map(x=><article className="metric-card" key={x.label}><div className="metric-label">{x.label}</div><div className="metric-value portal-metric-value">{loading?'—':x.value}</div></article>)}
    </div>
+   <section className={'client-availability-banner '+availabilityTone} aria-live="polite"><span className="client-availability-pulse"/><div><strong>Freelancer status</strong><p>{availabilityMessage}</p></div><span className="client-availability-label">{statusLabel}</span></section>
 
    {tab==='overview'&&<>
     <div className="portal-chart-grid client-premium-charts">
