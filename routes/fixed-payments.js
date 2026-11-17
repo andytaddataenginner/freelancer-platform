@@ -15,7 +15,7 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= f.month::date)
       WHERE f.client_id = $1 AND f.freelancer_id = $2
         AND (cc.status IS NULL OR cc.status = 'active')
-        AND to_date(f.month::text || '-01', 'YYYY-MM-DD') >= date_trunc('month', u.created_at)::date
+        AND f.month::date >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC
     `, [req.params.clientId, req.user.id]);
     res.json(rows);
