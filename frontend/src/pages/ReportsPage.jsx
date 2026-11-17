@@ -8,6 +8,8 @@ const monthKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
 const shiftMonth=(key,offset)=>{const safe=validMonth(key)?key:monthKey(new Date());const [y,m]=safe.split('-').map(Number);const d=new Date(y,m-1+offset,1);return monthKey(d);};
 const monthTitle=key=>validMonth(key)?new Date(key+'-02T00:00:00').toLocaleDateString(undefined,{month:'short',year:'2-digit'}):'—';
+const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const yearOptions=Array.from({length:31},(_,i)=>String(new Date().getFullYear()-20+i));
 const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
 
 export function ReportsPage(){
@@ -60,7 +62,7 @@ export function ReportsPage(){
  return <div className="module-page">
   <div className="page-heading"><div><div className="eyebrow">BUSINESS PERFORMANCE</div><h1>Reports & Analytics</h1><p>Revenue trends, client contribution, payment distribution and an exportable balance sheet.</p></div><div className="heading-actions"><button className="button-secondary" onClick={exportBalanceSheet} disabled={loading}><Download size={15}/> Export balance sheet</button><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button></div></div>
   {error&&<div className="notice-error" role="alert">{error}</div>}
-  <section className="panel-card report-filter"><label>Selected month<input type="month" value={month} onChange={e=>{if(validMonth(e.target.value))setMonth(e.target.value);}}/></label><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
+  <section className="panel-card report-filter"><div className="report-month-picker"><label>Selected month</label><div className="month-select-pair"><select aria-label="Report month" value={month.slice(5,7)} onChange={e=>setMonth(month.slice(0,4)+'-'+e.target.value)}>{monthNames.map((name,i)=><option key={name} value={String(i+1).padStart(2,'0')}>{name}</option>)}</select><select aria-label="Report year" value={month.slice(0,4)} onChange={e=>setMonth(e.target.value+'-'+month.slice(5,7))}>{yearOptions.map(y=><option key={y} value={y}>{y}</option>)}</select></div></div><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
   <div className="metric-grid report-kpis">
    <article className="metric-card"><div className="metric-label"><TrendingUp size={15}/> Revenue received · 12 months</div><div className="metric-value">{loading?'—':money(allTimePaid)}</div></article>
    <article className="metric-card"><div className="metric-label"><Wallet size={15}/> Outstanding · 12 months</div><div className="metric-value">{loading?'—':money(allTimeOutstanding)}</div></article>
