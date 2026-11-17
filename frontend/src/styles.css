@@ -1177,3 +1177,19 @@
  .client-portal-page .client-availability-banner .client-availability-label{margin-left:23px}
  .client-portal-page .client-premium-charts .portal-chart-card{min-height:280px}
 }
+
+
+.client-portal-page .client-project-chart{grid-column:1/-1}
+.client-portal-page .billing-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.client-portal-page .billing-summary-grid article{display:flex;flex-direction:column;gap:6px;min-width:0;padding:16px 17px;border:1px solid #e5eaf2;border-radius:13px;background:linear-gradient(145deg,#fff,#f7f9fd);box-shadow:0 5px 18px #0d23530a}
+.client-portal-page .billing-summary-grid article span{color:#7b879b;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.client-portal-page .billing-summary-grid article strong{color:#14294f;font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.client-portal-page .billing-summary-grid article small{color:#8a97aa;font-size:9px}
+.client-portal-page .billing-completion-track{height:6px;margin-top:4px;border-radius:10px;background:#e9eef5;overflow:hidden}
+.client-portal-page .billing-completion-track i{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,#16a36a,#56c48d)}
+.client-portal-page.portal-dark .billing-summary-grid article{background:linear-gradient(145deg,#111c30,#0d1729);border-color:#293b58}
+.client-portal-page.portal-dark .billing-summary-grid article strong{color:#edf2fb}
+.client-portal-page.portal-dark .billing-summary-grid article span,.client-portal-page.portal-dark .billing-summary-grid article small{color:#aab7cb}
+.client-portal-page.portal-dark .billing-completion-track{background:#293b58}
+@media(max-width:900px){.client-portal-page .billing-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.client-portal-page .billing-summary-grid article strong{font-size:17px}}
