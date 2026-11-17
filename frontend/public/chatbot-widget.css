@@ -333,3 +333,11 @@
   /* Menu toggle button not needed on desktop — menu is always visible */
   #qfaMenuToggle { display: none; }
 }
+
+
+/* Keep the assistant launcher available after minimizing. */
+.qfa-fab{z-index:12000!important;display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+.qfa-panel{z-index:11999!important;max-height:calc(100dvh - 7rem);max-width:calc(100vw - 2rem)}
+.qfa-icon-btn{flex:0 0 28px}
+#qfaMinimize{font-size:19px;font-weight:700;line-height:1}
+@media(max-width:560px){.qfa-panel{max-height:calc(100dvh - 6.5rem)}}
