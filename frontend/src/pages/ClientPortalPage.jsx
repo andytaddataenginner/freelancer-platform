@@ -18,7 +18,7 @@ export function ClientPortalPage(){
  const [showAllLogs,setShowAllLogs]=useState(false);
  const [tab,setTab]=useState('overview'),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [booking,setBooking]=useState(emptyBooking),[bookingBusy,setBookingBusy]=useState(false);
- const [filter,setFilter]=useState('all'),[from,setFrom]=useState(''),[to,setTo]=useState('');
+ const [filter,setFilter]=useState('all'),[from,setFrom]=useState(''),[to,setTo]=useState(''),[periodInitialized,setPeriodInitialized]=useState(false);
  const [password,setPassword]=useState({currentPassword:'',newPassword:'',confirmPassword:''}),[passwordBusy,setPasswordBusy]=useState(false),[passwordMessage,setPasswordMessage]=useState('');
  const [passwordVisible,setPasswordVisible]=useState({current:false,next:false,confirm:false});
  const [noteForm,setNoteForm]=useState({title:'',content:'',category:'general'}),[editingNote,setEditingNote]=useState(null),[noteBusy,setNoteBusy]=useState(false);
@@ -31,7 +31,17 @@ export function ClientPortalPage(){
   let results;
   try { results=await Promise.allSettled(paths.map(p=>apiRequest(p))); } catch(e) { setError(e.message||'Unable to connect to the portal.'); setLoading(false); return; }
   const value=i=>results[i].status==='fulfilled'?results[i].value:null;
-  setData({stats:value(0),projects:Array.isArray(value(1))?value(1):[],logs:Array.isArray(value(2))?value(2):[],bookings:Array.isArray(value(3))?value(3):[],notes:Array.isArray(value(4))?value(4):[],fixed:[],payments:[],availability:value(5),liveTimer:value(6)?.running?value(6):null});
+  const clientLogs=Array.isArray(value(2))?value(2):[];
+  setData({stats:value(0),projects:Array.isArray(value(1))?value(1):[],logs:clientLogs,bookings:Array.isArray(value(3))?value(3):[],notes:Array.isArray(value(4))?value(4):[],fixed:[],payments:[],availability:value(5),liveTimer:value(6)?.running?value(6):null});
+  if(!periodInitialized){
+   const months=[...new Set(clientLogs.map(x=>String(x.date||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)))].sort();
+   if(months.length){
+    const latest=months[months.length-1], [year,monthNumber]=latest.split('-').map(Number);
+    setFrom(latest+'-01');
+    setTo(latest+'-'+String(new Date(year,monthNumber,0).getDate()).padStart(2,'0'));
+   }
+   setPeriodInitialized(true);
+  }
   setTimerObservedAt(Date.now());
   if(results.slice(0,5).every(x=>x.status==='rejected'))setError('We could not load your portal information. Please refresh or contact your freelancer.');
   else if(results.slice(0,5).some(x=>x.status==='rejected'))setError('Some workspace records could not be loaded. Refresh the page or contact your freelancer.');
