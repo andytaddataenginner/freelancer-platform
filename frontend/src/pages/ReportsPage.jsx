@@ -26,7 +26,8 @@ export function ReportsPage(){
     Promise.all(months.map(m=>apiRequest('/stats/freelancer?month='+m))),
     apiRequest('/stats/freelancer?month='+month),
     apiRequest('/timelogs?limit=5000'),
-    apiRequest('/fixed-payments')
+    apiRequest('/fixed-payments'),
+    apiRequest('/timelogs/latest-month')
    ]);
    if(results[0].status==='rejected')throw results[0].reason;
    if(results[1].status==='rejected')throw results[1].reason;
@@ -38,8 +39,8 @@ export function ReportsPage(){
    const logRows=Array.isArray(allLogs)?allLogs:[];
    const fixedRows=Array.isArray(fixedPayments)?fixedPayments:[];
    setLogs(logRows);
-   const activeMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)&&x<=monthKey(new Date())))].sort();
-   if(activeMonths.length)setMonth(currentMonth=>currentMonth===activeMonths[activeMonths.length-1]?currentMonth:activeMonths[activeMonths.length-1]);
+   const latestMonth=results[4].status==='fulfilled'?results[4].value?.latest_month:null;
+   if(validMonth(latestMonth))setMonth(currentMonth=>currentMonth===latestMonth?currentMonth:latestMonth);
   }catch(e){setError(e.message||'Unable to load report data.');}
   finally{setLoading(false);}
  }
