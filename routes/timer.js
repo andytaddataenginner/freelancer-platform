@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer, requireAuth } = require('../middleware/auth');
-const { applyFundsToUnpaidLogs } = require('./creditLedger');
+const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 const verifyToken = requireAuth;
 
 const sseClients = new Map();
@@ -123,23 +123,37 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     const hours = Math.round((totalSecs / 3600) * 10000) / 10000;
 
     const rateRes = await dbClient.query(
-      `SELECT hourly_rate, rate_type FROM clients WHERE user_id = $1 OR id = $1 LIMIT 1`,
-      [actualUserId]
+      `SELECT COALESCE(cc.rate_type, c.rate_type, 'hourly') AS rate_type,
+              COALESCE(cc.hourly_rate, c.hourly_rate, 0) AS hourly_rate,
+              COALESCE(cc.fixed_price, c.fixed_price, 0) AS fixed_price
+       FROM clients c
+       LEFT JOIN LATERAL (
+         SELECT rate_type, hourly_rate, fixed_price
+         FROM client_contracts
+         WHERE client_id = c.user_id AND freelancer_id = $2
+           AND effective_from <= CURRENT_DATE
+           AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)
+         ORDER BY effective_from DESC, id DESC LIMIT 1
+       ) cc ON TRUE
+       WHERE c.user_id = $1 LIMIT 1`,
+      [actualUserId, req.user.id]
     );
     const clientData = rateRes.rows[0] || {};
-    const rateType = clientData.rate_type || 'hourly';
+    const rateType = String(clientData.rate_type || 'hourly').trim().toLowerCase();
     const hourlyRate = parseFloat(clientData.hourly_rate || 0);
-
-    const amount = rateType === 'fixed' ? 0 : Math.round((hours * hourlyRate) * 100) / 100;
-    const finalDescription = description || timer.description || 'Timed session';
+    const fixedPrice = parseFloat(clientData.fixed_price || 0);
+    // Use the same active-contract pricing as manual time-log entry.
+    const rawAmount = rateType === 'fixed' ? fixedPrice : hours * hourlyRate;
+    const amount = Math.round((rawAmount || 0) * 100) / 100;
+    const finalDescription = String(description || timer.description || 'Timed session').trim();
 
     await dbClient.query('BEGIN');
 
     if (hours > 0) {
       await dbClient.query(`
-        INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
-        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
-      `, [actualUserId, req.user.id, hours, amount, finalDescription]);
+        INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, rate_type, payment_status)
+        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', $6, 'unpaid')
+      `, [actualUserId, req.user.id, hours, amount, finalDescription, rateType]);
 
       // Trigger the credit ledger allocation to auto-settle using existing credit balance
       await applyFundsToUnpaidLogs(dbClient, actualUserId, 0);
@@ -234,30 +248,16 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Resolve the freelancer from both the client assignment row and the
-    // current contract. Do not gate this on clients.is_active: legacy timer
-    // status is based on the assigned freelancer's running timer.
+    // Use the same assignment source as GET /api/clients and the client portal.
+    // clients.user_id is the client account id; clients.freelancer_id is its freelancer.
     const { rows: assignedRows } = await pool.query(`
-      SELECT DISTINCT assignment.freelancer_id,
-             u.name AS freelancer_name,
+      SELECT c.freelancer_id, u.name AS freelancer_name,
              COALESCE(u.is_online, FALSE) AS is_online
-      FROM (
-        SELECT c.freelancer_id
-        FROM clients c
-        WHERE c.user_id = $1 AND c.freelancer_id IS NOT NULL
-
-        UNION
-
-        SELECT cc.freelancer_id
-        FROM client_contracts cc
-        WHERE cc.client_id = $1
-          AND cc.freelancer_id IS NOT NULL
-          AND cc.effective_to IS NULL
-          AND cc.status IN ('active', 'paused')
-      ) assignment
-      JOIN users u ON u.id = assignment.freelancer_id
-      WHERE LOWER(TRIM(u.role)) = 'freelancer'
-      ORDER BY assignment.freelancer_id
+      FROM clients c
+      JOIN users u ON u.id = c.freelancer_id
+      WHERE c.user_id = $1 AND c.freelancer_id IS NOT NULL
+        AND LOWER(TRIM(u.role)) = 'freelancer'
+      LIMIT 1
     `, [req.user.id]);
 
     if (!assignedRows.length) {
