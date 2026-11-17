@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, BarChart3, Cloud, Database, Download, Github, Linkedin, Mail, Moon, Sun, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, BarChart3, Cloud, Database, Download, Github, Linkedin, Mail, Moon, Sun, ExternalLink, Menu, X, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiBaseUrl } from '../services/api';
 
@@ -24,6 +24,7 @@ export function PublicHome() {
   const scrollTo=(id)=>event=>{event.preventDefault();document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});};
   const [portfolio,setPortfolio]=useState(demoPortfolio);
   const [theme,setTheme]=useState(()=>localStorage.getItem('qfa_theme')||'light');
+  const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
   const [form,setForm]=useState({name:'',email:'',service:'',message:''});
   const [sending,setSending]=useState(false);
   const [status,setStatus]=useState({type:'',message:''});
@@ -48,9 +49,10 @@ export function PublicHome() {
     finally{setSending(false);}
   }
   return <main className="public-home">
-    <nav className="public-nav">
+    <nav className={"public-nav"+(mobileMenuOpen?" public-nav-open":"")}>
       <a className="public-brand" href="#top" onClick={scrollTo('top')}><img src={ASSETS+'QFA_Logo.png'} alt="QFA logo"/><span>Quick Freelancing Agency</span></a>
-      <div className="public-nav-links"><a href="#work" onClick={scrollTo('work')}>Our work</a><a href="#skills" onClick={scrollTo('skills')}>Expertise</a><a href="#resume" onClick={scrollTo('resume')}>Resume</a><a href="#services" onClick={scrollTo('services')}>Services</a><a href="#contact" onClick={scrollTo('contact')}>Contact</a><button className="public-theme-toggle" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label="Toggle colour theme">{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button><Link className="public-login-link" to="/login?mode=signup">Create Account</Link><Link className="public-login-link" to="/login?role=client">Client Login <ArrowRight size={15}/></Link></div>
+      <button className="public-mobile-menu" aria-label={mobileMenuOpen?"Close navigation":"Open navigation"} aria-expanded={mobileMenuOpen} onClick={()=>setMobileMenuOpen(v=>!v)}>{mobileMenuOpen?<X size={21}/>:<Menu size={21}/>}</button>
+      <div className="public-nav-links"><a href="#work" onClick={e=>{scrollTo('work')(e);setMobileMenuOpen(false);}}>Our work</a><a href="#skills" onClick={e=>{scrollTo('skills')(e);setMobileMenuOpen(false);}}>Expertise</a><a href="#resume" onClick={e=>{scrollTo('resume')(e);setMobileMenuOpen(false);}}>Resume</a><a href="#services" onClick={e=>{scrollTo('services')(e);setMobileMenuOpen(false);}}>Services</a><a href="#contact" onClick={e=>{scrollTo('contact')(e);setMobileMenuOpen(false);}}>Contact</a><button className="public-theme-toggle" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} aria-label="Toggle colour theme">{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button><Link className="public-login-link" to="/login?mode=signup" onClick={()=>setMobileMenuOpen(false)}>Create Account</Link><Link className="public-login-link" to="/login?role=client" onClick={()=>setMobileMenuOpen(false)}>Client Login <ArrowRight size={15}/></Link></div>
     </nav>
     <header className="public-hero" id="top">
       <div className="public-hero-copy">
