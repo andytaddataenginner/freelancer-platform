@@ -24,4 +24,4 @@ jobs:
       - run: npm install
       - run: npm run build
       - name: Check additive API route syntax
-        run: node --check ../routes/client-portal.js && node --check ../routes/portfolio.js
+        run: node --check ../routes/client-portal.js && node --check ../routes/portfolio.js && node --check ../routes/timer.js
