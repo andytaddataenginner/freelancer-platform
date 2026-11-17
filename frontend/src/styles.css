@@ -1334,3 +1334,12 @@
 .theme-dark .change-password-form label{color:#c4cee0}
 .theme-dark .change-password-form input{background:#111d30;border-color:#34435d;color:#e8edf6}
 @media(max-width:600px){.change-password-form{grid-template-columns:1fr}.password-field-full,.password-requirement,.password-actions{grid-column:1}}
+
+
+.password-input-wrap{position:relative;display:flex;align-items:center;width:100%}
+.password-input-wrap input{width:100%;padding-right:42px!important}
+.password-input-wrap button{position:absolute;right:7px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:#77849a;cursor:pointer}
+.password-input-wrap button:hover{background:#edf2fa;color:#1a5cff}
+.theme-dark .password-input-wrap button:hover{background:#263650;color:#cbd8ef}
+.login-screen .field-wrap button{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;padding:0;border:0;border-radius:6px;background:transparent;color:#71809a;cursor:pointer}
+.login-screen .field-wrap button:hover{background:#edf2fa;color:#1a5cff}
