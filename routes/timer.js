@@ -256,7 +256,8 @@ router.get('/agency/status', requireAuth, async (req, res, next) => {
     // client_contracts is authoritative because assignments and contract states can
     // change over time; clients.freelancer_id is retained as a legacy fallback.
     const { rows: assignmentRows } = await pool.query(`
-      SELECT assignment.freelancer_id, u.name AS freelancer_name,
+      SELECT COALESCE(current_contract.freelancer_id, c.freelancer_id) AS freelancer_id,
+             u.name AS freelancer_name,
              COALESCE(u.is_online, FALSE) AS is_online
       FROM clients c
       LEFT JOIN LATERAL (
@@ -268,11 +269,8 @@ router.get('/agency/status', requireAuth, async (req, res, next) => {
         LIMIT 1
       ) current_contract ON TRUE
       JOIN users u ON u.id = COALESCE(current_contract.freelancer_id, c.freelancer_id)
-      CROSS JOIN LATERAL (
-        SELECT COALESCE(current_contract.freelancer_id, c.freelancer_id) AS freelancer_id
-      ) assignment
       WHERE c.user_id = $1
-        AND assignment.freelancer_id IS NOT NULL
+        AND COALESCE(current_contract.freelancer_id, c.freelancer_id) IS NOT NULL
         AND LOWER(TRIM(u.role)) = 'freelancer'
         AND COALESCE(LOWER(TRIM(current_contract.status)), 'active') <> 'terminated'
       LIMIT 1
