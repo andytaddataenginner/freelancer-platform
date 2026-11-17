@@ -26,7 +26,7 @@ export function InvoicesPage(){
    setFixed(fixedRows);
    if(!periodInitialized){
     const latestMonth=results[3].status==='fulfilled'?results[3].value?.latest_month:null;
-    const fallbackMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)))].sort();
+    const fallbackMonths=[...new Set(logRows.map(x=>String(x.date||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)))].sort();
     const latest= /^\d{4}-(0[1-9]|1[0-2])$/.test(String(latestMonth||''))?latestMonth:fallbackMonths[fallbackMonths.length-1];
     if(latest){
      const [year,monthNumber]=latest.split('-').map(Number);
