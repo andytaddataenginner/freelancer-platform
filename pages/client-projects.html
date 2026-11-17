@@ -118,7 +118,50 @@
       .mobile-header { display: flex !important; }
       .hero h1{ font-size:1.15rem; }
     }
-  </style>
+  
+    /* Consistent mobile client workspace layout */
+    @media (max-width: 768px) {
+      html, body { width:100%; max-width:100%; overflow-x:hidden; }
+      .dashboard { display:block !important; width:100%; min-height:100dvh; }
+      .mobile-header {
+        position:fixed !important; top:0; left:0; right:0; z-index:180 !important;
+        min-height:60px; padding:.65rem 1rem !important; display:flex !important;
+        align-items:center; justify-content:space-between; gap:.75rem;
+        background:var(--navy-950); box-shadow:0 3px 14px rgba(0,0,0,.14);
+      }
+      .mobile-logo { min-width:0; display:flex; align-items:center; gap:.55rem; }
+      .mobile-logo img { width:34px; height:34px; object-fit:contain; flex-shrink:0; }
+      .mobile-logo span { font-size:.92rem; font-weight:700; white-space:nowrap; }
+      .theme-toggle, .hamburger-btn { min-width:40px; min-height:40px; flex-shrink:0; }
+      .sidebar { width:min(280px, 84vw) !important; max-width:84vw; z-index:220 !important; }
+      .sidebar-overlay { z-index:210 !important; }
+      .main-content {
+        width:100% !important; max-width:100% !important; min-width:0 !important;
+        margin:0 !important; padding:1rem !important; padding-top:76px !important;
+        overflow-x:hidden;
+      }
+      .hero { width:100%; padding:1.15rem !important; margin-bottom:1rem; border-radius:14px; }
+      .hero h1 { font-size:clamp(1.25rem, 5vw, 1.65rem) !important; line-height:1.2; }
+      .hero-actions { display:flex; flex-wrap:wrap; gap:.6rem; }
+      .hero-actions .btn { flex:1 1 140px; justify-content:center; min-height:42px; }
+      .view-panel, .panel, .card, .subcard { width:100%; max-width:100%; min-width:0; }
+      .panel-heading { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; }
+      .table-wrap, .table-responsive { width:100%; max-width:100%; overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+      .booking-form-grid, .form-grid { grid-template-columns:1fr !important; }
+      .period-grid { grid-template-columns:1fr !important; }
+      input, select, textarea, button { max-width:100%; }
+      .btn { min-height:42px; }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding:.8rem !important; padding-top:72px !important; }
+      .hero { padding:1rem !important; }
+      .hero-actions { flex-direction:column; }
+      .hero-actions .btn { width:100%; }
+      .panel-heading { align-items:flex-start; }
+      .panel-heading h2, .panel-heading h3 { font-size:1rem; }
+    }
+
+    </style>
 </head>
 <body>
 
