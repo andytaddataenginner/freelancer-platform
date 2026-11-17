@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './styles.css';
+import './mobile-responsive.css';
 
 // Render hosts sometimes serve a 404 response for nested SPA paths before
 // their rewrite rules are synchronized. Hash routing keeps all app routes
