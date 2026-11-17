@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {KeyRound,ShieldCheck} from 'lucide-react';
+import {KeyRound,ShieldCheck,Eye,EyeOff} from 'lucide-react';
 import {apiRequest} from '../services/api';
 
 export function ChangePasswordPage(){
@@ -7,6 +7,7 @@ export function ChangePasswordPage(){
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
  const [notice,setNotice]=useState('');
+ const [visible,setVisible]=useState({current:false,next:false,confirm:false});
  async function submit(e){
   e.preventDefault();setError('');setNotice('');
   if(form.newPassword!==form.confirmPassword){setError('New passwords do not match.');return;}
@@ -26,9 +27,9 @@ export function ChangePasswordPage(){
   <section className="panel-card change-password-card">
    <div className="panel-heading"><div><h2><ShieldCheck size={17}/> Password security</h2><p>Confirm your current password before setting a new one.</p></div><KeyRound size={19}/></div>
    <form className="change-password-form" onSubmit={submit}>
-    <label className="password-field-full">Current password<input type="password" autoComplete="current-password" required value={form.currentPassword} onChange={e=>setForm(x=>({...x,currentPassword:e.target.value}))}/></label>
-    <label>New password<input type="password" autoComplete="new-password" minLength="8" required value={form.newPassword} onChange={e=>setForm(x=>({...x,newPassword:e.target.value}))}/></label>
-    <label>Confirm new password<input type="password" autoComplete="new-password" minLength="8" required value={form.confirmPassword} onChange={e=>setForm(x=>({...x,confirmPassword:e.target.value}))}/></label>
+    <label className="password-field-full">Current password<div className="password-input-wrap"><input type={visible.current?'text':'password'} autoComplete="current-password" required value={form.currentPassword} onChange={e=>setForm(x=>({...x,currentPassword:e.target.value}))}/><button type="button" onClick={()=>setVisible(x=>({...x,current:!x.current}))} aria-label={visible.current?'Hide current password':'Show current password'}>{visible.current?<EyeOff size={16}/>:<Eye size={16}/>}</button></div></label>
+    <label>New password<div className="password-input-wrap"><input type={visible.next?'text':'password'} autoComplete="new-password" minLength="8" required value={form.newPassword} onChange={e=>setForm(x=>({...x,newPassword:e.target.value}))}/><button type="button" onClick={()=>setVisible(x=>({...x,next:!x.next}))} aria-label={visible.next?'Hide new password':'Show new password'}>{visible.next?<EyeOff size={16}/>:<Eye size={16}/>}</button></div></label>
+    <label>Confirm new password<div className="password-input-wrap"><input type={visible.confirm?'text':'password'} autoComplete="new-password" minLength="8" required value={form.confirmPassword} onChange={e=>setForm(x=>({...x,confirm:!x.confirm}))}/><button type="button" onClick={()=>setVisible(x=>({...x,confirm:!x.confirm}))} aria-label={visible.confirm?'Hide confirmation password':'Show confirmation password'}>{visible.confirm?<EyeOff size={16}/>:<Eye size={16}/>}</button></div></label>
     <p className="password-requirement">Use at least 8 characters and include a number.</p>
     <div className="password-actions"><button className="button-primary" disabled={busy}>{busy?'Updating password…':'Update password'}</button></div>
    </form>
