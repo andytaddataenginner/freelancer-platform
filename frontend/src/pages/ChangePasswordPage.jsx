@@ -10,7 +10,7 @@ export function ChangePasswordPage(){
  async function submit(e){
   e.preventDefault();setError('');setNotice('');
   if(form.newPassword!==form.confirmPassword){setError('New passwords do not match.');return;}
-  if(form.newPassword.length<8||!/\\d/.test(form.newPassword)){setError('Use at least 8 characters and include a number.');return;}
+  if(form.newPassword.length<8||!/[0-9]/.test(form.newPassword)){setError('Use at least 8 characters and include a number.');return;}
   setBusy(true);
   try{
    const result=await apiRequest('/auth/change-password',{method:'POST',body:JSON.stringify({currentPassword:form.currentPassword,newPassword:form.newPassword})});
