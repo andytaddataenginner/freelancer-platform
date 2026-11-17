@@ -234,53 +234,42 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Resolve this client's currently assigned freelancer from the latest open
-    // contract first. The clients.freelancer_id value is only a fallback because
-    // it can lag behind a reassignment recorded in client_contracts.
-    const assignment = await pool.query(
-      `WITH assigned AS (
-         SELECT COALESCE(
-           (
-             SELECT cc.freelancer_id
-             FROM client_contracts cc
-             WHERE cc.client_id = $1
-               AND cc.effective_to IS NULL
-               AND cc.effective_from <= CURRENT_DATE
-             ORDER BY cc.effective_from DESC NULLS LAST, cc.id DESC
-             LIMIT 1
-           ),
-           (
-             SELECT c.freelancer_id
-             FROM clients c
-             WHERE c.user_id = $1
-               AND c.freelancer_id IS NOT NULL
-             ORDER BY c.id DESC
-             LIMIT 1
-           )
-         ) AS freelancer_id
-       )
-       SELECT u.id AS freelancer_id, u.name AS freelancer_name, u.is_online,
-              active.id AS active_timer_id,
-              active.client_id AS active_client_id,
-              active.started_at AS active_started_at,
-              active.description AS active_description,
-              active.is_paused AS active_is_paused,
-              active.accumulated_seconds AS active_accumulated_seconds
-       FROM assigned a
-       JOIN users u ON u.id = a.freelancer_id
-       LEFT JOIN LATERAL (
-         SELECT id, client_id, started_at, description, is_paused, accumulated_seconds
-         FROM active_timers
-         WHERE freelancer_id = a.freelancer_id
-           AND is_running = TRUE
-         ORDER BY (client_id <> $1) DESC, started_at DESC
-         LIMIT 1
-       ) active ON TRUE
-       WHERE LOWER(TRIM(u.role)) = 'freelancer'`,
-      [req.user.id]
-    );
+    // Use the exact freelancer assigned to this client in the clients table.
+    // active_timers.client_id identifies who owns a session, so it will differ
+    // when this freelancer is working for another client. Match by freelancer_id.
+    const { rows } = await pool.query(`
+      WITH assigned AS (
+        SELECT c.freelancer_id
+        FROM clients c
+        WHERE c.user_id = $1
+          AND c.freelancer_id IS NOT NULL
+        ORDER BY c.id DESC
+        LIMIT 1
+      )
+      SELECT u.id AS freelancer_id,
+             u.name AS freelancer_name,
+             u.is_online,
+             active.id AS active_timer_id,
+             active.client_id AS active_client_id,
+             active.started_at AS active_started_at,
+             active.description AS active_description,
+             active.is_paused AS active_is_paused,
+             active.accumulated_seconds AS active_accumulated_seconds
+      FROM assigned a
+      JOIN users u ON u.id = a.freelancer_id
+      LEFT JOIN LATERAL (
+        SELECT t.id, t.client_id, t.started_at, t.description,
+               t.is_paused, t.accumulated_seconds
+        FROM active_timers t
+        WHERE t.freelancer_id = a.freelancer_id
+          AND t.is_running = TRUE
+        ORDER BY (t.client_id <> $1) DESC, t.started_at DESC
+        LIMIT 1
+      ) active ON TRUE
+      WHERE LOWER(TRIM(u.role)) = 'freelancer'
+    `, [req.user.id]);
 
-    const assigned = assignment.rows[0] || null;
+    const assigned = rows[0] || null;
     if (!assigned) {
       return res.json({
         status: 'offline',
@@ -315,26 +304,12 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       });
     }
 
-    if (assigned.is_online) {
-      return res.json({
-        status: 'available',
-        availability_scope: 'client-assigned-freelancer',
-        assigned_freelancer_id: assigned.freelancer_id,
-        assigned_freelancer_name: assigned.freelancer_name,
-        is_available: true,
-        is_busy: false,
-        is_other_client: false,
-        is_paused: false,
-        active_session: null
-      });
-    }
-
     return res.json({
-      status: 'offline',
+      status: assigned.is_online ? 'available' : 'offline',
       availability_scope: 'client-assigned-freelancer',
       assigned_freelancer_id: assigned.freelancer_id,
       assigned_freelancer_name: assigned.freelancer_name,
-      is_available: false,
+      is_available: Boolean(assigned.is_online),
       is_busy: false,
       is_other_client: false,
       is_paused: false,
