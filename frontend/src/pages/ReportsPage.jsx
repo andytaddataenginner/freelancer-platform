@@ -9,7 +9,6 @@ const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
 const shiftMonth=(key,offset)=>{const safe=validMonth(key)?key:monthKey(new Date());const [y,m]=safe.split('-').map(Number);const d=new Date(y,m-1+offset,1);return monthKey(d);};
 const monthTitle=key=>validMonth(key)?new Date(key+'-02T00:00:00').toLocaleDateString(undefined,{month:'short',year:'2-digit'}):'—';
 const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const yearOptions=Array.from({length:51},(_,i)=>String(new Date().getFullYear()-40+i));
 const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
 
 export function ReportsPage(){
@@ -19,6 +18,8 @@ export function ReportsPage(){
  const [logs,setLogs]=useState([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
+ const [earliestYear,setEarliestYear]=useState(new Date().getFullYear());
+ const yearOptions=Array.from({length:Math.max(1,new Date().getFullYear()-earliestYear+1)},(_,i)=>String(earliestYear+i));
  const months=useMemo(()=>Array.from({length:12},(_,i)=>shiftMonth(month,-11+i)),[month]);
 
  async function load(){
@@ -37,6 +38,7 @@ export function ReportsPage(){
   finally{setLoading(false);}
  }
  useEffect(()=>{load();},[month]);
+ useEffect(()=>{let live=true;Promise.allSettled([apiRequest('/timelogs?limit=1&order=asc'),apiRequest('/fixed-payments')]).then(results=>{if(!live)return;const dates=[];if(results[0].status==='fulfilled'&&Array.isArray(results[0].value))dates.push(...results[0].value.map(x=>x.date));if(results[1].status==='fulfilled'&&Array.isArray(results[1].value))dates.push(...results[1].value.map(x=>x.month));const years=dates.map(x=>Number(String(x||'').slice(0,4))).filter(y=>Number.isInteger(y)&&y>=1900&&y<=new Date().getFullYear());if(years.length)setEarliestYear(Math.min(...years));});return()=>{live=false;};},[]);
 
  const selectedClients=useMemo(()=>Array.isArray(stats?.clientBreakdown)?stats.clientBreakdown.map(c=>({name:c.client_name||'Unknown client',paid:Number(c.paid)||0,unpaid:Number(c.unpaid)||0,total:Number(c.total)||0,hours:Number(c.hours)||0})).sort((a,b)=>b.total-a.total):[],[stats]);
  const paymentMix=useMemo(()=>[{name:'Paid',value:selectedClients.reduce((a,c)=>a+c.paid,0)},{name:'Outstanding',value:selectedClients.reduce((a,c)=>a+c.unpaid,0)}].filter(x=>x.value>0),[selectedClients]);
