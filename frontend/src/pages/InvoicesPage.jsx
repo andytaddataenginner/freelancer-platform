@@ -15,7 +15,7 @@ export function InvoicesPage(){
  const [loading,setLoading]=useState(true),[error,setError]=useState(''),[periodInitialized,setPeriodInitialized]=useState(false);
  async function load(){
   setLoading(true);setError('');
-  const results=await Promise.allSettled([apiRequest('/clients'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments')]);
+  const results=await Promise.allSettled([apiRequest('/clients'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments'),apiRequest('/timelogs/latest-month')]);
   if(results.every(x=>x.status==='rejected'))setError(results[0].reason?.message||'Unable to load invoice data.');
   else{
    const clientRows=results[0].status==='fulfilled'&&Array.isArray(results[0].value)?results[0].value:[];
@@ -25,9 +25,11 @@ export function InvoicesPage(){
    setLogs(logRows);
    setFixed(fixedRows);
    if(!periodInitialized){
-    const latestMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)&&x<=monthNow()))].sort();
-    if(latestMonths.length){
-     const latest=latestMonths[latestMonths.length-1], [year,monthNumber]=latest.split('-').map(Number);
+    const latestMonth=results[3].status==='fulfilled'?results[3].value?.latest_month:null;
+    const fallbackMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(x)))].sort();
+    const latest= /^\\d{4}-(0[1-9]|1[0-2])$/.test(String(latestMonth||''))?latestMonth:fallbackMonths[fallbackMonths.length-1];
+    if(latest){
+     const [year,monthNumber]=latest.split('-').map(Number);
      setFrom(latest+'-01');
      setTo(latest+'-'+String(new Date(year,monthNumber,0).getDate()).padStart(2,'0'));
     }
