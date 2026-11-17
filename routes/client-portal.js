@@ -33,7 +33,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
     let totalPaid = 0;
     let totalUnpaid = 0;
 
-    if (profile.rate_type === 'fixed') {
+    if (String(profile.rate_type || '').trim().toLowerCase() === 'fixed') {
       // Aggregate paid and unpaid records from fixed_monthly_payments
       const fixedRes = await pool.query(
         `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
@@ -42,7 +42,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
 
       fixedRes.rows.forEach(r => {
         const amt = parseFloat(r.amount || 0);
-        if (r.status === 'paid') {
+        if (String(r.status || '').trim().toLowerCase() === 'paid') {
           totalPaid += amt;
         } else if (contractStatus === 'active') {
           // Unpaid amounts are only added to outstanding KPIs if the contract is active
@@ -59,7 +59,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
       logsRes.rows.forEach(log => {
         let amt = parseFloat(log.amount || 0);
         if (!amt && log.hours) amt = parseFloat(log.hours) * rate;
-        if (log.payment_status === 'paid') totalPaid += amt;
+        if (String(log.payment_status || '').trim().toLowerCase() === 'paid') totalPaid += amt;
         else totalUnpaid += amt;
       });
     }
