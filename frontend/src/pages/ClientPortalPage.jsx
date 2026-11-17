@@ -99,11 +99,11 @@ export function ClientPortalPage(){
   <aside className="client-sidebar">
    <div className="client-sidebar-brand"><img src="/QFA_Logo.png" alt="QFA"/>{!sidebarCollapsed&&<div><strong>QFA</strong><small>CLIENT WORKSPACE</small></div>}<button className="portal-collapse" onClick={()=>setSidebarCollapsed(x=>!x)} aria-label="Collapse menu">{sidebarCollapsed?<ChevronRight size={16}/>:<ChevronLeft size={16}/>}</button></div>
    <nav className="client-sidebar-nav">{nav.map(([id,label,Icon])=><button key={id} className={tab===id?'active':''} title={sidebarCollapsed?label:undefined} onClick={()=>{setTab(id);setMobileNavOpen(false);}}><Icon size={17}/>{!sidebarCollapsed&&<span>{label}</span>}</button>)}</nav>
-   {(data.liveTimer||data.availability?.is_busy||data.availability?.status==='busy')&&<section className={'client-mobile-live-monitor '+(!data.liveTimer?'is-other-session':'')} aria-live="polite">
-    <div className="client-mobile-live-heading"><span className="client-mobile-live-dot"/>{data.liveTimer?(data.liveTimer.is_paused?'SESSION PAUSED':'LIVE WORK SESSION'):'FREELANCER BUSY'}</div>
-    <strong>{data.liveTimer?(data.liveTimer.description||'Work session in progress'):'Your freelancer is currently working with another client'}</strong>
-    {data.liveTimer&&<div className="client-mobile-live-clock"><Timer size={16}/>{timerClock}</div>}
-    <small>{data.liveTimer?'Your freelancer is tracking time for your account':'Your freelancer is unavailable until the current session ends'}</small>
+   {data.liveTimer&&<section className="client-mobile-live-monitor" aria-live="polite">
+    <div className="client-mobile-live-heading"><span className="client-mobile-live-dot"/>{data.liveTimer.is_paused?'SESSION PAUSED':'LIVE WORK SESSION'}</div>
+    <strong>{data.liveTimer.description||'Work session in progress'}</strong>
+    <div className="client-mobile-live-clock"><Timer size={16}/>{timerClock}</div>
+    <small>Your freelancer is tracking time for your account</small>
    </section>}
    <div className="client-sidebar-footer"><span className="client-avatar">{(user?.name||'C').slice(0,1).toUpperCase()}</span>{!sidebarCollapsed&&<span>{user?.name||'Client'}</span>}</div>
   </aside>
