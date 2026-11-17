@@ -12,15 +12,27 @@ const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 export function InvoicesPage(){
  const [clients,setClients]=useState([]),[logs,setLogs]=useState([]),[fixed,setFixed]=useState([]);
  const [from,setFrom]=useState(monthNow()+'-01'),[to,setTo]=useState(new Date().toISOString().slice(0,10)),[clientId,setClientId]=useState('all');
- const [loading,setLoading]=useState(true),[error,setError]=useState('');
+ const [loading,setLoading]=useState(true),[error,setError]=useState(''),[periodInitialized,setPeriodInitialized]=useState(false);
  async function load(){
   setLoading(true);setError('');
   const results=await Promise.allSettled([apiRequest('/clients'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments')]);
   if(results.every(x=>x.status==='rejected'))setError(results[0].reason?.message||'Unable to load invoice data.');
   else{
-   setClients(results[0].status==='fulfilled'&&Array.isArray(results[0].value)?results[0].value:[]);
-   setLogs(results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[]);
-   setFixed(results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[]);
+   const clientRows=results[0].status==='fulfilled'&&Array.isArray(results[0].value)?results[0].value:[];
+   const logRows=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];
+   const fixedRows=results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[];
+   setClients(clientRows);
+   setLogs(logRows);
+   setFixed(fixedRows);
+   if(!periodInitialized){
+    const latestMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)&&x<=monthNow()))].sort();
+    if(latestMonths.length){
+     const latest=latestMonths[latestMonths.length-1], [year,monthNumber]=latest.split('-').map(Number);
+     setFrom(latest+'-01');
+     setTo(latest+'-'+String(new Date(year,monthNumber,0).getDate()).padStart(2,'0'));
+    }
+    setPeriodInitialized(true);
+   }
    const failures=results.filter(x=>x.status==='rejected');
    if(failures.length)setError('Some billing data could not be loaded. '+failures.map(x=>x.reason?.message).join(' · '));
   }
