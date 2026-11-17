@@ -76,7 +76,7 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
           DELETE FROM fixed_monthly_payments
           WHERE client_id = $1 
             AND freelancer_id = $2
-            AND month >= $3
+            AND to_char(month::date, 'YYYY-MM') >= $3::text
             AND status = 'unpaid'
         `, [clientId, freelancerId, effectiveMonth]);
       }
@@ -135,7 +135,7 @@ router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
         DELETE FROM fixed_monthly_payments
         WHERE client_id = $1 
           AND freelancer_id = $2
-          AND month >= $3
+          AND to_char(month::date, 'YYYY-MM') >= $3::text
           AND status = 'unpaid'
       `, [clientId, freelancerId, effectiveMonth]);
 
@@ -233,7 +233,7 @@ router.post('/:clientId/terminate', requireFreelancer, async (req, res, next) =>
         DELETE FROM fixed_monthly_payments
         WHERE client_id = $1 
           AND freelancer_id = $2
-          AND month >= $3
+          AND to_char(month::date, 'YYYY-MM') >= $3::text
           AND status = 'unpaid'
       `, [clientId, freelancerId, effectiveMonth]);
 
