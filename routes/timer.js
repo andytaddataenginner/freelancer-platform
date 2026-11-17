@@ -234,19 +234,19 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Mirror the legacy freelancer timer widget: any running timer owned by the
-    // assigned freelancer makes that freelancer busy, regardless of client_id.
+    // Resolve every current freelancer assignment for this client. The legacy
+    // freelancer widget defines "busy" from /timer/status: ANY active timer
+    // owned by the freelancer counts, not only a timer for this client.
     const { rows: assignedRows } = await pool.query(`
-      SELECT c.freelancer_id, u.name AS freelancer_name, u.is_online
+      SELECT DISTINCT c.freelancer_id, u.name AS freelancer_name, u.is_online
       FROM clients c
       JOIN users u ON u.id = c.freelancer_id
       WHERE c.user_id = $1
+        AND c.is_active = TRUE
         AND LOWER(TRIM(u.role)) = 'freelancer'
-      ORDER BY c.id DESC
-      LIMIT 1
+      ORDER BY c.freelancer_id
     `, [req.user.id]);
-    const assigned = assignedRows[0];
-    if (!assigned) {
+    if (!assignedRows.length) {
       return res.json({
         status: 'offline', availability_scope: 'assigned-freelancer',
         assigned_freelancer_id: null, assigned_freelancer_name: null,
@@ -254,18 +254,20 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
         is_paused: false, active_session: null
       });
     }
+    const freelancerIds = assignedRows.map(row => row.freelancer_id);
     const { rows: timerRows } = await pool.query(`
-      SELECT t.id, t.client_id, t.started_at, t.description, t.is_paused,
+      SELECT t.id, t.freelancer_id, t.client_id, t.started_at, t.description, t.is_paused,
              t.accumulated_seconds,
              CASE WHEN t.is_paused THEN t.accumulated_seconds
                   ELSE t.accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - t.started_at))::int
              END AS elapsed_sec
       FROM active_timers t
-      WHERE t.freelancer_id = $1 AND t.is_running = TRUE
+      WHERE t.freelancer_id = ANY($1) AND t.is_running = TRUE
       ORDER BY (t.client_id <> $2) DESC, t.started_at DESC
       LIMIT 1
-    `, [assigned.freelancer_id, req.user.id]);
+    `, [freelancerIds, req.user.id]);
     const timer = timerRows[0];
+    const assigned = assignedRows.find(row => String(row.freelancer_id) === String(timer?.freelancer_id)) || assignedRows[0];
     if (timer) {
       const isOtherClient = String(timer.client_id) !== String(req.user.id);
       return res.json({
@@ -281,12 +283,13 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
         }
       });
     }
+    const isOnline = assignedRows.some(row => Boolean(row.is_online));
     return res.json({
-      status: assigned.is_online ? 'available' : 'offline',
+      status: isOnline ? 'available' : 'offline',
       availability_scope: 'assigned-freelancer',
       assigned_freelancer_id: assigned.freelancer_id,
       assigned_freelancer_name: assigned.freelancer_name,
-      is_available: Boolean(assigned.is_online), is_busy: false,
+      is_available: isOnline, is_busy: false,
       is_other_client: false, is_paused: false, active_session: null
     });
   } catch (err) {
