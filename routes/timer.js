@@ -234,23 +234,29 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Match the client portal's own assignment resolution: choose the latest
-    // current contract among this client's freelancer links, then inspect
-    // timers belonging only to that assigned freelancer.
+    // Resolve this client's currently assigned freelancer from the latest open
+    // contract first. The clients.freelancer_id value is only a fallback because
+    // it can lag behind a reassignment recorded in client_contracts.
     const assignment = await pool.query(
       `WITH assigned AS (
-         SELECT c.freelancer_id
-         FROM clients c
-         LEFT JOIN client_contracts cc
-           ON cc.client_id = c.user_id
-          AND cc.freelancer_id = c.freelancer_id
-          AND cc.effective_to IS NULL
-         WHERE c.user_id = $1
-           AND c.freelancer_id IS NOT NULL
-         ORDER BY cc.effective_from DESC NULLS LAST,
-                  cc.id DESC NULLS LAST,
-                  c.id DESC
-         LIMIT 1
+         SELECT COALESCE(
+           (
+             SELECT cc.freelancer_id
+             FROM client_contracts cc
+             WHERE cc.client_id = $1
+               AND cc.effective_to IS NULL
+             ORDER BY cc.effective_from DESC NULLS LAST, cc.id DESC
+             LIMIT 1
+           ),
+           (
+             SELECT c.freelancer_id
+             FROM clients c
+             WHERE c.user_id = $1
+               AND c.freelancer_id IS NOT NULL
+             ORDER BY c.id DESC
+             LIMIT 1
+           )
+         ) AS freelancer_id
        )
        SELECT u.id AS freelancer_id, u.name AS freelancer_name, u.is_online,
               active.id AS active_timer_id,
