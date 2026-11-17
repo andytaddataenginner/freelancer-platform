@@ -245,16 +245,18 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
               active.is_paused AS active_is_paused,
               active.accumulated_seconds AS active_accumulated_seconds
        FROM clients c
-       JOIN users u ON u.id = c.freelancer_id
+       LEFT JOIN client_contracts cc
+         ON cc.client_id = c.user_id AND cc.effective_to IS NULL
+       JOIN users u ON u.id = COALESCE(c.freelancer_id, cc.freelancer_id)
        LEFT JOIN LATERAL (
          SELECT id, client_id, started_at, description, is_paused, accumulated_seconds
          FROM active_timers
-         WHERE freelancer_id = c.freelancer_id AND is_running = TRUE
+         WHERE freelancer_id = COALESCE(c.freelancer_id, cc.freelancer_id) AND is_running = TRUE
          ORDER BY started_at DESC
          LIMIT 1
        ) active ON TRUE
        WHERE c.user_id = $1 AND LOWER(TRIM(u.role)) = 'freelancer'
-       ORDER BY c.id DESC
+       ORDER BY c.id DESC, cc.effective_from DESC
        LIMIT 1`,
       [req.user.id]
     );
@@ -264,6 +266,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
     if (!freelancer) {
       return res.json({
         status: 'offline',
+        availability_scope: 'freelancer-wide',
         is_available: false,
         is_busy: false,
         is_paused: false,
@@ -275,6 +278,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
       const isThisClient = String(assigned.active_client_id) === String(req.user.id);
       return res.json({
         status: 'busy',
+        availability_scope: 'freelancer-wide',
         is_available: false,
         is_busy: true,
         is_paused: Boolean(assigned.active_is_paused),
@@ -291,6 +295,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
     if (freelancer.is_online) {
       return res.json({
         status: 'available',
+        availability_scope: 'freelancer-wide',
         is_available: true,
         is_busy: false,
         is_paused: false,
