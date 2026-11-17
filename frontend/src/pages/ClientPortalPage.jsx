@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {auth} from '../services/auth';
 import {ChatbotLoader} from '../components/ChatbotLoader';
 import {apiRequest} from '../services/api';
@@ -13,6 +13,7 @@ const emptyBooking={date:'',time:'',type:'call',duration:'1',message:''};
 export function ClientPortalPage(){
  const [data,setData]=useState({stats:null,projects:[],logs:[],bookings:[],notes:[],fixed:[],payments:[],availability:null,liveTimer:null});
  const [timerObservedAt,setTimerObservedAt]=useState(Date.now());
+ const liveTimerWasRunning=useRef(null);
  const [timerNow,setTimerNow]=useState(Date.now());
  const [timerPopupMinimized,setTimerPopupMinimized]=useState(false);
  const [showAllLogs,setShowAllLogs]=useState(false);
@@ -48,7 +49,7 @@ export function ClientPortalPage(){
   setLoading(false);
  }
  useEffect(()=>{load();},[]);
- useEffect(()=>{let active=true;const refreshLive=async()=>{const [availability,timer]=await Promise.allSettled([apiRequest('/timer/agency/status'),apiRequest('/timer/client-status')]);if(!active)return;if(availability.status==='fulfilled')setData(d=>({...d,availability:availability.value}));if(timer.status==='fulfilled'){setData(d=>({...d,liveTimer:timer.value?.running?timer.value:null}));setTimerObservedAt(Date.now());}};refreshLive();const id=setInterval(refreshLive,3000);return()=>{active=false;clearInterval(id);};},[]);
+ useEffect(()=>{let active=true;const refreshLive=async()=>{const [availability,timer]=await Promise.allSettled([apiRequest('/timer/agency/status'),apiRequest('/timer/client-status')]);if(!active)return;if(availability.status==='fulfilled')setData(d=>({...d,availability:availability.value}));if(timer.status==='fulfilled'){const nextTimer=timer.value?.running?timer.value:null;const wasRunning=liveTimerWasRunning.current;liveTimerWasRunning.current=Boolean(nextTimer);setData(d=>({...d,liveTimer:nextTimer}));setTimerObservedAt(Date.now());if(wasRunning===true&&!nextTimer){const [stats,logs]=await Promise.allSettled([apiRequest('/client/stats'),apiRequest('/client/timelogs')]);if(!active)return;setData(d=>({...d,stats:stats.status==='fulfilled'?stats.value:d.stats,logs:logs.status==='fulfilled'&&Array.isArray(logs.value)?logs.value:d.logs}));}}};refreshLive();const id=setInterval(refreshLive,3000);return()=>{active=false;clearInterval(id);};},[]);
  useEffect(()=>{const id=setInterval(()=>setTimerNow(Date.now()),1000);return()=>clearInterval(id);},[]);
  useEffect(()=>{if(data.liveTimer?.started_at)setTimerPopupMinimized(false);},[data.liveTimer?.started_at]);
  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';document.body.dataset.theme=dark?'dark':'light';localStorage.setItem('qfa_theme',dark?'dark':'light');},[dark]);
