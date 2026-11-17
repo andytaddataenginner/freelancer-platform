@@ -3,6 +3,35 @@ const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 
+ 
+// GET /api/timelogs/latest-month — latest month with actual freelancer activity.
+// Read directly from the source tables so pagination and contract-history filters
+// cannot incorrectly fall back to the current calendar month.
+router.get('/latest-month', requireFreelancer, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(MAX(month_start), 'YYYY-MM') AS latest_month
+      FROM (
+        SELECT DATE_TRUNC('month', date)::date AS month_start
+        FROM time_logs
+        WHERE freelancer_id = $1
+        UNION ALL
+        SELECT TO_DATE(LEFT(f.month::text, 7) || '-01', 'YYYY-MM-DD') AS month_start
+        FROM fixed_monthly_payments f
+        WHERE EXISTS (
+          SELECT 1 FROM clients c
+          WHERE c.user_id = f.client_id AND c.freelancer_id = $1
+        )
+        OR EXISTS (
+          SELECT 1 FROM client_contracts cc
+          WHERE cc.client_id = f.client_id AND cc.freelancer_id = $1
+        )
+      ) activity
+    `, [req.user.id]);
+    res.json({ latest_month: rows[0]?.latest_month || null });
+  } catch (e) { next(e); }
+});
+
 // GET /api/timelogs — Filtered by active contract coverage
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
