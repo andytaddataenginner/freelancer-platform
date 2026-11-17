@@ -2,7 +2,7 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import {auth} from '../services/auth';
 import {ChatbotLoader} from '../components/ChatbotLoader';
 import {apiRequest} from '../services/api';
-import {BookOpen,CalendarDays,Clock3,FolderKanban,Flag,Maximize2,Minimize2,LogOut,Moon,Sun,RefreshCw,ShieldCheck,Eye,EyeOff,Wallet,ChevronLeft,ChevronRight,Edit3,Save,X,Timer,Activity,LayoutDashboard} from 'lucide-react';
+import {BookOpen,CalendarDays,Clock3,FolderKanban,Flag,Maximize2,Minimize2,LogOut,Moon,Sun,RefreshCw,ShieldCheck,Eye,EyeOff,Wallet,ChevronLeft,ChevronRight,Edit3,Save,X,Timer,Activity,LayoutDashboard,Menu} from 'lucide-react';
 import {ResponsiveContainer,AreaChart,Area,BarChart,Bar,XAxis,YAxis,Tooltip,CartesianGrid,PieChart,Pie,Cell,Legend} from 'recharts';
 
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0);
