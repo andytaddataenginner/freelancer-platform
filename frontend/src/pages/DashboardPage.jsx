@@ -8,7 +8,7 @@ const monthNow=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMo
 const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
 const rangeFor=m=>{const safe=validMonth(m)?m:monthNow();const [y,mo]=safe.split('-').map(Number);const end=new Date(y,mo,0).getDate();return {month:safe,from:safe+'-01',to:safe+'-'+String(end).padStart(2,'0')};};
 const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const yearOptions=Array.from({length:31},(_,i)=>String(new Date().getFullYear()-20+i));
+const yearOptions=Array.from({length:51},(_,i)=>String(new Date().getFullYear()-40+i));
 export function DashboardPage(){
  const [month,setMonth]=useState(monthNow()),[data,setData]=useState({stats:null,clients:[],logs:[]}),[loading,setLoading]=useState(true),[error,setError]=useState('');
  async function load(){setLoading(true);setError('');const r=rangeFor(month);if(r.month!==month)setMonth(r.month);const results=await Promise.allSettled([apiRequest('/stats/freelancer?month='+r.month),apiRequest('/clients'),apiRequest('/timelogs?from='+r.from+'&to='+r.to+'&limit=200')]);const val=i=>results[i].status==='fulfilled'?results[i].value:null;setData({stats:val(0),clients:Array.isArray(val(1))?val(1):[],logs:Array.isArray(val(2))?val(2):[]});const failed=results.filter(x=>x.status==='rejected');if(failed.length)setError(failed.map(x=>x.reason?.message).filter(Boolean).join(' · ')||'Some dashboard data could not be loaded.');setLoading(false);}
