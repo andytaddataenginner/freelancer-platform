@@ -8,7 +8,6 @@ const monthKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
 const shiftMonth=(key,offset)=>{const safe=validMonth(key)?key:monthKey(new Date());const [y,m]=safe.split('-').map(Number);const d=new Date(y,m-1+offset,1);return monthKey(d);};
 const monthTitle=key=>validMonth(key)?new Date(key+'-02T00:00:00').toLocaleDateString(undefined,{month:'short',year:'2-digit'}):'—';
-const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
 
 export function ReportsPage(){
@@ -18,10 +17,6 @@ export function ReportsPage(){
  const [logs,setLogs]=useState([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
- const [availableMonths,setAvailableMonths]=useState([]);
- const yearOptions=[...new Set(availableMonths.map(m=>m.slice(0,4)))].sort();
- const monthOptions=availableMonths.filter(m=>m.slice(0,4)===month.slice(0,4));
- const visibleMonthOptions=monthOptions.length?monthOptions:[month];
  const months=useMemo(()=>Array.from({length:12},(_,i)=>shiftMonth(month,-11+i)),[month]);
 
  async function load(){
@@ -43,9 +38,8 @@ export function ReportsPage(){
    const logRows=Array.isArray(allLogs)?allLogs:[];
    const fixedRows=Array.isArray(fixedPayments)?fixedPayments:[];
    setLogs(logRows);
-   const activeMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(x)&&Number(x.slice(0,4))<=new Date().getFullYear()))].sort();
-   setAvailableMonths(activeMonths);
-   if(activeMonths.length)setMonth(currentMonth=>activeMonths.includes(currentMonth)?currentMonth:activeMonths[activeMonths.length-1]);
+   const activeMonths=[...new Set([...logRows.map(x=>x.date),...fixedRows.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)&&Number(x.slice(0,4))<=new Date().getFullYear()))].sort();
+   if(activeMonths.length)setMonth(currentMonth=>currentMonth===activeMonths[activeMonths.length-1]?currentMonth:activeMonths[activeMonths.length-1]);
   }catch(e){setError(e.message||'Unable to load report data.');}
   finally{setLoading(false);}
  }
@@ -75,7 +69,7 @@ export function ReportsPage(){
  return <div className="module-page">
   <div className="page-heading"><div><div className="eyebrow">BUSINESS PERFORMANCE</div><h1>Reports & Analytics</h1><p>Revenue trends, client contribution, payment distribution and an exportable balance sheet.</p></div><div className="heading-actions"><button className="button-secondary" onClick={exportBalanceSheet} disabled={loading}><Download size={15}/> Export balance sheet</button><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button></div></div>
   {error&&<div className="notice-error" role="alert">{error}</div>}
-  <section className="panel-card report-filter"><div className="report-month-picker"><label>Selected month</label><div className="month-select-pair"><select aria-label="Report month" value={month.slice(5,7)} onChange={e=>setMonth(month.slice(0,4)+'-'+e.target.value)}>{visibleMonthOptions.map(m=><option key={m} value={m.slice(5,7)}>{new Date(m+'-02T00:00:00').toLocaleDateString(undefined,{month:'long'})}</option>)}</select><select aria-label="Report year" value={month.slice(0,4)} onChange={e=>{const nextYear=e.target.value;const months=availableMonths.filter(m=>m.startsWith(nextYear+'-'));setMonth(months.length?months[months.length-1]:month);}}>{(yearOptions.length?yearOptions:[month.slice(0,4)]).map(y=><option key={y} value={y}>{y}</option>)}</select></div></div><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
+  <section className="panel-card report-filter"><div className="report-month-picker"><label>Latest active month</label><strong>{new Date(month+'-02T00:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'})}</strong></div><span className="report-range-note">Trend charts cover the 12 months ending in the selected month.</span></section>
   <div className="metric-grid report-kpis">
    <article className="metric-card"><div className="metric-label"><TrendingUp size={15}/> Revenue received · 12 months</div><div className="metric-value">{loading?'—':money(allTimePaid)}</div></article>
    <article className="metric-card"><div className="metric-label"><Wallet size={15}/> Outstanding · 12 months</div><div className="metric-value">{loading?'—':money(allTimeOutstanding)}</div></article>
