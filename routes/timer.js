@@ -234,63 +234,92 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 router.get('/agency/status', verifyToken, async (req, res, next) => {
   try {
-    // Resolve every current freelancer assignment for this client. The legacy
-    // freelancer widget defines "busy" from /timer/status: ANY active timer
-    // owned by the freelancer counts, not only a timer for this client.
+    // Resolve the freelancer from both the client assignment row and the
+    // current contract. Do not gate this on clients.is_active: legacy timer
+    // status is based on the assigned freelancer's running timer.
     const { rows: assignedRows } = await pool.query(`
-      SELECT DISTINCT c.freelancer_id, u.name AS freelancer_name, u.is_online
-      FROM clients c
-      JOIN users u ON u.id = c.freelancer_id
-      WHERE c.user_id = $1
-        AND c.is_active = TRUE
-        AND LOWER(TRIM(u.role)) = 'freelancer'
-      ORDER BY c.freelancer_id
+      SELECT DISTINCT assignment.freelancer_id,
+             u.name AS freelancer_name,
+             COALESCE(u.is_online, FALSE) AS is_online
+      FROM (
+        SELECT c.freelancer_id
+        FROM clients c
+        WHERE c.user_id = $1 AND c.freelancer_id IS NOT NULL
+
+        UNION
+
+        SELECT cc.freelancer_id
+        FROM client_contracts cc
+        WHERE cc.client_id = $1
+          AND cc.freelancer_id IS NOT NULL
+          AND cc.effective_to IS NULL
+          AND cc.status IN ('active', 'paused')
+      ) assignment
+      JOIN users u ON u.id = assignment.freelancer_id
+      WHERE LOWER(TRIM(u.role)) = 'freelancer'
+      ORDER BY assignment.freelancer_id
     `, [req.user.id]);
+
     if (!assignedRows.length) {
       return res.json({
         status: 'offline', availability_scope: 'assigned-freelancer',
         assigned_freelancer_id: null, assigned_freelancer_name: null,
         is_available: false, is_busy: false, is_other_client: false,
-        is_paused: false, active_session: null
+        is_paused: false, active_session: null,
+        reason: 'No freelancer assignment found for this client'
       });
     }
+
     const freelancerIds = assignedRows.map(row => row.freelancer_id);
     const { rows: timerRows } = await pool.query(`
-      SELECT t.id, t.freelancer_id, t.client_id, t.started_at, t.description, t.is_paused,
-             t.accumulated_seconds,
+      SELECT t.id, t.freelancer_id, t.client_id, t.started_at, t.description,
+             t.is_paused, t.accumulated_seconds,
              CASE WHEN t.is_paused THEN t.accumulated_seconds
                   ELSE t.accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - t.started_at))::int
              END AS elapsed_sec
       FROM active_timers t
       WHERE t.freelancer_id = ANY($1) AND t.is_running = TRUE
-      ORDER BY (t.client_id <> $2) DESC, t.started_at DESC
+      ORDER BY (t.client_id = $2) DESC, t.started_at DESC
       LIMIT 1
     `, [freelancerIds, req.user.id]);
+
     const timer = timerRows[0];
-    const assigned = assignedRows.find(row => String(row.freelancer_id) === String(timer?.freelancer_id)) || assignedRows[0];
+    const assigned = assignedRows.find(row =>
+      String(row.freelancer_id) === String(timer?.freelancer_id)
+    ) || assignedRows[0];
+
     if (timer) {
       const isOtherClient = String(timer.client_id) !== String(req.user.id);
       return res.json({
-        status: 'busy', availability_scope: 'assigned-freelancer',
-        assigned_freelancer_id: assigned.freelancer_id,
+        status: 'busy',
+        availability_scope: 'freelancer-wide',
+        assigned_freelancer_id: timer.freelancer_id,
         assigned_freelancer_name: assigned.freelancer_name,
-        is_available: false, is_busy: true, is_other_client: isOtherClient,
+        is_available: false,
+        is_busy: true,
+        is_other_client: isOtherClient,
         is_paused: Boolean(timer.is_paused),
         active_session: isOtherClient ? null : {
-          started_at: timer.started_at, description: timer.description,
-          is_paused: timer.is_paused, accumulated_seconds: timer.accumulated_seconds,
+          started_at: timer.started_at,
+          description: timer.description,
+          is_paused: Boolean(timer.is_paused),
+          accumulated_seconds: timer.accumulated_seconds,
           elapsed_sec: timer.elapsed_sec
         }
       });
     }
+
     const isOnline = assignedRows.some(row => Boolean(row.is_online));
     return res.json({
       status: isOnline ? 'available' : 'offline',
-      availability_scope: 'assigned-freelancer',
+      availability_scope: 'freelancer-wide',
       assigned_freelancer_id: assigned.freelancer_id,
       assigned_freelancer_name: assigned.freelancer_name,
-      is_available: isOnline, is_busy: false,
-      is_other_client: false, is_paused: false, active_session: null
+      is_available: isOnline,
+      is_busy: false,
+      is_other_client: false,
+      is_paused: false,
+      active_session: null
     });
   } catch (err) {
     next(err);
