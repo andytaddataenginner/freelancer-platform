@@ -1301,3 +1301,23 @@
  .client-portal-page .portal-availability>strong{overflow:hidden!important;text-overflow:ellipsis!important}
  .client-portal-page .client-sidebar{height:auto!important;min-height:100vh!important}
 }
+
+
+/* Client portal dark theme KPI visibility and collapsible billing overview. */
+.client-portal-page.portal-dark .portal-metrics .metric-card{background:linear-gradient(145deg,#17243a,#111c30)!important;border:1px solid #34435d!important;box-shadow:0 5px 18px #0002!important}
+.client-portal-page.portal-dark .portal-metrics .metric-label{color:#aab8cc!important}
+.client-portal-page.portal-dark .portal-metrics .metric-value,.client-portal-page.portal-dark .portal-metrics .portal-metric-value{color:#f0f4fb!important}
+.client-portal-page.portal-dark .portal-metrics .metric-card svg{color:#b8c8e2!important}
+.client-portal-page .billing-overview-collapse{display:block!important;padding:0!important;overflow:hidden!important}
+.client-portal-page .billing-overview-summary{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin:0!important;padding:15px 17px!important;border:0!important;cursor:pointer!important;list-style:none!important}
+.client-portal-page .billing-overview-summary::-webkit-details-marker{display:none!important}
+.client-portal-page .billing-overview-summary h2{display:flex!important;align-items:center!important;gap:8px!important}
+.client-portal-page .billing-overview-summary p{margin-top:4px!important}
+.client-portal-page .billing-overview-chevron{margin-left:auto!important;color:#7c8ba2!important;font-size:18px!important;transition:transform .18s ease!important}
+.client-portal-page .billing-overview-collapse[open] .billing-overview-chevron{transform:rotate(180deg)!important}
+.client-portal-page .billing-overview-content{padding:0 16px 16px!important}
+.client-portal-page.portal-dark .billing-overview-collapse{background:#111c30!important;border-color:#34435d!important;color:#edf2fb!important}
+.client-portal-page.portal-dark .billing-overview-summary{border-bottom:1px solid #293b58!important}
+.client-portal-page.portal-dark .billing-overview-summary h2{color:#edf2fb!important}
+.client-portal-page.portal-dark .billing-overview-summary p{color:#aab7cb!important}
+.client-portal-page.portal-dark .billing-overview-chevron{color:#bdc8d8!important}
