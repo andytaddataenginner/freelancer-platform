@@ -25,6 +25,7 @@ export function ClientPortalPage(){
  const [noteForm,setNoteForm]=useState({title:'',content:'',category:'general'}),[editingNote,setEditingNote]=useState(null),[noteBusy,setNoteBusy]=useState(false);
  const [dark,setDark]=useState(()=>localStorage.getItem('qfa_theme')==='dark');
  const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
+ const [mobileNavOpen,setMobileNavOpen]=useState(false);
  const user=auth.user();
  async function load(){
   setLoading(true);setError('');
@@ -92,15 +93,16 @@ export function ClientPortalPage(){
  const statusLabel=availabilityStatus==='busy'?(data.availability?.is_other_client||(!data.availability?.active_session&&data.availability?.availability_scope==='freelancer-wide')?'Busy · working with another client':data.availability?.is_paused?'Working with you · paused':'Busy · working'):availabilityStatus==='available'?'Online · available':availabilityStatus==='offline'?'Offline':'Checking availability…';
  const timerSeconds=data.liveTimer?Math.max(0,Number(data.liveTimer.elapsed_sec||0)+(data.liveTimer.is_paused?0:Math.floor((timerNow-timerObservedAt)/1000))):0;
  const timerClock=[Math.floor(timerSeconds/3600),Math.floor(timerSeconds%3600/60),timerSeconds%60].map(v=>String(v).padStart(2,'0')).join(':');
- return <main className={'client-portal-page '+(dark?'portal-dark':'')+(sidebarCollapsed?' portal-sidebar-collapsed':'')}>
+ return <main className={'client-portal-page '+(dark?'portal-dark':'')+(sidebarCollapsed?' portal-sidebar-collapsed':'')+(mobileNavOpen?' portal-mobile-nav-open':'')}>
   <ChatbotLoader />
+  {mobileNavOpen&&<button className="client-mobile-scrim" aria-label="Close navigation" onClick={()=>setMobileNavOpen(false)}/>}
   <aside className="client-sidebar">
    <div className="client-sidebar-brand"><img src="/QFA_Logo.png" alt="QFA"/>{!sidebarCollapsed&&<div><strong>QFA</strong><small>CLIENT WORKSPACE</small></div>}<button className="portal-collapse" onClick={()=>setSidebarCollapsed(x=>!x)} aria-label="Collapse menu">{sidebarCollapsed?<ChevronRight size={16}/>:<ChevronLeft size={16}/>}</button></div>
-   <nav className="client-sidebar-nav">{nav.map(([id,label,Icon])=><button key={id} className={tab===id?'active':''} title={sidebarCollapsed?label:undefined} onClick={()=>setTab(id)}><Icon size={17}/>{!sidebarCollapsed&&<span>{label}</span>}</button>)}</nav>
+   <nav className="client-sidebar-nav">{nav.map(([id,label,Icon])=><button key={id} className={tab===id?'active':''} title={sidebarCollapsed?label:undefined} onClick={()=>{setTab(id);setMobileNavOpen(false);}}><Icon size={17}/>{!sidebarCollapsed&&<span>{label}</span>}</button>)}</nav>
    <div className="client-sidebar-footer"><span className="client-avatar">{(user?.name||'C').slice(0,1).toUpperCase()}</span>{!sidebarCollapsed&&<span>{user?.name||'Client'}</span>}</div>
   </aside>
   <div className="client-main">
-  <header className="portal-header"><a className="portal-brand" href="/"><img src="/QFA_Logo.png" alt="QFA"/><div><strong>QFA</strong><small>CLIENT PORTAL</small></div></a><div className="portal-header-actions"><span className={"portal-availability status-"+availabilityTone}><Flag size={14}/><i className={availabilityTone}/><strong>{statusLabel}</strong></span><button className="icon-button" onClick={()=>setDark(x=>!x)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button><button className="button-secondary" onClick={logout}><LogOut size={15}/> Sign out</button></div></header>
+  <header className="portal-header"><button className="client-mobile-menu" onClick={()=>setMobileNavOpen(true)} aria-label="Open client navigation"><Menu size={21}/></button><a className="portal-brand" href="/"><img src="/QFA_Logo.png" alt="QFA"/><div><strong>QFA</strong><small>CLIENT PORTAL</small></div></a><div className="portal-header-actions"><span className={"portal-availability status-"+availabilityTone}><Flag size={14}/><i className={availabilityTone}/><strong>{statusLabel}</strong></span><button className="icon-button" onClick={()=>setDark(x=>!x)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button><button className="button-secondary" onClick={logout}><LogOut size={15}/> Sign out</button></div></header>
   <section className="portal-content">
    <div className="portal-title-row"><div><div className="eyebrow">YOUR QFA WORKSPACE</div><h1>Welcome, {user?.name||'Client'}.</h1><p>View your work, account activity and communication with your freelancer.</p></div><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15} className={loading?'spin':''}/> Refresh</button></div>
    {error&&<div className="notice-error" role="alert">{error}</div>}{notice&&<div className="notice-success">{notice}</div>}
