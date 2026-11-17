@@ -286,6 +286,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
         is_available: false,
         is_busy: true,
         is_paused: Boolean(activeTimer.is_paused),
+        is_other_client: !isThisClient,
         // Only expose task details when the timer belongs to this client.
         active_session: isThisClient ? {
           started_at: activeTimer.started_at,
