@@ -17,7 +17,7 @@ export function DashboardPage(){
  // A client is active for the selected month only when that month has recorded work or a fixed-fee record.
  const activeClients=useMemo(()=>breakdown.map(row=>{const client=data.clients.find(c=>c.name===row.client_name);return {...row,id:client?.id,credit_balance:client?.credit_balance||0};}),[breakdown,data.clients]);
  const groupedLogs=useMemo(()=>{
-  const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9+#.]+/g,' ').trim().replace(/\\s+/g,' ');
+  const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9+#.]+/g,' ').trim().replace(/\s+/g,' ');
   const distance=(a,b)=>{const row=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=row[0];row[0]=i;for(let j=1;j<=b.length;j++){const old=row[j];row[j]=Math.min(row[j]+1,row[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=old;}}return row[b.length];};
   const similarity=(a,b)=>{if(a===b)return 1;if(!a||!b)return 0;const aa=a.split(' '),bb=b.split(' ');const token=2*aa.filter(x=>bb.some(y=>distance(x,y)<=1&&Math.min(x.length,y.length)>=4)).length/(aa.length+bb.length);const lev=1-distance(a,b)/Math.max(a.length,b.length);return Math.max(token,lev);};
   // Technology is the primary grouping key. Project names no longer split SQL,
