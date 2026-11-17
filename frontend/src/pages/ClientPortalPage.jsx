@@ -58,8 +58,17 @@ export function ClientPortalPage(){
  const fixedForPeriod=data.fixed.filter(r=>{const month=String(r.month||'').slice(0,7);return (!from||month>=from.slice(0,7))&&(!to||month<=to.slice(0,7));});
  const isPaidStatus=value=>String(value??'').trim().toLowerCase()==='paid';
  const hourlyLogs=filteredLogs.filter(l=>String(l.rate_type||'hourly').trim().toLowerCase()!=='fixed');
- const paidAmount=hourlyLogs.filter(l=>isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>isPaidStatus(r.status)).reduce((a,r)=>a+Number(r.amount||0),0);
- const unpaidAmount=hourlyLogs.filter(l=>!isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>!isPaidStatus(r.status)).reduce((a,r)=>a+Number(r.amount||0),0);
+ // Payment health is an account-wide summary, not limited by the Time & Logs
+ // date filter. The stats endpoint aggregates the authoritative paid/unpaid
+ // totals from time_logs or fixed_monthly_payments for this client contract.
+ const paidAmount=Number(s.totalPaid ?? (
+   hourlyLogs.filter(l=>isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.amount||0),0)+
+   fixedForPeriod.filter(r=>isPaidStatus(r.status)).reduce((a,r)=>a+Number(r.amount||0),0)
+ ))||0;
+ const unpaidAmount=Number(s.totalUnpaid ?? (
+   hourlyLogs.filter(l=>!isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.amount||0),0)+
+   fixedForPeriod.filter(r=>!isPaidStatus(r.status)).reduce((a,r)=>a+Number(r.amount||0),0)
+ ))||0;
  const paidHours=filteredLogs.filter(l=>isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.hours||0),0);
  const recentLogs=useMemo(()=>{const sorted=filteredLogs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return showAllLogs?sorted:sorted.slice(0,8);},[filteredLogs,showAllLogs]);
  const groupedLogs=useMemo(()=>{const groups={};recentLogs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[recentLogs]);
