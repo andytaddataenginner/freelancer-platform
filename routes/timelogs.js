@@ -6,7 +6,8 @@ const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 // GET /api/timelogs — Filtered by active contract coverage
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
-    const { client_id, from, to, limit = 200, offset = 0, payment_status } = req.query;
+    const { client_id, from, to, limit = 200, offset = 0, payment_status, order = 'desc' } = req.query;
+    const sortDirection = String(order).toLowerCase() === 'asc' ? 'ASC' : 'DESC';
     let where = ['t.freelancer_id = $1'];
     let params = [req.user.id];
     let i = 2;
@@ -25,7 +26,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
       WHERE ${where.join(' AND ')}
         AND (cc.status IS NULL OR cc.status = 'active')
-      ORDER BY t.date DESC, t.created_at DESC
+      ORDER BY t.date ${sortDirection}, t.id ${sortDirection}, t.created_at DESC
       LIMIT $${i++} OFFSET $${i++}
     `, [...params, limit, offset]);
     res.json(rows);
