@@ -994,3 +994,17 @@
 @media(max-width:1050px){.portal-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.portal-content{padding:22px}}
 @media(max-width:760px){.client-sidebar{width:72px;flex-basis:72px;padding:16px 9px}.client-sidebar-brand{justify-content:center;padding:0 0 17px}.client-sidebar-brand>div,.client-sidebar-brand .portal-collapse,.client-sidebar-nav button span,.client-sidebar-footer>span:not(.client-avatar){display:none!important}.client-sidebar-nav{padding-top:16px}.client-sidebar-nav button{justify-content:center;padding:0}.client-sidebar-footer{justify-content:center;padding-left:0;padding-right:0}.portal-header{padding:10px 15px;min-height:62px}.portal-content{padding:18px 14px 35px}.portal-title-row h1{font-size:23px}.portal-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.portal-chart-grid,.portal-grid{grid-template-columns:1fr}.live-monitor-heading{flex-direction:column}.portal-header-actions{gap:7px}.portal-availability{font-size:9px}}
 @media(max-width:430px){.portal-metrics{grid-template-columns:1fr 1fr}.portal-title-row{align-items:flex-start}.portal-title-row>.button-secondary{padding:8px}.portal-header .button-secondary{font-size:0;gap:0}.portal-header .button-secondary svg{margin:0}}
+
+
+.client-log-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:0 0 15px}
+.client-log-summary article{display:grid;gap:4px;padding:13px 15px;border:1px solid #e5ebf4;border-radius:10px;background:#f8faff}
+.client-log-summary article span{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8290a6}
+.client-log-summary article strong{font-size:19px;color:#1a315b;font-variant-numeric:tabular-nums}
+.client-log-summary article small{font-size:9px;color:#8290a6}
+.portal-availability i{background:#94a3b8}
+.portal-availability i.available{background:#16a36a;box-shadow:0 0 0 3px #16a36a20}
+.portal-availability i.busy{background:#d99a27;box-shadow:0 0 0 3px #d99a2720}
+.client-portal-page.portal-dark .client-log-summary article{background:#0d1729;border-color:#293b58}
+.client-portal-page.portal-dark .client-log-summary article strong{color:#edf2fb}
+.client-portal-page.portal-dark .client-log-summary article span,.client-portal-page.portal-dark .client-log-summary article small{color:#aab7cb}
+@media(max-width:600px){.client-log-summary{grid-template-columns:1fr 1fr}.client-log-summary article:last-child{grid-column:1/-1}}
