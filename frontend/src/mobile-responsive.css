@@ -163,11 +163,14 @@
 }
 
 
-/* Show the freelancer's live availability in the mobile workspace drawer. */
+/* Keep the availability label readable in the freelancer mobile navigation. */
+.sidebar .freelancer-nav-status{display:none}
+.sidebar.sidebar-collapsed .freelancer-nav-status{display:none!important}
 @media(max-width:760px){
- .sidebar .sidebar-bottom .profile-copy{min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
- .sidebar .freelancer-nav-status{display:flex!important;align-items:center!important;gap:6px!important;font-size:10px!important;line-height:1.3!important;font-weight:600!important;white-space:nowrap!important}
- .sidebar .freelancer-nav-status i{display:inline-block!important;width:7px!important;height:7px!important;flex:0 0 7px!important;border-radius:50%!important;background:#9aa7bb!important}
+ .sidebar .sidebar-bottom{gap:9px!important;align-items:center!important}
+ .sidebar .sidebar-bottom .profile-copy{min-width:0!important;display:flex!important;flex:1 1 auto!important;flex-direction:column!important;gap:2px!important}
+ .sidebar .freelancer-nav-status{display:flex!important;align-items:center!important;gap:6px!important;flex:0 0 auto!important;font-size:10px!important;line-height:1.3!important;font-weight:700!important;white-space:nowrap!important}
+ .sidebar .freelancer-nav-status i{display:inline-block!important;width:8px!important;height:8px!important;flex:0 0 8px!important;border-radius:50%!important;background:#9aa7bb!important}
  .sidebar .freelancer-nav-status.status-available i{background:#36c98f!important}
  .sidebar .freelancer-nav-status.status-busy i{background:#f5c842!important}
  .sidebar .freelancer-nav-status.status-offline i{background:#98a2b3!important}
@@ -215,6 +218,4 @@
   font-size:12px!important;font-weight:750!important;white-space:nowrap!important;
  }
  .public-nav .public-mobile-menu{flex:0 0 38px!important;width:38px!important;height:38px!important}
- .client-portal-page .client-mobile-live-monitor.is-other-session .client-mobile-live-heading{color:#f5c842!important}
- .client-portal-page .client-mobile-live-monitor.is-other-session .client-mobile-live-dot{background:#f5c842!important;box-shadow:0 0 0 4px #f5c84222!important}
 }
