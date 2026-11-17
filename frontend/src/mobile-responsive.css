@@ -202,3 +202,19 @@
   color:#aebbd4!important;font-size:9px!important;line-height:1.4!important;
  }
 }
+
+
+/* Keep a direct freelancer sign-in action visible in the public mobile header. */
+.public-mobile-login{display:none}
+@media(max-width:760px){
+ .public-mobile-login{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 auto!important;min-height:38px!important;padding:0 11px!important;
+  border:1px solid #dce5f1!important;border-radius:9px!important;
+  background:#fff!important;color:#0d2353!important;text-decoration:none!important;
+  font-size:12px!important;font-weight:750!important;white-space:nowrap!important;
+ }
+ .public-nav .public-mobile-menu{flex:0 0 38px!important;width:38px!important;height:38px!important}
+ .client-portal-page .client-mobile-live-monitor.is-other-session .client-mobile-live-heading{color:#f5c842!important}
+ .client-portal-page .client-mobile-live-monitor.is-other-session .client-mobile-live-dot{background:#f5c842!important;box-shadow:0 0 0 4px #f5c84222!important}
+}
