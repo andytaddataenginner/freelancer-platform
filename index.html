@@ -486,7 +486,66 @@
       .skills-grid { grid-template-columns: 1fr; }
       .hero-stats { gap: 1.5rem; flex-wrap: wrap; }
     }
-  </style>
+  
+    /* Mobile-first layout refinements */
+    @media (max-width: 768px) {
+      html, body { width:100%; max-width:100%; overflow-x:hidden; }
+      .nav { min-height:64px; padding:.65rem 1rem !important; gap:.6rem; }
+      .nav-brand { min-width:0; gap:.45rem !important; font-size:.95rem; }
+      .nav-brand img { height:38px !important; width:auto; flex-shrink:0; }
+      .nav-brand span { font-size:.82rem !important; line-height:1.15; }
+      .hamburger { flex-shrink:0; }
+      .nav-links { z-index:110; max-height:calc(100dvh - 64px); overflow-y:auto; box-shadow:0 14px 24px rgba(8,20,49,.12); }
+      .nav-links a { width:100%; }
+      .hero { min-height:unset; padding:6.2rem 1.1rem 2.5rem !important; gap:1.6rem !important; }
+      .hero-left, .hero-right { width:100%; min-width:0; }
+      .hero-title { font-size:clamp(2.1rem, 9vw, 3.2rem) !important; line-height:1.08; overflow-wrap:anywhere; }
+      .hero-sub { font-size:.98rem; line-height:1.65; }
+      .hero-cta { display:flex; flex-wrap:wrap; gap:.7rem; }
+      .hero-cta a, .hero-cta button { min-height:44px; }
+      .hero-stats { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem !important; }
+      .hero-stats .stat { min-width:0; }
+      .section, .skills-section, .resume-section { padding:3rem 1.1rem !important; }
+      .section-inner, .skills-inner, .contact-wrap, .resume-wrap { width:100%; max-width:100%; }
+      .section-header { margin-bottom:1.5rem; }
+      .section-header h2 { font-size:clamp(1.65rem, 7vw, 2.2rem); line-height:1.2; }
+      .ceo-card, .resume-preview-card, .contact-form { width:100%; min-width:0; }
+      .ceo-card { padding:1.2rem; }
+      .skills-grid, .services-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:.8rem; }
+      .skill-tag, .service-card, .portfolio-card { min-width:0; }
+      .service-card { padding:1rem; }
+      .portfolio-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:.8rem; }
+      .portfolio-card { overflow:hidden; }
+      .card-image-placeholder { min-height:110px; }
+      .card-body { padding:.9rem; }
+      .card-title { overflow-wrap:anywhere; }
+      .contact-wrap { gap:1.5rem !important; }
+      .contact-method { min-width:0; overflow-wrap:anywhere; }
+      .contact-form { padding:1.1rem; }
+      .footer { padding:2rem 1.1rem; }
+      .footer-inner { align-items:flex-start; flex-direction:column; gap:1.1rem; }
+      .footer-links { flex-wrap:wrap; gap:.8rem 1.2rem; }
+    }
+    @media (max-width: 480px) {
+      .nav-brand img { height:34px !important; }
+      .nav-brand span { font-size:.75rem !important; }
+      .hero { padding-left:1rem !important; padding-right:1rem !important; }
+      .hero-title { font-size:2.15rem !important; }
+      .hero-cta { flex-direction:column; align-items:stretch; }
+      .hero-cta a, .hero-cta button, .btn-primary, .btn-gold, .btn-ghost { width:100%; justify-content:center; text-align:center; }
+      .hero-stats { gap:.65rem !important; }
+      .stat-num { font-size:1.45rem; }
+      .skills-grid, .services-grid, .portfolio-grid { grid-template-columns:1fr !important; }
+      .section, .skills-section, .resume-section { padding:2.5rem 1rem !important; }
+      .form-row { grid-template-columns:1fr !important; }
+      .contact-form { padding:1rem; }
+      .footer-brand img { height:28px !important; }
+    }
+    @media (hover:none) {
+      .nav-links a, .btn-primary, .btn-gold, .btn-ghost { -webkit-tap-highlight-color:transparent; }
+    }
+
+    </style>
 </head>
 <body>
 
