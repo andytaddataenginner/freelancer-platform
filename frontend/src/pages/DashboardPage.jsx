@@ -7,7 +7,8 @@ const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',ma
 const monthNow=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
 const validMonth=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(m||''));
 const rangeFor=m=>{const safe=validMonth(m)?m:monthNow();const [y,mo]=safe.split('-').map(Number);const end=new Date(y,mo,0).getDate();return {month:safe,from:safe+'-01',to:safe+'-'+String(end).padStart(2,'0')};};
-const palette=['#1a5cff','#c9952a','#16a36a','#8b5cf6','#0ea5a4','#e0784b'];
+const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const yearOptions=Array.from({length:31},(_,i)=>String(new Date().getFullYear()-20+i));
 export function DashboardPage(){
  const [month,setMonth]=useState(monthNow()),[data,setData]=useState({stats:null,clients:[],logs:[]}),[loading,setLoading]=useState(true),[error,setError]=useState('');
  async function load(){setLoading(true);setError('');const r=rangeFor(month);if(r.month!==month)setMonth(r.month);const results=await Promise.allSettled([apiRequest('/stats/freelancer?month='+r.month),apiRequest('/clients'),apiRequest('/timelogs?from='+r.from+'&to='+r.to+'&limit=200')]);const val=i=>results[i].status==='fulfilled'?results[i].value:null;setData({stats:val(0),clients:Array.isArray(val(1))?val(1):[],logs:Array.isArray(val(2))?val(2):[]});const failed=results.filter(x=>x.status==='rejected');if(failed.length)setError(failed.map(x=>x.reason?.message).filter(Boolean).join(' · ')||'Some dashboard data could not be loaded.');setLoading(false);}
@@ -19,8 +20,19 @@ export function DashboardPage(){
   const normalize=s=>String(s||'').toLowerCase().replace(/[^a-z0-9+#.]+/g,' ').trim().replace(/\s+/g,' ');
   const distance=(a,b)=>{const row=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=row[0];row[0]=i;for(let j=1;j<=b.length;j++){const old=row[j];row[j]=Math.min(row[j]+1,row[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=old;}}return row[b.length];};
   const similarity=(a,b)=>{if(a===b)return 1;if(!a||!b)return 0;const aa=a.split(' '),bb=b.split(' ');const token=2*aa.filter(x=>bb.some(y=>distance(x,y)<=1&&Math.min(x.length,y.length)>=4)).length/(aa.length+bb.length);const lev=1-distance(a,b)/Math.max(a.length,b.length);return Math.max(token,lev);};
-  const stacks=[['Power BI',['power bi','dax','power query','pbix']],['Microsoft Fabric',['fabric','lakehouse','warehouse','dataflow gen2']],['Azure',['azure','adf','data factory','synapse']],['Databricks',['databricks','spark','delta lake']],['Snowflake',['snowflake','snowpark','streams','tasks']],['SQL & Database',['sql','sql server','postgres','database']],['Python & dbt',['python','pandas','dbt']],['Web & Apps',['react','javascript','api','frontend']]];
-  const getStack=log=>{const text=normalize([log.project_name,log.project,log.task_description,log.description,log.stack].join(' '));const found=stacks.find(([name,terms])=>terms.some(term=>text.includes(normalize(term))));return found?.[0]||'Other / General';};
+  const stacks=[
+   ['Power BI & Reporting',['power bi','powerbi','dax','power query','pbix','dashboard','reporting','visualization','visualisation','paginated report','semantic model','kpi','business intelligence','bi report']],
+   ['Microsoft Fabric',['microsoft fabric','fabric','lakehouse','warehouse','dataflow gen2','onelake','shortcuts','direct lake','notebook','medallion']],
+   ['Azure & Data Factory',['azure','adf','data factory','synapse','azure sql','key vault','logic app','azure devops','data pipeline','orchestration']],
+   ['Databricks & Spark',['databricks','spark','pyspark','delta lake','autoloader','unity catalog','dlt','mlflow']],
+   ['Snowflake',['snowflake','snowpark','snowpipe','streams','tasks','copy into','virtual warehouse','snowflake sql']],
+   ['SQL & Database',['sql server','t-sql','tsql','postgres','postgresql','mysql','database','stored procedure','query tuning','indexing','merge statement','ssms']],
+   ['Python & dbt',['python','pandas','numpy','dbt','airflow','elt','data transformation','jupyter']],
+   ['Cloud & DevOps',['terraform','docker','kubernetes','ci/cd','github actions','cloud migration','aws','gcp','infrastructure as code']],
+   ['Web & Applications',['react','javascript','typescript','frontend','backend','api','website','web app','supabase','node.js','nodejs']],
+   ['Automation & Power Platform',['power automate','power apps','power platform','copilot studio','workflow automation','automation','sharepoint']]
+  ];
+  const getStack=log=>{const text=normalize([log.project_name,log.project,log.task_description,log.description,log.stack,log.task,log.notes,log.client_name].join(' '));let best={name:'Other / General',score:0};for(const [name,terms] of stacks){let score=0;for(const term of terms){const t=normalize(term);if(text.includes(t))score+=t.includes(' ')?3:2;}if(score>best.score)best={name,score};}return best.score?best.name:'Other / General';};
   const groups=[];
   data.logs.forEach(log=>{
    const stack=getStack(log),project=String(log.project_name||log.project||'General work').trim(),task=String(log.task_description||log.description||'Unspecified task').trim();
@@ -39,7 +51,7 @@ export function DashboardPage(){
  const monthTitle=new Date(month+'-02T00:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'});
  const chartRows=activeClients.slice().sort((a,b)=>Number(b.total||0)-Number(a.total||0)).slice(0,8).map(x=>({client:x.client_name,paid:Number(x.paid)||0,unpaid:Number(x.unpaid)||0,hours:Number(x.hours)||0}));
  return <div className="dashboard-page">
-  <div className="page-heading dashboard-heading"><div><div className="eyebrow">YOUR BUSINESS AT A GLANCE</div><h1>Dashboard</h1><p>{monthTitle} · Payments, client activity and delivery progress</p></div><div className="heading-actions"><label className="month-filter">Selected month<input type="month" value={month} onChange={e=>{const next=e.target.value;if(validMonth(next))setMonth(next);}}/></label><button className="button-secondary refresh-button" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button></div></div>
+  <div className="page-heading dashboard-heading"><div><div className="eyebrow">YOUR BUSINESS AT A GLANCE</div><h1>Dashboard</h1><p>{monthTitle} · Payments, client activity and delivery progress</p></div><div className="heading-actions"><div className="month-filter"><span>Selected month</span><div className="month-select-pair"><select aria-label="Month" value={month.slice(5,7)} onChange={e=>setMonth(month.slice(0,4)+'-'+e.target.value)}>{monthNames.map((name,i)=><option key={name} value={String(i+1).padStart(2,'0')}>{name}</option>)}</select><select aria-label="Year" value={month.slice(0,4)} onChange={e=>setMonth(e.target.value+'-'+month.slice(5,7))}>{yearOptions.map(y=><option key={y} value={y}>{y}</option>)}</select></div></div><button className="button-secondary refresh-button" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button></div></div>
   <div className="metric-grid dashboard-kpis">{cards.map(({label,value,sub,icon:Icon,accent})=><article className="metric-card dashboard-kpi" key={label}><div className={'metric-icon '+accent}><Icon size={17}/></div><div className="metric-label">{label}</div><div className="metric-value">{loading?'—':value}</div><div className="metric-foot"><span>{sub}</span></div></article>)}</div>
 
   {error&&<div className="notice-error" role="alert">{error}</div>}
