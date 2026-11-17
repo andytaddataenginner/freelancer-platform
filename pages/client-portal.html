@@ -166,7 +166,66 @@
       .booking-form-grid { grid-template-columns: 1fr !important; }
       .hero h1{ font-size:1.15rem; }
     }
-  </style>
+  
+    /* Mobile portal layout aligned with the freelancer workspace */
+    @media (max-width: 768px) {
+      html, body { width:100%; max-width:100%; overflow-x:hidden; }
+      .dashboard { display:block !important; width:100%; min-height:100dvh; }
+      .mobile-header {
+        position:fixed !important; top:0; left:0; right:0; z-index:180 !important;
+        min-height:60px; padding:.65rem 1rem !important; display:flex !important;
+        align-items:center; justify-content:space-between; gap:.75rem;
+        background:var(--navy-950); box-shadow:0 3px 14px rgba(0,0,0,.14);
+      }
+      .mobile-logo { min-width:0; display:flex; align-items:center; gap:.55rem; }
+      .mobile-logo img { width:34px; height:34px; object-fit:contain; flex-shrink:0; }
+      .mobile-logo span { font-size:.92rem; font-weight:700; white-space:nowrap; }
+      .theme-toggle, .hamburger-btn { min-width:40px; min-height:40px; flex-shrink:0; }
+      .sidebar { width:min(280px, 84vw) !important; max-width:84vw; z-index:220 !important; }
+      .sidebar-overlay { z-index:210 !important; }
+      .main-content {
+        width:100% !important; max-width:100% !important; min-width:0 !important;
+        margin:0 !important; padding:1rem !important; padding-top:76px !important;
+        overflow-x:hidden;
+      }
+      .hero { width:100%; padding:1.15rem !important; margin-bottom:1rem; border-radius:14px; }
+      .hero h1 { font-size:clamp(1.25rem, 5vw, 1.65rem) !important; line-height:1.2; }
+      .hero-actions { display:flex; flex-wrap:wrap; gap:.6rem; }
+      .hero-actions .btn { flex:1 1 140px; justify-content:center; min-height:42px; }
+      .ledger-strip { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+      .lstat { min-width:0 !important; width:auto; padding:.85rem .8rem; border-bottom:1px solid var(--line); }
+      .lstat:nth-child(2n) { border-right:0; }
+      .lstat-value { font-size:1.05rem; white-space:normal; overflow-wrap:anywhere; }
+      .ledger-panel-wrap, .view-panel, .subcard { width:100%; max-width:100%; min-width:0; }
+      .panel-heading { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; }
+      .ledger-tabs { max-width:100%; padding-bottom:.25rem; }
+      .ledger-tab { flex:0 0 auto; min-height:40px; }
+      .table-wrap { width:100%; max-width:100%; overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+      .table-wrap table { min-width:620px; }
+      .booking-form-grid { grid-template-columns:1fr !important; }
+      .period-grid { grid-template-columns:1fr !important; }
+      .period-card { min-width:0; }
+      input, select, textarea, button { max-width:100%; }
+      .btn { min-height:42px; }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding:.8rem !important; padding-top:72px !important; }
+      .hero { padding:1rem !important; }
+      .hero-actions { flex-direction:column; }
+      .hero-actions .btn { width:100%; }
+      .ledger-strip { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .lstat { padding:.75rem .65rem; }
+      .lstat-label { font-size:.57rem; letter-spacing:.05em; }
+      .lstat-value { font-size:.98rem; }
+      .ledger-tabs { gap:.25rem; }
+      .ledger-tab { font-size:.75rem; padding:.55rem .75rem; }
+      .panel-heading { align-items:flex-start; }
+      .panel-heading h2, .panel-heading h3 { font-size:1rem; }
+      .table-wrap table { min-width:580px; }
+      .period-card { padding:.85rem; }
+    }
+
+    </style>
 </head>
 <body>
 
