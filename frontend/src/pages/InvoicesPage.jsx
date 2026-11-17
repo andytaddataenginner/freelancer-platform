@@ -36,8 +36,9 @@ export function InvoicesPage(){
     if(!latest){const fallback=monthNow();setFrom(fallback+'-01');setTo(new Date().toISOString().slice(0,10));}
     setPeriodInitialized(true);
    }
-   const failures=results.filter(x=>x.status==='rejected');
-   if(failures.length)setError('Some billing data could not be loaded. '+failures.map(x=>x.reason?.message).join(' · '));
+   // latest-month is a convenience endpoint only; the loaded log rows provide a fallback.
+   const requiredFailures=results.slice(0,3).map((x,i)=>({result:x,path:['/clients','/timelogs?limit=5000','/fixed-payments'][i]})).filter(x=>x.result.status==='rejected');
+   if(requiredFailures.length)setError('Some billing data could not be loaded. '+requiredFailures.map(x=>x.path+': '+(x.result.reason?.message||'Request failed')).join(' · '));
   }
   setLoading(false);
  }
