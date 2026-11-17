@@ -161,3 +161,15 @@
  .client-portal-page .client-main{width:100%!important;min-width:0!important;margin:0!important}
  .client-portal-page .portal-content{width:100%!important;max-width:none!important;padding:25px 16px 40px!important}
 }
+
+
+/* Show the freelancer's live availability in the mobile workspace drawer. */
+@media(max-width:760px){
+ .sidebar .sidebar-bottom .profile-copy{min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
+ .sidebar .freelancer-nav-status{display:flex!important;align-items:center!important;gap:6px!important;font-size:10px!important;line-height:1.3!important;font-weight:600!important;white-space:nowrap!important}
+ .sidebar .freelancer-nav-status i{display:inline-block!important;width:7px!important;height:7px!important;flex:0 0 7px!important;border-radius:50%!important;background:#9aa7bb!important}
+ .sidebar .freelancer-nav-status.status-available i{background:#36c98f!important}
+ .sidebar .freelancer-nav-status.status-busy i{background:#f5c842!important}
+ .sidebar .freelancer-nav-status.status-offline i{background:#98a2b3!important}
+ .sidebar .freelancer-nav-status.status-checking i{background:#8aa0c3!important}
+}
