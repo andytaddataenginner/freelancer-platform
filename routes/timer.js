@@ -239,11 +239,22 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
     // when this freelancer is working for another client. Match by freelancer_id.
     const { rows } = await pool.query(`
       WITH assigned AS (
-        SELECT c.freelancer_id
+        SELECT COALESCE(current_contract.freelancer_id, c.freelancer_id) AS freelancer_id
         FROM clients c
+        LEFT JOIN LATERAL (
+          SELECT cc.freelancer_id, cc.effective_from, cc.id
+          FROM client_contracts cc
+          WHERE cc.client_id = c.user_id
+            AND cc.effective_to IS NULL
+            AND cc.status IN ('active', 'paused')
+          ORDER BY cc.effective_from DESC, cc.id DESC
+          LIMIT 1
+        ) current_contract ON TRUE
         WHERE c.user_id = $1
-          AND c.freelancer_id IS NOT NULL
-        ORDER BY c.id DESC
+          AND COALESCE(current_contract.freelancer_id, c.freelancer_id) IS NOT NULL
+        ORDER BY current_contract.effective_from DESC NULLS LAST,
+                 current_contract.id DESC NULLS LAST,
+                 c.id DESC
         LIMIT 1
       )
       SELECT u.id AS freelancer_id,
