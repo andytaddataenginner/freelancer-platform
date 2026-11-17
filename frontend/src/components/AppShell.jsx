@@ -87,7 +87,8 @@ export function AppShell() {
         </nav>
         <div className="sidebar-bottom">
           <div className="profile-avatar">{(user?.name || 'Q').slice(0,1).toUpperCase()}</div>
-          {!collapsed && <div className="profile-copy"><strong>{user?.name || 'QFA User'}</strong><span>Freelancer workspace</span><span className={`freelancer-nav-status status-${freelancerStatusTone}`}><i/> {freelancerStatus}</span></div>}
+          {!collapsed && <div className="profile-copy"><strong>{user?.name || 'QFA User'}</strong><span>Freelancer workspace</span></div>}
+          <span className={`freelancer-nav-status status-${freelancerStatusTone}`} aria-live="polite" title="Current freelancer availability"><i/> {freelancerStatus}</span>
           <button className="icon-button" onClick={logout} title="Sign out" aria-label="Sign out"><LogOut size={17}/></button>
         </div>
       </aside>
