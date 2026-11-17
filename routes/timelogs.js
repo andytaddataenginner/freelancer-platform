@@ -26,6 +26,23 @@ router.get('/latest-month', requireFreelancer, async (req, res, next) => {
   }
 });
 
+// GET /api/timelogs/months — every month containing recorded work for this freelancer.
+router.get('/months', requireFreelancer, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(DATE_TRUNC('month', t.date), 'YYYY-MM') AS month
+      FROM time_logs t
+      WHERE t.freelancer_id = $1
+        AND t.date IS NOT NULL
+      GROUP BY DATE_TRUNC('month', t.date)
+      ORDER BY DATE_TRUNC('month', t.date) DESC
+    `, [req.user.id]);
+    res.json({ months: rows.map(row => row.month) });
+  } catch (e) {
+    next(e);
+  }
+});
+
 // GET /api/timelogs — Filtered by active contract coverage
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
