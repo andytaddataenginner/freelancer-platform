@@ -56,10 +56,11 @@ export function ClientPortalPage(){
  const filteredLogs=useMemo(()=>data.logs.filter(l=>(filter==='all'||l.payment_status===filter)&&(!from||String(l.date).slice(0,10)>=from)&&(!to||String(l.date).slice(0,10)<=to)),[data.logs,filter,from,to]);
  const hours=filteredLogs.reduce((a,l)=>a+Number(l.hours||0),0);
  const fixedForPeriod=data.fixed.filter(r=>{const month=String(r.month||'').slice(0,7);return (!from||month>=from.slice(0,7))&&(!to||month<=to.slice(0,7));});
- const hourlyLogs=filteredLogs.filter(l=>String(l.rate_type||'hourly').toLowerCase()!=='fixed');
- const paidAmount=hourlyLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>r.status==='paid').reduce((a,r)=>a+Number(r.amount||0),0);
- const unpaidAmount=hourlyLogs.filter(l=>l.payment_status!=='paid').reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>r.status!=='paid').reduce((a,r)=>a+Number(r.amount||0),0);
- const paidHours=filteredLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.hours||0),0);
+ const isPaidStatus=value=>String(value??'').trim().toLowerCase()==='paid';
+ const hourlyLogs=filteredLogs.filter(l=>String(l.rate_type||'hourly').trim().toLowerCase()!=='fixed');
+ const paidAmount=hourlyLogs.filter(l=>isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>isPaidStatus(r.status)).reduce((a,r)=>a+Number(r.amount||0),0);
+ const unpaidAmount=hourlyLogs.filter(l=>!isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.amount||0),0)+fixedForPeriod.filter(r=>!isPaidStatus(r.status)).reduce((a,r)=>a+Number(r.amount||0),0);
+ const paidHours=filteredLogs.filter(l=>isPaidStatus(l.payment_status)).reduce((a,l)=>a+Number(l.hours||0),0);
  const recentLogs=useMemo(()=>{const sorted=filteredLogs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return showAllLogs?sorted:sorted.slice(0,8);},[filteredLogs,showAllLogs]);
  const groupedLogs=useMemo(()=>{const groups={};recentLogs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[recentLogs]);
  const groupedAllLogs=useMemo(()=>{const groups={};data.logs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[data.logs]);
