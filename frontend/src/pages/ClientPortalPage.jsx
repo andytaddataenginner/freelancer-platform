@@ -27,12 +27,12 @@ export function ClientPortalPage(){
  const user=auth.user();
  async function load(){
   setLoading(true);setError('');
-  const paths=['/client/stats','/projects/client-view','/client/timelogs','/client/bookings','/client/notes','/timer/agency/status','/timer/client-status'];
+  const paths=['/client/stats','/projects/client-view','/client/timelogs','/client/bookings','/client/notes','/timer/agency/status','/timer/client-status','/client/fixed-payments'];
   let results;
   try { results=await Promise.allSettled(paths.map(p=>apiRequest(p))); } catch(e) { setError(e.message||'Unable to connect to the portal.'); setLoading(false); return; }
   const value=i=>results[i].status==='fulfilled'?results[i].value:null;
   const clientLogs=Array.isArray(value(2))?value(2):[];
-  setData({stats:value(0),projects:Array.isArray(value(1))?value(1):[],logs:clientLogs,bookings:Array.isArray(value(3))?value(3):[],notes:Array.isArray(value(4))?value(4):[],fixed:[],payments:[],availability:value(5),liveTimer:value(6)?.running?value(6):null});
+  setData({stats:value(0),projects:Array.isArray(value(1))?value(1):[],logs:clientLogs,bookings:Array.isArray(value(3))?value(3):[],notes:Array.isArray(value(4))?value(4):[],fixed:Array.isArray(value(7))?value(7):[],payments:[],availability:value(5),liveTimer:value(6)?.running?value(6):null});
   if(!periodInitialized){
    const months=[...new Set(clientLogs.map(x=>String(x.date||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)))].sort();
    if(months.length){
@@ -60,7 +60,7 @@ export function ClientPortalPage(){
  const paidHours=filteredLogs.filter(l=>l.payment_status==='paid').reduce((a,l)=>a+Number(l.hours||0),0);
  const recentLogs=useMemo(()=>{const sorted=filteredLogs.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return showAllLogs?sorted:sorted.slice(0,8);},[filteredLogs,showAllLogs]);
  const groupedLogs=useMemo(()=>{const groups={};recentLogs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[recentLogs]);
- const groupedAllLogs=useMemo(()=>{const groups={};filteredLogs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[filteredLogs]);
+ const groupedAllLogs=useMemo(()=>{const groups={};data.logs.forEach(l=>{const k=String(l.date||'').slice(0,7)||'Other';(groups[k]??=[]).push(l);});return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));},[data.logs]);
  const upcoming=data.bookings.filter(b=>String(b.date).slice(0,10)>=today()&&b.status!=='cancelled');
  async function book(e){e.preventDefault();setBookingBusy(true);setNotice('');try{await apiRequest('/client/bookings',{method:'POST',body:JSON.stringify(booking)});setNotice('Your booking request has been sent. Your freelancer will confirm it.');setBooking(emptyBooking);await load();}catch(e){setError(e.message);}finally{setBookingBusy(false);}}
  async function cancelBooking(id){if(!confirm('Cancel this upcoming session request?'))return;try{await apiRequest('/client/bookings/'+id+'/cancel',{method:'PATCH'});await load();}catch(e){setError(e.message);}}
