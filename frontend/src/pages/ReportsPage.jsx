@@ -11,7 +11,7 @@ const monthTitle=key=>validMonth(key)?new Date(key+'-02T00:00:00').toLocaleDateS
 const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
 
 export function ReportsPage(){
- const [month,setMonth]=useState(monthKey(new Date()));
+ const [month,setMonth]=useState('');
  const [monthly,setMonthly]=useState([]);
  const [stats,setStats]=useState(null);
  const [logs,setLogs]=useState([]);
@@ -46,7 +46,7 @@ export function ReportsPage(){
   }catch(e){setError(e.message||'Unable to load report data.');}
   finally{setLoading(false);}
  }
- useEffect(()=>{load();},[month]);
+ useEffect(()=>{let live=true;(async()=>{const results=await Promise.allSettled([apiRequest('/timelogs/latest-month'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments')]);if(!live)return;const direct=results[0].status==='fulfilled'?results[0].value?.latest_month:null;const logs=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];const fixed=results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[];const activity=[...new Set([...logs.map(x=>x.date),...fixed.map(x=>x.month)].map(x=>String(x||'').slice(0,7)).filter(validMonth))].sort();setMonth(validMonth(direct)?direct:(activity[activity.length-1]||monthKey(new Date())));})();return()=>{live=false;};},[]);useEffect(()=>{if(month)load();},[month]);
 
  const selectedClients=useMemo(()=>Array.isArray(stats?.clientBreakdown)?stats.clientBreakdown.map(c=>({name:c.client_name||'Unknown client',paid:Number(c.paid)||0,unpaid:Number(c.unpaid)||0,total:Number(c.total)||0,hours:Number(c.hours)||0})).sort((a,b)=>b.total-a.total):[],[stats]);
  const paymentMix=useMemo(()=>[{name:'Paid',value:selectedClients.reduce((a,c)=>a+c.paid,0)},{name:'Outstanding',value:selectedClients.reduce((a,c)=>a+c.unpaid,0)}].filter(x=>x.value>0),[selectedClients]);
