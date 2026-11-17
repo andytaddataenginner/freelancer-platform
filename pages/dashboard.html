@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — QFA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/chatbot-widget.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{overflow-y:scroll;scroll-behavior:smooth}
+    :root{
+      --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
+      --white:#fff;--bg:#f4f6fb;--bg2:#eef1f8;
+      --ink:#0d2353;--ink2:#3a4a6a;--ink3:#7a8aaa;
+      --green:#166534;--gbg:#dcfce7;--amber:#92400e;--abg:#fef3c7;
+      --red:#b91c1c;--rbg:#fee2e2;
+      --serif:'Playfair Display',serif;--sans:'Outfit',sans-serif;
+      --r:16px;--sh:0 2px 20px rgba(13,35,83,.08);
+      --sh-sm:0 1px 4px rgba(13,35,83,.08);
+      --sh-md:0 10px 28px -8px rgba(13,35,83,.14);
+      --sh-lg:0 26px 60px -18px rgba(13,35,83,.22);
+      --sh-gold:0 8px 22px rgba(201,149,42,.28);
+      --ring:rgba(26,92,255,.14);
+      --card-bg: #ffffff;
+      --table-hover: var(--bg);
+      --hairline:rgba(13,35,83,.08);
+      --hairline-strong:rgba(13,35,83,.15);
+    }
+
+    [data-theme="dark"] {
+      --navy: #1e293b; --navy2: #334155; --accent: #3b82f6; --gold: #d97706; --gold2: #fbbf24;
+      --white: #0f172a; --bg: #090d16; --bg2: #161f30;
+      --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #8493ad;
+      --green: #4ade80; --gbg: rgba(34, 197, 94, 0.14); --amber: #fbbf24; --abg: rgba(217, 119, 6, 0.16);
+      --red: #f87171; --rbg: rgba(248, 113, 113, 0.14);
+      --sh: 0 2px 20px rgba(0,0,0,0.4);
+      --sh-sm:0 1px 4px rgba(0,0,0,.35);
+      --sh-md:0 10px 28px -8px rgba(0,0,0,.5);
+      --sh-lg:0 26px 60px -18px rgba(0,0,0,.6);
+      --sh-gold:0 8px 22px rgba(217,119,6,.3);
+      --ring:rgba(59,130,246,.2);
+      --card-bg: #111a2c;
+      --table-hover: #16213a;
+      --hairline:rgba(255,255,255,.08);
+      --hairline-strong:rgba(255,255,255,.16);
+    }
+
+    body{
+      font-family:var(--sans);color:var(--ink);
+      background:
+        radial-gradient(1100px 520px at 88% -10%, rgba(201,149,42,.10), transparent 60%),
+        radial-gradient(900px 500px at -8% 8%, rgba(26,92,255,.07), transparent 55%),
+        var(--bg);
+      background-attachment:fixed;
+      -webkit-font-smoothing:antialiased;
+      transition:background 0.3s ease, color 0.3s ease;
+    }
+    .mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:linear-gradient(135deg,var(--navy),var(--navy2));z-index:200;align-items:center;justify-content:space-between;padding:0 1rem;box-shadow:0 2px 16px rgba(0,0,0,.25)}
+    .mob-brand{display:flex;align-items:center;gap:.5rem}
+    .mob-brand img{height:28px;background:#fff;border-radius:6px;padding:2px}
+    .mob-brand span{color:#fff;font-size:.82rem;font-weight:700;letter-spacing:.01em}
+    .mob-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+    .mob-btn:hover{background:rgba(255,255,255,.24)}
+    .overlay{display:none;position:fixed;inset:0;background:rgba(6,12,28,.6);backdrop-filter:blur(2px);z-index:149}
+    .overlay.on{display:block}
+    .sidebar{width:240px;background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 140%);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:150;box-shadow:4px 0 24px rgba(0,0,0,.12);transition: background 0.3s ease, transform 0.28s cubic-bezier(.4,0,.2,1);}
+    .sb-brand{padding:1.1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.7rem}
+    .sb-logo{width:36px;height:36px;background:#fff;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+    .sb-logo img{width:100%;height:100%;object-fit:contain}
+    .sb-text strong{display:block;color:#fff;font-size:.8rem;font-weight:700}
+    .sb-text span{font-size:.62rem;color:var(--gold2);text-transform:uppercase;letter-spacing:.1em}
+    .sb-nav{flex:1;padding:.8rem 0;overflow-y:auto}
+    .sb-nav a{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;font-size:.85rem;font-weight:500;color:rgba(255,255,255,.55);text-decoration:none;transition:all .2s;border-right:3px solid transparent}
+    .sb-nav a:hover{color:#fff;background:rgba(255,255,255,.06)}
+    .sb-nav a.active{color:#fff;background:linear-gradient(90deg,rgba(255,255,255,.02),rgba(201,149,42,.16));border-right-color:var(--gold2)}
+    .sb-user{padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.08)}
+    .sb-user strong{display:block;color:#fff;font-size:.88rem}
+    .sb-user span{font-size:.72rem;color:rgba(255,255,255,.4)}
+    .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none;transition:opacity .2s}
+    .sb-user a:hover{opacity:.75}
+    .sb-parent{justify-content:space-between;cursor:pointer}
+    .sb-chevron{font-size:.75rem;color:rgba(255,255,255,.4);transition:transform .25s ease}
+    .sb-group.open .sb-chevron{transform:rotate(90deg);color:var(--gold2)}
+    .sb-submenu{max-height:0;overflow:hidden;transition:max-height .28s ease}
+    .sb-group.open .sb-submenu{max-height:120px}
+    .sb-submenu a{padding:.55rem 1.2rem .55rem 2.5rem;font-size:.8rem;color:rgba(255,255,255,.45)}
+    .sb-submenu a:hover{color:#fff;background:rgba(255,255,255,.05)}
+    .main{margin-left:240px;min-height:100vh;overflow-x:hidden}
+
+    .topbar{background:var(--card-bg);border-bottom:1px solid var(--hairline);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;backdrop-filter:blur(10px);transition: background 0.3s ease;}
+    .topbar h2{font-family:var(--serif);font-size:1.4rem;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+    .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.15rem}
+    .topbar-right{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+    .mpick{display:flex;align-items:center;gap:.5rem}
+    .mpick label{font-size:.78rem;font-weight:700;color:var(--ink2)}
+    .mpick input{padding:.4rem .8rem;border:1.5px solid var(--hairline-strong);border-radius:8px;font-family:var(--sans);font-size:.82rem;color:var(--ink);background:var(--bg);transition:border-color .2s,box-shadow .2s}
+    .mpick input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+
+    /* Theme Toggle Button */
+    .theme-toggle {
+      background: var(--bg2); border: 1px solid var(--hairline-strong);
+      color: var(--ink); width: 36px; height: 36px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; transition: all 0.25s;
+    }
+    .theme-toggle:hover { background: linear-gradient(135deg,var(--gold),var(--gold2)); color: white; transform:rotate(15deg); box-shadow:var(--sh-sm); }
+
+    .content{padding:1.5rem}
+
+    .stats-row{
+      display:grid;
+      grid-template-columns:repeat(6, 1fr);
+      gap:0.8rem;
+      margin-bottom:1.5rem;
+    }
+    .sc{background:linear-gradient(160deg,var(--card-bg) 0%,var(--card-bg) 55%,var(--bg2) 170%);border-radius:var(--r);padding:1.1rem 1.4rem;box-shadow:var(--sh-md);border:1px solid var(--hairline);position:relative;overflow:hidden;transition:transform .25s ease, box-shadow .25s ease, background 0.3s ease;}
+    .sc:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)}
+    .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .sc::after{content:'';position:absolute;top:-30%;right:-15%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,var(--glow,transparent) 0%,transparent 70%);opacity:.6;pointer-events:none}
+    .sc.green::before{background:linear-gradient(90deg,#22c55e,#86efac)}
+    .sc.green{--glow:rgba(34,197,94,.28)}
+    .sc.amber::before{background:linear-gradient(90deg,#f59e0b,#fcd34d)}
+    .sc.amber{--glow:rgba(245,158,11,.24)}
+    .sc.blue::before{background:linear-gradient(90deg,var(--accent),#60a5fa)}
+    .sc.blue{--glow:rgba(26,92,255,.24)}
+    .sc.navy::before{background:linear-gradient(90deg,var(--navy),var(--navy2))}
+    .sc.navy{--glow:rgba(13,35,83,.22)}
+    .sc.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+    .sc.gold{--glow:rgba(201,149,42,.3)}
+    .sc-icon{position:absolute;top:.55rem;right:.7rem;font-size:2rem;opacity:.1;transform:rotate(-6deg)}
+    .sc-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:.55rem}
+    .sc-num{font-family:var(--serif);font-size:1.55rem;font-weight:700;line-height:1;display:block;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+    .sc-sub{font-size:.62rem;color:var(--ink3);margin-top:.35rem}
+    .card{background:var(--card-bg);border-radius:var(--r);box-shadow:var(--sh-md);border:1px solid var(--hairline);margin-bottom:1.2rem;transition: background 0.3s ease, box-shadow .25s ease;}
+    .ch{padding:1rem 1.4rem;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;position:relative}
+    .ch::after{content:'';position:absolute;left:1.4rem;right:1.4rem;bottom:-1px;height:1px;background:linear-gradient(90deg,var(--gold2),transparent 40%)}
+    .ch h3{font-size:.9rem;font-weight:700;color:var(--ink)}
+    .cb{padding:1.4rem}
+    .two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:1.2rem;align-items:start}
+    .log-form-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:.9rem;align-items:start}
+    @media(max-width:700px){.log-form-row{grid-template-columns:1fr}}
+    .entry-clients-row{display:grid;grid-template-columns:1.4fr 1fr;gap:1.2rem;align-items:stretch}
+    @media(max-width:900px){.entry-clients-row{grid-template-columns:1fr}}
+    .entry-clients-row>.card{display:flex;flex-direction:column}
+    .entry-clients-row>.card>.cb{flex:1}
+    .ac-list{flex:1;overflow-y:auto}
+    .ac-row{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.4rem;border-bottom:1px solid var(--hairline);cursor:pointer;transition:background .18s, padding-left .18s}
+    .ac-row:last-child{border-bottom:none}
+    .ac-row:hover{background:var(--table-hover);padding-left:1.6rem}
+    .ac-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;box-shadow:var(--sh-sm)}
+    .ac-info{min-width:0;flex:1}
+    .ac-info strong{display:block;font-size:.85rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ac-info span{font-size:.7rem;color:var(--ink3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ac-meta{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:.25rem;align-items:flex-end;flex-shrink:0}
+    .ac-meta .badge{font-size:.6rem}
+    .ac-credit{font-size:.7rem;font-weight:700;color:var(--accent)}
+    .fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem}
+    .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+    input,textarea,select{width:100%;padding:.7rem .9rem;border:1.5px solid var(--hairline-strong);border-radius:9px;background:var(--bg);font-family:var(--sans);font-size:.88rem;color:var(--ink);transition:border-color .2s, box-shadow .2s}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+    .hint{font-size:.7rem;color:var(--ink3);margin-top:.2rem}
+    .fs{font-size:.8rem;margin-top:.3rem}
+    .fs.ok{color:var(--green)}.fs.er{color:var(--red)}
+    .btn{padding:.55rem 1.2rem;border-radius:8px;font-family:var(--sans);font-size:.82rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+    .btn:active{transform:scale(.96)}
+    .btn-p{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;box-shadow:var(--sh-sm)}.btn-p:hover{background:var(--accent);box-shadow:var(--sh-md)}
+    .btn-g{background:var(--gbg);color:var(--green)}.btn-g:hover{background:var(--green);color:#fff}
+    .btn-r{background:var(--rbg);color:var(--red)}.btn-r:hover{background:var(--red);color:#fff}
+    .btn-o{background:transparent;border:1.5px solid var(--hairline-strong);color:var(--ink2)}.btn-o:hover{border-color:var(--navy);color:var(--ink)}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;box-shadow:var(--sh-gold)}
+    .btn-gold:hover{filter:brightness(1.06)}
+    .btn-sm{padding:.38rem .8rem;font-size:.75rem}
+
+    /* ── TIMER ── */
+    .timer-disp{font-family:var(--serif);font-size:2.5rem;text-align:center;padding:.7rem;background:var(--bg);border-radius:10px;margin:.6rem 0;letter-spacing:.05em;font-variant-numeric:tabular-nums;transition:color .3s}
+    .timer-disp.running{color:var(--green)}
+    .timer-disp.paused{color:var(--amber)}
+    .timer-disp.idle{color:var(--navy)}
+    .timer-status{text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;height:1rem}
+    .timer-btns{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap}
+
+    /* ── FLOATING DRAGGABLE TIMER WIDGET ── */
+    .float-timer{
+      position:fixed; bottom:20px; right:20px; width:280px;
+      background:var(--card-bg); border-radius:var(--r);
+      box-shadow:var(--sh-lg);
+      border:1px solid var(--hairline); z-index:250; overflow:hidden;
+      transition:background .3s ease, box-shadow .2s ease, width .2s ease;
+      user-select:none;
+      backdrop-filter:blur(16px);
+    }
+    .float-timer.dragging{ box-shadow:0 28px 70px rgba(0,0,0,.35); }
+    .float-timer-handle{
+      background:linear-gradient(135deg,var(--navy),var(--navy2)); color:#fff; padding:.6rem .9rem; cursor:grab;
+      display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+      font-size:.8rem; font-weight:700; position:relative;
+    }
+    .float-timer-handle::before{content:'';position:absolute;left:50%;top:.32rem;transform:translateX(-50%);width:28px;height:3px;border-radius:3px;background:rgba(255,255,255,.18)}
+    .float-timer-handle:active{ cursor:grabbing; }
+    .float-timer-handle-title{ display:flex; align-items:center; gap:.4rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .float-timer-mini-time{ display:none; font-family:var(--serif); font-size:.85rem; opacity:.9; font-variant-numeric:tabular-nums; }
+    .float-timer.collapsed .float-timer-mini-time{ display:inline; }
+    .float-timer-min{ background:rgba(255,255,255,.15); border:none; color:#fff; width:22px;height:22px;border-radius:5px; cursor:pointer; font-size:.95rem; line-height:1; flex-shrink:0; transition:background .2s; }
+    .float-timer-min:hover{ background:rgba(255,255,255,.32); }
+    .float-timer-body{ padding:.9rem 1rem 1rem; }
+    .float-timer.collapsed{ width:210px; }
+    .float-timer.collapsed .float-timer-body{ display:none; }
+    @media(max-width:480px){ .float-timer{ width:calc(100vw - 24px) !important; } }
+
+    /* ── TABLE ── */
+    .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:600px}
+    th{padding:.6rem .9rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:2px solid var(--hairline-strong);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.8rem .9rem;border-bottom:1px solid var(--hairline);color:var(--ink2);vertical-align:middle;font-variant-numeric:tabular-nums}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--table-hover)}
+
+    /* Collapsible Group Rows Matrix Styling */
+    .group-row td { background: var(--bg2) !important; cursor: pointer; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--hairline); }
+    .group-row:hover td { background: var(--table-hover) !important; }
+    .group-toggle { display: inline-block; width: 18px; font-size: 0.8rem; text-align: center; margin-right: 0.35rem; transition: transform 0.2s; }
+    .child-row td { padding-left: 1.6rem; }
+
+    .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .68rem;border-radius:100px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+    .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.75;flex-shrink:0}
+    .bg-g{background:var(--gbg);color:var(--green)}
+    .bg-a{background:var(--abg);color:var(--amber)}
+    .bg-b{background:#dbeafe;color:#1e40af}
+    [data-theme="dark"] .bg-b{background:rgba(59,130,246,.16);color:#93c5fd}
+    .modal-ov{position:fixed;inset:0;background:rgba(6,12,28,.55);display:none;align-items:center;justify-content:center;z-index:300;padding:1rem;backdrop-filter:blur(6px)}
+    .modal-ov.on{display:flex}
+    .modal{background:var(--card-bg);color:var(--ink);border-radius:20px;padding:1.8rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--hairline);animation:mIn .25s ease}
+    @keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
+    .mh h3{font-family:var(--serif);font-size:1.2rem;color:var(--ink)}
+    .mc{background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;color:var(--ink3);display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .mc:hover{background:var(--rbg);color:var(--red);transform:rotate(90deg)}
+
+    @media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
+
+    @media(max-width:768px){
+      .mob-bar{display:flex}
+      .sidebar{transform:translateX(-100%);z-index:150}
+      .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
+
+      .main{
+        margin-left:0;
+        padding-top:52px !important;
+      }
+
+      .topbar{
+        position: relative !important;
+        top: 0 !important;
+        padding: 1rem !important;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .stats-row{grid-template-columns:1fr 1fr !important;gap:.8rem}
+      .two-col{grid-template-columns:1fr}
+      .content{padding:1rem}
+      .sc-num{font-size:1.4rem}
+      .topbar-right{width:100%}
+    }
+    @media(max-width:420px){.stats-row{grid-template-columns:1fr 1fr !important;gap:.6rem}.sc-num{font-size:1.2rem}.content{padding:.8rem}}
+
+    ::-webkit-scrollbar{width:10px;height:10px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:10px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--ink3)}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  </style>
+</head>
+<body>
+
+<div class="mob-bar" id="mob-bar">
+  <div class="mob-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>Quick Freelancing Agency</span>
+  </div>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
+</div>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+    <div class="sb-text"><strong>Quick Freelancing</strong><span>Agency · Dashboard</span></div>
+  </div>
+  <nav class="sb-nav">
+    <a href="dashboard.html" class="active">📊 Overview</a>
+    <a href="time-logs.html">⏱ Time Logs</a>
+
+    <div class="sb-group" id="sb-group-clients">
+      <a href="#" class="sb-parent" onclick="toggleSubmenu(event,'sb-group-clients')">
+        <span>👥 Clients</span>
+        <span class="sb-chevron">›</span>
+      </a>
+      <div class="sb-submenu">
+        <a href="clients.html">All Clients</a>
+        <a href="#" onclick="show('modal-client');return false;">+ Add Client</a>
+      </div>
+    </div>
+
+    <a href="contracts.html">📜 Contracts</a>
+    <a href="schedule.html">📅 Schedule</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="fixed-invoices.html">📄 Invoices</a>
+    <a href="portfolio-admin.html">🖼 Portfolio</a>
+    <a href="notes.html">📝 Client Notes</a>
+    <a href="projects.html">📋 Projects</a>
+    <a href="../index.html" target="_blank">🌐 Public Site</a>
+  </nav>
+  <div class="sb-user">
+    <strong id="uname">Loading…</strong>
+    <span>Freelancer · QFA</span>
+    <a href="#" onclick="logout()">Sign out →</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2 id="ptitle">Overview</h2>
+      <p id="greeting">Good morning</p>
+    </div>
+    <div class="topbar-right">
+      <div class="mpick">
+        <label>Month</label>
+        <input type="month" id="mpicker" onchange="load()"/>
+      </div>
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+      <button class="btn btn-o btn-sm" onclick="show('modal-password')">🔒 Change Password</button>
+      <button class="btn btn-gold btn-sm" onclick="show('modal-client')">+ Add Client</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stats-row">
+      <div class="sc green"><div class="sc-icon">✅</div><div class="sc-label">Paid this month</div><span class="sc-num" id="s-paid">$0</span><div class="sc-sub">Received</div></div>
+      <div class="sc amber"><div class="sc-icon">⏳</div><div class="sc-label">Unpaid this month</div><span class="sc-num" id="s-unpaid">$0</span><div class="sc-sub">Outstanding</div></div>
+      <div class="sc blue"><div class="sc-icon">💰</div><div class="sc-label">Total expected</div><span class="sc-num" id="s-exp">$0</span><div class="sc-sub">Hourly + Fixed</div></div>
+      <div class="sc navy"><div class="sc-icon">👥</div><div class="sc-label">Clients this month</div><span class="sc-num" id="s-clients">0</span><div class="sc-sub">Active</div></div>
+      <div class="sc gold"><div class="sc-icon">⏱</div><div class="sc-label">Hours this month</div><span class="sc-num" id="s-hours">0h</span><div class="sc-sub">Logged</div></div>
+      <div class="sc navy"><div class="sc-icon">📅</div><div class="sc-label">Upcoming</div><span class="sc-num" id="s-book">0</span><div class="sc-sub">Bookings</div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <h3>💰 Payment Breakdown — <span id="bmonth"></span></h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all logs →</a>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="btable"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="entry-clients-row">
+      <div class="card">
+        <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
+        <div class="cb">
+          <form onsubmit="submitLog(event)">
+            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+              <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
+              <div class="fg">
+                <label>Hours (any value)</label>
+                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33=20min" required/>
+                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
+              </div>
+            </div>
+            <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
+            <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
+            <div id="ls" class="fs"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">
+          <h3>👥 Active Clients — <span id="acmonth"></span></h3>
+          <span style="font-size:.72rem;color:var(--ink3)" id="ac-count"></span>
+        </div>
+        <div class="ac-list" id="active-clients-list">
+          <div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <h3>Recent Logs</h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Client</th><th>Date</th><th>Hours</th><th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th></tr></thead>
+          <tbody id="rtable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn btn-p" onclick="show('modal-client')">+ Add New Client</button>
+  </div>
+</div>
+
+<!-- ── CHANGE PASSWORD MODAL WITH SHOW/HIDE TOGGLES ── -->
+<div class="modal-ov" id="modal-password">
+  <div class="modal">
+    <div class="mh"><h3>Change Password</h3><button class="mc" onclick="hide('modal-password')">✕</button></div>
+    <form onsubmit="changePasswordModal(event)">
+      <div class="fg">
+        <label>Current password</label>
+        <div style="position:relative;">
+          <input type="password" name="currentPassword" id="curr-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('curr-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>New password</label>
+        <div style="position:relative;">
+          <input type="password" name="newPassword" id="new-pwd" required placeholder="••••••••" minlength="8" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('new-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+        <span class="hint">At least 8 characters with a number.</span>
+      </div>
+      <div class="fg">
+        <label>Confirm new password</label>
+        <div style="position:relative;">
+          <input type="password" name="confirmPassword" id="conf-pwd" required placeholder="••••••••" style="padding-right:2.8rem;"/>
+          <button type="button" onclick="toggleModalPassword('conf-pwd', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--ink3);">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-p" style="width:100%; margin-top:.5rem">Update password</button>
+      <div id="pwd-status" class="fs"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Floating draggable Live Timer widget ── -->
+<div class="float-timer" id="float-timer">
+  <div class="float-timer-handle" id="float-timer-handle">
+    <div class="float-timer-handle-title">
+      <span>⏱ Live Timer</span>
+      <span class="float-timer-mini-time" id="float-timer-mini-time">00:00:00</span>
+    </div>
+    <button class="float-timer-min" id="float-timer-min-btn" onclick="toggleMinimize()" title="Minimize">–</button>
+  </div>
+  <div class="float-timer-body" id="float-timer-body">
+    <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
+    <div class="fg"><label>Task</label><input type="text" id="tt" placeholder="What are you working on?"/></div>
+    <div class="timer-status" id="t-status" style="color:var(--ink3)">Ready</div>
+    <div class="timer-disp idle" id="tdisp">00:00:00</div>
+    <div class="timer-btns">
+      <button class="btn btn-g" id="t-start" onclick="timerStart()">▶ Start</button>
+      <button class="btn" id="t-pause" onclick="timerPause()" style="display:none;background:var(--abg);color:var(--amber)">⏸ Pause</button>
+      <button class="btn btn-g" id="t-resume" onclick="timerResume()" style="display:none">▶ Resume</button>
+      <button class="btn btn-r" id="t-stop" onclick="timerStop()" style="display:none">■ Stop & Save</button>
+      <button class="btn btn-o btn-sm" onclick="timerReset()">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-client">
+  <div class="modal">
+    <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
+    <form onsubmit="addClient(event)">
+      <div class="fg"><label>Full name</label><input type="text" name="name" required/></div>
+      <div class="fg"><label>Email</label><input type="email" name="email" required/></div>
+      <div class="fg"><label>Company (optional)</label><input type="text" name="company"/></div>
+      <div class="fg"><label>Temporary password</label><input type="text" name="password" required/></div>
+      <div style="border-top:1px solid var(--bg2);padding-top:1rem;margin-top:.5rem">
+        <div class="fg"><label>Rate type</label>
+          <select name="rate_type" id="art" onchange="toggleRate()">
+            <option value="hourly">Hourly rate</option>
+            <option value="fixed">Fixed price</option>
+          </select>
+        </div>
+        <div class="fg" id="ahr"><label>Hourly rate ($)</label><input type="number" name="hourly_rate" min="1" step="0.5" placeholder="e.g. 25"/></div>
+        <div class="fg" id="afp" style="display:none"><label>Fixed price ($)</label><input type="number" name="fixed_price" min="1" step="1" placeholder="e.g. 500"/></div>
+      </div>
+      <button type="submit" class="btn btn-p" style="width:100%">Create client</button>
+      <div id="cs" class="fs"></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-edit">
+  <div class="modal">
+    <div class="mh"><h3>Edit Log Entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
+    <div id="einfo" style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="eid"/>
+    <input type="hidden" id="ehr"/>
+    <div class="fg"><label>Date</label><input type="date" id="edate" required/></div>
+    <div class="fg">
+      <label>Hours</label>
+      <input type="number" id="ehours" min="0.01" max="24" step="any" required oninput="previewAmt()"/>
+      <div class="hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</div>
+    </div>
+    <div id="aprev" style="background:#e8f0ff;border-radius:8px;padding:.6rem 1rem;margin-bottom:.8rem;font-size:.84rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="fg"><label>Task description</label><textarea id="etask" rows="3" required></textarea></div>
+    <button class="btn btn-p" style="width:100%;padding:.8rem" onclick="saveEdit()">Save changes</button>
+    <div id="es" class="fs"></div>
+  </div>
+</div>
+
+<script>
+const API='https://freelancer-platform-9jut.onrender.com/api';
+const SH=8;
+const auth={
+  token:()=>localStorage.getItem('token'),
+  user:()=>{try{return JSON.parse(localStorage.getItem('user'))}catch{return null}},
+  save:(t,u)=>{localStorage.setItem('token',t);localStorage.setItem('user',JSON.stringify(u));localStorage.setItem('login_time',Date.now());},
+  clear:()=>['token','user','login_time'].forEach(k=>localStorage.removeItem(k)),
+  ok:()=>{
+    if(!localStorage.getItem('token'))return false;
+    if((Date.now()-parseInt(localStorage.getItem('login_time')||0))/3600000>SH){auth.clear();return false;}
+    return true;
+  },
+  hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')})
+};
+
+// Theme Management Logic
+function initTheme() {
+  const savedTheme = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeButton(savedTheme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+  updateThemeButton(next);
+}
+function updateThemeButton(theme) {
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+initTheme();
+
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, { ...opts, headers: { ...auth.hdrs(), ...(opts.headers || {}) } });
+  
+  if (r.status === 401) {
+    const e = await r.json().catch(() => ({}));
+    
+    // Check if the route is related to changing passwords
+    if (path.includes('change-password')) {
+      throw new Error(e.error || 'Current password is incorrect');
+    }
+
+    auth.clear();
+    go('login.html?reason=' + (e.error === 'SESSION_REVOKED' ? 'revoked' : 'expired'));
+    return;
+  }
+
+  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Failed'); }
+  return r.json();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!auth.ok()){go('login.html');return;}
+  const u=auth.user();
+  if(u&&u.role!=='freelancer'){go('client-portal.html');return;}
+  document.getElementById('uname').textContent=u?u.name:'';
+  const h=new Date().getHours();
+  document.getElementById('greeting').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon 🌤':'Good evening 🌙';
+  document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
+  document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+  load();
+  initFloatingTimer();
+});
+
+function go(p){window.location.href=p;}
+async function logout() {
+  try {
+    // Call backend endpoint to set is_online = FALSE in the database
+    await fetch(API + '/auth/logout', { 
+      method: 'POST', 
+      headers: auth.hdrs() 
+    });
+  } catch (e) {
+    console.error('Logout network notification failed:', e);
+  } finally {
+    // Clear local storage and redirect to login
+    auth.clear();
+    go('login.html');
+  }
+}
+  
+function show(id){document.getElementById(id).classList.add('on');}
+function hide(id){document.getElementById(id).classList.remove('on');}
+function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
+function sbClose(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
+document.querySelectorAll('.sb-nav a:not(.sb-parent)').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();}));
+function toggleSubmenu(e,groupId){
+  e.preventDefault();
+  const g=document.getElementById(groupId);
+  if(!g)return;
+  g.classList.toggle('open');
+  try{localStorage.setItem('sb_submenu_'+groupId, g.classList.contains('open')?'1':'0');}catch(_){}
+}
+(function(){
+  try{
+    document.querySelectorAll('.sb-group').forEach(g=>{
+      if(localStorage.getItem('sb_submenu_'+g.id)==='1') g.classList.add('open');
+    });
+  }catch(_){}
+})();
+function toggleRate(){const t=document.getElementById('art').value;document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';document.getElementById('afp').style.display=t==='fixed'?'flex':'none';}
+function fmtH(h){
+  const totalMin = Math.round(h * 60);
+  const hr = Math.floor(totalMin / 60), mn = totalMin % 60;
+  if(hr === 0) return mn + 'min';
+  if(mn === 0) return hr + 'h';
+  return hr + 'h ' + mn + 'min';
+}
+
+// ── Password Visibility & Change Modal Handlers ──
+function toggleModalPassword(fieldId, btnEl) {
+  const input = document.getElementById(fieldId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btnEl.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btnEl.textContent = '👁️';
+  }
+}
+
+async function changePasswordModal(e) {
+  e.preventDefault();
+  const statusEl = document.getElementById('pwd-status');
+  const formData = new FormData(e.target);
+  const currentPassword = formData.get('currentPassword');
+  const newPassword = formData.get('newPassword');
+  const confirmPassword = formData.get('confirmPassword');
+
+  if (newPassword !== confirmPassword) {
+    statusEl.className = 'fs er';
+    statusEl.textContent = 'New passwords do not match.';
+    return;
+  }
+  if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+    statusEl.className = 'fs er';
+    statusEl.textContent = 'New password must be at least 8 characters and include a number.';
+    return;
+  }
+
+  try {
+    statusEl.className = 'fs';
+    statusEl.textContent = 'Updating password…';
+    
+    const resData = await api('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+
+    statusEl.className = 'fs ok';
+    statusEl.textContent = '✓ ' + (resData.message || 'Password updated successfully!');
+    e.target.reset();
+    setTimeout(() => { hide('modal-password'); statusEl.textContent = ''; }, 1500);
+  } catch (err) {
+    statusEl.className = 'fs er';
+    statusEl.textContent = err.message || 'Failed to update password.';
+  }
+}
+
+async function toggleFixed(recordId, newStatus){
+  try{
+    await api('/fixed-payments/'+recordId+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
+    load();
+  }catch(e){alert('Failed: '+e.message);}
+}
+
+function initials(name){
+  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+}
+
+function renderActiveClients(clients, breakdown){
+  const list=document.getElementById('active-clients-list');
+  const count=document.getElementById('ac-count');
+
+  const breakdownByKey = new Map();
+  (breakdown||[]).forEach(b => breakdownByKey.set((b.client_name||'')+'|'+(b.company||''), b));
+
+  const active = clients.filter(c => breakdownByKey.has((c.name||'')+'|'+(c.company||'')));
+
+  count.textContent = active.length ? active.length+' this month' : '';
+
+  if(!active.length){
+    list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--ink3);font-size:.85rem">No client activity logged yet this month.</div>';
+    return;
+  }
+
+  const sorted=[...active].sort((a,b)=>a.name.localeCompare(b.name));
+  list.innerHTML=sorted.map(c=>{
+    const b = breakdownByKey.get((c.name||'')+'|'+(c.company||''));
+    const rateLabel = c.rate_type==='fixed'
+      ? `Fixed $${parseFloat(c.fixed_price||0).toFixed(0)}`
+      : `$${parseFloat(c.hourly_rate||0).toFixed(0)}/hr`;
+    const rateBadge = c.rate_type==='fixed'
+      ? `<span class="badge bg-b">${rateLabel}</span>`
+      : `<span class="badge" style="background:#e8f0ff;color:var(--accent)">${rateLabel}</span>`;
+    const hoursLine = b ? `<span style="font-size:.68rem;color:var(--ink3)">${fmtH(parseFloat(b.hours||0))} logged</span>` : '';
+    const credit=parseFloat(c.credit_balance||0);
+    const creditLine = credit!==0
+      ? `<span class="ac-credit" style="color:${credit>0?'var(--accent)':'var(--red)'}">${credit>0?'Credit':'Owes'} $${Math.abs(credit).toFixed(2)}</span>`
+      : '';
+    return `<div class="ac-row" onclick="selectClientForEntry(${c.id})" title="Click to select for Manual Log Entry">
+      <div class="ac-avatar">${initials(c.name)}</div>
+      <div class="ac-info">
+        <strong>${c.name}</strong>
+        ${c.company?`<span>${c.company}</span>`:''}
+      </div>
+      <div class="ac-meta">
+        ${rateBadge}
+        ${hoursLine}
+        ${creditLine}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectClientForEntry(id){
+  const sel=document.getElementById('mc');
+  sel.value=id;
+  sel.focus();
+  sel.style.borderColor='var(--accent)';
+  sel.style.boxShadow='0 0 0 3px rgba(26,92,255,.15)';
+  setTimeout(()=>{ sel.style.borderColor=''; sel.style.boxShadow=''; }, 800);
+}
+
+async function load(){
+  const mo=document.getElementById('mpicker').value;
+  const ml=new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
+  document.getElementById('bmonth').textContent=ml;
+  document.getElementById('ptitle').textContent='Overview — '+ml;
+  try{
+    const [st,cl,lg]=await Promise.all([api('/stats/freelancer?month='+mo),api('/clients'),api('/timelogs?limit=8')]);
+    document.getElementById('s-paid').textContent='$'+parseFloat(st.totalEarned||0).toFixed(2);
+    document.getElementById('s-unpaid').textContent='$'+parseFloat(st.totalUnpaid||0).toFixed(2);
+    document.getElementById('s-exp').textContent='$'+parseFloat(st.totalExpected||0).toFixed(2);
+    document.getElementById('s-clients').textContent=st.clientsThisMonth||0;
+    document.getElementById('s-hours').textContent=fmtH(parseFloat(st.hoursThisMonth||0));
+    document.getElementById('s-book').textContent=st.upcomingBookings||0;
+
+    const bt=document.getElementById('btable');
+    if(!st.clientBreakdown||!st.clientBreakdown.length){
+      bt.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
+    }else{
+      bt.innerHTML=st.clientBreakdown.map(c=>{
+        const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
+        const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
+        const rt=c.rate_type==='fixed'?'<span class="badge bg-b">Fixed</span>':'<span class="badge" style="background:#e8f0ff;color:var(--accent)">Hourly</span>';
+        let actionCell = '';
+        if(c.rate_type==='fixed' && c.fixed_record_id){
+          const isPaidFixed = c.fixed_record_status==='paid';
+          actionCell = isPaidFixed
+            ? `<button class="btn btn-o btn-sm" onclick="toggleFixed(${c.fixed_record_id},'unpaid')">Mark unpaid</button>`
+            : `<button class="btn btn-g btn-sm" onclick="toggleFixed(${c.fixed_record_id},'paid')">Mark paid ✓</button>`;
+        }
+        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>$${parseFloat(c.total).toFixed(2)}</strong></td><td style="color:var(--green)">$${parseFloat(c.paid).toFixed(2)}</td><td style="color:var(--amber)">$${parseFloat(c.unpaid).toFixed(2)}</td><td>${badge}</td><td>${actionCell}</td></tr>`;
+      }).join('');
+    }
+
+    const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
+    document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
+    document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
+    document.getElementById('acmonth').textContent=ml;
+    renderActiveClients(cl, st.clientBreakdown);
+
+    const savedTimer=JSON.parse(localStorage.getItem('qfa_timer_v2')||'null');
+    if(savedTimer){
+      if(savedTimer.clientId) document.getElementById('tc').value=savedTimer.clientId;
+      if(savedTimer.taskText) document.getElementById('tt').value=savedTimer.taskText;
+    }
+
+    const rt=document.getElementById('rtable');
+    if(!lg.length){
+      rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
+    }else{
+      // Group recent logs into collapsible monthly parent sections
+      const grouped = {};
+      lg.forEach(l => {
+        const dStr = l.date || l.createdAt || '';
+        const key = dStr.length >= 7 ? dStr.slice(0, 7) : 'Other';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(l);
+      });
+
+      const sortedKeys = Object.keys(grouped).sort().reverse();
+      let matrixHtml = '';
+
+      sortedKeys.forEach((monthKey, idx) => {
+        const monthLogs = grouped[monthKey];
+        let grpHours = 0, grpAmount = 0;
+
+        monthLogs.forEach(l => {
+          const h = parseFloat(l.hours || 0);
+          let amt = parseFloat(l.amount || 0);
+          grpHours += h;
+          grpAmount += amt;
+        });
+
+        let groupLabel = monthKey;
+        if (monthKey !== 'Other') {
+          const dObj = new Date(monthKey + '-02');
+          groupLabel = dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        const groupId = 'dash-grp-' + idx;
+
+        matrixHtml += `
+          <tr class="group-row" onclick="toggleDashboardGroup('${groupId}')">
+            <td colspan="7">
+              <span class="group-toggle" id="${groupId}-toggle">▶</span>
+              📅 ${groupLabel} &nbsp;<span style="font-size:0.75rem;font-weight:normal;color:var(--ink3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'} &nbsp;·&nbsp; ${fmtH(grpHours)} &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
+            </td>
+          </tr>`;
+
+        monthLogs.forEach(l => {
+          const ip=l.payment_status==='paid';
+          const badge=ip?'<span class="badge bg-g">✓ Paid</span>':'<span class="badge bg-a">Unpaid</span>';
+          const pb=ip?`<button class="btn btn-o btn-sm" onclick="pay(${l.id},'unpaid'); event.stopPropagation();">Undo</button>`:`<button class="btn btn-g btn-sm" onclick="pay(${l.id},'paid'); event.stopPropagation();">Mark paid</button>`;
+          const cl2=cl.find(c=>c.id===l.client_id)||{};
+
+          matrixHtml += `
+            <tr class="${groupId} child-row" style="display: none;">
+              <td><strong>${l.client_name}</strong></td>
+              <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
+              <td>${fmtH(parseFloat(l.hours))}</td>
+              <td>${parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—'}</td>
+              <td>${badge}</td>
+              <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
+              <td style="display:flex;gap:.3rem;flex-wrap:wrap" onclick="event.stopPropagation()">${pb}<button class="btn btn-o btn-sm" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${cl2.hourly_rate||0})">✏️</button></td>
+            </tr>`;
+        });
+      });
+
+      rt.innerHTML = matrixHtml;
+    }
+  }catch(e){console.error(e);}
+}
+
+function toggleDashboardGroup(groupId) {
+  const rows = document.querySelectorAll('.' + groupId);
+  const toggle = document.getElementById(groupId + '-toggle');
+  let isHidden = false;
+
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = '';
+      isHidden = false;
+    } else {
+      r.style.display = 'none';
+      isHidden = true;
+    }
+  });
+
+  if (toggle) toggle.textContent = isHidden ? '▶' : '▼';
+}
+
+async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
+
+function openEdit(id,date,hours,task,hr){
+  document.getElementById('eid').value=id;
+  document.getElementById('ehr').value=hr;
+  document.getElementById('edate').value=date.slice(0,10);
+  document.getElementById('ehours').value=hours;
+  document.getElementById('etask').value=task;
+  document.getElementById('es').textContent='';
+  document.getElementById('einfo').textContent=hr>0?`Hourly rate: $${hr}/hr`:'No rate set';
+  previewAmt();
+  show('modal-edit');
+}
+function previewAmt(){
+  const h=parseFloat(document.getElementById('ehours').value||0);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const p=document.getElementById('aprev');
+  if(h>0&&hr>0){p.textContent='💰 New amount: $'+(h*hr).toFixed(2)+' ('+fmtH(h)+' ×$'+hr+'/hr)';p.style.display='block';}
+  else p.style.display='none';
+}
+async function saveEdit(){
+  const s=document.getElementById('es');
+  const id=document.getElementById('eid').value;
+  const hours=parseFloat(document.getElementById('ehours').value);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const amount=hr>0?(hours*hr).toFixed(2):undefined;
+  try{
+    await api('/timelogs/'+id,{method:'PUT',body:JSON.stringify({hours,task_description:document.getElementById('etask').value,date:document.getElementById('edate').value,amount})});
+    s.className='fs ok';s.textContent='✓ Updated!';
+    setTimeout(()=>{hide('modal-edit');load();},700);
+  }catch(e){s.className='fs er';s.textContent=e.message;}
+}
+
+ /* ────────────────────────────────────────────────────────────────────────
+   LIVE TIMER (Synchronized with Backend & Client Portal)
+   ──────────────────────────────────────────────────────────────────────── */
+let tiv = null;
+let timerState = 'idle';
+let startTimestamp = null;
+let accumulatedMs = 0;
+let activeClientId = null;
+
+async function syncBackendTimerAction(action, payload = {}) {
+  try {
+    const res = await fetch(API + '/timer/' + action, {
+      method: 'POST',
+      headers: auth.hdrs(),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.warn(`Timer action ${action} failed:`, err.error);
+    }
+  } catch (e) {
+    console.error(`Timer network error on ${action}:`, e);
+  }
+}
+
+function tDisp(){
+  const secs = Math.floor(currentElapsedMs()/1000);
+  const h = Math.floor(secs/3600).toString().padStart(2,'0');
+  const m = Math.floor((secs%3600)/60).toString().padStart(2,'0');
+  const s = (secs%60).toString().padStart(2,'0');
+  const str = `${h}:${m}:${s}`;
+  document.getElementById('tdisp').textContent = str;
+  document.getElementById('float-timer-mini-time').textContent = str;
+}
+
+function currentElapsedMs(){
+  return timerState === 'running' && startTimestamp
+    ? accumulatedMs + (Date.now() - startTimestamp)
+    : accumulatedMs;
+}
+
+function tSetUI(state){
+  timerState = state;
+  const el = id => document.getElementById(id);
+  const disp = el('tdisp'), status = el('t-status');
+  
+  el('t-start').style.display = 'none';
+  el('t-pause').style.display = 'none';
+  el('t-resume').style.display = 'none';
+  el('t-stop').style.display = 'none';
+
+  const sel = el('tc');
+  const taskInput = el('tt');
+  sel.disabled = (state !== 'idle');
+  taskInput.disabled = false; 
+
+  if(state === 'idle'){
+    el('t-start').style.display = 'inline-flex';
+    disp.className = 'timer-disp idle';
+    status.textContent = 'Ready'; status.style.color = 'var(--ink3)';
+  } else if(state === 'running'){
+    el('t-pause').style.display = 'inline-flex';
+    el('t-stop').style.display = 'inline-flex';
+    disp.className = 'timer-disp running';
+    status.textContent = '● Running Live'; status.style.color = 'var(--green)';
+  } else if(state === 'paused'){
+    el('t-resume').style.display = 'inline-flex';
+    el('t-stop').style.display = 'inline-flex';
+    disp.className = 'timer-disp paused';
+    status.textContent = '⏸ Paused'; status.style.color = 'var(--amber)';
+  }
+}
+
+async function timerStart(){
+  // 1. If another timer is currently active, cancel it first to prevent multi-timer overlap
+  if(activeClientId && timerState !== 'idle') {
+    await syncBackendTimerAction('cancel', { client_id: activeClientId });
+  }
+
+  const cid = document.getElementById('tc').value;
+  const task = document.getElementById('tt').value.trim();
+  if(!cid){ alert('Please select a client first.'); return; }
+
+  activeClientId = cid;
+  accumulatedMs = 0;
+  startTimestamp = Date.now();
+  tSetUI('running');
+  
+  if(tiv) clearInterval(tiv);
+  tiv = setInterval(tDisp, 1000);
+  tDisp();
+
+  // Save clean state to localStorage
+  localStorage.setItem('qfa_timer_v2', JSON.stringify({ clientId: cid, taskText: task, startTime: startTimestamp, accumulated: 0, state: 'running' }));
+
+  await syncBackendTimerAction('start', { client_id: cid, description: task || 'Timed session' });
+}
+
+async function timerPause(){
+  if(timerState !== 'running') return;
+  accumulatedMs += Date.now() - startTimestamp;
+  startTimestamp = null;
+  clearInterval(tiv); tiv = null;
+  tSetUI('paused');
+
+  if(activeClientId) {
+    await syncBackendTimerAction('pause', { client_id: activeClientId });
+  }
+}
+
+async function timerResume(){
+  if(timerState !== 'paused') return;
+  startTimestamp = Date.now();
+  tSetUI('running');
+  
+  if(tiv) clearInterval(tiv);
+  tiv = setInterval(tDisp, 1000);
+  tDisp();
+
+  if(activeClientId) {
+    await syncBackendTimerAction('resume', { client_id: activeClientId });
+  }
+}
+
+async function timerStop(){
+  if(timerState === 'idle') return;
+  const cid = activeClientId || document.getElementById('tc').value;
+  const task = document.getElementById('tt').value.trim();
+  if(!cid){ alert('No active client selected.'); return; }
+
+  const wasRunning = (timerState === 'running');
+  if(tiv){ clearInterval(tiv); tiv = null; }
+
+  const elapsedMs = wasRunning ? accumulatedMs + (Date.now() - startTimestamp) : accumulatedMs;
+  const elapsedSec = Math.max(1, Math.round(elapsedMs / 1000));
+  
+  let hours = parseFloat((elapsedSec / 3600).toFixed(4));
+  if (hours <= 0 && elapsedSec > 0) hours = 0.01;
+
+  if(!confirm(`Stop & save session (${fmtH ? fmtH(hours) : hours + ' hrs'}) to time logs?`)){
+    if(wasRunning){ accumulatedMs = elapsedMs; startTimestamp = null; tiv = setInterval(tDisp, 1000); }
+    tSetUI(wasRunning ? 'running' : 'paused');
+    return;
+  }
+
+  try {
+    const res = await fetch(API + '/timer/stop', {
+      method: 'POST',
+      headers: auth.hdrs(),
+      body: JSON.stringify({ 
+        client_id: cid, 
+        elapsed_sec: elapsedSec,
+        description: task || undefined
+      })
+    });
+    if(!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error || 'Failed to stop timer');
+    }
+    const data = await res.json();
+    alert(`✓ Successfully saved ${data.hours} hours to database!`);
+    timerReset();
+    load();
+  } catch(e) {
+    alert('Failed to save: ' + e.message);
+    if(wasRunning){ accumulatedMs = elapsedMs; startTimestamp = null; tiv = setInterval(tDisp, 1000); }
+    tSetUI('paused');
+  }
+}
+
+async function timerReset(){
+  if(tiv){ clearInterval(tiv); tiv = null; }
+  
+  const cid = activeClientId || document.getElementById('tc').value;
+  if(cid){
+    try {
+      await fetch(API + '/timer/cancel', {
+        method: 'POST',
+        headers: auth.hdrs(),
+        body: JSON.stringify({ client_id: cid })
+      });
+    } catch(e) {}
+  }
+
+  // Fully wipe local state and localStorage so reload doesn't resurrect old timers
+  accumulatedMs = 0; 
+  startTimestamp = null; 
+  activeClientId = null;
+  localStorage.removeItem('qfa_timer_v2');
+  tSetUI('idle');
+  tDisp();
+  document.getElementById('tt').value = '';
+
+  // Clear any leftover active timer records on backend
+  try {
+    await fetch(API + '/timer/cancel', { method: 'POST', headers: auth.hdrs(), body: JSON.stringify({}) });
+  } catch(e) {}
+}
+
+async function initFloatingTimer(){
+  try {
+    const res = await fetch(API + '/timer/status', { headers: auth.hdrs() });
+    if(res.ok) {
+      const timers = await res.json();
+      // Only restore if there is a valid, non-cancelled active timer
+      if(timers && timers.length > 0) {
+        const t = timers[0];
+        if (t.is_cancelled) {
+          localStorage.removeItem('qfa_timer_v2');
+          return;
+        }
+        activeClientId = t.client_id;
+        document.getElementById('tc').value = t.client_id;
+        if(t.description) document.getElementById('tt').value = t.description;
+        
+        accumulatedMs = (t.elapsed_sec || 0) * 1000;
+        if(t.is_paused) {
+          tSetUI('paused');
+        } else {
+          startTimestamp = Date.now();
+          tSetUI('running');
+          if(tiv) clearInterval(tiv);
+          tiv = setInterval(tDisp, 1000);
+        }
+        tDisp();
+      } else {
+        localStorage.removeItem('qfa_timer_v2');
+      }
+    }
+  } catch(_) {}
+
+  initTimerDrag();
+  initTimerCollapse();
+}
+
+function initTimerDrag(){
+  const panel = document.getElementById('float-timer');
+  const handle = document.getElementById('float-timer-handle');
+  const savedPos = JSON.parse(localStorage.getItem('qfa_timer_pos') || 'null');
+  if(savedPos){
+    panel.style.left = savedPos.left + 'px';
+    panel.style.top = savedPos.top + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+  }
+
+  let dragging = false, offsetX = 0, offsetY = 0;
+
+  function startDrag(cx, cy){
+    const rect = panel.getBoundingClientRect();
+    dragging = true;
+    offsetX = cx - rect.left;
+    offsetY = cy - rect.top;
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+    panel.classList.add('dragging');
+  }
+  function moveDrag(cx, cy){
+    if(!dragging) return;
+    let x = cx - offsetX, y = cy - offsetY;
+    const maxX = window.innerWidth - panel.offsetWidth - 8;
+    const maxY = window.innerHeight - panel.offsetHeight - 8;
+    x = Math.max(8, Math.min(x, maxX));
+    y = Math.max(8, Math.min(y, maxY));
+    panel.style.left = x + 'px';
+    panel.style.top = y + 'px';
+  }
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    panel.classList.remove('dragging');
+    const rect = panel.getBoundingClientRect();
+    localStorage.setItem('qfa_timer_pos', JSON.stringify({ left: rect.left, top: rect.top }));
+  }
+
+  handle.addEventListener('mousedown', e => { startDrag(e.clientX, e.clientY); e.preventDefault(); });
+  window.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
+  window.addEventListener('mouseup', endDrag);
+
+  handle.addEventListener('touchstart', e => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  window.addEventListener('touchmove', e => { if(dragging){ const t = e.touches[0]; moveDrag(t.clientX, t.clientY); } }, {passive:true});
+  window.addEventListener('touchend', endDrag);
+}
+
+function initTimerCollapse(){
+  const collapsed = localStorage.getItem('qfa_timer_collapsed') === '1';
+  if(collapsed){
+    document.getElementById('float-timer').classList.add('collapsed');
+    document.getElementById('float-timer-min-btn').textContent = '+';
+  }
+}
+function toggleMinimize(){
+  const panel = document.getElementById('float-timer');
+  const collapsed = panel.classList.toggle('collapsed');
+  document.getElementById('float-timer-min-btn').textContent = collapsed ? '+' : '–';
+  localStorage.setItem('qfa_timer_collapsed', collapsed ? '1' : '0');
+}
+
+async function submitLog(e){
+  e.preventDefault();
+  const st=document.getElementById('ls');
+  try{
+    await api('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
+    st.className='fs ok';st.textContent='✓ Log saved!';
+    e.target.reset();document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+    load();setTimeout(()=>st.textContent='',3000);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+
+async function addClient(e){
+  e.preventDefault();
+  const st=document.getElementById('cs');
+  try{
+    await api('/clients',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
+    st.className='fs ok';st.textContent='✓ Client created!';
+    e.target.reset();setTimeout(()=>{hide('modal-client');st.textContent='';},1200);load();
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+</script>
+<!-- Put this just before </body> -->
+<script src="../chatbot-widget.js"></script>
+</body>
+</html>

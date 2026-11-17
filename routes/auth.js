@@ -1,0 +1,200 @@
+const router  = require('express').Router();
+const bcrypt  = require('bcryptjs');
+const jwt     = require('jsonwebtoken');
+const pool    = require('../db/pool');
+const { requireAuth } = require('../middleware/auth');
+const crypto  = require('crypto');
+
+function issueToken(user) {
+  const sessionId = crypto.randomUUID();
+  const token = jwt.sign(
+    { id: user.id, name: user.name, email: user.email, role: user.role, sid: sessionId },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+  return { token, sessionId };
+}
+
+async function handleSignup(req, res, next) {
+  try {
+    const { name, email, phone, password, role } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    const { rows: existingRows } = await pool.query(
+      'SELECT id FROM users WHERE email = $1', 
+      [cleanEmail]
+    );
+
+    if (existingRows.length > 0) {
+      return res.status(409).json({ error: 'This email is already registered' });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const userRole = role || 'freelancer';
+
+    const { rows: newRows } = await pool.query(
+      `INSERT INTO users (name, email, phone, password_hash, role, is_online, last_seen_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, TRUE, NOW(), NOW(), NOW())
+       RETURNING id, name, email, role, company`,
+      [name, cleanEmail, phone || null, password_hash, userRole]
+    );
+
+    const newUser = newRows[0];
+    const { token, sessionId } = issueToken(newUser);
+    await pool.query('UPDATE users SET session_id = $1 WHERE id = $2', [sessionId, newUser.id]);
+    
+    return res.status(201).json({ token, user: newUser });
+  } catch (e) {
+    next(e);
+  }
+}
+
+router.post('/signup', handleSignup);
+router.post('/signup/initiate', handleSignup);
+
+// POST /api/auth/login
+router.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    const { rows } = await pool.query(
+      'SELECT id, name, email, password_hash, role, company FROM users WHERE email = $1',
+      [email.toLowerCase().trim()]
+    );
+
+    const user = rows[0];
+    if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: 'Invalid email or password' });
+
+    const { token, sessionId } = issueToken(user);
+    
+    // Set user online upon successful login
+    await pool.query(
+      'UPDATE users SET session_id = $1, is_online = TRUE, last_seen_at = NOW() WHERE id = $2', 
+      [sessionId, user.id]
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, company: user.company }
+    });
+  } catch (e) { 
+    next(e); 
+  }
+});
+
+// POST /api/auth/logout
+// POST /api/auth/logout
+router.post('/logout', async (req, res, next) => {
+  try {
+    let userId = req.user ? req.user.id : null;
+
+    // Fallback: if token wasn't parsed by middleware, try decoding it from Authorization header
+    if (!userId && req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.id;
+      } catch (err) {}
+    }
+
+    if (userId) {
+      await pool.query(
+        'UPDATE users SET is_online = FALSE, last_seen_at = NOW() WHERE id = $1',
+        [userId]
+      );
+    } else {
+      // Ultimate fallback: set all freelancers offline if session is untraceable
+      await pool.query(
+        `UPDATE users SET is_online = FALSE, last_seen_at = NOW() WHERE role = 'freelancer'`
+      );
+    }
+
+    res.json({ message: 'Logged out successfully' });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// GET /api/auth/me
+router.get('/me', requireAuth, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, name, email, role, company FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    res.json(rows[0] || {});
+  } catch (e) { 
+    next(e); 
+  }
+});
+
+// POST /api/auth/change-password (Freelancer dashboard endpoint)
+router.post('/change-password', requireAuth, async (req, res, next) => {
+  try {
+    const currentPassword = req.body.current || req.body.currentPassword;
+    const { newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    const { rows } = await pool.query('SELECT password_hash FROM users WHERE id=$1', [req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    const ok = await bcrypt.compare(currentPassword, rows[0].password_hash);
+    if (!ok) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters and include a number' });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2', [hash, req.user.id]);
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (e) { 
+    next(e); 
+  }
+});
+
+// POST /api/auth/client/change-password (Client portal endpoint)
+router.post('/client/change-password', requireAuth, async (req, res, next) => {
+  try {
+    const currentPassword = req.body.current || req.body.currentPassword;
+    const { newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    const { rows } = await pool.query('SELECT password_hash FROM users WHERE id=$1', [req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+
+    const ok = await bcrypt.compare(currentPassword, rows[0].password_hash);
+    if (!ok) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters and include a number' });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2', [hash, req.user.id]);
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (e) { 
+    next(e); 
+  }
+});
+
+module.exports = router;

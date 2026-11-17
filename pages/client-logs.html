@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Work Logs — QFA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/chatbot-widget.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root{
+      --navy-950:#081431; --navy-900:#0d2353; --navy-700:#1a3a7a; --accent:#2f6fed;
+      --gold-600:#a8781f; --gold-500:#c9952a; --gold-300:#f0c34a;
+      --ink:#0d2353; --ink-2:#48557a; --ink-3:#8592b3;
+      --bg:#eef1f7; --bg2:#e4e9f4; --panel:#ffffff;
+      --green:#146c43; --gbg:#dcf3e6; --amber:#92400e; --abg:#fdecc8; --red:#b91c1c; --rbg:#fde3e3;
+      --line: rgba(13,35,83,.10);
+      --serif:'Playfair Display',serif; --sans:'Outfit',sans-serif; --mono:'IBM Plex Mono',monospace;
+      --radius:12px; --radius-lg:16px;
+      --shadow:0 3px 18px rgba(13,35,83,.07);
+      --table-hover:var(--bg);
+    }
+    [data-theme="dark"]{
+      --navy-950:#05070d; --navy-900:#101c38; --navy-700:#1c2f57; --accent:#5b8dff;
+      --gold-600:#c9952a; --gold-500:#e0ac35; --gold-300:#f5c842;
+      --ink:#eef1f8; --ink-2:#aab6d6; --ink-3:#6d7ba3;
+      --bg:#080c17; --bg2:#111a2e; --panel:#0e1526;
+      --green:#4fd394; --gbg:rgba(20,108,67,.32); --amber:#f2b84a; --abg:rgba(146,64,14,.32); --red:#ff8080; --rbg:rgba(185,28,28,.30);
+      --line: rgba(255,255,255,.09);
+      --shadow:0 3px 22px rgba(0,0,0,.45);
+      --table-hover:#141f38;
+    }
+
+    html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);transition:background .3s ease,color .3s ease;}
+    .mono{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+    @media (prefers-reduced-motion: reduce){ *{animation-duration:.01ms !important;transition-duration:.01ms !important;} html{scroll-behavior:auto} }
+
+    .dashboard { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 232px !important; background: var(--navy-950) !important;
+      position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important;
+      display: flex !important; flex-direction: column !important;
+      z-index: 150 !important; transform: translateX(0);
+      transition: transform 0.3s ease-in-out, background .3s ease !important;
+      border-right: 1px solid rgba(255,255,255,.05);
+    }
+    .sidebar-brand {
+      padding: 1.2rem 1.4rem !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+    }
+    .sidebar-nav { flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 0.15rem !important; }
+    .sidebar-nav a {
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      padding: 0.75rem 1.4rem !important; font-size: 0.85rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.6) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 3px solid transparent !important;
+    }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.05) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(201,149,42,0.12) !important; border-right-color: var(--gold-500) !important; }
+    .sidebar-user { padding: 1.1rem 1.4rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; }
+
+    .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--navy-950); padding: 0.75rem 1rem; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(13,35,83,0.2); }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 30px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.83rem; font-weight: 700; }
+    .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
+
+    .main-content { margin-left: 232px; flex: 1; padding: 1.2rem 1.8rem 2rem; position: relative; max-width: 1180px; }
+
+    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.95rem; transition:all .2s; flex-shrink:0; }
+    .theme-toggle:hover{ background:rgba(255,255,255,.22); }
+
+    /* Compact Hero Styling */
+    .hero{ background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius); padding: 0.85rem 1.2rem; color: white; margin-bottom: 0.9rem; box-shadow: 0 4px 16px rgba(13,35,83,0.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+    .eyebrow{ font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
+    .hero h1{ margin: 0.1rem 0 0; font-family: var(--serif); font-style:italic; font-size: 1.25rem; font-weight: 700; line-height: 1.15; }
+    .hero-actions{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+    .ledger-strip{ display:flex; flex-wrap:wrap; background:var(--panel); border-radius:var(--radius-lg); box-shadow:var(--shadow); border:1px solid var(--line); overflow:hidden; margin-bottom:1rem; }
+    .lstat{ flex:1 1 20%; min-width:120px; padding:.7rem 1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:.2rem; }
+    .lstat:last-child{ border-right:none; }
+    .lstat-value{ font-size:1.15rem; font-weight:600; color:var(--ink); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lstat-label{ font-size:.6rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); font-weight:600; }
+    @media (max-width: 860px){
+      .ledger-strip{ border-bottom:none; }
+      .lstat{ flex:1 1 50%; border-right:1px solid var(--line); }
+      .lstat:nth-child(2n){ border-right:none; }
+      .lstat:last-child{ border-bottom:none; }
+    }
+
+    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; margin-bottom:1.4rem; padding:1.1rem 1.2rem 1.3rem; }
+    .panel-heading{ font-size:.68rem; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:.7rem; display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
+
+    .subcard{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.75rem .9rem; margin-bottom:.9rem; }
+    table{width:100%;border-collapse:collapse;font-size:.85rem}
+    th{padding:.65rem .85rem;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);border-bottom:2px solid var(--bg2);font-weight:700;text-align:left;white-space:nowrap}
+    td{padding:.75rem .85rem;border-bottom:1px solid var(--bg2);color:var(--ink-2);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--table-hover)}
+    .row-unpaid td{background:rgba(245,158,11,.06)}
+
+    /* Collapsible Group Rows Matrix Styling */
+    .group-row td { background: var(--bg2) !important; cursor: pointer; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--line); }
+    .group-row:hover td { background: var(--table-hover) !important; }
+    .group-toggle { display: inline-block; width: 18px; font-size: 0.8rem; text-align: center; margin-right: 0.35rem; transition: transform 0.2s; }
+    .child-row td { padding-left: 1.6rem; }
+    
+    .badge{display:inline-block;padding:.2rem .65rem;border-radius:100px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+    .bg-g{background:var(--gbg);color:var(--green)}
+    .bg-a{background:var(--abg);color:var(--amber)}
+    .badge-stamp{ display:inline-flex; align-items:center; gap:.28rem; padding:.22rem .6rem; border:1.5px dashed var(--green); border-radius:4px; color:var(--green); font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.11em; transform:rotate(-3deg); background:rgba(20,108,67,.05); }
+
+    .fg{display:flex;flex-direction:column;gap:.35rem}
+    .fg label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+    select{width:100%;padding:.5rem .75rem;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);font-family:var(--sans);font-size:.85rem;color:var(--ink);transition:border-color .2s}
+    select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
+
+    .tab-btn{padding:.4rem .95rem;border-radius:6px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-family:var(--sans);font-size:.8rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+    .tab-btn.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900)}
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%) !important; }
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
+      .main-content { margin-left: 0 !important; padding: 0.8rem !important; padding-top: 68px !important; }
+      .mobile-header { display: flex !important; }
+      .hero h1{ font-size:1.15rem; }
+    }
+  
+    /* Consistent mobile client workspace layout */
+    @media (max-width: 768px) {
+      html, body { width:100%; max-width:100%; overflow-x:hidden; }
+      .dashboard { display:block !important; width:100%; min-height:100dvh; }
+      .mobile-header {
+        position:fixed !important; top:0; left:0; right:0; z-index:180 !important;
+        min-height:60px; padding:.65rem 1rem !important; display:flex !important;
+        align-items:center; justify-content:space-between; gap:.75rem;
+        background:var(--navy-950); box-shadow:0 3px 14px rgba(0,0,0,.14);
+      }
+      .mobile-logo { min-width:0; display:flex; align-items:center; gap:.55rem; }
+      .mobile-logo img { width:34px; height:34px; object-fit:contain; flex-shrink:0; }
+      .mobile-logo span { font-size:.92rem; font-weight:700; white-space:nowrap; }
+      .theme-toggle, .hamburger-btn { min-width:40px; min-height:40px; flex-shrink:0; }
+      .sidebar { width:min(280px, 84vw) !important; max-width:84vw; z-index:220 !important; }
+      .sidebar-overlay { z-index:210 !important; }
+      .main-content {
+        width:100% !important; max-width:100% !important; min-width:0 !important;
+        margin:0 !important; padding:1rem !important; padding-top:76px !important;
+        overflow-x:hidden;
+      }
+      .hero { width:100%; padding:1.15rem !important; margin-bottom:1rem; border-radius:14px; }
+      .hero h1 { font-size:clamp(1.25rem, 5vw, 1.65rem) !important; line-height:1.2; }
+      .hero-actions { display:flex; flex-wrap:wrap; gap:.6rem; }
+      .hero-actions .btn { flex:1 1 140px; justify-content:center; min-height:42px; }
+      .view-panel, .panel, .card, .subcard { width:100%; max-width:100%; min-width:0; }
+      .panel-heading { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; }
+      .table-wrap, .table-responsive { width:100%; max-width:100%; overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+      .booking-form-grid, .form-grid { grid-template-columns:1fr !important; }
+      .period-grid { grid-template-columns:1fr !important; }
+      input, select, textarea, button { max-width:100%; }
+      .btn { min-height:42px; }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding:.8rem !important; padding-top:72px !important; }
+      .hero { padding:1rem !important; }
+      .hero-actions { flex-direction:column; }
+      .hero-actions .btn { width:100%; }
+      .panel-heading { align-items:flex-start; }
+      .panel-heading h2, .panel-heading h3 { font-size:1rem; }
+    }
+
+    </style>
+</head>
+<body>
+
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA Portal</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:.6rem">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <button class="hamburger-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div style="width:36px;height:36px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div style="line-height:1.2">
+        <div style="color:white;font-size:0.78rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:var(--gold-300);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="client-portal.html">📊 My Overview</a>
+      <a href="client-logs.html" class="active" id="sidebar-logs-link">⏱ My Work Logs</a>
+      <a href="client-projects.html">📁 My Projects</a>
+      <a href="client-notes.html">📌 Guidelines & Notes</a>
+      <a href="client-schedule.html">📅 Book a Session</a>
+      
+      <a href="../index.html" target="_blank">🌐 Portfolio</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name" style="color:white; display:block;">Loading…</strong>
+      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.78rem;color:rgba(255,255,255,0.4)"></span>
+      <a href="#" onclick="logout()" style="color:var(--gold-300);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- Compact Hero Header -->
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Client Workspace</span>
+        <h1 id="page-main-title">Work Logs</h1>
+      </div>
+      <div class="hero-actions">
+        <span id="engagement-badge-container">
+          <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
+        </span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+      </div>
+    </div>
+
+    <!-- Ledger summary strip -->
+    <div class="ledger-strip">
+      <div class="lstat"><span class="lstat-value mono" id="s-paid" style="color:var(--green)">$0.00</span><span class="lstat-label" id="lbl-paid">Total paid</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-unpaid" style="color:var(--amber)">$0.00</span><span class="lstat-label" id="lbl-unpaid">Outstanding</span></div>
+      <div class="lstat" id="stat-hours-col"><span class="lstat-value mono" id="s-hours" style="color:var(--accent)">0.0h</span><span class="lstat-label" id="lbl-hours">Total hours</span></div>
+      <div class="lstat"><span class="lstat-value mono" id="s-entries">0</span><span class="lstat-label" id="lbl-entries">Log entries</span></div>
+    </div>
+
+    <div class="ledger-panel-wrap">
+      <div class="subcard">
+        <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end;justify-content:space-between">
+          <div style="display:flex;gap:0.55rem;flex-wrap:wrap">
+            <button id="tab-all"    class="tab-btn active" onclick="switchTab('all')">All</button>
+            <button id="tab-unpaid" class="tab-btn" onclick="switchTab('unpaid')">⚠ Unpaid</button>
+            <button id="tab-paid"   class="tab-btn" onclick="switchTab('paid')">✓ Paid</button>
+          </div>
+          <div class="fg" style="min-width:200px">
+            <label for="month-dropdown">Statement Period</label>
+            <select id="month-dropdown" onchange="applyFilters()">
+              <option value="">Show All History</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-heading" id="table-title" style="margin-bottom:.6rem">Work Logs</div>
+      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px">
+        <table>
+          <thead>
+            <tr id="table-header-row">
+              <th>Date</th>
+              <th>Hours</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Task Description</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink-3)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="table-footer" class="mono" style="padding:.9rem .2rem 0;font-size:0.83rem;color:var(--ink-2)"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+function initTheme(){
+  const saved = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeButtons(saved);
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+  updateThemeButtons(next);
+}
+function updateThemeButtons(theme){
+  const icon = theme==='dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(b=>b.textContent=icon);
+}
+initTheme();
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+
+let clientName = '';
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  const u = auth.user();
+  if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
+  clientName = u ? u.name : '';
+  document.getElementById('user-name').textContent = clientName;
+  if (u && u.company) document.getElementById('user-company').textContent = u.company;
+})();
+
+function logout() { auth.clear(); window.location.href = '../index.html'; }
+
+let allLogs = [];
+let clientStats = null;
+let isFixedClient = false;
+let currentTab = 'all';
+
+async function loadLogs() {
+  const badgeContainer = document.getElementById('engagement-badge-container');
+
+  try {
+    const [stats, logs] = await Promise.all([
+      apiFetch('/client/stats'),
+      apiFetch('/client/timelogs?limit=500')
+    ]);
+
+    clientStats = stats || {};
+    isFixedClient = clientStats.rateType === 'fixed';
+    const contractStatus = clientStats.contractStatus || 'active';
+    allLogs = logs || [];
+
+    const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+
+    if (isFixedClient) {
+      if (contractStatus === 'paused') {
+        badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
+      } else if (contractStatus === 'terminated') {
+        badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(185,28,28,0.15); border-color:rgba(185,28,28,0.32); color:var(--red);">🛑 Contract Terminated</span>`;
+      } else {
+        badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(240,195,74,0.15); border-color:rgba(240,195,74,0.32); color:var(--gold-300);">📦 Fixed-Rate Contract</span>`;
+      }
+
+      document.getElementById('sidebar-logs-link').textContent = '📋 My Milestones';
+      document.getElementById('page-main-title').textContent = titlePrefix + 'Project Milestones';
+      document.getElementById('table-title').textContent = 'All Milestone Deliverables';
+
+      document.getElementById('table-header-row').innerHTML = `
+        <th>Date</th>
+        <th>Milestone / Phase</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Description</th>
+      `;
+
+      document.getElementById('stat-hours-col').style.display = 'none';
+    } else {
+      const rate = parseFloat(clientStats.hourlyRate || 0);
+      document.getElementById('page-main-title').textContent = titlePrefix + 'Work Logs';
+
+      if (contractStatus === 'paused') {
+        badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.32); color:var(--amber);">⏸ Contract Paused</span>`;
+      } else if (contractStatus === 'terminated') {
+        badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(185,28,28,0.15); border-color:rgba(185,28,28,0.32); color:var(--red);">🛑 Contract Terminated</span>`;
+      } else {
+        badgeContainer.innerHTML = `<span class="engagement-pill" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.32); color:#4ade80;"><span style="width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block;"></span> Hourly Tier ($${rate.toFixed(2)}/hr)</span>`;
+      }
+    }
+
+    buildDropdownOptions();
+    applyFilters();
+  } catch(e) {
+    console.error(e);
+    badgeContainer.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">⚠️ Data failed to load.</span>`;
+    document.getElementById('logs-table').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--red)">Failed to load log items.</td></tr>`;
+  }
+}
+
+function buildDropdownOptions() {
+  const dropdown = document.getElementById('month-dropdown');
+  const monthsSet = new Set();
+
+  allLogs.forEach(l => {
+    const dateStr = l.date || l.createdAt;
+    if (dateStr && dateStr.length >= 7) monthsSet.add(dateStr.slice(0, 7));
+  });
+
+  if (isFixedClient) {
+    if (clientStats.createdAt) monthsSet.add(clientStats.createdAt.slice(0, 7));
+    if (clientStats.updatedAt) monthsSet.add(clientStats.updatedAt.slice(0, 7));
+  }
+
+  const sortedMonths = Array.from(monthsSet).sort().reverse();
+  sortedMonths.forEach(m => {
+    const dateObj = new Date(m + '-02');
+    const label = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const option = document.createElement('option');
+    option.value = m;
+    option.textContent = label;
+    dropdown.appendChild(option);
+  });
+
+  dropdown.value = '';
+}
+
+function applyFilters() {
+  const dropdown = document.getElementById('month-dropdown');
+  const selectedMonth = dropdown.value;
+
+  let targetLogs = allLogs;
+  let monthPaid = 0, monthUnpaid = 0, monthHours = 0;
+
+  if (selectedMonth) {
+    const localizedMonth = dropdown.options[dropdown.selectedIndex].text;
+
+    targetLogs = allLogs.filter(l => {
+      const dStr = l.date || l.createdAt || '';
+      return dStr.startsWith(selectedMonth);
+    });
+
+    document.getElementById('lbl-paid').textContent = 'Paid (' + localizedMonth + ')';
+    document.getElementById('lbl-unpaid').textContent = 'Outstanding (' + localizedMonth + ')';
+    if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Hours (' + localizedMonth + ')';
+    document.getElementById('lbl-entries').textContent = (isFixedClient ? 'Milestones (' : 'Entries (') + localizedMonth + ')';
+
+    targetLogs.forEach(l => {
+      const amt = parseFloat(l.amount || 0);
+      const hrs = parseFloat(l.hours || 0);
+      monthHours += hrs;
+      if (l.payment_status === 'paid') monthPaid += amt; else monthUnpaid += amt;
+    });
+  } else {
+    document.getElementById('lbl-paid').textContent = 'Total paid';
+    document.getElementById('lbl-unpaid').textContent = 'Outstanding';
+    if (!isFixedClient) document.getElementById('lbl-hours').textContent = 'Total hours';
+    document.getElementById('lbl-entries').textContent = isFixedClient ? 'Total milestones' : 'Log entries';
+
+    if (isFixedClient) {
+      monthPaid = parseFloat(clientStats.totalPaid || 0);
+      monthUnpaid = parseFloat(clientStats.totalUnpaid || 0);
+    } else {
+      allLogs.forEach(l => {
+        const amt = parseFloat(l.amount || 0);
+        const hrs = parseFloat(l.hours || 0);
+        monthHours += hrs;
+        if (l.payment_status === 'paid') monthPaid += amt; else monthUnpaid += amt;
+      });
+    }
+  }
+
+  document.getElementById('s-paid').textContent = '$' + monthPaid.toFixed(2);
+  document.getElementById('s-unpaid').textContent = '$' + monthUnpaid.toFixed(2);
+  if (!isFixedClient) document.getElementById('s-hours').textContent = monthHours.toFixed(1) + 'h';
+  
+  let entryCount = targetLogs.length;
+  if (isFixedClient && entryCount === 0) {
+    entryCount = (monthPaid > 0 ? 1 : 0) + (monthUnpaid > 0 ? 1 : 0);
+  }
+  document.getElementById('s-entries').textContent = entryCount;
+
+  const filteredByTab = currentTab === 'all' ? targetLogs : targetLogs.filter(l => l.payment_status === currentTab);
+  renderLogsMatrix(filteredByTab);
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['all','unpaid','paid'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+
+  const titles = isFixedClient ?
+    { all: 'All Milestone Deliverables', unpaid: '⚠ Unpaid Milestones', paid: '✓ Paid Milestones' } :
+    { all: 'Work Logs', unpaid: '⚠ Unpaid Logs', paid: '✓ Paid Logs' };
+
+  document.getElementById('table-title').textContent = titles[tab];
+  applyFilters();
+}
+
+function renderLogsMatrix(logs) {
+  const tbody  = document.getElementById('logs-table');
+  const footer = document.getElementById('table-footer');
+  const isFiltered = !!document.getElementById('month-dropdown').value;
+
+  if (!logs.length) {
+    if (isFixedClient && !isFiltered) {
+      const unpaidAmt = parseFloat(clientStats.totalUnpaid || 0);
+      const paidAmt   = parseFloat(clientStats.totalPaid || 0);
+      const dateVal   = clientStats.createdAt ? new Date(clientStats.createdAt).toLocaleDateString() : 'Current Period';
+      let rowsHtml = '';
+      let activeCount = 0;
+      let totalVal = 0;
+
+      if ((currentTab === 'all' || currentTab === 'paid') && paidAmt > 0) {
+        rowsHtml += `
+          <tr>
+            <td>${dateVal}</td>
+            <td><strong>Fixed Price Contract (Settled Portion)</strong></td>
+            <td class="mono"><strong>$${paidAmt.toFixed(2)}</strong></td>
+            <td><span class="badge-stamp">✓ Settled</span></td>
+            <td>Completed milestone deliverables and settled payments.</td>
+          </tr>`;
+        activeCount++;
+        totalVal += paidAmt;
+      }
+
+      if ((currentTab === 'all' || currentTab === 'unpaid') && unpaidAmt > 0) {
+        rowsHtml += `
+          <tr class="row-unpaid">
+            <td>${dateVal}</td>
+            <td><strong>Fixed Price Contract (Outstanding Balance)</strong></td>
+            <td class="mono"><strong>$${unpaidAmt.toFixed(2)}</strong></td>
+            <td><span class="badge bg-a">⚠ Unpaid</span></td>
+            <td>Pending contract balance awaiting payment.</td>
+          </tr>`;
+        activeCount++;
+        totalVal += unpaidAmt;
+      }
+
+      if (rowsHtml !== '') {
+        tbody.innerHTML = rowsHtml;
+        footer.innerHTML = `Showing <strong>${activeCount}</strong> milestone items &nbsp;·&nbsp; <strong>$${totalVal.toFixed(2)}</strong> total value`;
+        return;
+      }
+    }
+
+    let msg = 'No records found matching criteria.';
+    if (currentTab === 'unpaid') msg = 'No unpaid logs in this range — all settled! ✓';
+    else if (currentTab === 'paid') msg = 'No paid logs in this range.';
+    else if (isFiltered) msg = 'No work logs recorded during this statement period.';
+
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink-3)">${msg}</td></tr>`;
+    footer.textContent = '';
+    return;
+  }
+
+  // Group logs into monthly parent sections
+  const grouped = {};
+  logs.forEach(l => {
+    const dStr = l.date || l.createdAt || '';
+    const key = dStr.length >= 7 ? dStr.slice(0, 7) : 'Other';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(l);
+  });
+
+  const sortedKeys = Object.keys(grouped).sort().reverse();
+  let matrixHtml = '';
+  let sumHours = 0, sumAmount = 0;
+
+  sortedKeys.forEach((monthKey, idx) => {
+    const monthLogs = grouped[monthKey];
+    let grpHours = 0, grpAmount = 0;
+
+    monthLogs.forEach(l => {
+      grpHours += parseFloat(l.hours || 0);
+      grpAmount += parseFloat(l.amount || 0);
+    });
+
+    sumHours += grpHours;
+    sumAmount += grpAmount;
+
+    let groupLabel = monthKey;
+    if (monthKey !== 'Other') {
+      const dObj = new Date(monthKey + '-02');
+      groupLabel = dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+
+    const groupId = 'm-grp-' + idx;
+    const hoursSummary = !isFixedClient ? ` &nbsp;·&nbsp; ${grpHours.toFixed(1)}h` : '';
+
+    // Parent Matrix Header Row (Default Collapsed: toggle shows right arrow '▶' and child rows have display:none)
+    matrixHtml += `
+      <tr class="group-row" onclick="toggleGroup('${groupId}')">
+        <td colspan="5">
+          <span class="group-toggle" id="${groupId}-toggle">▶</span>
+          📅 ${groupLabel} &nbsp;<span style="font-size:0.78rem;font-weight:normal;color:var(--ink-3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'}${hoursSummary} &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
+        </td>
+      </tr>`;
+
+    // Child Rows (Default style="display:none" to keep them collapsed initially)
+    monthLogs.forEach(l => {
+      const isPaid  = l.payment_status === 'paid';
+      const amount  = parseFloat(l.amount || 0);
+      const hrs     = parseFloat(l.hours || 0);
+      const badge = isPaid ? '<span class="badge-stamp">✓ Settled</span>' : '<span class="badge bg-a">⚠ Unpaid</span>';
+      const dateStr = l.date || l.createdAt;
+      const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString() : '—';
+      const desc = l.task_description || l.title || l.description || 'Milestone deliverable item';
+      const rowClass = !isPaid ? 'row-unpaid' : '';
+
+      if (isFixedClient) {
+        matrixHtml += `
+          <tr class="${groupId} child-row ${rowClass}" style="display: none;">
+            <td>${formattedDate}</td>
+            <td><strong>${l.title || 'Milestone Phase'}</strong></td>
+            <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
+            <td>${badge}</td>
+            <td>${desc}</td>
+          </tr>`;
+      } else {
+        matrixHtml += `
+          <tr class="${groupId} child-row ${rowClass}" style="display: none;">
+            <td>${formattedDate}</td>
+            <td class="mono"><strong>${hrs}h</strong></td>
+            <td class="mono">${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
+            <td>${badge}</td>
+            <td>${desc}</td>
+          </tr>`;
+      }
+    });
+  });
+
+  tbody.innerHTML = matrixHtml;
+
+  if (isFixedClient) {
+    footer.innerHTML = `Showing <strong>${logs.length}</strong> milestones &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong> total value`;
+  } else {
+    footer.innerHTML = `Showing <strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> total &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong> total`;
+  }
+}
+
+function toggleGroup(groupId) {
+  const rows = document.querySelectorAll('.' + groupId);
+  const toggle = document.getElementById(groupId + '-toggle');
+  let isHidden = false;
+
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = '';
+      isHidden = false;
+    } else {
+      r.style.display = 'none';
+      isHidden = true;
+    }
+  });
+
+  if (toggle) toggle.textContent = isHidden ? '▶' : '▼';
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('is-open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('is-open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+});
+
+loadLogs();
+</script>
+  <script src="../chatbot-widget.js"></script>
+  <script src="../client-timer-widget.js"></script>
+
+</body>
+</html>

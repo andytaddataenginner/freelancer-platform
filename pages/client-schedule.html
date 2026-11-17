@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book a Session — QFA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/chatbot-widget.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy-950:#081431; --navy-900:#0d2353; --navy-700:#1a3a7a; --accent:#2f6fed;
+      --gold-600:#a8781f; --gold-500:#c9952a; --gold-300:#f0c34a;
+      --ink:#0d2353; --ink-2:#48557a; --ink-3:#8592b3;
+      --bg:#eef1f7; --bg2:#e4e9f4; --panel:#ffffff;
+      --green:#146c43; --gbg:#dcf3e6; --amber:#92400e; --abg:#fdecc8; --red:#b91c1c; --rbg:#fde3e3;
+      --line: rgba(13,35,83,.10);
+      --serif:'Playfair Display',serif; --sans:'Outfit',sans-serif; --mono:'IBM Plex Mono',monospace;
+      --radius:12px; --radius-lg:16px;
+      --shadow:0 3px 18px rgba(13,35,83,.07);
+    }
+    [data-theme="dark"] {
+      --navy-950:#05070d; --navy-900:#101c38; --navy-700:#1c2f57; --accent:#5b8dff;
+      --gold-600:#c9952a; --gold-500:#e0ac35; --gold-300:#f5c842;
+      --ink:#eef1f8; --ink-2:#aab6d6; --ink-3:#6d7ba3;
+      --bg:#080c17; --bg2:#111a2e; --panel:#0e1526;
+      --green:#4fd394; --gbg:rgba(20,108,67,.32); --amber:#f2b84a; --abg:rgba(146,64,14,.32); --red:#ff8080; --rbg:rgba(185,28,28,.30);
+      --line: rgba(255,255,255,.09);
+      --shadow:0 3px 22px rgba(0,0,0,.45);
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); transition: background .3s ease, color .3s ease; }
+    .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+    .dashboard { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 232px !important; background: var(--navy-950) !important;
+      position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important;
+      display: flex !important; flex-direction: column !important;
+      z-index: 150 !important; transform: translateX(0);
+      transition: transform 0.3s ease-in-out, background .3s ease !important;
+      border-right: 1px solid rgba(255,255,255,.05);
+    }
+    .sidebar-brand {
+      padding: 1.2rem 1.4rem !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+    }
+    .sidebar-nav { flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 0.15rem !important; }
+    .sidebar-nav a {
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      padding: 0.75rem 1.4rem !important; font-size: 0.85rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.6) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 3px solid transparent !important;
+    }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.05) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(201,149,42,0.12) !important; border-right-color: var(--gold-500) !important; }
+    .sidebar-user { padding: 1.1rem 1.4rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; }
+
+    .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--navy-950); padding: 0.75rem 1rem; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(13,35,83,0.2); }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 30px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.83rem; font-weight: 700; }
+    .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
+
+    .main-content { margin-left: 232px; flex: 1; padding: 1.2rem 1.8rem 2rem; position: relative; max-width: 1180px; }
+
+    .theme-toggle { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .95rem; transition: all .2s; flex-shrink: 0; }
+    .theme-toggle:hover { background: rgba(255,255,255,.22); }
+
+    .hero { background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); border-radius: var(--radius); padding: 0.85rem 1.2rem; color: white; margin-bottom: 0.9rem; box-shadow: 0 4px 16px rgba(13,35,83,0.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+    .eyebrow { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
+    .hero h1 { margin: 0.1rem 0 0; font-family: var(--serif); font-style: italic; font-size: 1.25rem; font-weight: 700; line-height: 1.15; }
+    .hero-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .engagement-pill { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+    .ledger-panel-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.4rem; padding: 1.1rem 1.2rem 1.3rem; }
+    .panel-heading { font-size: .68rem; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .7rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+
+    .fg { display: flex; flex-direction: column; gap: .35rem; }
+    .fg label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+    
+    select, input[type=date], textarea {
+      width: 100%; padding: .5rem .75rem; border: 1.5px solid var(--line); border-radius: 9px; background: var(--panel); font-family: var(--sans); font-size: .85rem; color: var(--ink); transition: border-color .2s, box-shadow .2s;
+    }
+    select:focus, input[type=date]:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,111,237,.12); }
+
+    .badge { display: inline-block; padding: .2rem .65rem; border-radius: 100px; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    .bg-g { background: var(--gbg); color: var(--green); }
+    .bg-a { background: var(--abg); color: var(--amber); }
+    .bg-gray { background: var(--bg2); color: var(--ink-3); }
+
+    .btn-primary {
+      background: var(--navy-900); color: white; padding: 0.6rem 1.2rem; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+    .btn-primary:hover { background: var(--navy-700); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    
+    .btn-sm { padding: 0.35rem 0.75rem; font-family: var(--sans); font-size: 0.72rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .btn-red { background: var(--rbg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+
+    .session-item { padding: 1rem 1.1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); margin-bottom: 0.8rem; transition: background 0.2s; }
+    .session-item:hover { background: var(--panel); }
+
+    .form-status { font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600; }
+    .form-status.success { color: var(--green); }
+    .form-status.error { color: var(--red); }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%) !important; }
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
+      .main-content { margin-left: 0 !important; padding: 0.8rem !important; padding-top: 68px !important; }
+      .mobile-header { display: flex !important; }
+      .hero h1 { font-size: 1.15rem; }
+    }
+  
+    /* Consistent mobile client workspace layout */
+    @media (max-width: 768px) {
+      html, body { width:100%; max-width:100%; overflow-x:hidden; }
+      .dashboard { display:block !important; width:100%; min-height:100dvh; }
+      .mobile-header {
+        position:fixed !important; top:0; left:0; right:0; z-index:180 !important;
+        min-height:60px; padding:.65rem 1rem !important; display:flex !important;
+        align-items:center; justify-content:space-between; gap:.75rem;
+        background:var(--navy-950); box-shadow:0 3px 14px rgba(0,0,0,.14);
+      }
+      .mobile-logo { min-width:0; display:flex; align-items:center; gap:.55rem; }
+      .mobile-logo img { width:34px; height:34px; object-fit:contain; flex-shrink:0; }
+      .mobile-logo span { font-size:.92rem; font-weight:700; white-space:nowrap; }
+      .theme-toggle, .hamburger-btn { min-width:40px; min-height:40px; flex-shrink:0; }
+      .sidebar { width:min(280px, 84vw) !important; max-width:84vw; z-index:220 !important; }
+      .sidebar-overlay { z-index:210 !important; }
+      .main-content {
+        width:100% !important; max-width:100% !important; min-width:0 !important;
+        margin:0 !important; padding:1rem !important; padding-top:76px !important;
+        overflow-x:hidden;
+      }
+      .hero { width:100%; padding:1.15rem !important; margin-bottom:1rem; border-radius:14px; }
+      .hero h1 { font-size:clamp(1.25rem, 5vw, 1.65rem) !important; line-height:1.2; }
+      .hero-actions { display:flex; flex-wrap:wrap; gap:.6rem; }
+      .hero-actions .btn { flex:1 1 140px; justify-content:center; min-height:42px; }
+      .view-panel, .panel, .card, .subcard { width:100%; max-width:100%; min-width:0; }
+      .panel-heading { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; }
+      .table-wrap, .table-responsive { width:100%; max-width:100%; overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+      .booking-form-grid, .form-grid { grid-template-columns:1fr !important; }
+      .period-grid { grid-template-columns:1fr !important; }
+      input, select, textarea, button { max-width:100%; }
+      .btn { min-height:42px; }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding:.8rem !important; padding-top:72px !important; }
+      .hero { padding:1rem !important; }
+      .hero-actions { flex-direction:column; }
+      .hero-actions .btn { width:100%; }
+      .panel-heading { align-items:flex-start; }
+      .panel-heading h2, .panel-heading h3 { font-size:1rem; }
+    }
+
+    </style>
+</head>
+<body>
+
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA Portal</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:.6rem">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <button class="hamburger-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div style="width:36px;height:36px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div style="line-height:1.2">
+        <div style="color:white;font-size:0.78rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:var(--gold-300);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="client-portal.html">📊 My Overview</a>
+      <a href="client-logs.html">⏱ My Time Logs</a>
+      <a href="client-projects.html">📁 My Projects</a>
+      <a href="client-notes.html">📌 Guidelines & Notes</a>
+      <a href="client-schedule.html" class="active">📅 Book a Session</a>
+      <a href="../index.html" target="_blank">🌐 Portfolio</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name" style="color:white; display:block;">Loading…</strong>
+      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.78rem;color:rgba(255,255,255,0.4)"></span>
+      <a href="#" onclick="logout()" style="color:var(--gold-300);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Client Workspace</span>
+        <h1 id="page-main-title">Book a Session</h1>
+      </div>
+      <div class="hero-actions">
+        <span class="engagement-pill" id="freelancer-status-pill">
+          <span id="pill-dot" style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> 
+          <span id="pill-text">Checking availability...</span>
+        </span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+      </div>
+    </div>
+
+    <!-- Booking Form Panel -->
+    <div class="ledger-panel-wrap">
+      <div class="panel-heading">📅 New Booking Request</div>
+      <form onsubmit="bookSession(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem">
+        <div class="fg">
+          <label for="book-date">Preferred date</label>
+          <input type="date" name="date" id="book-date" required/>
+        </div>
+        <div class="fg">
+          <label>Preferred time</label>
+          <select name="time" required>
+            <option value="">Select time…</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="17:00">5:00 PM</option>
+            <option value="18:00">6:00 PM</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Session type</label>
+          <select name="type" required>
+            <option value="">Select type…</option>
+            <option value="call">Video call / meeting</option>
+            <option value="review">Project review</option>
+            <option value="workshop">Working session</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Duration</label>
+          <select name="duration" required>
+            <option value="0.5">30 minutes</option>
+            <option value="1" selected>1 hour</option>
+            <option value="1.5">1.5 hours</option>
+            <option value="2">2 hours</option>
+            <option value="2.5">2.5 hours</option>
+            <option value="3">3 hours</option>
+            <option value="3.5">3.5 hours</option>
+          </select>
+        </div>
+        <div class="fg" style="grid-column:1/-1">
+          <label>Message / agenda</label>
+          <textarea name="message" rows="3" placeholder="What would you like to discuss or work on?"></textarea>
+        </div>
+        <div style="grid-column:1/-1; margin-top:0.3rem;">
+          <button type="submit" class="btn-primary">Send booking request →</button>
+          <div id="book-status" class="form-status"></div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Booking History Panel -->
+    <div class="ledger-panel-wrap">
+      <div class="panel-heading">Your Sessions</div>
+      <div id="bookings-list">
+        <p style="color:var(--ink-3); font-size:0.88rem;">Loading…</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+function initTheme(){
+  const saved = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeButtons(saved);
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+  updateThemeButtons(next);
+}
+function updateThemeButtons(theme){
+  const icon = theme==='dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(b=>b.textContent=icon);
+}
+initTheme();
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+
+let clientName = '';
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  const u = auth.user();
+  if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
+  
+  clientName = u ? u.name : '';
+  document.getElementById('user-name').textContent = clientName;
+  if (u && u.company) document.getElementById('user-company').textContent = u.company;
+  
+  const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+  document.getElementById('page-main-title').textContent = titlePrefix + 'Book a Session';
+
+  document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
+  
+  checkFreelancerLiveStatus();
+  setInterval(checkFreelancerLiveStatus, 30000);
+})();
+
+async function checkFreelancerLiveStatus() {
+  const dot = document.getElementById('pill-dot');
+  const text = document.getElementById('pill-text');
+  if (!dot || !text) return;
+
+  try {
+    const res = await fetch(API + '/timer/agency/status', { headers: auth.headers() });
+    if (res.ok) {
+      const data = await res.json();
+      
+      if (data.status === 'busy') {
+        dot.style.background = '#f59e0b'; // Orange
+        if (data.is_paused) {
+          text.textContent = 'On a brief break';
+        } else {
+          text.textContent = 'Currently in a session';
+        }
+      } else if (data.status === 'available') {
+        dot.style.background = '#22c55e'; // Green
+        text.textContent = 'Available';
+      } else {
+        dot.style.background = '#9ca3af'; // Gray
+        text.textContent = 'Offline';
+      }
+    }
+  } catch (e) {
+    console.error('Error checking freelancer live availability:', e);
+    dot.style.background = '#9ca3af';
+    text.textContent = 'Offline';
+  }
+}
+  
+function logout() { auth.clear(); window.location.href = '../index.html'; }
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('is-open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('is-open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+});
+
+const TYPE_LABELS = { call:'Video call / meeting', review:'Project review', workshop:'Working session', other:'Other' };
+
+async function loadBookings() {
+  try {
+    const bookings = await apiFetch('/client/bookings');
+    const list = document.getElementById('bookings-list');
+
+    if (!bookings || !bookings.length) {
+      list.innerHTML = '<p style="color:var(--ink-3);font-size:0.88rem">No sessions scheduled yet. Book your first session using the form above.</p>';
+      return;
+    }
+
+    const todayStr = new Date().toISOString().slice(0,10);
+    const upcoming = bookings.filter(b => {
+      const bDate = b.date ? b.date.slice(0,10) : '';
+      return bDate >= todayStr && b.status !== 'cancelled';
+    });
+    const past = bookings.filter(b => {
+      const bDate = b.date ? b.date.slice(0,10) : '';
+      return bDate < todayStr || b.status === 'cancelled';
+    });
+
+    let html = '';
+    if (upcoming.length) {
+      html += '<p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3);font-weight:700;margin-bottom:0.7rem">Upcoming Sessions</p>';
+      html += upcoming.map(b => bookingCard(b)).join('');
+    }
+    if (past.length) {
+      html += '<p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-3);font-weight:700;margin:1.4rem 0 0.7rem">Past / Cancelled</p>';
+      html += past.map(b => bookingCard(b)).join('');
+    }
+
+    list.innerHTML = html || '<p style="color:var(--ink-3);font-size:0.88rem">No sessions match current criteria.</p>';
+  } catch(e) { 
+    console.error(e); 
+    document.getElementById('bookings-list').innerHTML = `<p style="color:var(--red);font-size:0.88rem">Error loading sessions: ${e.message}</p>`;
+  }
+}
+
+function bookingCard(b) {
+  const badgeClass = b.status === 'confirmed' ? 'bg-g' : b.status === 'pending' ? 'bg-a' : 'bg-gray';
+  const todayStr = new Date().toISOString().slice(0,10);
+  const bDate = b.date ? b.date.slice(0,10) : '';
+
+  const cancelBtn = b.status !== 'cancelled' && bDate >= todayStr
+    ? `<button class="btn-sm btn-red" onclick="cancelBooking(${b.id})" style="margin-top:0.6rem">Cancel request</button>`
+    : '';
+
+  let formattedDate = b.date;
+  try {
+     formattedDate = new Date(b.date).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  } catch(err){}
+
+  return `
+    <div class="session-item">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div>
+          <div style="font-weight:600;font-size:0.92rem;color:var(--ink);">${TYPE_LABELS[b.type] || b.type}</div>
+          <div style="color:var(--ink-2);font-size:0.83rem;margin-top:0.25rem" class="mono">
+            📅 ${formattedDate} &nbsp;·&nbsp; 🕐 ${b.time} &nbsp;·&nbsp; ⏱ ${b.duration}h
+          </div>
+          ${b.message ? `<div style="color:var(--ink-3);font-size:0.82rem;margin-top:0.4rem">💬 ${b.message}</div>` : ''}
+          ${cancelBtn}
+        </div>
+        <span class="badge ${badgeClass}">${b.status}</span>
+      </div>
+    </div>`;
+}
+
+async function bookSession(e) {
+  e.preventDefault();
+  const status = document.getElementById('book-status');
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true;
+  btn.textContent = 'Sending request…';
+
+  try {
+    await apiFetch('/client/bookings', {
+      method: 'POST',
+      body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+    });
+    status.className = 'form-status success';
+    status.textContent = '✓ Booking request sent! I\'ll confirm within 24 hours.';
+    e.target.reset();
+    document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
+    loadBookings();
+  } catch(err) {
+    status.className = 'form-status error';
+    status.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send booking request →';
+  }
+}
+
+async function cancelBooking(id) {
+  if (!confirm('Cancel this booking request?')) return;
+  try {
+    await apiFetch('/client/bookings/' + id, { method: 'DELETE' });
+    loadBookings();
+  } catch(e) { alert('Failed to cancel: ' + e.message); }
+}
+
+loadBookings();
+</script>
+<script src="../chatbot-widget.js"></script>
+<script src="../client-timer-widget.js"></script>
+
+</body>
+</html>

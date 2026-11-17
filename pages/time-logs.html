@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Logs — QFA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="../css/chatbot-widget.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --green: #166534; --green-bg: #dcfce7;
+      --amber: #92400e; --amber-bg: #fef3c7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --card-bg: #ffffff;
+      --table-hover: var(--bg);
+    }
+    
+    [data-theme="dark"] {
+      --navy: #1e293b; --accent: #3b82f6; --gold2: #fbbf24;
+      --white: #0f172a; --bg: #090d16; --bg2: #1e293b;
+      --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #94a3b8;
+      --green: #4ade80; --green-bg: rgba(22, 101, 52, 0.4);
+      --amber: #fbbf24; --amber-bg: rgba(146, 64, 14, 0.4);
+      --red: #f87171; --red-bg: rgba(185, 28, 28, 0.4);
+      --shadow: 0 2px 20px rgba(0,0,0,0.4);
+      --card-bg: #111827;
+      --table-hover: #1f2937;
+    }
+
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); transition: background 0.3s ease, color 0.3s ease; }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE NAV ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
+
+    /* ── MAIN ── */
+    .main { margin-left: 220px; flex: 1; }
+
+    .topbar {
+      background: var(--card-bg); border-bottom: 1px solid rgba(13,35,83,0.08);
+      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; color: var(--ink); }
+    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+
+    /* Theme Toggle Button */
+    .theme-toggle {
+      background: var(--bg2); border: 1px solid rgba(13,35,83,0.1);
+      color: var(--ink); width: 38px; height: 38px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; transition: all 0.2s;
+    }
+    .theme-toggle:hover { background: var(--accent); color: white; }
+
+    .content { padding: 1.5rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card-bg); border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.2rem; transition: background 0.3s ease;
+    }
+    .card-header {
+      padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--ink); }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1rem; margin-bottom: 1.2rem;
+    }
+    .stat-card {
+      background: var(--card-bg); border-radius: var(--radius); padding: 1.1rem 1.3rem;
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      transition: background 0.3s ease;
+    }
+    .stat-num { font-family: var(--serif); font-size: 1.7rem; font-weight: 700; display: block; color: var(--ink); }
+    .stat-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); margin-top: 0.2rem; }
+
+    /* ── FILTERS & ADMINISTRATIVE FORMS ── */
+    .filters, .payment-form-flex { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; padding: 1rem 1.2rem; }
+    .fg { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 130px; }
+    .fg label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); }
+    select, input[type=date], input[type=number] {
+      padding: 0.6rem 0.8rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 8px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.85rem; color: var(--ink); width: 100%;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── BULK BAR ── */
+    .bulk-bar {
+      display: none; background: var(--navy); color: white;
+      padding: 0.7rem 1.2rem; border-radius: 10px; margin-bottom: 1rem;
+      align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .bulk-bar.open { display: flex; }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 700px; }
+    th { padding: 0.6rem 0.8rem; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; white-space: nowrap; }
+    td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--table-hover); }
+
+    /* Collapsible Group Rows Matrix Styling */
+    .group-row td { background: var(--bg2) !important; cursor: pointer; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--bg2); }
+    .group-row:hover td { background: var(--table-hover) !important; }
+    .group-toggle { display: inline-block; width: 18px; font-size: 0.8rem; text-align: center; margin-right: 0.35rem; transition: transform 0.2s; }
+    .child-row td { padding-left: 1.6rem; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-blue  { background: #dbeafe; color: #1e40af; }
+
+    /* ── BUTTONS ── */
+    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-family: var(--sans); font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .btn-green  { background: var(--green-bg); color: var(--green); }
+    .btn-green:hover { background: var(--green); color: white; }
+    .btn-red    { background: var(--red-bg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
+    .btn-outline:hover { border-color: var(--navy); color: var(--ink); }
+    .btn-navy   { background: var(--navy); color: white; }
+    .btn-navy:hover { background: var(--accent); }
+
+    /* ── MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--card-bg); color: var(--ink); border-radius: 18px; padding: 1.8rem; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); animation: modalIn 0.25s ease; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
+    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); }
+    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: var(--red-bg); color: var(--red); }
+    .mfg { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+    .mfg label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink2); }
+    .mfg input, .mfg textarea {
+      padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 9px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.88rem; color: var(--ink); width: 100%;
+    }
+    .mfg input:focus, .mfg textarea:focus { outline: none; border-color: var(--accent); }
+    .hint { font-size: 0.7rem; color: var(--ink3); margin-top: 0.2rem; }
+    .form-status { font-size: 0.8rem; margin-top: 0.4rem; }
+    .form-status.success { color: var(--green); }
+    .form-status.error   { color: var(--red); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 240px; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .mobile-header { display: flex; }
+      .topbar { top: 56px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .filters, .payment-form-flex { gap: 0.6rem; }
+      .fg { min-width: 100px; }
+      .content { padding: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+      .stat-num { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html" class="active">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="contracts.html">📜 Contracts</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="reports.html">📈 Reports</a>
+      <a href="fixed-invoices.html">📄 Invoices</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="notes.html">📝 Client Notes</a>
+      <a href="projects.html">📋 Projects</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer · QFA</span>
+      <a href="#" onclick="logout()">Sign out →</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2>Time Logs</h2>
+        <p>All your logged hours. Mark entries as paid when client pays you.</p>
+      </div>
+      <div>
+        <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="card" style="border-left: 4px solid #10b981;">
+        <div class="card-header" style="padding-bottom: 0.2rem; border-bottom: none;">
+          <h3 style="color: #10b981;">💰 Record Client Payment Remittance</h3>
+        </div>
+        <form id="record-payment-form" onsubmit="handleRecordPayment(event)">
+          <div class="payment-form-flex">
+            <div class="fg" style="min-width: 200px;">
+              <label>Target Client</label>
+              <select id="payment-client" required>
+                <option value="">Select client...</option>
+              </select>
+            </div>
+            <div class="fg" style="min-width: 120px;">
+              <label>Amount Remitted ($)</label>
+              <input type="number" id="payment-amount" step="0.01" min="0.01" required placeholder="100.00"/>
+            </div>
+            <div class="fg" style="min-width: 130px;">
+              <label>Payment Date</label>
+              <input type="date" id="payment-date" required/>
+            </div>
+            <button type="submit" class="btn btn-navy" style="background: #10b981; padding: 0.65rem 1.2rem; font-size: 0.85rem; height: 38px;">
+              Apply Remittance
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="filters">
+          <div class="fg">
+            <label>Client Filter <span id="client-credit-display" style="margin-left: 6px; color: #1a5cff; font-weight: 600; text-transform: none; display: none;"></span></label>
+            <select id="filter-client" onchange="handleFilterChange()">
+              <option value="">All clients</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Payment</label>
+            <select id="filter-payment" onchange="handleFilterChange()">
+              <option value="">All</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>From</label>
+            <input type="date" id="filter-from" onchange="handleFilterChange()"/>
+          </div>
+          <div class="fg">
+            <label>To</label>
+            <input type="date" id="filter-to" onchange="handleFilterChange()"/>
+          </div>
+          <button class="btn btn-outline" onclick="clearFilters()" style="padding:0.5rem 1rem;margin-top:1rem">Clear</button>
+        </div>
+      </div>
+
+      <!-- Dedicated Container for Fixed-Rate Monthly Billing Records -->
+      <div id="fixedRateMonthlyContainer" style="display: none;" class="card mb-4 p-3">
+        <div class="card-header px-0 pt-0">
+          <h3>Fixed-Rate Billing Periods</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Billing Month</th>
+                <th>Amount Due</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fixedMonthlyTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card" style="border-left:4px solid #22c55e">
+          <span class="stat-num" id="total-paid" style="color:var(--green)">$0</span>
+          <div class="stat-label">Total paid</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #f59e0b">
+          <span class="stat-num" id="total-unpaid" style="color:var(--amber)">$0</span>
+          <div class="stat-label">Total unpaid</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="total-hours">0h</span>
+          <div class="stat-label">Total hours</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="total-entries">0</span>
+          <div class="stat-label">Log entries</div>
+        </div>
+      </div>
+
+      <div class="bulk-bar" id="bulk-bar">
+        <span id="bulk-count" style="font-size:0.88rem">0 selected</span>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="bulkMarkPaid()">✓ Mark selected as Paid</button>
+          <button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="clearSelection()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card" id="logs-card">
+        <div class="card-header">
+          <h3>All Time Logs</h3>
+          <button class="btn btn-outline" onclick="selectAllVisible()" style="font-size:0.75rem">Select all</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:32px"><input type="checkbox" id="check-all" onchange="toggleAll(this)"/></th>
+                <th>Client</th><th>Date</th><th>Hours</th><th>Rate</th>
+                <th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table">
+              <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Log Entry</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="edit-client-info" style="background:var(--bg);border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="edit-id"/>
+    <input type="hidden" id="edit-client-id"/>
+    <input type="hidden" id="edit-rate-type"/>
+    <input type="hidden" id="edit-hourly-rate"/>
+    <div class="mfg">
+      <label>Date</label>
+      <input type="date" id="edit-date" required/>
+    </div>
+    <div class="mfg">
+      <label>Hours spent</label>
+      <input type="number" id="edit-hours" min="0.01" max="24" step="any" required oninput="previewAmount()"/>
+      <div class="hint">💡 20min = 0.33 · 45min = 0.75 · 1h 20min = 1.33</div>
+    </div>
+    <div id="amount-preview" style="background:#e8f0ff;border-radius:8px;padding:0.6rem 1rem;margin-bottom:0.8rem;font-size:0.85rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="mfg">
+      <label>Task description</label>
+      <textarea id="edit-task" rows="3" required></textarea>
+    </div>
+    <button class="btn btn-navy" style="width:100%;padding:0.8rem;font-size:0.9rem" onclick="saveEdit()">Save changes</button>
+    <div id="edit-status" class="form-status"></div>
+  </div>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+// Theme Management Logic
+function initTheme() {
+  const savedTheme = localStorage.getItem('qfa_theme') || localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeButton(savedTheme);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeButton(next);
+}
+function updateThemeButton(theme) {
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+initTheme();
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||e.message||'Failed'); }
+  return res.json();
+}
+
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+let selectedIds = new Set();
+let allClients  = [];
+
+async function fetchAndPopulateClients() {
+  try {
+    allClients = await apiFetch('/clients');
+    const opts = allClients.map(c =>
+      `<option value="${c.id}" data-rate="${c.rate_type}" data-hourly="${c.hourly_rate||0}" data-fixed="${c.fixed_price||0}" data-credit="${c.credit_balance||0}">${c.name}${c.company?' — '+c.company:''}</option>`
+    ).join('');
+    
+    const filterSelect = document.getElementById('filter-client');
+    const paymentSelect = document.getElementById('payment-client');
+    
+    const previousFilterVal = filterSelect.value;
+    const previousPaymentVal = paymentSelect.value;
+
+    filterSelect.innerHTML = '<option value="">All clients</option>' + opts;
+    paymentSelect.innerHTML = '<option value="">Select client...</option>' + opts;
+    
+    filterSelect.value = previousFilterVal;
+    paymentSelect.value = previousPaymentVal;
+
+    if (filterSelect.value) {
+      updateClientCreditDisplay();
+    }
+  } catch(e) { console.error('Error fetching clients:', e); }
+}
+
+function updateClientCreditDisplay() {
+  const filterSelect = document.getElementById('filter-client');
+  const creditDisplay = document.getElementById('client-credit-display');
+  if (!filterSelect || !creditDisplay) return;
+
+  const selectedOpt = filterSelect.selectedOptions[0];
+  if (selectedOpt && selectedOpt.value !== "") {
+    const balance = parseFloat(selectedOpt.dataset.credit || 0);
+    creditDisplay.textContent = `(Available Credit: $${balance.toFixed(2)})`;
+    creditDisplay.style.display = 'inline';
+    creditDisplay.style.color = balance < 0 ? '#f87171' : '#1a5cff';
+  } else {
+    creditDisplay.textContent = '';
+    creditDisplay.style.display = 'none';
+  }
+}
+
+async function handleFilterChange() {
+  const filterSelect = document.getElementById('filter-client');
+  const clientId = filterSelect.value;
+  const selectedOpt = filterSelect.selectedOptions[0];
+  const isFixed = selectedOpt && selectedOpt.value !== "" && selectedOpt.dataset.rate === 'fixed';
+
+  updateClientCreditDisplay();
+
+  const fixedContainer = document.getElementById('fixedRateMonthlyContainer');
+  const logsCard       = document.getElementById('logs-card');
+  const statsRow       = document.getElementById('stats-row');
+
+  if (isFixed && clientId) {
+    if (fixedContainer) fixedContainer.style.display = 'block';
+    if (logsCard) logsCard.style.display = 'none';
+    if (statsRow) statsRow.style.display = 'none';
+
+    await loadFixedClientMonthlyRecords(clientId);
+  } else {
+    if (fixedContainer) fixedContainer.style.display = 'none';
+    if (logsCard) logsCard.style.display = 'block';
+    if (statsRow) statsRow.style.display = 'grid';
+
+    loadLogs();
+  }
+}
+
+async function loadFixedClientMonthlyRecords(clientId) {
+  const tbody = document.getElementById('fixedMonthlyTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--ink3);">Loading monthly billing periods...</td></tr>`;
+
+  try {
+    const records = await apiFetch(`/fixed-payments/${clientId}`);
+    renderFixedMonthlyTable(records, clientId);
+  } catch (err) {
+    console.error('Error loading fixed monthly records:', err);
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--red);">Error loading data: ${err.message}</td></tr>`;
+  }
+}
+
+function renderFixedMonthlyTable(records, clientId) {
+  const tbody = document.getElementById('fixedMonthlyTableBody');
+  if (!tbody) return;
+
+  if (!records || records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--ink3);">No monthly billing records found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = records.map(record => {
+    const isPaid = record.status === 'paid';
+    return `
+      <tr>
+        <td><strong>${record.month}</strong></td>
+        <td>$${parseFloat(record.amount || 0).toFixed(2)}</td>
+        <td>
+          <span class="badge ${isPaid ? 'badge-green' : 'badge-amber'}">
+            ${isPaid ? '✓ Paid' : 'Pending'}
+          </span>
+          ${record.paid_at ? `<br><small style="color:var(--ink3)">Paid: ${new Date(record.paid_at).toLocaleDateString()}</small>` : ''}
+        </td>
+        <td>
+          <button class="btn btn-sm ${isPaid ? 'btn-outline' : 'btn-green'}"
+              onclick="toggleFixedMonthlyRecordStatus('${record.id}', '${isPaid ? 'unpaid' : 'paid'}', '${clientId}')">
+              ${isPaid ? 'Mark Unpaid' : 'Mark Paid ✓'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function toggleFixedMonthlyRecordStatus(recordId, newStatus, clientId) {
+  try {
+    await apiFetch(`/fixed-payments/${recordId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus })
+    });
+    await loadFixedClientMonthlyRecords(clientId);
+  } catch (err) {
+    alert('Error updating payment status: ' + err.message);
+  }
+}
+
+async function loadLogs() {
+  const clientId = document.getElementById('filter-client').value;
+  const payment  = document.getElementById('filter-payment').value;
+  const from     = document.getElementById('filter-from').value;
+  const to       = document.getElementById('filter-to').value;
+
+  let url = '/timelogs?limit=200';
+  if (clientId) url += '&client_id=' + clientId;
+  if (payment)  url += '&payment_status=' + payment;
+  if (from)     url += '&from=' + from;
+  if (to)       url += '&to='   + to;
+
+  try {
+    const logs  = await apiFetch(url);
+    const tbody = document.getElementById('logs-table');
+    let totalPaid = 0, totalUnpaid = 0, totalHours = 0;
+
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">No logs found.</td></tr>';
+      document.getElementById('total-paid').textContent   = '$0.00';
+      document.getElementById('total-unpaid').textContent = '$0.00';
+      document.getElementById('total-hours').textContent  = '0min';
+      document.getElementById('total-entries').textContent = '0';
+      updateBulkBar();
+      return;
+    }
+
+    // Compute stats first
+    logs.forEach(l => {
+      const isPaid = l.payment_status === 'paid';
+      const amount = parseFloat(l.amount || 0);
+      if (isPaid) totalPaid += amount; else totalUnpaid += amount;
+      totalHours += parseFloat(l.hours || 0);
+    });
+
+    // Group logs into collapsible monthly parent sections
+    const grouped = {};
+    logs.forEach(l => {
+      const dStr = l.date || l.createdAt || '';
+      const key = dStr.length >= 7 ? dStr.slice(0, 7) : 'Other';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(l);
+    });
+
+    const sortedKeys = Object.keys(grouped).sort().reverse();
+    let matrixHtml = '';
+
+    sortedKeys.forEach((monthKey, idx) => {
+      const monthLogs = grouped[monthKey];
+      let grpHours = 0, grpAmount = 0;
+
+      monthLogs.forEach(l => {
+        const h = parseFloat(l.hours || 0);
+        let amt = parseFloat(l.amount || 0);
+        grpHours += h;
+        grpAmount += amt;
+      });
+
+      let groupLabel = monthKey;
+      if (monthKey !== 'Other') {
+        const dObj = new Date(monthKey + '-02');
+        groupLabel = dObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+      }
+
+      const groupId = 'log-grp-' + idx;
+
+      // Parent Matrix Row (Default Collapsed: shows right arrow '▶' and child rows hidden)
+      matrixHtml += `
+        <tr class="group-row" onclick="toggleGroup('${groupId}')">
+          <td colspan="9">
+            <span class="group-toggle" id="${groupId}-toggle">▶</span>
+            📅 ${groupLabel} &nbsp;<span style="font-size:0.75rem;font-weight:normal;color:var(--ink3)">(${monthLogs.length} ${monthLogs.length===1?'log':'logs'} &nbsp;·&nbsp; ${fmtHours(grpHours)} &nbsp;·&nbsp; $${grpAmount.toFixed(2)})</span>
+          </td>
+        </tr>`;
+
+      // Child Rows (Default style="display:none")
+      monthLogs.forEach(l => {
+        const isPaid = l.payment_status === 'paid';
+        const amount = parseFloat(l.amount || 0);
+        const badge  = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
+        const payBtn = isPaid
+          ? `<button class="btn btn-outline" onclick="togglePayment(${l.id},'unpaid'); event.stopPropagation();">Undo</button>`
+          : `<button class="btn btn-green" onclick="togglePayment(${l.id},'paid'); event.stopPropagation();">Paid ✓</button>`;
+        const checked = selectedIds.has(l.id) ? 'checked' : '';
+        const cl = allClients.find(c => c.id === l.client_id) || {};
+        
+        matrixHtml += `
+          <tr class="${groupId} child-row" style="display: none;">
+            <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" value="${l.id}" ${checked} onchange="updateSel(${l.id},this.checked)"/></td>
+            <td><strong>${l.client_name}</strong></td>
+            <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
+            <td>${fmtHours(parseFloat(l.hours))}</td>
+            <td><span class="badge ${l.rate_type==='fixed'?'badge-blue':'badge-green'}">${l.rate_type||'hourly'}</span></td>
+            <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+            <td>${badge}</td>
+            <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
+            <td style="display:flex;gap:0.3rem;flex-wrap:wrap" onclick="event.stopPropagation()">
+              ${payBtn}
+              <button class="btn btn-outline" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${l.client_id},'${l.rate_type||'hourly'}',${cl.hourly_rate||0})">✏️</button>
+            </td>
+          </tr>`;
+      });
+    });
+
+    tbody.innerHTML = matrixHtml;
+
+    document.getElementById('total-paid').textContent   = '$' + totalPaid.toFixed(2);
+    document.getElementById('total-unpaid').textContent = '$' + totalUnpaid.toFixed(2);
+    document.getElementById('total-hours').textContent  = fmtHours(totalHours);
+    document.getElementById('total-entries').textContent = logs.length;
+    updateBulkBar();
+  } catch(e) { console.error(e); }
+}
+
+function toggleGroup(groupId) {
+  const rows = document.querySelectorAll('.' + groupId);
+  const toggle = document.getElementById(groupId + '-toggle');
+  let isHidden = false;
+
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = '';
+      isHidden = false;
+    } else {
+      r.style.display = 'none';
+      isHidden = true;
+    }
+  });
+
+  if (toggle) toggle.textContent = isHidden ? '▶' : '▼';
+}
+
+function fmtHours(h) {
+  const hrs = Math.floor(h), mins = Math.round((h - hrs) * 60);
+  if (hrs === 0) return `${mins}min`;
+  if (mins === 0) return `${hrs}h`;
+  return `${hrs}h ${mins}min`;
+}
+
+async function handleRecordPayment(event) {
+  event.preventDefault();
+  const clientId = document.getElementById('payment-client').value;
+  const amount   = document.getElementById('payment-amount').value;
+  const date     = document.getElementById('payment-date').value;
+
+  if (!clientId) {
+    alert('Please select a Target Client from the payment form dropdown.');
+    document.getElementById('payment-client').focus();
+    return;
+  }
+  if (!amount || parseFloat(amount) <= 0) {
+    alert('Please enter a valid amount remitted.');
+    document.getElementById('payment-amount').focus();
+    return;
+  }
+  if (!date) {
+    alert('Please select a payment date.');
+    document.getElementById('payment-date').focus();
+    return;
+  }
+
+  try {
+    const result = await apiFetch('/payments/remit', {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: parseInt(clientId),
+        amount_remitted: parseFloat(amount),
+        date: date,
+        notes: `Manual balance posting via Freelancer Time Logs layout UI.`
+      })
+    });
+
+    alert(`Success! ${result.message || 'Payment applied successfully.'}`);
+    document.getElementById('payment-amount').value = '';
+
+    await fetchAndPopulateClients();
+
+    const filterSelect = document.getElementById('filter-client');
+    if (filterSelect) filterSelect.value = clientId;
+
+    handleFilterChange();
+  } catch (err) {
+    alert('Payment Allocation Error: ' + err.message);
+  }
+}
+async function togglePayment(id, status) {
+  try {
+    await apiFetch('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:status})});
+    loadLogs();
+  } catch(e){alert('Failed: '+e.message);}
+}
+
+function openEdit(id, date, hours, task, clientId, rateType, hourlyRate) {
+  document.getElementById('edit-id').value         = id;
+  document.getElementById('edit-client-id').value  = clientId;
+  document.getElementById('edit-rate-type').value  = rateType;
+  document.getElementById('edit-hourly-rate').value = hourlyRate;
+  document.getElementById('edit-date').value        = date.slice(0,10);
+  document.getElementById('edit-hours').value       = hours;
+  document.getElementById('edit-task').value        = task;
+  document.getElementById('edit-status').textContent = '';
+
+  const cl = allClients.find(c => c.id === clientId);
+  if (cl) {
+    const rateLabel = rateType === 'hourly' ? `Hourly @ $${hourlyRate}/hr` : `Fixed @ $${cl.fixed_price}`;
+    document.getElementById('edit-client-info').innerHTML = `<strong>${cl.name}</strong> &nbsp;·&nbsp; ${rateLabel}`;
+  }
+
+  previewAmount();
+  document.getElementById('modal-edit').classList.add('open');
+}
+
+function previewAmount() {
+  const hours      = parseFloat(document.getElementById('edit-hours').value || 0);
+  const rateType   = document.getElementById('edit-rate-type').value;
+  const hourlyRate = parseFloat(document.getElementById('edit-hourly-rate').value || 0);
+  const preview    = document.getElementById('amount-preview');
+
+  if (hours > 0 && rateType === 'hourly' && hourlyRate > 0) {
+    const amount = (hours * hourlyRate).toFixed(2);
+    preview.textContent = `💰 New amount: $${amount} (${fmtHours(hours)} × $${hourlyRate}/hr)`;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+async function saveEdit() {
+  const status     = document.getElementById('edit-status');
+  const id         = document.getElementById('edit-id').value;
+  const hours      = parseFloat(document.getElementById('edit-hours').value);
+  const rateType   = document.getElementById('edit-rate-type').value;
+  const hourlyRate = parseFloat(document.getElementById('edit-hourly-rate').value || 0);
+  const date       = document.getElementById('edit-date').value;
+  const task       = document.getElementById('edit-task').value;
+
+  let amount = 0;
+  if (rateType === 'hourly' && hourlyRate > 0) amount = hours * hourlyRate;
+
+  try {
+    await apiFetch('/timelogs/' + id, {
+      method: 'PUT',
+      body: JSON.stringify({ hours, task_description: task, date, amount: amount.toFixed(2) })
+    });
+    status.className = 'form-status success';
+    status.textContent = '✓ Updated!';
+    setTimeout(() => { closeModal(); handleFilterChange(); }, 700);
+  } catch(err) {
+    status.className = 'form-status error';
+    status.textContent = err.message;
+  }
+}
+
+function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
+
+function updateSel(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkBar();
+}
+function toggleAll(cb) {
+  document.querySelectorAll('.row-check').forEach(c => { c.checked = cb.checked; updateSel(parseInt(c.value), cb.checked); });
+}
+function selectAllVisible() {
+  document.querySelectorAll('.row-check').forEach(c => { c.checked = true; selectedIds.add(parseInt(c.value)); });
+  updateBulkBar();
+}
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+  document.getElementById('check-all').checked = false;
+  updateBulkBar();
+}
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  if (selectedIds.size > 0) {
+    bar.classList.add('open');
+    document.getElementById('bulk-count').textContent = selectedIds.size + ' selected';
+  } else {
+    bar.classList.remove('open');
+  }
+}
+async function bulkMarkPaid() {
+  if (!selectedIds.size) return;
+  if (!confirm(`Mark ${selectedIds.size} log(s) as paid?`)) return;
+  try {
+    await apiFetch('/timelogs/bulk-payment',{method:'PATCH',body:JSON.stringify({ids:[...selectedIds],payment_status:'paid'})});
+    clearSelection(); handleFilterChange();
+  } catch(e){alert('Failed: '+e.message);}
+}
+
+function clearFilters() {
+  document.getElementById('filter-client').value  = '';
+  document.getElementById('filter-payment').value = '';
+  document.getElementById('filter-from').value    = '';
+  document.getElementById('filter-to').value      = '';
+  handleFilterChange();
+}
+
+async function init() {
+  document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+  
+  const today = new Date();
+  const fiveDaysAgo = new Date();
+  fiveDaysAgo.setDate(today.getDate() - 5);
+  
+  document.getElementById('filter-to').value = today.toISOString().split('T')[0];
+  document.getElementById('filter-from').value = fiveDaysAgo.toISOString().split('T')[0];
+  
+  await fetchAndPopulateClients();
+  handleFilterChange();
+}
+
+init();
+</script>
+---Added for chatbot---
+<script src="../chatbot-widget.js"></script>
+</body>
+</html>

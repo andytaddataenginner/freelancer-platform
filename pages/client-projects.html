@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Projects — QFA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/chatbot-widget.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root{
+      --navy-950:#081431; --navy-900:#0d2353; --navy-700:#1a3a7a; --accent:#2f6fed;
+      --gold-600:#a8781f; --gold-500:#c9952a; --gold-300:#f0c34a;
+      --ink:#0d2353; --ink-2:#48557a; --ink-3:#8592b3;
+      --bg:#eef1f7; --bg2:#e4e9f4; --panel:#ffffff;
+      --green:#146c43; --gbg:#dcf3e6; --amber:#92400e; --abg:#fdecc8; --red:#b91c1c; --rbg:#fde3e3;
+      --line: rgba(13,35,83,.10);
+      --serif:'Playfair Display',serif; --sans:'Outfit',sans-serif; --mono:'IBM Plex Mono',monospace;
+      --radius:12px; --radius-lg:16px;
+      --shadow:0 3px 18px rgba(13,35,83,.07);
+    }
+    [data-theme="dark"]{
+      --navy-950:#05070d; --navy-900:#101c38; --navy-700:#1c2f57; --accent:#5b8dff;
+      --gold-600:#c9952a; --gold-500:#e0ac35; --gold-300:#f5c842;
+      --ink:#eef1f8; --ink-2:#aab6d6; --ink-3:#6d7ba3;
+      --bg:#080c17; --bg2:#111a2e; --panel:#0e1526;
+      --green:#4fd394; --gbg:rgba(20,108,67,.32); --amber:#f2b84a; --abg:rgba(146,64,14,.32); --red:#ff8080; --rbg:rgba(185,28,28,.30);
+      --line: rgba(255,255,255,.09);
+      --shadow:0 3px 22px rgba(0,0,0,.45);
+    }
+
+    html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);transition:background .3s ease,color .3s ease;}
+    .mono{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    .dashboard { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 232px !important; background: var(--navy-950) !important;
+      position: fixed !important; top: 0 !important; left: 0 !important; height: 100vh !important;
+      display: flex !important; flex-direction: column !important;
+      z-index: 150 !important; transform: translateX(0);
+      transition: transform 0.3s ease-in-out, background .3s ease !important;
+      border-right: 1px solid rgba(255,255,255,.05);
+    }
+    .sidebar-brand {
+      padding: 1.2rem 1.4rem !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+    }
+    .sidebar-nav { flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 0.15rem !important; }
+    .sidebar-nav a {
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      padding: 0.75rem 1.4rem !important; font-size: 0.85rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.6) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 3px solid transparent !important;
+    }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.05) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(201,149,42,0.12) !important; border-right-color: var(--gold-500) !important; }
+    .sidebar-user { padding: 1.1rem 1.4rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; }
+
+    .mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--navy-950); padding: 0.75rem 1rem; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(13,35,83,0.2); }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 30px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.83rem; font-weight: 700; }
+    .hamburger-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 8px; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
+
+    .main-content { margin-left: 232px; flex: 1; padding: 1.2rem 1.8rem 2rem; position: relative; max-width: 1180px; }
+
+    .theme-toggle{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); color:#fff; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.95rem; transition:all .2s; flex-shrink:0; }
+    .theme-toggle:hover{ background:rgba(255,255,255,.22); }
+    
+    /* Compact Hero Styling */
+    .hero { 
+      background: linear-gradient(150deg, var(--navy-950), var(--navy-700)); 
+      border-radius: var(--radius); 
+      padding: 0.85rem 1.2rem;     
+      color: white; 
+      margin-bottom: 0.9rem;      
+      box-shadow: 0 4px 16px rgba(13,35,83,0.14); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;        
+      flex-wrap: wrap; 
+      gap: 0.6rem; 
+    }
+    .hero h1 { 
+      margin: 0.1rem 0 0; 
+      font-family: var(--serif); 
+      font-style: italic; 
+      font-size: 1.25rem;         
+      font-weight: 700; 
+      line-height: 1.15; 
+    }
+    .eyebrow{ font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-300); font-weight: 700; }
+    .hero-actions{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .engagement-pill{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+    .ledger-panel-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:1.1rem 1.2rem 1.3rem; }
+    .qfa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+    .qfa-card { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 1.2rem; }
+    .qfa-card-title { font-weight: 600; font-size: 1rem; color: var(--ink); margin-bottom: 0.4rem; }
+    .qfa-card-desc { font-size: 0.86rem; color: var(--ink-2); line-height: 1.5; margin-bottom: 1rem; }
+    .qfa-badge { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge-active { background: var(--gbg); color: var(--green); }
+    .badge-paused { background: var(--abg); color: var(--amber); }
+    .badge-completed { background: var(--bg2); color: var(--ink-2); }
+    .qfa-meta { font-size: 0.78rem; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 0.8rem; margin-top: 0.8rem; display: flex; justify-content: space-between; }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%) !important; }
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
+      .main-content { margin-left: 0 !important; padding: 0.8rem !important; padding-top: 68px !important; }
+      .mobile-header { display: flex !important; }
+      .hero h1{ font-size:1.15rem; }
+    }
+  
+    /* Consistent mobile client workspace layout */
+    @media (max-width: 768px) {
+      html, body { width:100%; max-width:100%; overflow-x:hidden; }
+      .dashboard { display:block !important; width:100%; min-height:100dvh; }
+      .mobile-header {
+        position:fixed !important; top:0; left:0; right:0; z-index:180 !important;
+        min-height:60px; padding:.65rem 1rem !important; display:flex !important;
+        align-items:center; justify-content:space-between; gap:.75rem;
+        background:var(--navy-950); box-shadow:0 3px 14px rgba(0,0,0,.14);
+      }
+      .mobile-logo { min-width:0; display:flex; align-items:center; gap:.55rem; }
+      .mobile-logo img { width:34px; height:34px; object-fit:contain; flex-shrink:0; }
+      .mobile-logo span { font-size:.92rem; font-weight:700; white-space:nowrap; }
+      .theme-toggle, .hamburger-btn { min-width:40px; min-height:40px; flex-shrink:0; }
+      .sidebar { width:min(280px, 84vw) !important; max-width:84vw; z-index:220 !important; }
+      .sidebar-overlay { z-index:210 !important; }
+      .main-content {
+        width:100% !important; max-width:100% !important; min-width:0 !important;
+        margin:0 !important; padding:1rem !important; padding-top:76px !important;
+        overflow-x:hidden;
+      }
+      .hero { width:100%; padding:1.15rem !important; margin-bottom:1rem; border-radius:14px; }
+      .hero h1 { font-size:clamp(1.25rem, 5vw, 1.65rem) !important; line-height:1.2; }
+      .hero-actions { display:flex; flex-wrap:wrap; gap:.6rem; }
+      .hero-actions .btn { flex:1 1 140px; justify-content:center; min-height:42px; }
+      .view-panel, .panel, .card, .subcard { width:100%; max-width:100%; min-width:0; }
+      .panel-heading { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; }
+      .table-wrap, .table-responsive { width:100%; max-width:100%; overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+      .booking-form-grid, .form-grid { grid-template-columns:1fr !important; }
+      .period-grid { grid-template-columns:1fr !important; }
+      input, select, textarea, button { max-width:100%; }
+      .btn { min-height:42px; }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding:.8rem !important; padding-top:72px !important; }
+      .hero { padding:1rem !important; }
+      .hero-actions { flex-direction:column; }
+      .hero-actions .btn { width:100%; }
+      .panel-heading { align-items:flex-start; }
+      .panel-heading h2, .panel-heading h3 { font-size:1rem; }
+    }
+
+    </style>
+</head>
+<body>
+
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA Portal</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:.6rem">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <button class="hamburger-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div style="width:36px;height:36px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div style="line-height:1.2">
+        <div style="color:white;font-size:0.78rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:var(--gold-300);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="client-portal.html">📊 My Overview</a>
+      <a href="client-logs.html">⏱ My Time Logs</a>
+      <a href="client-projects.html" class="active">📁 My Projects</a>
+      <a href="client-notes.html">📌 Guidelines & Notes</a>
+      <a href="client-schedule.html">📅 Book a Session</a>
+      <a href="../index.html" target="_blank">🌐 Portfolio</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name" style="color:white; display:block;">Loading…</strong>
+      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.78rem;color:rgba(255,255,255,0.4)"></span>
+      <a href="#" onclick="logout()" style="color:var(--gold-300);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- Compact Hero Header -->
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Client Workspace</span>
+        <h1 id="page-main-title">My Projects</h1>
+      </div>
+      <div class="hero-actions">
+        <span id="engagement-badge-container">
+          <span class="engagement-pill"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span> Syncing profile…</span>
+        </span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+      </div>
+    </div>
+
+    <div class="ledger-panel-wrap">
+      <div style="font-size:.68rem;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.1rem">Assigned Projects</div>
+      <div id="projectsList" class="qfa-grid">
+        <p style="color:var(--ink-3);font-size:0.88rem;">Loading projects…</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+
+function initTheme(){
+  const saved = localStorage.getItem('qfa_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('qfa_theme', next);
+}
+initTheme();
+
+let clientName = '';
+if (!auth.isLoggedIn()) { window.location.href = 'login.html'; }
+const u = auth.user();
+if (u) {
+  clientName = u ? u.name : ''; 
+  document.getElementById('user-name').textContent = u.name;
+  if (u.company) document.getElementById('user-company').textContent = u.company;
+}
+function logout() { auth.clear(); window.location.href = '../index.html'; }
+
+async function fetchProjects() {
+  const titlePrefix = clientName ? `Welcome, ${clientName} — ` : '';
+  document.getElementById('page-main-title').textContent = titlePrefix + 'My Projects';
+  
+  try {
+    const res = await fetch(`${API}/projects/client-view`, {
+      headers: auth.headers()
+    });
+    if (!res.ok) throw new Error('Failed to load projects');
+    const projects = await res.json();
+
+    const container = document.getElementById('projectsList');
+    if (!projects.length) {
+      container.innerHTML = `<p style="color:var(--ink-3);font-size:0.88rem;">No projects found for your account.</p>`;
+      return;
+    }
+
+    container.innerHTML = projects.map(p => {
+      let tasks = [];
+      try {
+        tasks = typeof p.tasks === 'string' ? JSON.parse(p.tasks) : (p.tasks || []);
+      } catch(e) { tasks = []; }
+
+      const totalTasks = p.total_tasks !== undefined ? p.total_tasks : tasks.length;
+      const completedCount = p.done_tasks !== undefined ? p.done_tasks : tasks.filter(t => t.status === 'done' || t.completed).length;
+      const percent = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+
+      let tasksHtml = '';
+      if (totalTasks > 0) {
+        const listItems = tasks.map((t, idx) => {
+          const isDone = (t.status === 'done') || (t.completed) || (p.done_tasks !== undefined && idx < p.done_tasks);
+          const isInProgress = t.status === 'in_progress';
+          const isBlocked = t.status === 'blocked';
+
+          let statusBadge = '';
+          if (isDone) {
+            statusBadge = '<span style="font-size:0.9rem; color:var(--green);">☑</span>';
+          } else if (isInProgress) {
+            statusBadge = '<span style="font-size:0.65rem; background:var(--abg); color:var(--amber); padding:0.1rem 0.4rem; border-radius:4px; font-weight:600; text-transform:uppercase;">In Progress</span>';
+          } else if (isBlocked) {
+            statusBadge = '<span style="font-size:0.65rem; background:var(--rbg); color:var(--red); padding:0.1rem 0.4rem; border-radius:4px; font-weight:600; text-transform:uppercase;">Blocked</span>';
+          } else {
+            statusBadge = '<span style="font-size:0.9rem; color:var(--ink-3);">☐</span>';
+          }
+
+          return `
+            <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.82rem; margin-bottom:0.4rem; color:${isDone ? 'var(--ink-3)' : 'var(--ink)'};">
+              <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
+                <span style="${isDone ? 'text-decoration: line-through;' : ''}">${escapeHtml(t.title || t.name || t.task)}</span>
+              </div>
+              <div>${statusBadge}</div>
+            </div>
+          `;
+        }).join('');
+
+        tasksHtml = `
+          <div style="margin-top:0.8rem; border-top:1px dashed var(--line); padding-top:0.8rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:700; color:var(--ink-3); margin-bottom:0.4rem; text-transform:uppercase;">
+              <span>Tasks (${completedCount}/${totalTasks})</span>
+              <span>${percent}%</span>
+            </div>
+            <!-- Progress Bar -->
+            <div style="width:100%; height:6px; background:var(--bg2); border-radius:3px; overflow:hidden; margin-bottom:0.6rem;">
+              <div style="width:${percent}%; height:100%; background:var(--accent); transition: width 0.3s ease;"></div>
+            </div>
+            <div style="max-height:140px; overflow-y:auto; display:flex; flex-direction:column; gap:0.3rem;">
+              ${listItems}
+            </div>
+          </div>
+        `;
+      } else {
+        tasksHtml = `
+          <div style="margin-top:0.8rem; border-top:1px dashed var(--line); padding-top:0.6rem; font-size:0.78rem; color:var(--ink-3); font-style:italic;">
+            No sub-tasks listed for this project.
+          </div>
+        `;
+      }
+
+      return `
+        <div class="qfa-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem;">
+            <div class="qfa-card-title">${escapeHtml(p.name)}</div>
+            <span class="qfa-badge badge-${p.status || 'active'}">${p.status || 'active'}</span>
+          </div>
+          <div class="qfa-card-desc">${escapeHtml(p.description || 'No description provided.')}</div>
+          
+          ${tasksHtml}
+
+          <div class="qfa-meta">
+            <span>Deadline: ${p.deadline ? new Date(p.deadline).toLocaleDateString() : 'None'}</span>
+            <span>Managed by: ${escapeHtml(p.freelancer_name || 'Freelancer')}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    document.getElementById('projectsList').innerHTML = `<p style="color:var(--red);font-size:0.88rem;">Error loading projects.</p>`;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('is-open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('is-open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+fetchProjects();
+</script>
+<script src="../chatbot-widget.js"></script>
+<script src="../client-timer-widget.js"></script>
+</body>
+</html>

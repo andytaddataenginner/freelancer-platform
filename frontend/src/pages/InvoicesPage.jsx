@@ -1,0 +1,71 @@
+import {useEffect,useMemo,useState} from 'react';
+import {Download,MessageCircle,RefreshCw,FileText,Wallet,Users,Clock3,CalendarDays} from 'lucide-react';
+import {apiRequest} from '../services/api';
+import {auth} from '../services/auth';
+
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(Number(n)||0);
+const monthNow=()=>new Date().toISOString().slice(0,7);
+const monthLabel=m=>new Date(m+'-02T00:00:00').toLocaleDateString(undefined,{month:'long',year:'numeric'});
+const cleanPhone=raw=>{let d=String(raw||'').replace(/\D/g,'');if(!d)return '';if(d.startsWith('0'))d='251'+d.slice(1);return d;};
+const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+export function InvoicesPage(){
+ const [clients,setClients]=useState([]),[logs,setLogs]=useState([]),[fixed,setFixed]=useState([]);
+ const [from,setFrom]=useState(''),[to,setTo]=useState(''),[clientId,setClientId]=useState('all');
+ const [loading,setLoading]=useState(true),[error,setError]=useState(''),[periodInitialized,setPeriodInitialized]=useState(false);
+ async function load(){
+  setLoading(true);setError('');
+  const results=await Promise.allSettled([apiRequest('/clients'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments'),apiRequest('/timelogs/latest-month')]);
+  if(results.every(x=>x.status==='rejected'))setError(results[0].reason?.message||'Unable to load invoice data.');
+  else{
+   const clientRows=results[0].status==='fulfilled'&&Array.isArray(results[0].value)?results[0].value:[];
+   const logRows=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];
+   const fixedRows=results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[];
+   setClients(clientRows);
+   setLogs(logRows);
+   setFixed(fixedRows);
+   if(!periodInitialized){
+    const latestMonth=results[3].status==='fulfilled'?results[3].value?.latest_month:null;
+    const fallbackMonths=[...new Set(logRows.map(x=>String(x.date||'').slice(0,7)).filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(x)))].sort();
+    const latest= /^\d{4}-(0[1-9]|1[0-2])$/.test(String(latestMonth||''))?latestMonth:fallbackMonths[fallbackMonths.length-1];
+    if(latest){
+     const [year,monthNumber]=latest.split('-').map(Number);
+     setFrom(latest+'-01');
+     setTo(latest+'-'+String(new Date(year,monthNumber,0).getDate()).padStart(2,'0'));
+    }
+    if(!latest){const fallback=monthNow();setFrom(fallback+'-01');setTo(new Date().toISOString().slice(0,10));}
+    setPeriodInitialized(true);
+   }
+   // latest-month is a convenience endpoint only; the loaded log rows provide a fallback.
+   const requiredFailures=results.slice(0,3).map((x,i)=>({result:x,path:['/clients','/timelogs?limit=5000','/fixed-payments'][i]})).filter(x=>x.result.status==='rejected');
+   if(requiredFailures.length)setError('Some billing data could not be loaded. '+requiredFailures.map(x=>x.path+': '+(x.result.reason?.message||'Request failed')).join(' · '));
+  }
+  setLoading(false);
+ }
+ useEffect(()=>{load();},[]);
+ const invoices=useMemo(()=>{
+  const map=new Map();
+  const get=(id,name)=>{if(!map.has(String(id)))map.set(String(id),{id:String(id),name:name||'Client',phone:clients.find(c=>String(c.id)===String(id))?.phone||'',email:clients.find(c=>String(c.id)===String(id))?.email||'',hours:0,unpaid:0,paid:0,items:[],fixed:false});return map.get(String(id));};
+  logs.filter(l=>String(l.date||'').slice(0,10)>=from&&String(l.date||'').slice(0,10)<=to&&l.payment_status!=='paid'&&l.rate_type!=='fixed').forEach(l=>{const r=get(l.client_id,l.client_name);const amount=Number(l.amount)||0;r.hours+=Number(l.hours)||0;r.unpaid+=amount;r.items.push({date:String(l.date).slice(0,10),description:l.task_description||'Professional services',hours:Number(l.hours)||0,amount});});
+  logs.filter(l=>String(l.date||'').slice(0,10)>=from&&String(l.date||'').slice(0,10)<=to&&l.payment_status==='paid'&&l.rate_type!=='fixed').forEach(l=>{const r=get(l.client_id,l.client_name);r.paid+=Number(l.amount)||0;});
+  fixed.filter(f=>String(f.month||'')>=from.slice(0,7)&&String(f.month||'')<=to.slice(0,7)).forEach(f=>{const r=get(f.client_id,f.client_name);r.fixed=true;if(f.status==='paid')r.paid+=Number(f.amount)||0;else{r.unpaid+=Number(f.amount)||0;r.items.push({date:f.month,description:'Fixed monthly fee — '+monthLabel(f.month),hours:0,amount:Number(f.amount)||0});}});
+  return [...map.values()].filter(r=>r.unpaid>0||r.paid>0).filter(r=>clientId==='all'||r.id===String(clientId)).sort((a,b)=>b.unpaid-a.unpaid);
+ },[clients,logs,fixed,from,to,clientId]);
+ const outstanding=invoices.reduce((a,r)=>a+r.unpaid,0),paid=invoices.reduce((a,r)=>a+r.paid,0);
+ function invoiceId(row){return 'QFA-'+to.replaceAll('-','')+'-'+row.id.replace(/[^a-z0-9]/gi,'').slice(-6).toUpperCase();}
+ function invoiceHtml(row){
+  const id=invoiceId(row),issued=new Date().toLocaleDateString();
+  const lineItems=row.items.map(i=>'<tr><td>'+safe(i.date)+'</td><td>'+safe(i.description)+'</td><td style="text-align:right">'+(i.hours?i.hours.toFixed(2)+' h':'—')+'</td><td style="text-align:right">'+money(i.amount)+'</td></tr>').join('');
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${id}</title><style>*{box-sizing:border-box}body{font:14px Arial,sans-serif;color:#24324b;margin:0;background:#f3f5f9}.sheet{max-width:850px;margin:30px auto;background:white;padding:48px 54px;box-shadow:0 8px 32px #0d23531a}.bar{height:5px;background:linear-gradient(90deg,#0d2353,#1a5cff);margin-bottom:30px}.head{display:flex;justify-content:space-between;gap:20px}.brand{font-size:23px;font-weight:700;color:#0d2353}.muted{color:#71809a;font-size:12px}.invoice-no{text-align:right}.invoice-no strong{display:block;font-size:24px;color:#0d2353;margin-top:5px}.meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:36px 0}.meta label{display:block;font-size:10px;color:#8390a5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}.meta strong{display:block;color:#14264e;margin-bottom:5px}table{width:100%;border-collapse:collapse;margin:25px 0}th{text-align:left;background:#f1f4fa;color:#61708a;font-size:10px;text-transform:uppercase;padding:13px}td{padding:14px 13px;border-bottom:1px solid #e9edf4;font-size:12px}.total{margin-left:auto;width:280px;background:#f5f7fb;padding:18px;border-radius:10px}.total div{display:flex;justify-content:space-between;margin:7px 0}.total b{font-size:21px;color:#0d2353}.status{display:inline-block;padding:6px 10px;border-radius:20px;background:#fff2d2;color:#946400;font-size:10px;font-weight:bold}.footer{margin-top:48px;border-top:1px solid #e9edf4;padding-top:18px;color:#7b879b;font-size:11px}@media print{body{background:white}.sheet{margin:0;max-width:none;box-shadow:none;padding:35px 42px}@page{size:A4;margin:10mm}}</style></head><body><main class="sheet"><div class="bar"></div><div class="head"><div><div class="brand">QUICK FREELANCING AGENCY</div><div class="muted">Professional consulting invoice</div></div><div class="invoice-no"><span class="muted">INVOICE</span><strong>${id}</strong><span class="muted">Issued ${issued}</span></div></div><div class="meta"><div><label>Issued by</label><strong>Quick Freelancing Agency</strong><span class="muted">${safe(auth.user()?.name||'QFA')}</span><br><span class="muted">${safe(auth.user()?.email||'')}</span></div><div><label>Bill to</label><strong>${safe(row.name)}</strong><span class="muted">${safe(row.email)}</span></div><div><label>Billing period</label><strong>${safe(from)} — ${safe(to)}</strong><span class="status">OUTSTANDING</span></div></div><table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Hours</th><th style="text-align:right">Amount</th></tr></thead><tbody>${lineItems}</tbody></table><div class="total"><div><span>Paid in period</span><span>${money(row.paid)}</span></div><div><span>Outstanding</span><b>${money(row.unpaid)}</b></div></div><div class="footer">Thank you for working with Quick Freelancing Agency. Please contact us if you have any questions about this invoice.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),350)</script></body></html>`;
+ }
+ function generate(row){const w=window.open('','_blank','width=980,height=780');if(!w){setError('Please allow pop-ups to generate the invoice PDF.');return;}w.document.open();w.document.write(invoiceHtml(row));w.document.close();}
+ function whatsapp(row){const phone=cleanPhone(row.phone);if(!phone){setError('No phone number is saved for '+row.name+'. Add the client phone number in Client Management first.');return;}const message=['Hello '+row.name+',','', 'This is a friendly reminder from Quick Freelancing Agency about your outstanding balance.','', 'Invoice: '+invoiceId(row),'Billing period: '+from+' to '+to,'Outstanding amount: '+money(row.unpaid),'', 'Please let us know if you have any questions. Thank you!'].join('\n');window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(message),'_blank','noopener,noreferrer');}
+ return <div className="module-page invoices-page">
+  <div className="page-heading"><div><div className="eyebrow">BILLING & COLLECTIONS</div><h1>Invoice Hub</h1><p>Generate client invoices, review outstanding balances and send payment reminders directly through WhatsApp.</p></div><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh data</button></div>
+  {error&&<div className="notice-error" role="alert">{error}</div>}
+  <div className="invoice-filter panel-card"><label>From date<input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label>To date<input type="date" value={to} min={from} onChange={e=>setTo(e.target.value)}/></label><label>Client<select value={clientId} onChange={e=>setClientId(e.target.value)}><option value="all">All clients</option>{clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>
+  <div className="metric-grid invoice-kpis"><article className="metric-card"><div className="metric-icon amber"><Wallet size={18}/></div><div className="metric-label">Outstanding balance</div><div className="metric-value">{loading?'—':money(outstanding)}</div><div className="metric-foot">Unpaid across selected clients</div></article><article className="metric-card"><div className="metric-icon green"><FileText size={18}/></div><div className="metric-label">Payments received</div><div className="metric-value">{loading?'—':money(paid)}</div><div className="metric-foot">Paid in selected period</div></article><article className="metric-card"><div className="metric-icon blue"><Users size={18}/></div><div className="metric-label">Clients with billing activity</div><div className="metric-value">{loading?'—':invoices.length}</div><div className="metric-foot">Based on selected filters</div></article><article className="metric-card"><div className="metric-icon violet"><Clock3 size={18}/></div><div className="metric-label">Outstanding hours</div><div className="metric-value">{loading?'—':invoices.reduce((a,r)=>a+r.hours,0).toFixed(2)+'h'}</div><div className="metric-foot">Unpaid hourly work</div></article></div>
+  <section className="panel-card"><div className="panel-heading"><div><h2>Client invoices</h2><p>Each invoice includes unpaid work and fixed monthly fees for the selected period.</p></div><span className="panel-icon"><CalendarDays size={18}/></span></div>{loading?<p className="empty-state">Loading invoice records…</p>:!invoices.length?<div className="empty-state"><FileText size={30}/><p>No billing records match these filters.</p></div>:<div className="table-scroll"><table><thead><tr><th>Invoice</th><th>Client</th><th>Type</th><th>Unpaid hours</th><th>Outstanding</th><th>Paid</th><th>Actions</th></tr></thead><tbody>{invoices.map(r=><tr key={r.id}><td><strong>{invoiceId(r)}</strong></td><td><strong>{r.name}</strong><small className="table-sub">{r.phone||'No phone number saved'}</small></td><td>{r.fixed?'Fixed / mixed':'Hourly'}</td><td>{r.hours.toFixed(2)}h</td><td><strong className="invoice-due">{money(r.unpaid)}</strong></td><td>{money(r.paid)}</td><td><div className="invoice-actions"><button className="button-secondary" onClick={()=>generate(r)}><Download size={14}/> Generate PDF</button>{r.unpaid>0&&<button className="button-whatsapp" onClick={()=>whatsapp(r)}><MessageCircle size={14}/> WhatsApp</button>}</div></td></tr>)}</tbody></table></div>}</section>
+  <p className="invoice-help">PDF generation opens a print-ready invoice. Choose “Save to PDF” in your browser’s print dialog. WhatsApp opens a pre-filled reminder; you review and send it yourself.</p>
+ </div>;
+}
