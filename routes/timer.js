@@ -279,7 +279,7 @@ router.get('/agency/status', verifyToken, async (req, res, next) => {
              END AS elapsed_sec
       FROM active_timers t
       WHERE t.freelancer_id = ANY($1) AND t.is_running = TRUE
-      ORDER BY (t.client_id = $2) DESC, t.started_at DESC
+      ORDER BY (t.client_id <> $2) DESC, t.started_at DESC
       LIMIT 1
     `, [freelancerIds, req.user.id]);
 
