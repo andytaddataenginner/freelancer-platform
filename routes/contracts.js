@@ -139,7 +139,9 @@ async function changeStatus(req, res, next, action) {
       if (from < new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()))) {
         const err = new Error('The effective date cannot be earlier than the current contract period.'); err.status = 400; throw err;
       }
-      if (current.effective_to == null) {\n        await db.query('UPDATE client_contracts SET effective_to=$1::date - INTERVAL \'1 day\' WHERE id=$2', [effective_from, current.id]);\n      }
+      if (current.effective_to == null) {
+        await db.query('UPDATE client_contracts SET effective_to=$1::date - INTERVAL \'1 day\' WHERE id=$2', [effective_from, current.id]);
+      }
       const nextStatus = action === 'terminate' ? 'terminated' : action === 'pause' ? 'paused' : 'active';
       const inserted = await db.query(`
         INSERT INTO client_contracts
