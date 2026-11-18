@@ -1,20 +1,61 @@
 const router = require('express').Router();
-const pool   = require('../db/pool');
+const crypto = require('crypto');
+const pool = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// GET /api/fixed-payments/:clientId — get records filtered by active contract status and client creation date
+function validMonth(month) {
+  return typeof month === 'string' && /^\\d{4}-(0[1-9]|1[0-2])$/.test(month);
+}
+
+// Select the latest contract state that overlaps the billing month. A paused or
+// terminated latest state prevents invoice creation, even if an older row was active.
+async function generateForFreelancer(db, freelancerId, month) {
+  const eligible = await db.query(`
+    WITH month_bounds AS (
+      SELECT to_date($2 || '-01', 'YYYY-MM-DD') AS month_start,
+             (to_date($2 || '-01', 'YYYY-MM-DD') + INTERVAL '1 month - 1 day')::date AS month_end
+    ),
+    latest_contract AS (
+      SELECT DISTINCT ON (cc.client_id)
+             cc.client_id, cc.freelancer_id, cc.rate_type, cc.fixed_price, cc.status
+      FROM client_contracts cc
+      CROSS JOIN month_bounds mb
+      WHERE cc.freelancer_id = $1
+        AND cc.effective_from <= mb.month_end
+        AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
+      ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
+    )
+    SELECT lc.client_id, lc.fixed_price
+    FROM latest_contract lc
+    JOIN users u ON u.id = lc.client_id
+    CROSS JOIN month_bounds mb
+    WHERE lc.status = 'active'
+      AND lc.rate_type = 'fixed'
+      AND lc.fixed_price IS NOT NULL
+      AND mb.month_start >= date_trunc('month', u.created_at)::date
+  `, [freelancerId, month]);
+
+  let created = 0;
+  for (const client of eligible.rows) {
+    const inserted = await db.query(`
+      INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
+      VALUES ($1, $2, $3, $4, 'unpaid')
+      ON CONFLICT (client_id, month) DO NOTHING
+      RETURNING id
+    `, [client.client_id, freelancerId, month, client.fixed_price]);
+    if (inserted.rowCount) created++;
+  }
+  return { eligible: eligible.rowCount, created };
+}
+
+// GET /api/fixed-payments/:clientId — preserve invoice history even if a contract is later paused/terminated.
 router.get('/:clientId', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
-      SELECT f.* 
+      SELECT f.*
       FROM fixed_monthly_payments f
       JOIN users u ON u.id = f.client_id
-      LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
-        AND cc.freelancer_id = f.freelancer_id
-        AND cc.effective_from <= to_date(f.month || '-01', 'YYYY-MM-DD')
-        AND (cc.effective_to IS NULL OR cc.effective_to >= to_date(f.month || '-01', 'YYYY-MM-DD'))
       WHERE f.client_id = $1 AND f.freelancer_id = $2
-        AND (cc.status IS NULL OR cc.status = 'active')
         AND to_date(f.month || '-01', 'YYYY-MM-DD') >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC
     `, [req.params.clientId, req.user.id]);
@@ -22,149 +63,101 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/fixed-payments/generate — generate single monthly record
-router.post('/generate', requireFreelancer, async (req, res, next) => {
+// Internal monthly scheduler endpoint. Configure FIXED_INVOICE_CRON_SECRET on the API service.
+router.post('/auto-generate', async (req, res, next) => {
   try {
-    const { client_id, month } = req.body;
-    if (!client_id || !month)
-      return res.status(400).json({ error: 'client_id and month required' });
-
-    const firstOfMonth = `${month}-01`;
-
-    // Verify client has an active fixed-rate contract for this month and month >= client creation month
-    const contractCheck = await pool.query(`
-      SELECT cc.fixed_price, cc.status, to_char(c.created_at, 'YYYY-MM') AS start_month
-      FROM client_contracts cc
-      JOIN clients c ON c.user_id = cc.client_id AND c.freelancer_id = cc.freelancer_id
-      JOIN users u ON u.id = c.user_id
-      WHERE cc.client_id = $1 AND cc.freelancer_id = $2
-        AND cc.effective_from <= $3::date
-        AND (cc.effective_to IS NULL OR cc.effective_to >= $3::date)
-        AND $3::text >= to_char(u.created_at, 'YYYY-MM')
-      ORDER BY cc.effective_from DESC, cc.id DESC LIMIT 1
-    `, [client_id, req.user.id, firstOfMonth]);
-
-    if (!contractCheck.rows.length || contractCheck.rows[0].status !== 'active') {
-      return res.status(400).json({ error: 'Client contract is not active for the selected month or month precedes client creation.' });
+    const expected = process.env.FIXED_INVOICE_CRON_SECRET || '';
+    const supplied = (req.headers.authorization || '').replace(/^Bearer\\s+/i, '');
+    const expectedBuffer = Buffer.from(expected);
+    const suppliedBuffer = Buffer.from(supplied);
+    if (!expected || expectedBuffer.length !== suppliedBuffer.length ||
+        !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
+      return res.status(401).json({ error: 'Unauthorized scheduler request.' });
     }
 
-    const amount = contractCheck.rows[0].fixed_price;
+    const month = req.body?.month || new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Addis_Ababa', year: 'numeric', month: '2-digit'
+    }).format(new Date()).slice(0, 7);
+    if (!validMonth(month)) return res.status(400).json({ error: 'month must use YYYY-MM format.' });
 
-    const { rows } = await pool.query(`
-      INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
-      VALUES ($1, $2, $3, $4, 'unpaid')
-      ON CONFLICT (client_id, month) DO NOTHING
-      RETURNING *
-    `, [client_id, req.user.id, month, amount]);
-
-    if (!rows.length) {
-      const existing = await pool.query(
-        'SELECT * FROM fixed_monthly_payments WHERE client_id=$1 AND month=$2',
-        [client_id, month]
-      );
-      return res.json(existing.rows[0]);
+    const freelancers = await pool.query(
+      'SELECT DISTINCT freelancer_id FROM client_contracts WHERE freelancer_id IS NOT NULL'
+    );
+    const results = [];
+    for (const row of freelancers.rows) {
+      const result = await generateForFreelancer(pool, row.freelancer_id, month);
+      results.push({ freelancer_id: row.freelancer_id, ...result });
     }
-    res.status(201).json(rows[0]);
+    res.json({ month, freelancers: results.length, created: results.reduce((sum, item) => sum + item.created, 0), results });
   } catch (e) { next(e); }
 });
 
-// PATCH /api/fixed-payments/:id/status — mark a month as paid or unpaid
+// POST /api/fixed-payments/generate — manual generation for one month.
+router.post('/generate', requireFreelancer, async (req, res, next) => {
+  try {
+    const { client_id, month } = req.body;
+    if (!client_id || !validMonth(month))
+      return res.status(400).json({ error: 'client_id and a valid month (YYYY-MM) are required.' });
+
+    const generated = await generateForFreelancer(pool, req.user.id, month);
+    const existing = await pool.query(
+      'SELECT * FROM fixed_monthly_payments WHERE client_id=$1 AND freelancer_id=$2 AND month=$3',
+      [client_id, req.user.id, month]
+    );
+    if (existing.rowCount) return res.json(existing.rows[0]);
+    return res.status(400).json({ error: 'No active fixed-price contract overlaps the selected month; no invoice was generated.', generated });
+  } catch (e) { next(e); }
+});
+
+// PATCH /api/fixed-payments/:id/status — mark a month as paid or unpaid.
 router.patch('/:id/status', requireFreelancer, async (req, res, next) => {
   try {
     const { status, note } = req.body;
-    if (!['paid','unpaid'].includes(status))
+    if (!['paid', 'unpaid'].includes(status))
       return res.status(400).json({ error: 'status must be paid or unpaid' });
-
     const { rows } = await pool.query(`
       UPDATE fixed_monthly_payments
-      SET status  = $1,
-          paid_at = $2,
-          note    = $3
-      WHERE id = $4 AND freelancer_id = $5
-      RETURNING *
-    `, [
-      status,
-      status === 'paid' ? new Date() : null,
-      note || null,
-      req.params.id,
-      req.user.id
-    ]);
-
+      SET status=$1, paid_at=$2, note=$3
+      WHERE id=$4 AND freelancer_id=$5 RETURNING *
+    `, [status, status === 'paid' ? new Date() : null, note || null, req.params.id, req.user.id]);
     if (!rows.length) return res.status(404).json({ error: 'Record not found' });
     res.json(rows[0]);
   } catch (e) { next(e); }
 });
 
-// POST /api/fixed-payments/bulk-generate — bulk generation (skips non-active contracts & pre-creation months)
+// POST /api/fixed-payments/bulk-generate — only clients whose latest contract state is active and fixed.
 router.post('/bulk-generate', requireFreelancer, async (req, res, next) => {
   try {
     const { month } = req.body;
-    if (!month) return res.status(400).json({ error: 'month required' });
-    const firstOfMonth = `${month}-01`;
-
-    const clients = await pool.query(`
-      SELECT DISTINCT cc.client_id AS id, cc.fixed_price
-      FROM client_contracts cc
-      JOIN users u ON u.id = cc.client_id
-      WHERE cc.freelancer_id = $1 
-        AND cc.rate_type = 'fixed' 
-        AND cc.status = 'active'
-        AND cc.fixed_price IS NOT NULL
-        AND cc.effective_from <= to_date($2::text || '-01', 'YYYY-MM-DD')
-        AND (cc.effective_to IS NULL OR cc.effective_to >= to_date($2::text || '-01', 'YYYY-MM-DD'))
-        AND to_date($2::text || '-01', 'YYYY-MM-DD') >= date_trunc('month', u.created_at)::date
-    `, [req.user.id, month]);
-
-    await Promise.all(clients.rows.map(cl =>
-      pool.query(`
-        INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
-        VALUES ($1, $2, $3, $4, 'unpaid')
-        ON CONFLICT (client_id, month) DO NOTHING
-      `, [cl.id, req.user.id, month, cl.fixed_price])
-    ));
-
+    if (!validMonth(month)) return res.status(400).json({ error: 'A valid month (YYYY-MM) is required.' });
+    const generated = await generateForFreelancer(pool, req.user.id, month);
     const { rows } = await pool.query(`
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_monthly_payments f
       JOIN users u ON u.id = f.client_id
-      LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
-        AND cc.freelancer_id = f.freelancer_id
-        AND cc.effective_from <= to_date($2::text || '-01', 'YYYY-MM-DD')
-        AND (cc.effective_to IS NULL OR cc.effective_to >= to_date($2::text || '-01', 'YYYY-MM-DD'))
-      WHERE f.freelancer_id = $1 AND f.month = $2
-        AND (cc.status IS NULL OR cc.status = 'active')
-        AND to_date(f.month || '-01', 'YYYY-MM-DD') >= date_trunc('month', u.created_at)::date
+      WHERE f.freelancer_id=$1 AND f.month=$2
       ORDER BY u.name
     `, [req.user.id, month]);
-
-    res.json(rows);
+    res.json({ ...generated, rows });
   } catch (e) { next(e); }
 });
 
-// DELETE /api/fixed-payments/:id — remove a monthly record
+// DELETE /api/fixed-payments/:id — remove a monthly record.
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
-    await pool.query(
-      'DELETE FROM fixed_monthly_payments WHERE id=$1 AND freelancer_id=$2',
-      [req.params.id, req.user.id]
-    );
+    await pool.query('DELETE FROM fixed_monthly_payments WHERE id=$1 AND freelancer_id=$2', [req.params.id, req.user.id]);
     res.json({ message: 'Deleted' });
   } catch (e) { next(e); }
 });
 
-// GET /api/fixed-payments — fetch all active contract fixed payments (filtered by creation date)
+// GET /api/fixed-payments — retain payment history regardless of current contract status.
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_monthly_payments f
       JOIN users u ON u.id = f.client_id
-      LEFT JOIN client_contracts cc ON cc.client_id = f.client_id 
-        AND cc.freelancer_id = f.freelancer_id
-        AND cc.effective_from <= to_date(f.month || '-01', 'YYYY-MM-DD')
-        AND (cc.effective_to IS NULL OR cc.effective_to >= to_date(f.month || '-01', 'YYYY-MM-DD'))
-      WHERE f.freelancer_id = $1
-        AND (cc.status IS NULL OR cc.status = 'active')
+      WHERE f.freelancer_id=$1
         AND to_date(f.month || '-01', 'YYYY-MM-DD') >= date_trunc('month', u.created_at)::date
       ORDER BY f.month DESC, u.name
     `, [req.user.id]);
@@ -172,52 +165,27 @@ router.get('/', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/fixed-payments/backfill-all
+// POST /api/fixed-payments/backfill-all — manual backfill using the same status-aware eligibility rule.
 router.post('/backfill-all', requireFreelancer, async (req, res, next) => {
   try {
     const { start_month } = req.body;
-    if (!start_month) return res.status(400).json({ error: 'start_month required (YYYY-MM)' });
+    if (!validMonth(start_month)) return res.status(400).json({ error: 'start_month must use YYYY-MM format.' });
+    const nowMonth = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Addis_Ababa', year: 'numeric', month: '2-digit'
+    }).format(new Date()).slice(0, 7);
+    if (start_month > nowMonth) return res.status(400).json({ error: 'start_month cannot be in the future.' });
 
-    const contracts = await pool.query(`
-      SELECT cc.client_id, cc.fixed_price, 
-             to_char(cc.effective_from, 'YYYY-MM') AS start_month,
-             to_char(u.created_at, 'YYYY-MM') AS client_created_month
-      FROM client_contracts cc
-      JOIN users u ON u.id = cc.client_id
-      WHERE cc.freelancer_id = $1 AND cc.rate_type = 'fixed' AND cc.status = 'active' AND cc.fixed_price IS NOT NULL
-    `, [req.user.id]);
-
-    const now = new Date();
-    const endY = now.getFullYear(), endM = now.getMonth() + 1;
-
-    function monthsFrom(fromMonth) {
-      const months = [];
-      let [y, m] = fromMonth.split('-').map(Number);
-      while (y < endY || (y === endY && m <= endM)) {
-        months.push(`${y}-${String(m).padStart(2, '0')}`);
-        m++; if (m > 12) { m = 1; y++; }
-      }
-      return months;
-    }
-
+    let [year, month] = start_month.split('-').map(Number);
+    const [endYear, endMonth] = nowMonth.split('-').map(Number);
     let created = 0;
-    for (const cl of contracts.rows) {
-      let effectiveStart = cl.start_month > start_month ? cl.start_month : start_month;
-      if (effectiveStart < cl.client_created_month) {
-        effectiveStart = cl.client_created_month;
-      }
-      const months = monthsFrom(effectiveStart);
-      for (const mo of months) {
-        const r = await pool.query(`
-          INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
-          VALUES ($1, $2, $3, $4, 'unpaid')
-          ON CONFLICT (client_id, month) DO NOTHING
-          RETURNING id
-        `, [cl.client_id, req.user.id, mo, cl.fixed_price]);
-        if (r.rows.length) created++;
-      }
+    while (year < endYear || (year === endYear && month <= endMonth)) {
+      const current = `${year}-${String(month).padStart(2, '0')}`;
+      const result = await generateForFreelancer(pool, req.user.id, current);
+      created += result.created;
+      month++;
+      if (month > 12) { month = 1; year++; }
     }
-    res.json({ clients: contracts.rows.length, created });
+    res.json({ created, through_month: nowMonth });
   } catch (e) { next(e); }
 });
 
