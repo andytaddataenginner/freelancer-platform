@@ -89,17 +89,17 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
       const inserted = await db.query(`
         INSERT INTO client_contracts
           (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
-        VALUES ($1,$2,$3,$4,$5,'active',$6,$7) RETURNING *
-      `, [clientId, req.user.id, rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, effective_from, String(note).trim()]);
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
+      `, [clientId, req.user.id, rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, current.rows[0].status, effective_from, String(note).trim()]);
       await db.query(`
-        UPDATE clients SET rate_type=$1, hourly_rate=$2, fixed_price=$3, is_active=TRUE
+        UPDATE clients SET rate_type=$1, hourly_rate=$2, fixed_price=$3, is_active=$4
         WHERE user_id=$4 AND freelancer_id=$5
-      `, [rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, clientId, req.user.id]);
+      `, [rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, current.rows[0].status === 'active', clientId, req.user.id]);
       if (rate_type === 'hourly') {
         await db.query(`
           DELETE FROM fixed_monthly_payments
           WHERE client_id=$1 AND freelancer_id=$2
-            AND to_char(month::date, 'YYYY-MM') >= $3 AND status='unpaid'
+            AND month >= $3 AND status='unpaid'
         `, [clientId, req.user.id, effective_from.slice(0, 7)]);
       }
       return inserted.rows[0];
@@ -152,7 +152,7 @@ async function changeStatus(req, res, next, action) {
         await db.query(`
           DELETE FROM fixed_monthly_payments
           WHERE client_id=$1 AND freelancer_id=$2
-            AND to_char(month::date, 'YYYY-MM') >= $3 AND status='unpaid'
+            AND month >= $3 AND status='unpaid'
         `, [clientId, req.user.id, effective_from.slice(0, 7)]);
       }
       await db.query('UPDATE clients SET is_active=$1 WHERE user_id=$2 AND freelancer_id=$3', [nextStatus === 'active', clientId, req.user.id]);
