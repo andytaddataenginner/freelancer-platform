@@ -105,7 +105,7 @@ export function ClientPortalPage(){
     <small>{availabilityStatus==="busy"?"Your freelancer is currently working.":availabilityStatus==="available"?"Your freelancer is ready to take on work.":availabilityStatus==="offline"?"Your freelancer is currently offline.":"Checking the latest availability."}</small>
    </section>
    {data.liveTimer&&<section className="client-mobile-live-monitor" aria-live="polite">
-    <div className="client-mobile-live-heading"><span className="client-mobile-live-dot"/>{data.liveTimer.is_paused?'SESSION PAUSED':'LIVE WORK SESSION'}</div>
+    <div className="client-mobile-live-heading"><span className="client-mobile-live-dot"/>{data.liveTimer.is_paused?'Session paused':'Live work session'}</div>
     <strong>{data.liveTimer.description||'Work session in progress'}</strong>
     <div className="client-mobile-live-clock"><Timer size={16}/>{timerClock}</div>
     <small>Your freelancer is tracking time for your account</small>
