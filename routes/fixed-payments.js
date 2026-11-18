@@ -4,7 +4,7 @@ const pool = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
 function validMonth(month) {
-  return typeof month === 'string' && /^\\d{4}-(0[1-9]|1[0-2])$/.test(month);
+  return typeof month === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
 }
 
 // Select the latest contract state that overlaps the billing month. A paused or
@@ -68,7 +68,7 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
 router.post('/auto-generate', async (req, res, next) => {
   try {
     const expected = process.env.FIXED_INVOICE_CRON_SECRET || '';
-    const supplied = (req.headers.authorization || '').replace(/^Bearer\\s+/i, '');
+    const supplied = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const expectedBuffer = Buffer.from(expected);
     const suppliedBuffer = Buffer.from(supplied);
     if (!expected || expectedBuffer.length !== suppliedBuffer.length ||
