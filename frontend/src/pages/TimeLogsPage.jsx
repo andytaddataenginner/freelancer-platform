@@ -19,6 +19,7 @@ export function TimeLogsPage(){
  async function loadFixed(id){try{const rows=await apiRequest('/fixed-payments/'+id);setFixed(Array.isArray(rows)?rows:[]);}catch(e){setError(e.message);}}
  useEffect(()=>{loadClients().catch(e=>setError(e.message));},[]);
  useEffect(()=>{if(filterClient&&clients.find(c=>String(c.id)===String(filterClient))?.rate_type==='fixed')loadFixed(filterClient);else loadLogs();},[filterClient,payment,from,to,clients]);
+ useEffect(()=>{const refresh=()=>{if(isFixed)loadFixed(filterClient);else loadLogs();};window.addEventListener('qfa:timer-saved',refresh);return()=>window.removeEventListener('qfa:timer-saved',refresh);},[isFixed,filterClient,payment,from,to]);
  const isFixed=!!filterClient&&clients.find(c=>String(c.id)===String(filterClient))?.rate_type==='fixed';
  const totals=useMemo(()=>logs.reduce((a,l)=>{a.hours+=Number(l.hours)||0;a[l.payment_status==='paid'?'paid':'unpaid']+=Number(l.amount)||0;return a;},{hours:0,paid:0,unpaid:0}),[logs]);
  const displayedLogs=useMemo(()=>{const sorted=[...logs].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return showAllLogs?sorted:sorted.slice(0,8);},[logs,showAllLogs]);
