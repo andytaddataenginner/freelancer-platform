@@ -36,9 +36,9 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
-    // ── Ensure one full fixed invoice exists for the month when the latest
-    // contract state overlapping that month is ACTIVE and FIXED. This includes
-    // contracts resumed mid-month and excludes paused/terminated contracts.
+    // ── Ensure one full fixed invoice exists only when the contract is active
+    // and fixed on the first calendar day of the billing month. Mid-month
+    // resumes begin billing on the following month's first day.
     try {
       await pool.query(`
         WITH month_bounds AS (
@@ -51,7 +51,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
           FROM client_contracts cc
           CROSS JOIN month_bounds mb
           WHERE cc.freelancer_id = $2
-            AND cc.effective_from <= mb.month_end
+            AND cc.effective_from <= mb.month_start
             AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
           ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
         )
@@ -143,7 +143,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
         FROM client_contracts cc
         CROSS JOIN month_bounds mb
         WHERE cc.freelancer_id = $1
-          AND cc.effective_from <= mb.month_end
+          AND cc.effective_from <= mb.month_start
           AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
         ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
       )
