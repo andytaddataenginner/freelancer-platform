@@ -118,22 +118,28 @@ async function changeStatus(req, res, next, action) {
     const record = await withTransaction(async db => {
       const owned = await db.query('SELECT user_id FROM clients WHERE user_id=$1 AND freelancer_id=$2 FOR UPDATE', [clientId, req.user.id]);
       if (!owned.rowCount) { const err = new Error('Client not found.'); err.status = 404; throw err; }
-      const currentResult = await db.query(`
-        SELECT * FROM client_contracts
-        WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
-        ORDER BY effective_from DESC, id DESC LIMIT 1 FOR UPDATE
-      `, [clientId, req.user.id]);
-      if (!currentResult.rowCount) { const err = new Error('No current contract found.'); err.status = 404; throw err; }
+      const currentResult = action === 'resume'
+        ? await db.query(`
+            SELECT * FROM client_contracts
+            WHERE client_id=$1 AND freelancer_id=$2
+            ORDER BY effective_from DESC, id DESC LIMIT 1 FOR UPDATE
+          `, [clientId, req.user.id])
+        : await db.query(`
+            SELECT * FROM client_contracts
+            WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
+            ORDER BY effective_from DESC, id DESC LIMIT 1 FOR UPDATE
+          `, [clientId, req.user.id]);
+      if (!currentResult.rowCount) { const err = new Error(action === 'resume' ? 'No contract history exists for this client.' : 'No current contract found.'); err.status = 404; throw err; }
       const current = currentResult.rows[0];
       if (action === 'pause' && current.status !== 'active') { const err = new Error('Only an active contract can be paused.'); err.status = 400; throw err; }
-      if (action === 'resume' && current.status !== 'paused') { const err = new Error('This client does not have a paused contract to resume. Refresh the contract history and try again.'); err.status = 400; throw err; }
+      if (action === 'resume' && current.status !== 'paused') { const err = new Error(`The latest contract record is ${current.status}, not paused. Refresh the contract history and check the latest entry before resuming.`); err.status = 400; throw err; }
       if (action === 'terminate' && current.status === 'terminated') { const err = new Error('This contract is already terminated.'); err.status = 400; throw err; }
       const from = new Date(effective_from + 'T00:00:00Z');
       const start = new Date(current.effective_from);
       if (from < new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()))) {
         const err = new Error('The effective date cannot be earlier than the current contract period.'); err.status = 400; throw err;
       }
-      await db.query('UPDATE client_contracts SET effective_to=$1::date - INTERVAL \'1 day\' WHERE id=$2', [effective_from, current.id]);
+      if (current.effective_to == null) {\n        await db.query('UPDATE client_contracts SET effective_to=$1::date - INTERVAL \'1 day\' WHERE id=$2', [effective_from, current.id]);\n      }
       const nextStatus = action === 'terminate' ? 'terminated' : action === 'pause' ? 'paused' : 'active';
       const inserted = await db.query(`
         INSERT INTO client_contracts
