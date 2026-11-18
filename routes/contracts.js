@@ -102,6 +102,16 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
           WHERE client_id=$1 AND freelancer_id=$2
             AND month >= $3 AND status='unpaid'
         `, [clientId, req.user.id, effective_from.slice(0, 7)]);
+      } else if (current.rows[0].status === 'active') {
+        await db.query(`
+          INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
+          SELECT $1, $2, $3, $4, 'unpaid'
+          WHERE EXISTS (
+            SELECT 1 FROM users
+            WHERE id=$1 AND date_trunc('month', created_at)::date <= to_date($3 || '-01', 'YYYY-MM-DD')
+          )
+          ON CONFLICT (client_id, month) DO NOTHING
+        `, [clientId, req.user.id, effective_from.slice(0, 7), Number(fixed_price)]);
       }
       return inserted.rows[0];
     });
@@ -157,6 +167,19 @@ async function changeStatus(req, res, next, action) {
         `, [clientId, req.user.id, effective_from.slice(0, 7)]);
       }
       await db.query('UPDATE clients SET is_active=$1 WHERE user_id=$2 AND freelancer_id=$3', [nextStatus === 'active', clientId, req.user.id]);
+      // Resuming a fixed-price contract creates the full monthly invoice immediately.
+      // The unique (client_id, month) key makes this safe to retry without duplicates.
+      if (action === 'resume' && current.rate_type === 'fixed' && current.fixed_price != null) {
+        await db.query(`
+          INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
+          SELECT $1, $2, $3, $4, 'unpaid'
+          WHERE EXISTS (
+            SELECT 1 FROM users
+            WHERE id=$1 AND date_trunc('month', created_at)::date <= to_date($3 || '-01', 'YYYY-MM-DD')
+          )
+          ON CONFLICT (client_id, month) DO NOTHING
+        `, [clientId, req.user.id, effective_from.slice(0, 7), current.fixed_price]);
+      }
       return inserted.rows[0];
     });
     return res.status(201).json(record);
