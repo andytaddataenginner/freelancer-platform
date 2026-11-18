@@ -11,7 +11,10 @@ export const auth = {
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('login_time', String(Date.now()));
   },
-  clear: () => ['token', 'user', 'login_time'].forEach((key) => localStorage.removeItem(key)),
+  clear: () => {
+    ['token', 'user', 'login_time'].forEach((key) => localStorage.removeItem(key));
+    window.dispatchEvent(new Event('qfa:logout'));
+  },
   isValid: () => {
     if (!localStorage.getItem('token')) return false;
     const signedInAt = Number(localStorage.getItem('login_time') || 0);
