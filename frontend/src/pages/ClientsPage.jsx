@@ -13,7 +13,8 @@ export function ClientsPage(){
  const navigate=useNavigate();
  async function load(){setLoading(true);setError('');try{const rows=await apiRequest('/clients');setClients(Array.isArray(rows)?rows:[]);}catch(e){setError(e.message||'Could not load clients.');}finally{setLoading(false);}}
  useEffect(()=>{load();},[]);
- const filtered=useMemo(()=>clients.filter(c=>[c.name,c.email,c.company,c.phone].join(' ').toLowerCase().includes(query.toLowerCase())),[clients,query]);\n const rateChanged=modal==='edit'&&editing&&(form.rate_type!==(editing.rate_type||'hourly')||String(form.hourly_rate||'')!==String(editing.hourly_rate??'')||String(form.fixed_price||'')!==String(editing.fixed_price??''));
+ const filtered=useMemo(()=>clients.filter(c=>[c.name,c.email,c.company,c.phone].join(' ').toLowerCase().includes(query.toLowerCase())),[clients,query]);
+ const rateChanged=modal==='edit'&&editing&&(form.rate_type!==(editing.rate_type||'hourly')||String(form.hourly_rate||'')!==String(editing.hourly_rate??'')||String(form.fixed_price||'')!==String(editing.fixed_price??''));
  function change(field,value){setForm(current=>({...current,[field]:value}));}
  function add(){setEditing(null);setForm(emptyForm);setNotice('');setModal('add');}
  function edit(c){setEditing(c);setForm({name:c.name||'',email:c.email||'',company:c.company||'',phone:c.phone||'',password:'',notes:c.notes||'',rate_type:c.rate_type||'hourly',hourly_rate:c.hourly_rate??'',fixed_price:c.fixed_price??'',rate_effective_from:new Date().toLocaleDateString('en-CA'),rate_reason:''});setNotice('');setModal('edit');}
