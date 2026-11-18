@@ -1427,3 +1427,30 @@
 }
 .client-portal-page.portal-dark .client-logs-page .portal-month tbody tr:last-child td{border-bottom:0!important}
 .client-portal-page.portal-dark .client-logs-page .empty-state{color:#aab7cb!important}
+
+/* Compact, aligned freelancer availability panel in the desktop client sidebar. */
+.client-portal-page .client-sidebar .client-mobile-availability{
+ display:flex;flex-direction:column;align-items:stretch;gap:5px;
+ width:auto;min-width:0;margin:18px 2px 12px;padding:10px 11px;
+ border:1px solid rgba(255,255,255,.14);border-radius:10px;
+ background:rgba(255,255,255,.075);color:#fff;
+}
+.client-portal-page .client-sidebar .client-mobile-availability-heading{
+ display:flex;align-items:center;gap:7px;min-width:0;
+ color:#aebdd5;font-size:8px;font-weight:700;line-height:1.35;letter-spacing:.1em;
+}
+.client-portal-page .client-sidebar .client-mobile-availability-dot{
+ display:inline-block;width:7px;height:7px;flex:0 0 7px;border-radius:50%;
+ background:#9db4dc;
+}
+.client-portal-page .client-sidebar .client-mobile-availability.status-available .client-mobile-availability-dot{background:#36d399}
+.client-portal-page .client-sidebar .client-mobile-availability.status-busy .client-mobile-availability-dot{background:#f5c842}
+.client-portal-page .client-sidebar .client-mobile-availability.status-offline .client-mobile-availability-dot{background:#a5afc0}
+.client-portal-page .client-sidebar .client-mobile-availability>strong{
+ display:block;margin:0;color:#f4f7fc;font-size:11px;font-weight:650;line-height:1.35;
+ white-space:normal;overflow-wrap:anywhere;
+}
+.client-portal-page .client-sidebar .client-mobile-availability>small{
+ display:block;margin:0;color:#b5c2d7;font-size:9px;font-weight:400;line-height:1.4;
+ white-space:normal;overflow-wrap:anywhere;
+}
