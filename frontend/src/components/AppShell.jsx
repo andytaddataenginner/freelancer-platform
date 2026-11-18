@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Activity, BarChart3, BriefcaseBusiness, CalendarDays, ChevronLeft, ChevronRight, CircleDollarSign, FileText, FolderKanban, LayoutDashboard, LogOut, Menu, Moon, Sun, Users, X, NotebookPen, Receipt, KeyRound } from 'lucide-react';
 import { auth } from '../services/auth';
 import { apiRequest } from '../services/api';
+import { FloatingTimer } from './FloatingTimer';
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -102,6 +103,7 @@ export function AppShell() {
           </div>
         </header>
         <section className="page-content"><Outlet /></section>
+        <FloatingTimer/>
       </main>
     </div>
   );
