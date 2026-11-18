@@ -10,7 +10,7 @@ export function FloatingTimer(){
  const [elapsed,setElapsed]=useState(0),[state,setState]=useState('idle'),[busy,setBusy]=useState(false);
  const [collapsed,setCollapsed]=useState(()=>localStorage.getItem('qfa_timer_collapsed')==='1');
  const [pos,setPos]=useState(()=>{try{return JSON.parse(localStorage.getItem('qfa_timer_pos_v3')||'null')||{right:18,bottom:18};}catch{return {right:18,bottom:18};}});
- const [dragging,setDragging]=useState(false);const drag=useRef(null);const lastSync=useRef(0);
+ const [dragging,setDragging]=useState(false);const drag=useRef(null);const lastSync=useRef(0);const descriptionDirty=useRef(false);
 
  const syncStatus=useCallback(async()=>{
   try{
@@ -18,10 +18,11 @@ export function FloatingTimer(){
    const t=Array.isArray(rows)?rows[0]:null;
    if(t){
     setClientId(String(t.client_id??''));
-    setDescription(t.description||'');
+    if(!descriptionDirty.current)setDescription(t.description||'');
     setElapsed(Number(t.elapsed_sec)||0);
     setState(t.is_paused?'paused':'running');
    }else{
+    descriptionDirty.current=false;
     setState('idle');setElapsed(0);setDescription('');
    }
    lastSync.current=Date.now();
@@ -60,6 +61,6 @@ export function FloatingTimer(){
  const activeClient=clients.find(c=>String(c.id)===String(clientId));
  return <aside className={'qfa-floating-timer '+(collapsed?'is-collapsed':'')+(dragging?' is-dragging':'')} style={pos.left!==undefined?{left:pos.left,top:pos.top,right:'auto',bottom:'auto'}:{right:pos.right,bottom:pos.bottom}}>
   <header className="qfa-timer-head" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onLostPointerCapture={pointerUp}><span><Grip size={14}/> LIVE TIME TRACKER</span><strong>{fmt(elapsed)}</strong><button type="button" onClick={()=>setCollapsed(v=>!v)} aria-label={collapsed?'Expand timer':'Minimize timer'}>{collapsed?<Plus size={16}/>:<Minus size={16}/>}</button></header>
-  {!collapsed&&<div className="qfa-timer-body"><label>Client<select value={clientId} onChange={e=>setClientId(e.target.value)} disabled={state!=='idle'}><option value="">Select client</option>{clients.filter(c=>c.contract_status==='active'||!c.contract_status).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Task / activity<input value={description} onChange={e=>setDescription(e.target.value)} disabled={state!=='idle'} placeholder="What are you working on?"/></label><div className={'qfa-timer-clock '+state}>{fmt(elapsed)}</div><div className="qfa-timer-actions">{state==='idle'?<button disabled={busy||!clientId} onClick={start}><Play size={14}/> Start</button>:state==='running'?<button disabled={busy} onClick={pause}><Pause size={14}/> Pause</button>:<button disabled={busy} onClick={resume}><Play size={14}/> Resume</button>}{state!=='idle'&&<><button className="stop" disabled={busy} onClick={stop}><Square size={13}/> Stop & save</button><button className="reset" disabled={busy} onClick={reset}><RotateCcw size={13}/> Reset</button></>}</div>{state!=='idle'&&<small className="qfa-timer-client">Tracking {activeClient?.name||'selected client'} · synced with Time Logs</small>}</div>}
+  {!collapsed&&<div className="qfa-timer-body"><label>Client<select value={clientId} onChange={e=>setClientId(e.target.value)} disabled={state!=='idle'}><option value="">Select client</option>{clients.filter(c=>c.contract_status==='active'||!c.contract_status).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Task / activity<input value={description} onChange={e=>{descriptionDirty.current=true;setDescription(e.target.value);}} placeholder="What are you working on?" /></label><div className={'qfa-timer-clock '+state}>{fmt(elapsed)}</div><div className="qfa-timer-actions">{state==='idle'?<button disabled={busy||!clientId} onClick={start}><Play size={14}/> Start</button>:state==='running'?<button disabled={busy} onClick={pause}><Pause size={14}/> Pause</button>:<button disabled={busy} onClick={resume}><Play size={14}/> Resume</button>}{state!=='idle'&&<><button className="stop" disabled={busy} onClick={stop}><Square size={13}/> Stop & save</button><button className="reset" disabled={busy} onClick={reset}><RotateCcw size={13}/> Reset</button></>}</div>{state!=='idle'&&<small className="qfa-timer-client">Tracking {activeClient?.name||'selected client'} · synced with Time Logs</small>}</div>}
  </aside>;
 }
