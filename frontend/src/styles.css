@@ -1383,3 +1383,47 @@
  .client-portal-page .client-live-popout-clock{font-size:23px!important}
  .client-portal-page .client-live-popout-caption{font-size:10px!important}
 }
+
+
+/* Match client Time & Logs dark-mode history to the Billing History surfaces. */
+.client-portal-page.portal-dark .client-logs-page{
+ background:#111c30!important;
+ border-color:#293b58!important;
+ color:#edf2fb!important;
+}
+.client-portal-page.portal-dark .client-logs-page .panel-heading h2{color:#edf2fb!important}
+.client-portal-page.portal-dark .client-logs-page .panel-heading p{color:#aab7cb!important}
+.client-portal-page.portal-dark .client-logs-page .client-log-summary article{
+ background:linear-gradient(145deg,#111c30,#0d1729)!important;
+ border-color:#293b58!important;
+}
+.client-portal-page.portal-dark .client-logs-page .client-log-summary article span,
+.client-portal-page.portal-dark .client-logs-page .client-log-summary article small{color:#aab7cb!important}
+.client-portal-page.portal-dark .client-logs-page .client-log-summary article strong{color:#edf2fb!important}
+.client-portal-page.portal-dark .client-logs-page .portal-month{
+ background:linear-gradient(145deg,#111c30,#0d1729)!important;
+ border:1px solid #293b58!important;
+ border-radius:12px!important;
+ box-shadow:none!important;
+ overflow:hidden!important;
+}
+.client-portal-page.portal-dark .client-logs-page .portal-month>summary{
+ background:transparent!important;
+ color:#edf2fb!important;
+ border-bottom:1px solid transparent!important;
+}
+.client-portal-page.portal-dark .client-logs-page .portal-month[open]>summary{border-bottom-color:#293b58!important}
+.client-portal-page.portal-dark .client-logs-page .portal-month>summary span{color:#aab7cb!important}
+.client-portal-page.portal-dark .client-logs-page .portal-month .table-scroll{background:#111c30!important}
+.client-portal-page.portal-dark .client-logs-page .portal-month th{
+ background:#19263b!important;
+ color:#b6c3d7!important;
+ border-color:#293b58!important;
+}
+.client-portal-page.portal-dark .client-logs-page .portal-month td{
+ background:transparent!important;
+ color:#c7d3e5!important;
+ border-color:#293b58!important;
+}
+.client-portal-page.portal-dark .client-logs-page .portal-month tbody tr:last-child td{border-bottom:0!important}
+.client-portal-page.portal-dark .client-logs-page .empty-state{color:#aab7cb!important}
