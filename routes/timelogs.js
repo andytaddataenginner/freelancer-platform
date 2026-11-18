@@ -91,32 +91,19 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       ORDER BY effective_from DESC, id DESC LIMIT 1
     `, [client_id, req.user.id, date]);
 
-    let rate_type = 'hourly';
-    let amount = 0;
+    if (!contractInfo.rows.length || contractInfo.rows[0].status !== 'active') {
+      return res.status(409).json({
+        error: 'A time log cannot be recorded because there is no active contract covering the selected date.'
+      });
+    }
 
-    if (contractInfo.rows.length) {
-      const c = contractInfo.rows[0];
-      rate_type = c.rate_type;
-      if (c.status === 'active') {
-        if (rate_type === 'hourly' && c.hourly_rate) {
-          amount = parseFloat(hours) * parseFloat(c.hourly_rate);
-        } else if (rate_type === 'fixed' && c.fixed_price) {
-          amount = parseFloat(c.fixed_price);
-        }
-      }
-    } else {
-      // Fallback to clients table base row
-      const clientInfo = await pool.query(
-        'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id = $1',
-        [client_id]
-      );
-      const c = clientInfo.rows[0] || {};
-      rate_type = c.rate_type || 'hourly';
-      if (rate_type === 'hourly' && c.hourly_rate) {
-        amount = parseFloat(hours) * parseFloat(c.hourly_rate);
-      } else if (rate_type === 'fixed' && c.fixed_price) {
-        amount = parseFloat(c.fixed_price);
-      }
+    const contract = contractInfo.rows[0];
+    const rate_type = contract.rate_type;
+    let amount = 0;
+    if (rate_type === 'hourly' && contract.hourly_rate) {
+      amount = parseFloat(hours) * parseFloat(contract.hourly_rate);
+    } else if (rate_type === 'fixed' && contract.fixed_price) {
+      amount = parseFloat(contract.fixed_price);
     }
 
     await client.query('BEGIN');
