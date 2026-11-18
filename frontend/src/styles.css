@@ -1383,34 +1383,3 @@
  .client-portal-page .client-live-popout-clock{font-size:23px!important}
  .client-portal-page .client-live-popout-caption{font-size:10px!important}
 }
-
-/* Mobile-only dashboard and navigation presentation refinements. No behavior changes. */
-@media(max-width:760px){
-  /* Put the KPI summary first on small screens, before the dashboard heading. */
-  .dashboard-page>.dashboard-kpis{order:-1!important;margin:0 0 12px!important}
-  .dashboard-page>.page-heading{order:0!important}
-  .dashboard-page>.notice-error{order:2!important}
-  .dashboard-page>.dashboard-chart-grid{order:3!important}
-  .dashboard-page>.dashboard-lower{order:4!important}
-
-  /* Keep the month selector and refresh action readable and comfortably tappable. */
-  .dashboard-heading{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important}
-  .dashboard-heading>div:first-child{min-width:0}
-  .dashboard-heading .heading-actions{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:9px!important;width:100%!important}
-  .dashboard-heading .month-filter{flex:1 1 auto!important;min-width:0!important}
-  .dashboard-heading .month-filter select{width:100%!important;min-width:0!important}
-  .dashboard-heading .refresh-button{display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:94px!important;min-height:40px!important;padding:9px 11px!important;border:1px solid #d6deea!important;border-radius:9px!important;background:#fff!important;color:#34445f!important;font-size:11px!important;font-weight:700!important;white-space:nowrap!important;opacity:1!important}
-  .dashboard-heading .refresh-button:disabled{opacity:.62!important}
-  .theme-dark .dashboard-heading .refresh-button{background:#23334d!important;border-color:#435674!important;color:#edf2fb!important}
-  .theme-dark .dashboard-heading .refresh-button:disabled{color:#b9c7dc!important}
-
-  /* Show the same text-based availability status in the mobile drawer. */
-  .sidebar .sidebar-bottom{display:flex!important;flex-wrap:wrap!important;gap:8px!important;align-items:center!important}
-  .sidebar .sidebar-bottom .profile-copy{flex:1 1 120px!important;min-width:0!important}
-  .sidebar .freelancer-nav-status{display:inline-flex!important;flex:1 1 auto!important;min-width:0!important;max-width:calc(100% - 48px)!important;align-items:center!important;gap:7px!important;padding:7px 9px!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:8px!important;background:rgba(255,255,255,.07)!important;color:#e8eef8!important;font-size:11px!important;font-weight:600!important;line-height:1.3!important;white-space:normal!important}
-  .sidebar .freelancer-nav-status i{flex:0 0 8px!important}
-  .sidebar .freelancer-nav-status.status-available{color:#baf3d7!important}
-  .sidebar .freelancer-nav-status.status-busy{color:#ffdf9b!important}
-  .sidebar .freelancer-nav-status.status-checking{color:#d3dced!important}
-  .sidebar .sidebar-bottom>button{flex:0 0 36px!important;margin-left:auto!important}
-}
