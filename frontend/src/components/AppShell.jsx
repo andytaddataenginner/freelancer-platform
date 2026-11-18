@@ -65,7 +65,7 @@ export function AppShell() {
   async function logout() {
     try { await apiRequest('/auth/logout', { method: 'POST' }); } catch {}
     auth.clear();
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   }
 
   return (
