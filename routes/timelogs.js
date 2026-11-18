@@ -155,37 +155,37 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/timelogs/:id — recalculate amount with contract rate
+// PUT /api/timelogs/:id — only edit logs within an active contract period.
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
+    const logRow = await pool.query(
+      'SELECT client_id, date FROM time_logs WHERE id=$1 AND freelancer_id=$2',
+      [req.params.id, req.user.id]
+    );
+    if (!logRow.rows.length) return res.status(404).json({ error: 'Not found' });
+
+    const targetDate = date || logRow.rows[0].date;
+    const contractInfo = await pool.query(`
+      SELECT rate_type, hourly_rate, status
+      FROM client_contracts
+      WHERE client_id=$1 AND freelancer_id=$2
+        AND effective_from <= $3::date
+        AND (effective_to IS NULL OR effective_to >= $3::date)
+      ORDER BY effective_from DESC, id DESC LIMIT 1
+    `, [logRow.rows[0].client_id, req.user.id, targetDate]);
+
+    if (!contractInfo.rows.length || contractInfo.rows[0].status !== 'active') {
+      return res.status(409).json({
+        error: 'A time log cannot be edited for a date without an active contract.'
+      });
+    }
+
     let finalAmount = amount;
-
     if (finalAmount === undefined || finalAmount === null) {
-      const logRow = await pool.query('SELECT client_id, date FROM time_logs WHERE id=$1', [req.params.id]);
-      if (logRow.rows.length) {
-        const targetDate = date || logRow.rows[0].date;
-        const contractInfo = await pool.query(`
-          SELECT rate_type, hourly_rate, status 
-          FROM client_contracts
-          WHERE client_id = $1 AND freelancer_id = $2
-            AND effective_from <= $3::date
-            AND (effective_to IS NULL OR effective_to >= $3::date)
-          ORDER BY effective_from DESC, id DESC LIMIT 1
-        `, [logRow.rows[0].client_id, req.user.id, targetDate]);
-
-        if (!contractInfo.rows.length || contractInfo.rows[0].status !== 'active') {
-          return res.status(409).json({
-            error: 'A time log cannot be moved to a date without an active contract.'
-          });
-        }
-
-        if (contractInfo.rows.length && contractInfo.rows[0].status === 'active') {
-          const c = contractInfo.rows[0];
-          if (c.rate_type === 'hourly' && c.hourly_rate) {
-            finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
-          }
-        }
+      const contract = contractInfo.rows[0];
+      if (contract.rate_type === 'hourly' && contract.hourly_rate) {
+        finalAmount = (parseFloat(hours) * parseFloat(contract.hourly_rate)).toFixed(2);
       }
     }
 
@@ -193,9 +193,8 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
       UPDATE time_logs
       SET hours=$1, task_description=$2, date=$3, amount=COALESCE($4::numeric, amount)
       WHERE id=$5 AND freelancer_id=$6 RETURNING *
-    `, [hours, task_description, date, finalAmount || null, req.params.id, req.user.id]);
+    `, [hours, task_description, targetDate, finalAmount || null, req.params.id, req.user.id]);
 
-    if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) { next(e); }
 });
