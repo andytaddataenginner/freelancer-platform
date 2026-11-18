@@ -1,16 +1,48 @@
 const router = require('express').Router();
-const pool   = require('../db/pool');
+const pool = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 
-// ── GET /api/contracts/:clientId — full contract history ──────
+async function withTransaction(work) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await work(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function validateChange(body) {
+  const { rate_type, hourly_rate, fixed_price, effective_from, note } = body;
+  if (!['hourly', 'fixed'].includes(rate_type)) return 'Choose a valid rate type.';
+  if (!effective_from || !/^\d{4}-\d{2}-\d{2}$/.test(effective_from) || Number.isNaN(Date.parse(effective_from))) return 'A valid effective date is required.';
+  if (!note || !String(note).trim()) return 'Please provide a reason for this contract change.';
+  const amount = rate_type === 'hourly' ? hourly_rate : fixed_price;
+  if (amount == null || amount === '' || !Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+    return rate_type === 'hourly' ? 'Enter a valid hourly rate.' : 'Enter a valid fixed monthly price.';
+  }
+  return null;
+}
+
+function validateAction(body) {
+  const { effective_from, note } = body;
+  if (!effective_from || !/^\d{4}-\d{2}-\d{2}$/.test(effective_from) || Number.isNaN(Date.parse(effective_from))) return 'A valid effective date is required.';
+  if (!note || !String(note).trim()) return 'Please provide a reason for this contract action.';
+  return null;
+}
+
 router.get('/:clientId', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
-      SELECT cc.*,
-             u.name AS client_name,
-             u.company AS client_company
+      SELECT cc.*, u.name AS client_name, u.company AS client_company
       FROM client_contracts cc
       JOIN users u ON u.id = cc.client_id
+      JOIN clients c ON c.user_id = cc.client_id AND c.freelancer_id = cc.freelancer_id
       WHERE cc.client_id = $1 AND cc.freelancer_id = $2
       ORDER BY cc.effective_from DESC, cc.id DESC
     `, [req.params.clientId, req.user.id]);
@@ -18,232 +50,112 @@ router.get('/:clientId', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ── GET /api/contracts/:clientId/current — active/current contract ────
 router.get('/:clientId/current', requireFreelancer, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT * FROM client_contracts
-      WHERE client_id = $1 AND freelancer_id = $2
-        AND effective_to IS NULL
-      ORDER BY effective_from DESC, id DESC
-      LIMIT 1
+      WHERE client_id = $1 AND freelancer_id = $2 AND effective_to IS NULL
+      ORDER BY effective_from DESC, id DESC LIMIT 1
     `, [req.params.clientId, req.user.id]);
     res.json(rows[0] || null);
   } catch (e) { next(e); }
 });
 
-// ── POST /api/contracts/:clientId/change — log a rate change ─
 router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
+  const invalid = validateChange(req.body);
+  if (invalid) return res.status(400).json({ error: invalid });
+  const { rate_type, hourly_rate, fixed_price, effective_from, note } = req.body;
+  const clientId = Number.parseInt(req.params.clientId, 10);
+  if (!Number.isInteger(clientId)) return res.status(400).json({ error: 'Invalid client ID.' });
   try {
-    const { rate_type, hourly_rate, fixed_price, effective_from, note } = req.body;
-    if (!rate_type || !effective_from)
-      return res.status(400).json({ error: 'rate_type and effective_from required' });
-
-    const clientId     = parseInt(req.params.clientId);
-    const freelancerId = req.user.id;
-    const effectiveMonth = effective_from.substring(0, 7); // YYYY-MM format
-
-    await pool.query('BEGIN');
-    try {
-      // 1. Close current open contract
-      await pool.query(`
-        UPDATE client_contracts
-        SET effective_to = $1::date - INTERVAL '1 day'
-        WHERE client_id = $2 AND freelancer_id = $3
-          AND effective_to IS NULL
-      `, [effective_from, clientId, freelancerId]);
-
-      // 2. Insert new active contract
-      const { rows } = await pool.query(`
-        INSERT INTO client_contracts
-          (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
-        VALUES ($1, $2, $3, $4, $5, 'active', $6, $7)
-        RETURNING *
-      `, [clientId, freelancerId, rate_type,
-          hourly_rate || null, fixed_price || null,
-          effective_from, note || null]);
-
-      // 3. Keep base clients table synced
-      await pool.query(`
-        UPDATE clients
-        SET rate_type=$1, hourly_rate=$2, fixed_price=$3
-        WHERE user_id=$4 AND freelancer_id=$5
-      `, [rate_type, hourly_rate || null, fixed_price || null, clientId, freelancerId]);
-
-      // 4. CLEANUP: If shifting to HOURLY, remove any unpaid fixed payments from effective month onwards
-      if (rate_type === 'hourly') {
-        await pool.query(`
-          DELETE FROM fixed_monthly_payments
-          WHERE client_id = $1 
-            AND freelancer_id = $2
-            AND to_char(month::date, 'YYYY-MM') >= $3::text
-            AND status = 'unpaid'
-        `, [clientId, freelancerId, effectiveMonth]);
-      }
-
-      await pool.query('COMMIT');
-      res.status(201).json(rows[0]);
-    } catch (e) {
-      await pool.query('ROLLBACK');
-      throw e;
-    }
-  } catch (e) { next(e); }
-});
-
-// ── POST /api/contracts/:clientId/pause — pause contract ──
-router.post('/:clientId/pause', requireFreelancer, async (req, res, next) => {
-  try {
-    const { effective_from, note } = req.body;
-    const clientId     = parseInt(req.params.clientId);
-    const freelancerId = req.user.id;
-    const from = effective_from || new Date().toISOString().slice(0, 10);
-    const effectiveMonth = from.substring(0, 7);
-
-    await pool.query('BEGIN');
-    try {
-      const cur = await pool.query(`
+    const record = await withTransaction(async db => {
+      const owned = await db.query('SELECT user_id FROM clients WHERE user_id=$1 AND freelancer_id=$2 FOR UPDATE', [clientId, req.user.id]);
+      if (!owned.rowCount) { const err = new Error('Client not found.'); err.status = 404; throw err; }
+      const current = await db.query(`
         SELECT * FROM client_contracts
         WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
-        ORDER BY effective_from DESC, id DESC LIMIT 1
-      `, [clientId, freelancerId]);
-
-      if (!cur.rows.length) {
-        await pool.query('ROLLBACK');
-        return res.status(404).json({ error: 'No active contract found' });
+        ORDER BY effective_from DESC, id DESC LIMIT 1 FOR UPDATE
+      `, [clientId, req.user.id]);
+      if (!current.rowCount) { const err = new Error('No current contract found to change.'); err.status = 400; throw err; }
+      const from = new Date(effective_from + 'T00:00:00Z');
+      const start = new Date(current.rows[0].effective_from);
+      if (from < new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()))) {
+        const err = new Error('The effective date cannot be earlier than the current contract start date.'); err.status = 400; throw err;
       }
-      const current = cur.rows[0];
-      if (current.status === 'paused' || current.status === 'terminated') {
-        await pool.query('ROLLBACK');
-        return res.status(400).json({ error: `Contract is already ${current.status}` });
-      }
-
-      await pool.query(`
+      await db.query(`
         UPDATE client_contracts SET effective_to = $1::date - INTERVAL '1 day'
-        WHERE id = $2
-      `, [from, current.id]);
-
-      const { rows } = await pool.query(`
-        INSERT INTO client_contracts
-          (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
-        VALUES ($1,$2,$3,$4,$5,'paused',$6,$7) RETURNING *
-      `, [clientId, freelancerId, current.rate_type,
-          current.hourly_rate, current.fixed_price, from,
-          note || 'Contract paused']);
-
-      // CLEANUP: Remove unpaid fixed monthly payments starting from the pause month
-      await pool.query(`
-        DELETE FROM fixed_monthly_payments
-        WHERE client_id = $1 
-          AND freelancer_id = $2
-          AND to_char(month::date, 'YYYY-MM') >= $3::text
-          AND status = 'unpaid'
-      `, [clientId, freelancerId, effectiveMonth]);
-
-      await pool.query('COMMIT');
-      res.status(201).json(rows[0]);
-    } catch (e) {
-      await pool.query('ROLLBACK');
-      throw e;
-    }
-  } catch (e) { next(e); }
-});
-
-// ── POST /api/contracts/:clientId/resume — resume contract ───
-router.post('/:clientId/resume', requireFreelancer, async (req, res, next) => {
-  try {
-    const { effective_from, note } = req.body;
-    const clientId     = parseInt(req.params.clientId);
-    const freelancerId = req.user.id;
-    const from = effective_from || new Date().toISOString().slice(0, 10);
-
-    await pool.query('BEGIN');
-    try {
-      const cur = await pool.query(`
-        SELECT * FROM client_contracts
-        WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
-        ORDER BY effective_from DESC, id DESC LIMIT 1
-      `, [clientId, freelancerId]);
-
-      if (!cur.rows.length || cur.rows[0].status !== 'paused') {
-        await pool.query('ROLLBACK');
-        return res.status(400).json({ error: 'No paused contract to resume' });
-      }
-      const current = cur.rows[0];
-
-      await pool.query(`
-        UPDATE client_contracts SET effective_to = $1::date - INTERVAL '1 day'
-        WHERE id = $2
-      `, [from, current.id]);
-
-      const { rows } = await pool.query(`
+        WHERE id=$2
+      `, [effective_from, current.rows[0].id]);
+      const inserted = await db.query(`
         INSERT INTO client_contracts
           (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
         VALUES ($1,$2,$3,$4,$5,'active',$6,$7) RETURNING *
-      `, [clientId, freelancerId, current.rate_type,
-          current.hourly_rate, current.fixed_price, from,
-          note || 'Contract resumed']);
-
-      await pool.query('COMMIT');
-      res.status(201).json(rows[0]);
-    } catch (e) {
-      await pool.query('ROLLBACK');
-      throw e;
-    }
-  } catch (e) { next(e); }
+      `, [clientId, req.user.id, rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, effective_from, String(note).trim()]);
+      await db.query(`
+        UPDATE clients SET rate_type=$1, hourly_rate=$2, fixed_price=$3, is_active=TRUE
+        WHERE user_id=$4 AND freelancer_id=$5
+      `, [rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, clientId, req.user.id]);
+      if (rate_type === 'hourly') {
+        await db.query(`
+          DELETE FROM fixed_monthly_payments
+          WHERE client_id=$1 AND freelancer_id=$2
+            AND to_char(month::date, 'YYYY-MM') >= $3 AND status='unpaid'
+        `, [clientId, req.user.id, effective_from.slice(0, 7)]);
+      }
+      return inserted.rows[0];
+    });
+    res.status(201).json(record);
+  } catch (e) { if (e.status) return res.status(e.status).json({ error: e.message }); next(e); }
 });
 
-// ── POST /api/contracts/:clientId/terminate — terminate contract ─
-router.post('/:clientId/terminate', requireFreelancer, async (req, res, next) => {
+async function changeStatus(req, res, next, action) {
+  const invalid = validateAction(req.body);
+  if (invalid) return res.status(400).json({ error: invalid });
+  const clientId = Number.parseInt(req.params.clientId, 10);
+  if (!Number.isInteger(clientId)) return res.status(400).json({ error: 'Invalid client ID.' });
+  const { effective_from, note } = req.body;
   try {
-    const { effective_from, note } = req.body;
-    const clientId     = parseInt(req.params.clientId);
-    const freelancerId = req.user.id;
-    const from = effective_from || new Date().toISOString().slice(0, 10);
-    const effectiveMonth = from.substring(0, 7);
-
-    await pool.query('BEGIN');
-    try {
-      const cur = await pool.query(`
+    const record = await withTransaction(async db => {
+      const owned = await db.query('SELECT user_id FROM clients WHERE user_id=$1 AND freelancer_id=$2 FOR UPDATE', [clientId, req.user.id]);
+      if (!owned.rowCount) { const err = new Error('Client not found.'); err.status = 404; throw err; }
+      const currentResult = await db.query(`
         SELECT * FROM client_contracts
         WHERE client_id=$1 AND freelancer_id=$2 AND effective_to IS NULL
-        ORDER BY effective_from DESC, id DESC LIMIT 1
-      `, [clientId, freelancerId]);
-
-      if (!cur.rows.length) {
-        await pool.query('ROLLBACK');
-        return res.status(404).json({ error: 'No open contract to terminate' });
+        ORDER BY effective_from DESC, id DESC LIMIT 1 FOR UPDATE
+      `, [clientId, req.user.id]);
+      if (!currentResult.rowCount) { const err = new Error('No current contract found.'); err.status = 404; throw err; }
+      const current = currentResult.rows[0];
+      if (action === 'pause' && current.status !== 'active') { const err = new Error('Only an active contract can be paused.'); err.status = 400; throw err; }
+      if (action === 'resume' && current.status !== 'paused') { const err = new Error('This client does not have a paused contract to resume. Refresh the contract history and try again.'); err.status = 400; throw err; }
+      if (action === 'terminate' && current.status === 'terminated') { const err = new Error('This contract is already terminated.'); err.status = 400; throw err; }
+      const from = new Date(effective_from + 'T00:00:00Z');
+      const start = new Date(current.effective_from);
+      if (from < new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()))) {
+        const err = new Error('The effective date cannot be earlier than the current contract period.'); err.status = 400; throw err;
       }
-
-      await pool.query(`
-        UPDATE client_contracts SET effective_to = $1::date - INTERVAL '1 day'
-        WHERE id = $2
-      `, [from, cur.rows[0].id]);
-
-      const { rows } = await pool.query(`
+      await db.query('UPDATE client_contracts SET effective_to=$1::date - INTERVAL \'1 day\' WHERE id=$2', [effective_from, current.id]);
+      const nextStatus = action === 'terminate' ? 'terminated' : action === 'pause' ? 'paused' : 'active';
+      const inserted = await db.query(`
         INSERT INTO client_contracts
-          (client_id, freelancer_id, rate_type, hourly_rate, fixed_price,
-           status, effective_from, note)
-        VALUES ($1,$2,$3,$4,$5,'terminated',$6,$7) RETURNING *
-      `, [clientId, freelancerId, cur.rows[0].rate_type,
-          cur.rows[0].hourly_rate, cur.rows[0].fixed_price,
-          from, note || 'Contract terminated']);
+          (client_id, freelancer_id, rate_type, hourly_rate, fixed_price, status, effective_from, note)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
+      `, [clientId, req.user.id, current.rate_type, current.hourly_rate, current.fixed_price, nextStatus, effective_from, String(note).trim()]);
+      if (action === 'pause' || action === 'terminate') {
+        await db.query(`
+          DELETE FROM fixed_monthly_payments
+          WHERE client_id=$1 AND freelancer_id=$2
+            AND to_char(month::date, 'YYYY-MM') >= $3 AND status='unpaid'
+        `, [clientId, req.user.id, effective_from.slice(0, 7)]);
+      }
+      await db.query('UPDATE clients SET is_active=$1 WHERE user_id=$2 AND freelancer_id=$3', [nextStatus === 'active', clientId, req.user.id]);
+      return inserted.rows[0];
+    });
+    return res.status(201).json(record);
+  } catch (e) { if (e.status) return res.status(e.status).json({ error: e.message }); return next(e); }
+}
 
-      // CLEANUP: Remove unpaid fixed monthly payments starting from the termination month
-      await pool.query(`
-        DELETE FROM fixed_monthly_payments
-        WHERE client_id = $1 
-          AND freelancer_id = $2
-          AND to_char(month::date, 'YYYY-MM') >= $3::text
-          AND status = 'unpaid'
-      `, [clientId, freelancerId, effectiveMonth]);
-
-      await pool.query('COMMIT');
-      res.status(201).json(rows[0]);
-    } catch (e) {
-      await pool.query('ROLLBACK');
-      throw e;
-    }
-  } catch (e) { next(e); }
-});
+router.post('/:clientId/pause', requireFreelancer, (req, res, next) => changeStatus(req, res, next, 'pause'));
+router.post('/:clientId/resume', requireFreelancer, (req, res, next) => changeStatus(req, res, next, 'resume'));
+router.post('/:clientId/terminate', requireFreelancer, (req, res, next) => changeStatus(req, res, next, 'terminate'));
 
 module.exports = router;
