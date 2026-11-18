@@ -32,6 +32,18 @@ router.post('/start', requireFreelancer, async (req, res, next) => {
     const actualUserId = await resolveClientUserId(client_id);
     if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
 
+    const contract = await pool.query(`
+      SELECT status
+      FROM client_contracts
+      WHERE client_id=$1 AND freelancer_id=$2
+        AND effective_from <= CURRENT_DATE
+        AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)
+      ORDER BY effective_from DESC, id DESC LIMIT 1
+    `, [actualUserId, req.user.id]);
+    if (!contract.rows.length || contract.rows[0].status !== 'active') {
+      return res.status(409).json({ error: 'The timer cannot start because this client does not have an active contract today.' });
+    }
+
     const { rows } = await pool.query(`
       INSERT INTO active_timers (freelancer_id, client_id, started_at, description, is_running, is_paused, accumulated_seconds)
       VALUES ($1, $2, NOW(), $3, TRUE, FALSE, 0)
@@ -123,12 +135,10 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     const hours = Math.round((totalSecs / 3600) * 10000) / 10000;
 
     const rateRes = await dbClient.query(
-      `SELECT COALESCE(cc.rate_type, c.rate_type, 'hourly') AS rate_type,
-              COALESCE(cc.hourly_rate, c.hourly_rate, 0) AS hourly_rate,
-              COALESCE(cc.fixed_price, c.fixed_price, 0) AS fixed_price
+      `SELECT cc.rate_type, cc.hourly_rate, cc.fixed_price, cc.status
        FROM clients c
        LEFT JOIN LATERAL (
-         SELECT rate_type, hourly_rate, fixed_price
+         SELECT rate_type, hourly_rate, fixed_price, status
          FROM client_contracts
          WHERE client_id = c.user_id AND freelancer_id = $2
            AND effective_from <= CURRENT_DATE
@@ -139,6 +149,10 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
       [actualUserId, req.user.id]
     );
     const clientData = rateRes.rows[0] || {};
+    if (!clientData.status || clientData.status !== 'active') {
+      await dbClient.query('DELETE FROM active_timers WHERE id=$1', [timer.id]);
+      return res.status(409).json({ error: 'The timer was not saved because this client does not have an active contract today.' });
+    }
     const rateType = String(clientData.rate_type || 'hourly').trim().toLowerCase();
     const hourlyRate = parseFloat(clientData.hourly_rate || 0);
     const fixedPrice = parseFloat(clientData.fixed_price || 0);
