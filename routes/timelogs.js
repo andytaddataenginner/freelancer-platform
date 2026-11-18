@@ -102,8 +102,10 @@ router.post('/', requireFreelancer, async (req, res, next) => {
     let amount = 0;
     if (rate_type === 'hourly' && contract.hourly_rate) {
       amount = parseFloat(hours) * parseFloat(contract.hourly_rate);
-    } else if (rate_type === 'fixed' && contract.fixed_price) {
-      amount = parseFloat(contract.fixed_price);
+    } else if (rate_type === 'fixed') {
+      // Fixed-price clients are billed only through fixed_monthly_payments.
+      // Time logs must never create a second charge for the monthly fee.
+      amount = 0;
     }
 
     await client.query('BEGIN');
@@ -167,7 +169,7 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
 
     const targetDate = date || logRow.rows[0].date;
     const contractInfo = await pool.query(`
-      SELECT rate_type, hourly_rate, status
+      SELECT rate_type, hourly_rate, fixed_price, status
       FROM client_contracts
       WHERE client_id=$1 AND freelancer_id=$2
         AND effective_from <= $3::date
@@ -181,12 +183,12 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
       });
     }
 
-    let finalAmount = amount;
-    if (finalAmount === undefined || finalAmount === null) {
-      const contract = contractInfo.rows[0];
-      if (contract.rate_type === 'hourly' && contract.hourly_rate) {
-        finalAmount = (parseFloat(hours) * parseFloat(contract.hourly_rate)).toFixed(2);
-      }
+    const contract = contractInfo.rows[0];
+    // Never accept a caller-supplied amount for a fixed-price time log.
+    // The monthly invoice is the sole billing record for fixed contracts.
+    let finalAmount = contract.rate_type === 'fixed' ? '0.00' : amount;
+    if (contract.rate_type === 'hourly' && (finalAmount === undefined || finalAmount === null) && contract.hourly_rate) {
+      finalAmount = (parseFloat(hours) * parseFloat(contract.hourly_rate)).toFixed(2);
     }
 
     const { rows } = await pool.query(`
