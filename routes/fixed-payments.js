@@ -9,7 +9,7 @@ function validMonth(month) {
 
 // Select the latest contract state that overlaps the billing month. A paused or
 // terminated latest state prevents invoice creation, even if an older row was active.
-async function generateForFreelancer(db, freelancerId, month) {
+async function generateForFreelancer(db, freelancerId, month, clientId = null) {
   const eligible = await db.query(`
     WITH month_bounds AS (
       SELECT to_date($2 || '-01', 'YYYY-MM-DD') AS month_start,
@@ -21,6 +21,7 @@ async function generateForFreelancer(db, freelancerId, month) {
       FROM client_contracts cc
       CROSS JOIN month_bounds mb
       WHERE cc.freelancer_id = $1
+        AND ($3::bigint IS NULL OR cc.client_id = $3)
         AND cc.effective_from <= mb.month_end
         AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
       ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
@@ -33,7 +34,7 @@ async function generateForFreelancer(db, freelancerId, month) {
       AND lc.rate_type = 'fixed'
       AND lc.fixed_price IS NOT NULL
       AND mb.month_start >= date_trunc('month', u.created_at)::date
-  `, [freelancerId, month]);
+  `, [freelancerId, month, clientId]);
 
   let created = 0;
   for (const client of eligible.rows) {
@@ -99,7 +100,7 @@ router.post('/generate', requireFreelancer, async (req, res, next) => {
     if (!client_id || !validMonth(month))
       return res.status(400).json({ error: 'client_id and a valid month (YYYY-MM) are required.' });
 
-    const generated = await generateForFreelancer(pool, req.user.id, month);
+    const generated = await generateForFreelancer(pool, req.user.id, month, client_id);
     const existing = await pool.query(
       'SELECT * FROM fixed_monthly_payments WHERE client_id=$1 AND freelancer_id=$2 AND month=$3',
       [client_id, req.user.id, month]
