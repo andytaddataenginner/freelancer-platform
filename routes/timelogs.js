@@ -174,6 +174,12 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
           ORDER BY effective_from DESC, id DESC LIMIT 1
         `, [logRow.rows[0].client_id, req.user.id, targetDate]);
 
+        if (!contractInfo.rows.length || contractInfo.rows[0].status !== 'active') {
+          return res.status(409).json({
+            error: 'A time log cannot be moved to a date without an active contract.'
+          });
+        }
+
         if (contractInfo.rows.length && contractInfo.rows[0].status === 'active') {
           const c = contractInfo.rows[0];
           if (c.rate_type === 'hourly' && c.hourly_rate) {
