@@ -263,7 +263,6 @@
       : `Hi ${name}! 👋 Pick a topic from the menu, or type your question below.`;
   }
   updateWelcomeText();
-  checkAndCleanSession();
 
   // ── BUILD MENU ────────────────────────────────────────────────────────────
   MENU.forEach(cat => {
@@ -293,6 +292,7 @@
 
   // ── OPEN / CLOSE ──────────────────────────────────────────────────────────
   let isOpen = false;
+  checkAndCleanSession();
 
   function openPanel() {
     // Re-verify role and identity before opening the assistant
