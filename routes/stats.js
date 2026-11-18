@@ -36,23 +36,36 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
-    // ── Auto-generate fixed monthly payments for ACTIVE FIXED contracts only (Safeguarded against pre-creation months) ──
+    // ── Ensure one full fixed invoice exists for the month when the latest
+    // contract state overlapping that month is ACTIVE and FIXED. This includes
+    // contracts resumed mid-month and excludes paused/terminated contracts.
     try {
       await pool.query(`
+        WITH month_bounds AS (
+          SELECT to_date($1 || '-01', 'YYYY-MM-DD') AS month_start,
+                 (to_date($1 || '-01', 'YYYY-MM-DD') + INTERVAL '1 month - 1 day')::date AS month_end
+        ),
+        latest_contract AS (
+          SELECT DISTINCT ON (cc.client_id)
+                 cc.client_id, cc.freelancer_id, cc.fixed_price, cc.rate_type, cc.status
+          FROM client_contracts cc
+          CROSS JOIN month_bounds mb
+          WHERE cc.freelancer_id = $2
+            AND cc.effective_from <= mb.month_end
+            AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
+          ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
+        )
         INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
-        SELECT u.id, c.freelancer_id, $1, COALESCE(cc.fixed_price, c.fixed_price), 'unpaid'
-        FROM clients c
-        JOIN users u ON u.id = c.user_id
-        JOIN client_contracts cc ON cc.client_id = c.user_id AND cc.freelancer_id = c.freelancer_id
-        WHERE c.freelancer_id = $2
-          AND cc.status = 'active'
-          AND cc.rate_type = 'fixed'
-          AND COALESCE(cc.fixed_price, c.fixed_price) IS NOT NULL
-          AND cc.effective_from <= $3::date
-          AND (cc.effective_to IS NULL OR cc.effective_to >= $3::date)
-          AND ($1 || '-01')::date >= date_trunc('month', u.created_at)::date
+        SELECT lc.client_id, lc.freelancer_id, $1, lc.fixed_price, 'unpaid'
+        FROM latest_contract lc
+        JOIN users u ON u.id = lc.client_id
+        CROSS JOIN month_bounds mb
+        WHERE lc.status = 'active'
+          AND lc.rate_type = 'fixed'
+          AND lc.fixed_price IS NOT NULL
+          AND mb.month_start >= date_trunc('month', u.created_at)::date
         ON CONFLICT (client_id, month) DO NOTHING
-      `, [currentMonth, freelancerId, firstOfMonth]);
+      `, [currentMonth, freelancerId]);
     } catch (genErr) {
       console.error('[stats/freelancer] fixed-monthly auto-generate failed (non-fatal):', genErr);
     }
@@ -120,17 +133,30 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     // ── Fixed monthly payments for THIS month (Filtered by Active FIXED Contract and creation date) ──
     const fixedMonthly = await pool.query(`
+      WITH month_bounds AS (
+        SELECT to_date($2 || '-01', 'YYYY-MM-DD') AS month_start,
+               (to_date($2 || '-01', 'YYYY-MM-DD') + INTERVAL '1 month - 1 day')::date AS month_end
+      ),
+      latest_contract AS (
+        SELECT DISTINCT ON (cc.client_id)
+               cc.client_id, cc.freelancer_id, cc.rate_type, cc.status
+        FROM client_contracts cc
+        CROSS JOIN month_bounds mb
+        WHERE cc.freelancer_id = $1
+          AND cc.effective_from <= mb.month_end
+          AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
+        ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
+      )
       SELECT f.*, u.name AS client_name, u.company AS client_company
       FROM fixed_monthly_payments f
       JOIN users u ON u.id = f.client_id
-      JOIN client_contracts cc ON cc.client_id = f.client_id 
+      JOIN latest_contract cc ON cc.client_id = f.client_id
         AND cc.freelancer_id = f.freelancer_id
-        AND cc.effective_from <= ($2 || '-01')::date
-        AND (cc.effective_to IS NULL OR cc.effective_to >= ($2 || '-01')::date)
+      CROSS JOIN month_bounds mb
       WHERE f.freelancer_id = $1 AND f.month = $2
         AND cc.status = 'active'
         AND cc.rate_type = 'fixed'
-        AND ($2 || '-01')::date >= date_trunc('month', u.created_at)::date
+        AND mb.month_start >= date_trunc('month', u.created_at)::date
       ORDER BY u.name
     `, [freelancerId, currentMonth]);
 
