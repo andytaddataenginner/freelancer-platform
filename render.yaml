@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: qfa-react-preview
+    runtime: static
+    branch: feature/react-migration
+    buildCommand: cd frontend && npm install && npm run build && cp ../QFA_Logo.png ../anduamlak.png ../resume-preview.jpg ../Anduamlak_Tadesse_Resume.pdf ../chatbot-widget.js ../css/chatbot-widget.css dist/ && cp dist/index.html dist/404.html
+    staticPublishPath: frontend/dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://freelancer-platform-9jut.onrender.com/api
+    # Rewrite every deep link to the React entry point for refresh-safe SPA routing.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

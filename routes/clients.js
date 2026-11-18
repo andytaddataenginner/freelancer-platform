@@ -128,38 +128,33 @@ router.post('/', requireFreelancer, async (req, res, next) => {
 
 // PUT /api/clients/:id — update user details and sync contract changes[cite: 2]
 router.put('/:id', requireFreelancer, async (req, res, next) => {
+  const db = await pool.connect();
   try {
-    const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price, phone, status } = req.body;
-    
-    await pool.query('BEGIN');
-
-    await pool.query(
-      `UPDATE users SET name=$1, company=$2, updated_at=NOW()
-       WHERE id=$3 AND role='client'`,
-      [name, company, req.params.id]
+    const { name, company, notes, is_active, phone } = req.body;
+    await db.query('BEGIN');
+    const owned = await db.query(
+      "SELECT user_id FROM clients WHERE user_id=$1 AND freelancer_id=$2 FOR UPDATE",
+      [req.params.id, req.user.id]
     );
-
-    await pool.query(
-      `UPDATE clients 
-       SET notes=$1, is_active=$2, rate_type=$3, hourly_rate=$4, fixed_price=$5, phone=$6
-       WHERE user_id=$7 AND freelancer_id=$8`,
-      [notes, is_active ?? true, rate_type || 'hourly', 
-       hourly_rate || null, fixed_price || null, phone || null, req.params.id, req.user.id]
+    if (!owned.rowCount) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ error: 'Client not found.' });
+    }
+    await db.query(
+      "UPDATE users SET name=COALESCE($1,name), company=$2, updated_at=NOW() WHERE id=$3 AND role='client'",
+      [name || null, company || null, req.params.id]
     );
-
-    const contractStatus = status || (is_active === false ? 'terminated' : 'active');
-    await pool.query(
-      `UPDATE client_contracts 
-       SET rate_type=$1, hourly_rate=$2, fixed_price=$3, status=$4
-       WHERE client_id=$5 AND freelancer_id=$6 AND effective_to IS NULL`,
-      [rate_type || 'hourly', hourly_rate || null, fixed_price || null, contractStatus, req.params.id, req.user.id]
+    await db.query(
+      "UPDATE clients SET notes=$1, is_active=COALESCE($2,is_active), phone=$3 WHERE user_id=$4 AND freelancer_id=$5",
+      [notes ?? null, is_active ?? null, phone || null, req.params.id, req.user.id]
     );
-
-    await pool.query('COMMIT');
+    await db.query('COMMIT');
     res.json({ message: 'Updated' });
-  } catch (e) { 
-    await pool.query('ROLLBACK');
-    next(e); 
+  } catch (e) {
+    await db.query('ROLLBACK');
+    next(e);
+  } finally {
+    db.release();
   }
 });
 

@@ -3,10 +3,51 @@ const pool   = require('../db/pool');
 const { requireFreelancer } = require('../middleware/auth');
 const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 
+ 
+// GET /api/timelogs/latest-month — latest month with actual freelancer activity.
+// Read directly from the source tables so pagination and contract-history filters
+// cannot incorrectly fall back to the current calendar month.
+router.get('/latest-month', requireFreelancer, async (req, res, next) => {
+  try {
+    // Historical records remain valid even when the client's contract later ends.
+    // Use the freelancer_id stored on each source record, not current assignments
+    // or the paginated/contract-filtered time-log endpoint.
+    // The selected work month must come from recorded work, not automatically
+    // generated fixed-monthly billing rows (stats can create a current-month row
+    // even when no work has been logged in that month).
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(DATE_TRUNC('month', MAX(t.date)), 'YYYY-MM') AS latest_month
+      FROM time_logs t
+      WHERE t.freelancer_id = $1
+    `, [req.user.id]);
+    res.json({ latest_month: rows[0]?.latest_month || null });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// GET /api/timelogs/months — every month containing recorded work for this freelancer.
+router.get('/months', requireFreelancer, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT TO_CHAR(DATE_TRUNC('month', t.date), 'YYYY-MM') AS month
+      FROM time_logs t
+      WHERE t.freelancer_id = $1
+        AND t.date IS NOT NULL
+      GROUP BY DATE_TRUNC('month', t.date)
+      ORDER BY DATE_TRUNC('month', t.date) DESC
+    `, [req.user.id]);
+    res.json({ months: rows.map(row => row.month) });
+  } catch (e) {
+    next(e);
+  }
+});
+
 // GET /api/timelogs — Filtered by active contract coverage
 router.get('/', requireFreelancer, async (req, res, next) => {
   try {
-    const { client_id, from, to, limit = 200, offset = 0, payment_status } = req.query;
+    const { client_id, from, to, limit = 200, offset = 0, payment_status, order = 'desc' } = req.query;
+    const sortDirection = String(order).toLowerCase() === 'asc' ? 'ASC' : 'DESC';
     let where = ['t.freelancer_id = $1'];
     let params = [req.user.id];
     let i = 2;
@@ -25,7 +66,7 @@ router.get('/', requireFreelancer, async (req, res, next) => {
         AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
       WHERE ${where.join(' AND ')}
         AND (cc.status IS NULL OR cc.status = 'active')
-      ORDER BY t.date DESC, t.created_at DESC
+      ORDER BY t.date ${sortDirection}, t.id ${sortDirection}, t.created_at DESC
       LIMIT $${i++} OFFSET $${i++}
     `, [...params, limit, offset]);
     res.json(rows);
@@ -50,32 +91,21 @@ router.post('/', requireFreelancer, async (req, res, next) => {
       ORDER BY effective_from DESC, id DESC LIMIT 1
     `, [client_id, req.user.id, date]);
 
-    let rate_type = 'hourly';
-    let amount = 0;
+    if (!contractInfo.rows.length || contractInfo.rows[0].status !== 'active') {
+      return res.status(409).json({
+        error: 'A time log cannot be recorded because there is no active contract covering the selected date.'
+      });
+    }
 
-    if (contractInfo.rows.length) {
-      const c = contractInfo.rows[0];
-      rate_type = c.rate_type;
-      if (c.status === 'active') {
-        if (rate_type === 'hourly' && c.hourly_rate) {
-          amount = parseFloat(hours) * parseFloat(c.hourly_rate);
-        } else if (rate_type === 'fixed' && c.fixed_price) {
-          amount = parseFloat(c.fixed_price);
-        }
-      }
-    } else {
-      // Fallback to clients table base row
-      const clientInfo = await pool.query(
-        'SELECT c.rate_type, c.hourly_rate, c.fixed_price FROM clients c WHERE c.user_id = $1',
-        [client_id]
-      );
-      const c = clientInfo.rows[0] || {};
-      rate_type = c.rate_type || 'hourly';
-      if (rate_type === 'hourly' && c.hourly_rate) {
-        amount = parseFloat(hours) * parseFloat(c.hourly_rate);
-      } else if (rate_type === 'fixed' && c.fixed_price) {
-        amount = parseFloat(c.fixed_price);
-      }
+    const contract = contractInfo.rows[0];
+    const rate_type = contract.rate_type;
+    let amount = 0;
+    if (rate_type === 'hourly' && contract.hourly_rate) {
+      amount = parseFloat(hours) * parseFloat(contract.hourly_rate);
+    } else if (rate_type === 'fixed') {
+      // Fixed-price clients are billed only through fixed_monthly_payments.
+      // Time logs must never create a second charge for the monthly fee.
+      amount = 0;
     }
 
     await client.query('BEGIN');
@@ -127,41 +157,46 @@ router.patch('/bulk-payment', requireFreelancer, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/timelogs/:id — recalculate amount with contract rate
+// PUT /api/timelogs/:id — only edit logs within an active contract period.
 router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { hours, task_description, date, amount } = req.body;
-    let finalAmount = amount;
+    const logRow = await pool.query(
+      'SELECT client_id, date FROM time_logs WHERE id=$1 AND freelancer_id=$2',
+      [req.params.id, req.user.id]
+    );
+    if (!logRow.rows.length) return res.status(404).json({ error: 'Not found' });
 
-    if (finalAmount === undefined || finalAmount === null) {
-      const logRow = await pool.query('SELECT client_id, date FROM time_logs WHERE id=$1', [req.params.id]);
-      if (logRow.rows.length) {
-        const targetDate = date || logRow.rows[0].date;
-        const contractInfo = await pool.query(`
-          SELECT rate_type, hourly_rate, status 
-          FROM client_contracts
-          WHERE client_id = $1 AND freelancer_id = $2
-            AND effective_from <= $3::date
-            AND (effective_to IS NULL OR effective_to >= $3::date)
-          ORDER BY effective_from DESC, id DESC LIMIT 1
-        `, [logRow.rows[0].client_id, req.user.id, targetDate]);
+    const targetDate = date || logRow.rows[0].date;
+    const contractInfo = await pool.query(`
+      SELECT rate_type, hourly_rate, fixed_price, status
+      FROM client_contracts
+      WHERE client_id=$1 AND freelancer_id=$2
+        AND effective_from <= $3::date
+        AND (effective_to IS NULL OR effective_to >= $3::date)
+      ORDER BY effective_from DESC, id DESC LIMIT 1
+    `, [logRow.rows[0].client_id, req.user.id, targetDate]);
 
-        if (contractInfo.rows.length && contractInfo.rows[0].status === 'active') {
-          const c = contractInfo.rows[0];
-          if (c.rate_type === 'hourly' && c.hourly_rate) {
-            finalAmount = (parseFloat(hours) * parseFloat(c.hourly_rate)).toFixed(2);
-          }
-        }
-      }
+    if (!contractInfo.rows.length || contractInfo.rows[0].status !== 'active') {
+      return res.status(409).json({
+        error: 'A time log cannot be edited for a date without an active contract.'
+      });
+    }
+
+    const contract = contractInfo.rows[0];
+    // Never accept a caller-supplied amount for a fixed-price time log.
+    // The monthly invoice is the sole billing record for fixed contracts.
+    let finalAmount = contract.rate_type === 'fixed' ? '0.00' : amount;
+    if (contract.rate_type === 'hourly' && (finalAmount === undefined || finalAmount === null) && contract.hourly_rate) {
+      finalAmount = (parseFloat(hours) * parseFloat(contract.hourly_rate)).toFixed(2);
     }
 
     const { rows } = await pool.query(`
       UPDATE time_logs
       SET hours=$1, task_description=$2, date=$3, amount=COALESCE($4::numeric, amount)
       WHERE id=$5 AND freelancer_id=$6 RETURNING *
-    `, [hours, task_description, date, finalAmount || null, req.params.id, req.user.id]);
+    `, [hours, task_description, targetDate, finalAmount || null, req.params.id, req.user.id]);
 
-    if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) { next(e); }
 });

@@ -13,7 +13,7 @@ const VALID_CATEGORIES = ['basic', 'mandatory', 'business_rule', 'tip', 'general
 
 // Helper to resolve the correct client_id depending on whether a freelancer or client is logged in
 async function resolveClientAndFreelancer(user, targetClientId) {
-  if (user.role === 'client') {
+  if (String(user.role || '').trim().toLowerCase() === 'client') {
     // If a client is logged in, they can only access their own notes.
     // Look up their client record to find their assigned freelancer_id.
     const clientRes = await pool.query(

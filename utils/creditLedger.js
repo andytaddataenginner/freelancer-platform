@@ -34,6 +34,7 @@ async function applyFundsToUnpaidLogs(client, clientUserId, cashAmount = 0) {
   const logsRes = await client.query(
     `SELECT id, amount FROM time_logs
      WHERE client_id = $1 AND payment_status = 'unpaid'
+       AND COALESCE(rate_type, 'hourly') = 'hourly'
      ORDER BY date ASC, id ASC`,
     [clientUserId]
   );

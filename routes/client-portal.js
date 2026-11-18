@@ -33,7 +33,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
     let totalPaid = 0;
     let totalUnpaid = 0;
 
-    if (profile.rate_type === 'fixed') {
+    if (String(profile.rate_type || '').trim().toLowerCase() === 'fixed') {
       // Aggregate paid and unpaid records from fixed_monthly_payments
       const fixedRes = await pool.query(
         `SELECT amount, status FROM fixed_monthly_payments WHERE client_id = $1`,
@@ -42,7 +42,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
 
       fixedRes.rows.forEach(r => {
         const amt = parseFloat(r.amount || 0);
-        if (r.status === 'paid') {
+        if (String(r.status || '').trim().toLowerCase() === 'paid') {
           totalPaid += amt;
         } else if (contractStatus === 'active') {
           // Unpaid amounts are only added to outstanding KPIs if the contract is active
@@ -59,7 +59,7 @@ router.get('/stats', requireClient, async (req, res, next) => {
       logsRes.rows.forEach(log => {
         let amt = parseFloat(log.amount || 0);
         if (!amt && log.hours) amt = parseFloat(log.hours) * rate;
-        if (log.payment_status === 'paid') totalPaid += amt;
+        if (String(log.payment_status || '').trim().toLowerCase() === 'paid') totalPaid += amt;
         else totalUnpaid += amt;
       });
     }
@@ -110,6 +110,26 @@ router.get('/notes', requireClient, async (req, res, next) => {
 });
 
 
+// PUT /api/client/notes/:id — client may edit the notes assigned to their own account
+router.put('/notes/:id', requireClient, async (req, res, next) => {
+  try {
+    const { title, content, category } = req.body || {};
+    if (typeof title !== 'string' || !title.trim() || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ error: 'A title and note content are required.' });
+    }
+    const { rows } = await pool.query(
+      `UPDATE client_notes
+       SET title = $1, content = $2, category = COALESCE($3, category)
+       WHERE id = $4 AND client_id = $5
+       RETURNING id, title, content, category, is_pinned, created_at`,
+      [title.trim(), content.trim(), typeof category === 'string' ? category : null, req.params.id, req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Note not found for this client account.' });
+    res.json(rows[0]);
+  } catch (e) { next(e); }
+});
+
+
 // GET /api/client/timelogs
 router.get('/timelogs', requireClient, async (req, res, next) => {
     try {
@@ -141,6 +161,68 @@ router.post('/payments/record', requireClient, async (req, res, next) => {
       [parsedAmount, req.user.id]
     );
     res.status(201).json({ success: true });
+  } catch (e) { next(e); }
+});
+
+
+// GET /api/client/fixed-payments — client's fixed-fee billing history
+router.get('/fixed-payments', requireClient, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, month, amount, status, paid_at, note FROM fixed_monthly_payments WHERE client_id=$1 ORDER BY month DESC',
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
+// GET /api/client/payments — client's recorded remittances
+router.get('/payments', requireClient, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, amount, date, notes FROM payments WHERE client_id=$1 ORDER BY date DESC, id DESC',
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (e) { next(e); }
+});
+
+// POST /api/client/bookings — client requests a session with their assigned freelancer
+router.post('/bookings', requireClient, async (req, res, next) => {
+  try {
+    const { date, time, duration = 1, type = 'call', message } = req.body;
+    const validTypes = ['call', 'review', 'workshop', 'other'];
+    const hours = Number(duration);
+    if (!date || !time || !validTypes.includes(type) || !Number.isFinite(hours) || hours < 0.5 || hours > 8) {
+      return res.status(400).json({ error: 'A valid date, time, session type and duration are required.' });
+    }
+    if (date < new Date().toISOString().slice(0, 10)) {
+      return res.status(400).json({ error: 'Please choose today or a future date.' });
+    }
+    const clientRes = await pool.query(
+      'SELECT freelancer_id FROM clients WHERE user_id=$1 LIMIT 1',
+      [req.user.id]
+    );
+    if (!clientRes.rows.length || !clientRes.rows[0].freelancer_id) {
+      return res.status(404).json({ error: 'No freelancer is assigned to this client account.' });
+    }
+    const { rows } = await pool.query(
+      "INSERT INTO bookings (client_id, freelancer_id, date, time, duration, type, message, status) VALUES ($1,$2,$3::date,$4::time,$5,$6,$7,'pending') RETURNING *",
+      [req.user.id, clientRes.rows[0].freelancer_id, date, time, hours, type, message || null]
+    );
+    res.status(201).json(rows[0]);
+  } catch (e) { next(e); }
+});
+
+// PATCH /api/client/bookings/:id/cancel — clients may cancel their own future requests
+router.patch('/bookings/:id/cancel', requireClient, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      "UPDATE bookings SET status='cancelled' WHERE id=$1 AND client_id=$2 AND date >= CURRENT_DATE AND status IN ('pending','confirmed') RETURNING *",
+      [req.params.id, req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Upcoming booking not found or cannot be cancelled.' });
+    res.json(rows[0]);
   } catch (e) { next(e); }
 });
 

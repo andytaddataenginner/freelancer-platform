@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireFreelancer, requireAuth } = require('../middleware/auth');
-const { applyFundsToUnpaidLogs } = require('./creditLedger');
+const { applyFundsToUnpaidLogs } = require('../utils/creditLedger');
 const verifyToken = requireAuth;
 
 const sseClients = new Map();
@@ -31,6 +31,18 @@ router.post('/start', requireFreelancer, async (req, res, next) => {
 
     const actualUserId = await resolveClientUserId(client_id);
     if (!actualUserId) return res.status(404).json({ error: 'Client user not found' });
+
+    const contract = await pool.query(`
+      SELECT status
+      FROM client_contracts
+      WHERE client_id=$1 AND freelancer_id=$2
+        AND effective_from <= CURRENT_DATE
+        AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)
+      ORDER BY effective_from DESC, id DESC LIMIT 1
+    `, [actualUserId, req.user.id]);
+    if (!contract.rows.length || contract.rows[0].status !== 'active') {
+      return res.status(409).json({ error: 'The timer cannot start because this client does not have an active contract today.' });
+    }
 
     const { rows } = await pool.query(`
       INSERT INTO active_timers (freelancer_id, client_id, started_at, description, is_running, is_paused, accumulated_seconds)
@@ -123,23 +135,41 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     const hours = Math.round((totalSecs / 3600) * 10000) / 10000;
 
     const rateRes = await dbClient.query(
-      `SELECT hourly_rate, rate_type FROM clients WHERE user_id = $1 OR id = $1 LIMIT 1`,
-      [actualUserId]
+      `SELECT cc.rate_type, cc.hourly_rate, cc.fixed_price, cc.status
+       FROM clients c
+       LEFT JOIN LATERAL (
+         SELECT rate_type, hourly_rate, fixed_price, status
+         FROM client_contracts
+         WHERE client_id = c.user_id AND freelancer_id = $2
+           AND effective_from <= CURRENT_DATE
+           AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)
+         ORDER BY effective_from DESC, id DESC LIMIT 1
+       ) cc ON TRUE
+       WHERE c.user_id = $1 LIMIT 1`,
+      [actualUserId, req.user.id]
     );
     const clientData = rateRes.rows[0] || {};
-    const rateType = clientData.rate_type || 'hourly';
+    if (!clientData.status || clientData.status !== 'active') {
+      await dbClient.query('DELETE FROM active_timers WHERE id=$1', [timer.id]);
+      return res.status(409).json({ error: 'The timer was not saved because this client does not have an active contract today.' });
+    }
+    const rateType = String(clientData.rate_type || 'hourly').trim().toLowerCase();
     const hourlyRate = parseFloat(clientData.hourly_rate || 0);
-
-    const amount = rateType === 'fixed' ? 0 : Math.round((hours * hourlyRate) * 100) / 100;
-    const finalDescription = description || timer.description || 'Timed session';
+    const fixedPrice = parseFloat(clientData.fixed_price || 0);
+    // Use the same active-contract pricing as manual time-log entry.
+    // Fixed-price clients are billed only by the monthly invoice process.
+    // A timer session must never add the monthly fixed fee to time_logs.
+    const rawAmount = rateType === 'fixed' ? 0 : hours * hourlyRate;
+    const amount = Math.round((rawAmount || 0) * 100) / 100;
+    const finalDescription = String(description || timer.description || 'Timed session').trim();
 
     await dbClient.query('BEGIN');
 
     if (hours > 0) {
       await dbClient.query(`
-        INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, payment_status)
-        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', 'unpaid')
-      `, [actualUserId, req.user.id, hours, amount, finalDescription]);
+        INSERT INTO time_logs (client_id, freelancer_id, date, hours, amount, task_description, source, rate_type, payment_status)
+        VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, 'timer', $6, 'unpaid')
+      `, [actualUserId, req.user.id, hours, amount, finalDescription, rateType]);
 
       // Trigger the credit ledger allocation to auto-settle using existing credit balance
       await applyFundsToUnpaidLogs(dbClient, actualUserId, 0);
@@ -185,7 +215,7 @@ router.get('/status', requireFreelancer, async (req, res, next) => {
 // ── GET /api/timer/client-status — client status poll ─────────────────────────
 router.get('/client-status', verifyToken, async (req, res, next) => {
   try {
-    if (req.user.role !== 'client') return res.status(403).json({ error: 'Clients only' });
+    if (String(req.user.role || '').trim().toLowerCase() !== 'client') return res.status(403).json({ error: 'Clients only' });
 
     const { rows } = await pool.query(`
       SELECT t.started_at, t.description, t.is_running, t.is_paused, t.accumulated_seconds,
@@ -231,66 +261,95 @@ router.post('/cancel', requireFreelancer, async (req, res, next) => {
 
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
 // ── GET /api/timer/agency/status — agency-wide availability status ──────────
-// ── GET /api/timer/agency/status — agency-wide availability status ──────────
-router.get('/agency/status', verifyToken, async (req, res, next) => {
+// ── GET /api/timer/agency/status — availability for the freelancer assigned to this client
+router.get('/agency/status', requireAuth, async (req, res, next) => {
   try {
-    // 1. Check if there is an active timer (running OR paused) for this client relationship
-    const timerRes = await pool.query(
-      `SELECT t.*, u.name AS freelancer_name 
-       FROM active_timers t
-       JOIN users u ON u.id = t.freelancer_id
-       WHERE t.client_id = $1 AND t.is_running = TRUE 
-       LIMIT 1`,
-      [req.user.id]
-    );
+    if (String(req.user.role || '').trim().toLowerCase() !== 'client') {
+      return res.status(403).json({ error: 'Clients only' });
+    }
 
-    if (timerRes.rows.length > 0) {
-      const activeTimer = timerRes.rows[0];
-      
-      // Optional: you can distinguish between running and paused if you want, 
-      // but both will correctly show as busy/not available!
+    // Resolve the client -> freelancer relationship from the latest open contract.
+    // client_contracts is authoritative because assignments and contract states can
+    // change over time; clients.freelancer_id is retained as a legacy fallback.
+    // The clients table is the canonical client-to-freelancer assignment.
+    // Do not let an older/stale contract row override clients.freelancer_id.
+    const { rows: assignmentRows } = await pool.query(`
+      SELECT c.freelancer_id,
+             u.name AS freelancer_name,
+             COALESCE(u.is_online, FALSE) AS is_online
+      FROM clients c
+      JOIN users u ON u.id = c.freelancer_id
+      WHERE c.user_id = $1
+        AND c.freelancer_id IS NOT NULL
+        AND LOWER(TRIM(u.role)) = 'freelancer'
+      LIMIT 1
+    `, [req.user.id]);
+
+    if (!assignmentRows.length) {
+      return res.json({
+        status: 'offline',
+        availability_scope: 'assigned-freelancer',
+        assigned_freelancer_id: null,
+        assigned_freelancer_name: null,
+        is_available: false,
+        is_busy: false,
+        is_other_client: false,
+        is_paused: false,
+        active_session: null,
+        reason: 'No active freelancer assignment found for this client'
+      });
+    }
+
+    const assigned = assignmentRows[0];
+
+    // This is the key agency-wide check: do NOT filter by this client's ID.
+    // Any running/paused timer belonging to the assigned freelancer makes
+    // every other client assigned to that same freelancer see "Busy".
+    const { rows: timerRows } = await pool.query(`
+      SELECT t.id, t.freelancer_id, t.client_id, t.started_at, t.description,
+             t.is_paused, t.accumulated_seconds,
+             CASE WHEN t.is_paused THEN t.accumulated_seconds
+                  ELSE t.accumulated_seconds + EXTRACT(EPOCH FROM (NOW() - t.started_at))::int
+             END AS elapsed_sec
+      FROM active_timers t
+      WHERE t.freelancer_id = $1
+        AND t.is_running = TRUE
+      ORDER BY t.started_at DESC, t.id DESC
+      LIMIT 1
+    `, [assigned.freelancer_id]);
+
+    const timer = timerRows[0];
+    if (timer) {
+      const isOtherClient = String(timer.client_id) !== String(req.user.id);
       return res.json({
         status: 'busy',
+        availability_scope: 'freelancer-wide',
+        assigned_freelancer_id: assigned.freelancer_id,
+        assigned_freelancer_name: assigned.freelancer_name,
         is_available: false,
         is_busy: true,
-        is_paused: activeTimer.is_paused,
-        active_session: activeTimer
+        is_other_client: isOtherClient,
+        is_paused: Boolean(timer.is_paused),
+        active_session: isOtherClient ? null : {
+          started_at: timer.started_at,
+          description: timer.description,
+          is_paused: Boolean(timer.is_paused),
+          accumulated_seconds: timer.accumulated_seconds,
+          elapsed_sec: timer.elapsed_sec
+        }
       });
     }
 
-    // 2. If no timer exists at all, check if the freelancer is logged in (Available vs Offline)
-    const freelancerRes = await pool.query(
-      `SELECT u.id, u.name, u.is_online 
-       FROM clients c
-       JOIN users u ON u.id = c.freelancer_id
-       WHERE c.user_id = $1
-       LIMIT 1`,
-      [req.user.id]
-    );
-
-    let isOnline = false;
-    if (freelancerRes.rows.length > 0) {
-      isOnline = freelancerRes.rows[0].is_online;
-    } else {
-      const fallbackRes = await pool.query(
-        `SELECT is_online FROM users WHERE role = 'freelancer' AND is_online = TRUE LIMIT 1`
-      );
-      isOnline = fallbackRes.rows.length > 0;
-    }
-
-    if (isOnline) {
-      return res.json({
-        status: 'available',
-        is_available: true,
-        is_busy: false,
-        active_session: null
-      });
-    }
-
+    const isOnline = Boolean(assigned.is_online);
     return res.json({
-      status: 'offline',
-      is_available: false,
+      status: isOnline ? 'available' : 'offline',
+      availability_scope: 'freelancer-wide',
+      assigned_freelancer_id: assigned.freelancer_id,
+      assigned_freelancer_name: assigned.freelancer_name,
+      is_available: isOnline,
       is_busy: false,
+      is_other_client: false,
+      is_paused: false,
       active_session: null
     });
   } catch (err) {
