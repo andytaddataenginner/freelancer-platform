@@ -4,11 +4,17 @@ on:
     branches: [feature/react-migration]
     paths:
       - 'frontend/**'
+      - 'routes/**'
+      - 'server.js'
+      - 'package.json'
       - '.github/workflows/qfa-react-build.yml'
   pull_request:
     branches: [main]
     paths:
       - 'frontend/**'
+      - 'routes/**'
+      - 'server.js'
+      - 'package.json'
       - '.github/workflows/qfa-react-build.yml'
 jobs:
   build:
@@ -24,4 +30,4 @@ jobs:
       - run: npm install
       - run: npm run build
       - name: Check additive API route syntax
-        run: node --check ../routes/client-portal.js && node --check ../routes/portfolio.js && node --check ../routes/timer.js
+        run: node --check ../routes/client-portal.js && node --check ../routes/portfolio.js && node --check ../routes/timer.js && node --check ../routes/contracts.js && node --check ../routes/fixed-payments.js && node --check ../server.js
