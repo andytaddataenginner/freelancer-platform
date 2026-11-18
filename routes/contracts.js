@@ -77,6 +77,7 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
         ORDER BY effective_from DESC, id DESC LIMIT 1 FOR UPDATE
       `, [clientId, req.user.id]);
       if (!current.rowCount) { const err = new Error('No current contract found to change.'); err.status = 400; throw err; }
+      if (current.rows[0].status === 'terminated') { const err = new Error('A terminated contract cannot be changed. Create a new client agreement instead.'); err.status = 400; throw err; }
       const from = new Date(effective_from + 'T00:00:00Z');
       const start = new Date(current.rows[0].effective_from);
       if (from < new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()))) {
@@ -93,7 +94,7 @@ router.post('/:clientId/change', requireFreelancer, async (req, res, next) => {
       `, [clientId, req.user.id, rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, current.rows[0].status, effective_from, String(note).trim()]);
       await db.query(`
         UPDATE clients SET rate_type=$1, hourly_rate=$2, fixed_price=$3, is_active=$4
-        WHERE user_id=$4 AND freelancer_id=$5
+        WHERE user_id=$5 AND freelancer_id=$6
       `, [rate_type, rate_type === 'hourly' ? Number(hourly_rate) : null, rate_type === 'fixed' ? Number(fixed_price) : null, current.rows[0].status === 'active', clientId, req.user.id]);
       if (rate_type === 'hourly') {
         await db.query(`
