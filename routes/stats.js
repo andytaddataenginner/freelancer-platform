@@ -36,9 +36,9 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
 
     const currentMonth = monthParam || new Date().toISOString().slice(0, 7);
 
-    // ── Ensure one full fixed invoice exists only when the contract is active
-    // and fixed on the first calendar day of the billing month. Mid-month
-    // resumes begin billing on the following month's first day.
+    // ── Generate a fixed invoice only when one active fixed contract covers
+    // the entire calendar month. Mid-month pauses/resumes are billed from
+    // the next full month, never for the interrupted month.
     try {
       await pool.query(`
         WITH month_bounds AS (
@@ -52,7 +52,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
           CROSS JOIN month_bounds mb
           WHERE cc.freelancer_id = $2
             AND cc.effective_from <= mb.month_start
-            AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
+            AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_end)
           ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
         )
         INSERT INTO fixed_monthly_payments (client_id, freelancer_id, month, amount, status)
@@ -146,7 +146,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
         CROSS JOIN month_bounds mb
         WHERE cc.freelancer_id = $1
           AND cc.effective_from <= mb.month_start
-          AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
+          AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_end)
         ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
       )
       SELECT f.*, u.name AS client_name, u.company AS client_company
