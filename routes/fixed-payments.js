@@ -7,8 +7,9 @@ function validMonth(month) {
   return typeof month === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
 }
 
-// Select the contract state effective on the first calendar day of the billing month.
-// A mid-month resume becomes billable from the following month's first day.
+// Only bill a month when one active fixed contract covers the entire calendar month.
+// A mid-month pause, termination, rate change, or resume makes that month ineligible;
+// billing restarts on the first day of the next fully covered month.
 async function generateForFreelancer(db, freelancerId, month, clientId = null) {
   const eligible = await db.query(`
     WITH month_bounds AS (
@@ -23,7 +24,7 @@ async function generateForFreelancer(db, freelancerId, month, clientId = null) {
       WHERE cc.freelancer_id = $1
         AND ($3::bigint IS NULL OR cc.client_id = $3)
         AND cc.effective_from <= mb.month_start
-        AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_start)
+        AND (cc.effective_to IS NULL OR cc.effective_to >= mb.month_end)
       ORDER BY cc.client_id, cc.effective_from DESC, cc.id DESC
     )
     SELECT lc.client_id, lc.fixed_price
