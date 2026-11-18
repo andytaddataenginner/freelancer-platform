@@ -102,6 +102,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
           AND cc.effective_from <= t.date
           AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
         WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date AND t.payment_status='paid'
+          AND t.rate_type='hourly'
           AND (cc.status IS NULL OR cc.status = 'active')
       `, [freelancerId, firstOfMonth, lastOfMonth]),
 
@@ -112,7 +113,8 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
           AND cc.freelancer_id = t.freelancer_id
           AND cc.effective_from <= t.date
           AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
-        WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date 
+        WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date
+          AND t.rate_type='hourly'
           AND (t.payment_status='unpaid' OR t.payment_status IS NULL)
           AND (cc.status IS NULL OR cc.status = 'active')
       `, [freelancerId, firstOfMonth, lastOfMonth]),
@@ -185,6 +187,7 @@ router.get('/freelancer', requireFreelancer, async (req, res, next) => {
         AND cc.effective_from <= t.date
         AND (cc.effective_to IS NULL OR cc.effective_to >= t.date)
       WHERE t.freelancer_id=$1 AND t.date>=$2::date AND t.date<=$3::date
+        AND t.rate_type='hourly'
         AND (cc.status IS NULL OR cc.status = 'active')
       GROUP BY u.name, u.company
       ORDER BY total DESC
