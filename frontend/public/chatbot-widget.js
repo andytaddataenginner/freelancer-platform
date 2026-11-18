@@ -15,35 +15,75 @@
     try {
       const token = localStorage.getItem('token');
       if (!token) return null;
-      return JSON.parse(atob(token.split('.')[1]));
+      const part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(decodeURIComponent(escape(atob(part))));
     } catch (_) { return null; }
+  }
+
+  function getStoredUser() {
+    try { return JSON.parse(localStorage.getItem('user') || 'null'); }
+    catch (_) { return null; }
   }
 
   function getUserRole() {
     const payload = parseToken();
-    return (payload && payload.role) ? payload.role : 'freelancer';
+    const user = getStoredUser();
+    const role = String(user?.role || payload?.role || payload?.userRole || '').toLowerCase();
+    if (role === 'client' || role === 'freelancer' || role === 'admin') return role;
+    return 'unknown';
   }
 
   function getCurrentUserId() {
     const payload = parseToken();
-    return (payload && (payload.id || payload.userId)) ? String(payload.id || payload.userId) : 'guest';
+    const user = getStoredUser();
+    const id = user?.id || user?.userId || user?.user_id || payload?.id || payload?.userId || payload?.user_id || payload?.sub;
+    return id ? String(id) : '';
   }
 
   function getCurrentUserName() {
+    const user = getStoredUser();
     const payload = parseToken();
-    return (payload && payload.name) ? payload.name : 'User';
+    return user?.name || payload?.name || 'User';
   }
 
-  // Enforce strict session isolation on load
-  function checkAndCleanSession() {
-    const currentUserId = getCurrentUserId();
-    const storedUserId = localStorage.getItem('qfa_chat_user_id');
+  function getSessionKey() {
+    const role = getUserRole();
+    const userId = getCurrentUserId();
+    return role !== 'unknown' && userId ? role + ':' + userId : '';
+  }
 
-    // If user changed or logged out/in as someone else, clear old conversation history immediately
-    if (storedUserId !== currentUserId) {
-      localStorage.removeItem('qfa_chat_history');
-      localStorage.setItem('qfa_chat_user_id', currentUserId);
+  function clearChatState() {
+    const all = JSON.parse(localStorage.getItem('qfa_chat_histories') || '{}');
+    delete all[getSessionKey()];
+    localStorage.setItem('qfa_chat_histories', JSON.stringify(all));
+    localStorage.removeItem('qfa_chat_user_id');
+    localStorage.removeItem('qfa_chat_session_key');
+    if (messages) {
+      messages.innerHTML = '<div class="qfa-welcome"><div class="qfa-welcome-icon">🤖</div><p id="qfaWelcomeMsg"></p></div>';
+      updateWelcomeText();
     }
+    if (panel) panel.classList.remove('open');
+    if (fab) {
+      fab.classList.remove('active');
+      fab.setAttribute('aria-expanded', 'false');
+      fab.style.display = localStorage.getItem('token') ? '' : 'none';
+    }
+    isOpen = false;
+    document.querySelectorAll('.qfa-menu-btn').forEach(btn => btn.classList.remove('active'));
+  }
+
+  function checkAndCleanSession() {
+    const key = getSessionKey();
+    const previous = localStorage.getItem('qfa_chat_session_key');
+    if (!key) {
+      clearChatState();
+      return false;
+    }
+    if (previous !== key) {
+      clearChatState();
+      localStorage.setItem('qfa_chat_session_key', key);
+    }
+    return true;
   }
 
   checkAndCleanSession();
@@ -256,8 +296,8 @@
   let isOpen = false;
 
   function openPanel() {
-    // Re-verify session in case user switched accounts while app was open
-    checkAndCleanSession();
+    // Re-verify role and identity before opening the assistant
+    if (!checkAndCleanSession()) return;
     updateWelcomeText();
     
     isOpen = true;
@@ -278,6 +318,13 @@
   }
 
   fab.addEventListener('click', () => isOpen ? closePanel() : openPanel());
+
+  // React auth.clear() dispatches this event on logout and session expiry.
+  window.addEventListener('qfa:logout', clearChatState);
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'token' && !event.newValue) clearChatState();
+    if (event.key === 'token' || event.key === 'user') checkAndCleanSession();
+  });
   closeBtn.addEventListener('click', closePanel);
   minimizeBtn.addEventListener('click', closePanel);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closePanel(); });
@@ -298,16 +345,23 @@
   // ── SESSION HISTORY (LocalStorage bounded to user ID) ─────────────────────
   function saveHistory(role, text) {
     try {
-      const hist = JSON.parse(localStorage.getItem('qfa_chat_history') || '[]');
+      const key = getSessionKey();
+      const all = JSON.parse(localStorage.getItem('qfa_chat_histories') || '{}');
+      const hist = all[key] || [];
       hist.push({ role, text });
       if (hist.length > 40) hist.splice(0, hist.length - 40);
-      localStorage.setItem('qfa_chat_history', JSON.stringify(hist));
+      const key = getSessionKey();
+      const all = JSON.parse(localStorage.getItem('qfa_chat_histories') || '{}');
+      all[key] = hist;
+      localStorage.setItem('qfa_chat_histories', JSON.stringify(all));
     } catch (_) {}
   }
 
   function restoreHistory() {
     try {
-      const hist = JSON.parse(localStorage.getItem('qfa_chat_history') || '[]');
+      const key = getSessionKey();
+      const all = JSON.parse(localStorage.getItem('qfa_chat_histories') || '{}');
+      const hist = all[key] || [];
       if (!hist.length) return;
       messages.innerHTML = '';
       hist.forEach(m => appendBubble(m.role, m.text, false));
@@ -362,7 +416,7 @@
     input.value = '';
 
     const token = localStorage.getItem('token');
-    if (!token) {
+    if (!token || !checkAndCleanSession() || !['client','freelancer'].includes(getUserRole())) {
       appendBubble('bot', '🔒 You need to be logged in to use the assistant.');
       return;
     }
