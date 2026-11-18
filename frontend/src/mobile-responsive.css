@@ -219,3 +219,51 @@
  }
  .public-nav .public-mobile-menu{flex:0 0 38px!important;width:38px!important;height:38px!important}
 }
+
+/* Freelancer mobile drawer and dashboard polish. Presentation only. */
+@media(max-width:760px){
+  /* Keep availability wording visible even if the sidebar was collapsed on desktop. */
+  .sidebar.sidebar-collapsed .freelancer-nav-status{display:flex!important}
+  .sidebar .sidebar-bottom{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important}
+  .sidebar .sidebar-bottom .profile-avatar{order:0!important;flex:0 0 34px!important}
+  .sidebar .sidebar-bottom .profile-copy{order:0!important;display:flex!important;flex:1 1 100px!important;min-width:0!important;flex-direction:column!important;gap:2px!important}
+  .sidebar .sidebar-bottom>button{order:2!important;flex:0 0 36px!important;margin-left:auto!important}
+  .sidebar .freelancer-nav-status{
+    order:3!important;display:flex!important;flex:0 0 100%!important;width:100%!important;max-width:100%!important;
+    min-width:0!important;align-items:center!important;gap:8px!important;padding:8px 10px!important;
+    border:1px solid rgba(255,255,255,.18)!important;border-radius:8px!important;
+    background:rgba(255,255,255,.08)!important;color:#edf3ff!important;
+    font-size:11px!important;font-weight:600!important;line-height:1.35!important;
+    white-space:normal!important;overflow-wrap:anywhere!important;
+  }
+  .sidebar .freelancer-nav-status i{display:inline-block!important;width:8px!important;height:8px!important;flex:0 0 8px!important;border-radius:50%!important}
+  .sidebar .freelancer-nav-status.status-available i{background:#36c98f!important}
+  .sidebar .freelancer-nav-status.status-busy i{background:#f5c842!important}
+  .sidebar .freelancer-nav-status.status-checking i{background:#9db4dc!important}
+
+  /* Put the KPI cards before the dashboard heading on mobile. */
+  .dashboard-page{display:flex!important;flex-direction:column!important}
+  .dashboard-page>.dashboard-kpis{order:-1!important;margin:0 0 12px!important}
+  .dashboard-page>.page-heading{order:0!important}
+  .dashboard-page>.notice-error{order:1!important}
+  .dashboard-page>.dashboard-chart-grid{order:2!important}
+  .dashboard-page>.dashboard-lower{order:3!important}
+
+  /* Consistent refresh control in both themes. */
+  .dashboard-heading{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+  .dashboard-heading>div:first-child{min-width:0!important}
+  .dashboard-heading .heading-actions{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:9px!important;width:100%!important}
+  .dashboard-heading .month-filter{display:flex!important;flex:1 1 auto!important;min-width:0!important;flex-direction:column!important;gap:5px!important}
+  .dashboard-heading .month-filter select{width:100%!important;min-width:0!important}
+  .dashboard-heading .refresh-button{
+    display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;gap:7px!important;
+    min-width:96px!important;min-height:40px!important;margin:0!important;padding:9px 12px!important;
+    border:1px solid #d4ddeb!important;border-radius:9px!important;background:#fff!important;color:#263957!important;
+    font-size:11px!important;font-weight:700!important;white-space:nowrap!important;opacity:1!important;
+  }
+  .dashboard-heading .refresh-button:disabled{opacity:.62!important}
+  .theme-dark .dashboard-heading .refresh-button{
+    background:#22324a!important;border-color:#455a78!important;color:#f1f5fc!important;
+  }
+  .theme-dark .dashboard-heading .refresh-button:disabled{color:#c0cde0!important}
+}
