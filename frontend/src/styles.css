@@ -1526,3 +1526,50 @@
   line-height:1.4!important;text-transform:none!important;
  }
 }
+
+
+/* Client Portal collapsed desktop sidebar: use compact, legible status and timer chips. */
+@media(min-width:761px){
+ .client-portal-page.portal-sidebar-collapsed .client-sidebar .client-mobile-availability{
+  display:flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;min-width:0!important;min-height:42px!important;
+  margin:16px 0 10px!important;padding:8px 0!important;
+  border:1px solid rgba(255,255,255,.16)!important;border-radius:11px!important;
+  background:rgba(255,255,255,.08)!important;box-shadow:none!important;
+  overflow:hidden!important;
+ }
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-availability-heading{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:0!important;width:100%!important;min-width:0!important;
+  font-size:0!important;letter-spacing:0!important;
+ }
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-availability-heading>span:last-child,
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-availability>strong,
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-availability>small{display:none!important}
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-availability-dot{
+  width:10px!important;height:10px!important;flex:0 0 10px!important;margin:0!important;
+ }
+ .client-portal-page.portal-sidebar-collapsed .client-sidebar .client-mobile-live-monitor{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;min-width:0!important;min-height:42px!important;
+  margin:8px 0 10px!important;padding:8px 2px!important;gap:0!important;
+  border:1px solid rgba(255,255,255,.16)!important;border-radius:11px!important;
+  background:rgba(255,255,255,.08)!important;overflow:hidden!important;
+ }
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-live-heading{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;gap:0!important;font-size:0!important;letter-spacing:0!important;
+ }
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-live-heading .client-mobile-live-dot{
+  width:8px!important;height:8px!important;flex:0 0 8px!important;
+ }
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-live-monitor>strong,
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-live-monitor>small{display:none!important}
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-live-clock{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;gap:0!important;margin-top:7px!important;
+  font-size:10px!important;line-height:1.2!important;letter-spacing:-.04em!important;
+  white-space:nowrap!important;font-variant-numeric:tabular-nums!important;
+ }
+ .client-portal-page.portal-sidebar-collapsed .client-mobile-live-clock svg{display:none!important}
+}
