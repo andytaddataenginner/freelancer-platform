@@ -86,8 +86,6 @@
     return true;
   }
 
-  checkAndCleanSession();
-
   // ── MENU STRUCTURES ───────────────────────────────────────────────────────
   const MENU_FREELANCER = [
     {
@@ -265,6 +263,7 @@
       : `Hi ${name}! 👋 Pick a topic from the menu, or type your question below.`;
   }
   updateWelcomeText();
+  checkAndCleanSession();
 
   // ── BUILD MENU ────────────────────────────────────────────────────────────
   MENU.forEach(cat => {
