@@ -157,7 +157,9 @@ router.post('/stop', requireFreelancer, async (req, res, next) => {
     const hourlyRate = parseFloat(clientData.hourly_rate || 0);
     const fixedPrice = parseFloat(clientData.fixed_price || 0);
     // Use the same active-contract pricing as manual time-log entry.
-    const rawAmount = rateType === 'fixed' ? fixedPrice : hours * hourlyRate;
+    // Fixed-price clients are billed only by the monthly invoice process.
+    // A timer session must never add the monthly fixed fee to time_logs.
+    const rawAmount = rateType === 'fixed' ? 0 : hours * hourlyRate;
     const amount = Math.round((rawAmount || 0) * 100) / 100;
     const finalDescription = String(description || timer.description || 'Timed session').trim();
 
