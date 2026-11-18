@@ -331,7 +331,9 @@
   menuToggle.addEventListener('click', () => menuEl.classList.toggle('open'));
 
   clearBtn.addEventListener('click', () => {
-    localStorage.removeItem('qfa_chat_history');
+    const all = JSON.parse(localStorage.getItem('qfa_chat_histories') || '{}');
+    delete all[getSessionKey()];
+    localStorage.setItem('qfa_chat_histories', JSON.stringify(all));
     const name = getCurrentUserName();
     const defaultWelcome = getUserRole() === 'client'
       ? `Hi ${name}! 👋 Type "help" or pick a topic from the menu to check your billing, hours, bookings and more.`
@@ -349,8 +351,6 @@
       const hist = all[key] || [];
       hist.push({ role, text });
       if (hist.length > 40) hist.splice(0, hist.length - 40);
-      const key = getSessionKey();
-      const all = JSON.parse(localStorage.getItem('qfa_chat_histories') || '{}');
       all[key] = hist;
       localStorage.setItem('qfa_chat_histories', JSON.stringify(all));
     } catch (_) {}
