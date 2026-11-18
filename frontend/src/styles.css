@@ -1491,3 +1491,38 @@
   font-size:11px!important;
  }
 }
+
+
+/* Final desktop live-session popout typography and alignment. */
+@media (min-width:761px){
+ .client-portal-page .client-live-popout{
+  width:276px!important;max-width:calc(100vw - 40px)!important;
+  padding:12px 14px!important;display:block!important;
+ }
+ .client-portal-page .client-live-popout-top{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:10px!important;margin:0!important;
+ }
+ .client-portal-page .client-live-popout-top>span{
+  display:flex!important;align-items:center!important;gap:7px!important;
+  font-size:9px!important;font-weight:600!important;letter-spacing:.025em!important;
+  text-transform:none!important;line-height:1.35!important;
+ }
+ .client-portal-page .client-live-popout-title{
+  display:block!important;margin:9px 0 7px!important;
+  font-size:12px!important;font-weight:500!important;letter-spacing:0!important;
+  line-height:1.4!important;text-transform:none!important;
+ }
+ .client-portal-page .client-live-popout-clock{
+  display:flex!important;align-items:center!important;gap:8px!important;
+  font-size:19px!important;font-weight:650!important;line-height:1.25!important;
+  font-variant-numeric:tabular-nums!important;
+ }
+ .client-portal-page .client-live-popout-clock svg{
+  display:block!important;flex:0 0 15px!important;width:15px!important;height:15px!important;
+ }
+ .client-portal-page .client-live-popout-caption{
+  margin:6px 0 0!important;font-size:9px!important;font-weight:400!important;
+  line-height:1.4!important;text-transform:none!important;
+ }
+}
