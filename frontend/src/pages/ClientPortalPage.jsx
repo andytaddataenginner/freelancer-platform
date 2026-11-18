@@ -99,6 +99,11 @@ export function ClientPortalPage(){
   <aside className="client-sidebar">
    <div className="client-sidebar-brand"><img src="/QFA_Logo.png" alt="QFA"/>{!sidebarCollapsed&&<div><strong>QFA</strong><small>CLIENT WORKSPACE</small></div>}<button className="portal-collapse" onClick={()=>setSidebarCollapsed(x=>!x)} aria-label="Collapse menu">{sidebarCollapsed?<ChevronRight size={16}/>:<ChevronLeft size={16}/>}</button></div>
    <nav className="client-sidebar-nav">{nav.map(([id,label,Icon])=><button key={id} className={tab===id?'active':''} title={sidebarCollapsed?label:undefined} onClick={()=>{setTab(id);setMobileNavOpen(false);}}><Icon size={17}/>{!sidebarCollapsed&&<span>{label}</span>}</button>)}</nav>
+   <section className={"client-mobile-availability status-"+availabilityTone} aria-live="polite">
+    <div className="client-mobile-availability-heading"><span className="client-mobile-availability-dot"/><span>FREELANCER AVAILABILITY</span></div>
+    <strong>{statusLabel}</strong>
+    <small>{availabilityStatus==="busy"?"Your freelancer is currently working.":availabilityStatus==="available"?"Your freelancer is ready to take on work.":availabilityStatus==="offline"?"Your freelancer is currently offline.":"Checking the latest availability."}</small>
+   </section>
    {data.liveTimer&&<section className="client-mobile-live-monitor" aria-live="polite">
     <div className="client-mobile-live-heading"><span className="client-mobile-live-dot"/>{data.liveTimer.is_paused?'SESSION PAUSED':'LIVE WORK SESSION'}</div>
     <strong>{data.liveTimer.description||'Work session in progress'}</strong>
@@ -110,7 +115,7 @@ export function ClientPortalPage(){
   <div className="client-main">
   <header className="portal-header"><button className="client-mobile-menu" onClick={()=>setMobileNavOpen(true)} aria-label="Open client navigation"><Menu size={21}/></button><a className="portal-brand" href="/"><img src="/QFA_Logo.png" alt="QFA"/><div><strong>QFA</strong><small>CLIENT PORTAL</small></div></a><div className="portal-header-actions"><span className={"portal-availability status-"+availabilityTone}><Flag size={14}/><i className={availabilityTone}/><strong>{statusLabel}</strong></span><button className="icon-button" onClick={()=>setDark(x=>!x)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button><button className="button-secondary" onClick={logout}><LogOut size={15}/> Sign out</button></div></header>
   <section className="portal-content">
-   <div className="portal-title-row"><div><div className="eyebrow">YOUR QFA WORKSPACE</div><h1>Welcome, {user?.name||'Client'}.</h1><p>View your work, account activity and communication with your freelancer.</p></div><button className="button-secondary" onClick={load} disabled={loading}><RefreshCw size={15} className={loading?'spin':''}/> Refresh</button></div>
+   <div className="portal-title-row"><div><div className="eyebrow">YOUR QFA WORKSPACE</div><h1>Welcome, {user?.name||'Client'}.</h1><p>View your work, account activity and communication with your freelancer.</p></div><button className="button-secondary client-portal-refresh" onClick={load} disabled={loading}><RefreshCw size={15} className={loading?'spin':''}/> Refresh</button></div>
    {error&&<div className="notice-error" role="alert">{error}</div>}{notice&&<div className="notice-success">{notice}</div>}
    <div className="metric-grid portal-metrics">
     {[{label:'Contract status',value:s.contractStatus||'—'},{label:'Total paid',value:money(s.totalPaid)},{label:'Outstanding',value:money(s.totalUnpaid)},{label:'Account credit',value:money(s.creditBalance)},{label:s.rateType==='fixed'?'Monthly fixed fee':'Hourly rate',value:s.rateType==='fixed'?money(s.fixedPrice)+'/mo':money(s.hourlyRate)+'/hr'}].map(x=><article className="metric-card" key={x.label}><div className="metric-label">{x.label}</div><div className="metric-value portal-metric-value">{loading?'—':x.value}</div></article>)}
