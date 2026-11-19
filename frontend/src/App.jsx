@@ -26,52 +26,69 @@ function SessionInactivityGuard() {
   const loggingOut = useRef(false);
 
   useEffect(() => {
-    if (!auth.token()) return undefined;
+    let stopSessionWatch = null;
 
-    const now = Date.now();
-    if (!localStorage.getItem(ACTIVITY_STORAGE_KEY)) {
-      localStorage.setItem(ACTIVITY_STORAGE_KEY, String(now));
-    }
-    let lastWrite = Number(localStorage.getItem(ACTIVITY_STORAGE_KEY)) || now;
-
-    const recordActivity = () => {
-      if (!auth.token() || loggingOut.current) return;
-      const current = Date.now();
-      // Throttle writes while still synchronizing activity across same-browser tabs.
-      if (current - lastWrite >= 1000) {
-        lastWrite = current;
-        localStorage.setItem(ACTIVITY_STORAGE_KEY, String(current));
+    const startSessionWatch = () => {
+      if (!auth.token() || stopSessionWatch) return;
+      loggingOut.current = false;
+      const now = Date.now();
+      if (!localStorage.getItem(ACTIVITY_STORAGE_KEY)) {
+        localStorage.setItem(ACTIVITY_STORAGE_KEY, String(now));
       }
+      let lastWrite = Number(localStorage.getItem(ACTIVITY_STORAGE_KEY)) || now;
+
+      const recordActivity = () => {
+        if (!auth.token() || loggingOut.current) return;
+        const current = Date.now();
+        // Throttle writes while synchronizing activity across same-browser tabs.
+        if (current - lastWrite >= 1000) {
+          lastWrite = current;
+          localStorage.setItem(ACTIVITY_STORAGE_KEY, String(current));
+        }
+      };
+
+      const checkInactivity = () => {
+        if (!auth.token() || loggingOut.current) return;
+        const lastActivity = Number(localStorage.getItem(ACTIVITY_STORAGE_KEY)) || lastWrite;
+        if (Date.now() - lastActivity < INACTIVITY_LIMIT_MS) return;
+
+        loggingOut.current = true;
+        const role = String(auth.user()?.role || '').trim().toLowerCase() === 'client'
+          ? 'client'
+          : 'freelancer';
+        // Notify the API when possible, then always clear the local session.
+        apiRequest('/auth/logout', { method: 'POST' })
+          .catch(() => {})
+          .finally(() => {
+            auth.clear();
+            window.location.replace('/#/login?role=' + role + '&reason=inactive');
+          });
+      };
+
+      const activityEvents = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'click'];
+      activityEvents.forEach((eventName) => window.addEventListener(eventName, recordActivity, { passive: true }));
+      window.addEventListener('storage', checkInactivity);
+      const interval = window.setInterval(checkInactivity, 1000);
+
+      stopSessionWatch = () => {
+        activityEvents.forEach((eventName) => window.removeEventListener(eventName, recordActivity));
+        window.removeEventListener('storage', checkInactivity);
+        window.clearInterval(interval);
+        stopSessionWatch = null;
+      };
     };
 
-    const checkInactivity = () => {
-      if (!auth.token() || loggingOut.current) return;
-      const lastActivity = Number(localStorage.getItem(ACTIVITY_STORAGE_KEY)) || lastWrite;
-      if (Date.now() - lastActivity < INACTIVITY_LIMIT_MS) return;
-
-      loggingOut.current = true;
-      const role = String(auth.user()?.role || '').trim().toLowerCase() === 'client'
-        ? 'client'
-        : 'freelancer';
-      // Notify the API when possible, then always clear the local session.
-      apiRequest('/auth/logout', { method: 'POST' })
-        .catch(() => {})
-        .finally(() => {
-          auth.clear();
-          localStorage.removeItem(ACTIVITY_STORAGE_KEY);
-          window.location.replace('/#/login?role=' + role + '&reason=inactive');
-        });
+    const stopWatching = () => {
+      if (stopSessionWatch) stopSessionWatch();
     };
 
-    const activityEvents = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'click'];
-    activityEvents.forEach((eventName) => window.addEventListener(eventName, recordActivity, { passive: true }));
-    window.addEventListener('storage', checkInactivity);
-    const interval = window.setInterval(checkInactivity, 1000);
-
+    startSessionWatch();
+    window.addEventListener('qfa:login', startSessionWatch);
+    window.addEventListener('qfa:logout', stopWatching);
     return () => {
-      activityEvents.forEach((eventName) => window.removeEventListener(eventName, recordActivity));
-      window.removeEventListener('storage', checkInactivity);
-      window.clearInterval(interval);
+      window.removeEventListener('qfa:login', startSessionWatch);
+      window.removeEventListener('qfa:logout', stopWatching);
+      stopWatching();
     };
   }, []);
 
