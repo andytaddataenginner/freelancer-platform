@@ -1,4 +1,5 @@
 const SESSION_HOURS = 24 * 30;
+const ACTIVITY_STORAGE_KEY = 'qfa_last_activity';
 
 export const auth = {
   token: () => localStorage.getItem('token'),
@@ -7,12 +8,14 @@ export const auth = {
     catch { return null; }
   },
   save: (token, user) => {
+    const now = String(Date.now());
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('login_time', String(Date.now()));
+    localStorage.setItem('login_time', now);
+    localStorage.setItem(ACTIVITY_STORAGE_KEY, now);
   },
   clear: () => {
-    ['token', 'user', 'login_time'].forEach((key) => localStorage.removeItem(key));
+    ['token', 'user', 'login_time', ACTIVITY_STORAGE_KEY].forEach((key) => localStorage.removeItem(key));
     window.dispatchEvent(new Event('qfa:logout'));
   },
   isValid: () => {
