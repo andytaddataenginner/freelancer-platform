@@ -13,6 +13,7 @@ export const auth = {
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('login_time', now);
     localStorage.setItem(ACTIVITY_STORAGE_KEY, now);
+    window.dispatchEvent(new Event('qfa:login'));
   },
   clear: () => {
     ['token', 'user', 'login_time', ACTIVITY_STORAGE_KEY].forEach((key) => localStorage.removeItem(key));
