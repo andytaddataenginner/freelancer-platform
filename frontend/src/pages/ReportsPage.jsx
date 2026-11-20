@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState} from 'react';
 import {apiRequest} from '../services/api';
-import {BarChart3,RefreshCw,Download,TrendingUp,Wallet,Users,Clock3} from 'lucide-react';
+import {BarChart3,RefreshCw,Download,TrendingUp,Wallet,Users,Clock3,CalendarDays} from 'lucide-react';
 import {ResponsiveContainer,BarChart,Bar,XAxis,YAxis,Tooltip,Legend,CartesianGrid,PieChart,Pie,Cell,LineChart,Line} from 'recharts';
 
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n)||0);
@@ -16,6 +16,7 @@ export function ReportsPage(){
  const [monthly,setMonthly]=useState([]);
  const [stats,setStats]=useState(null);
  const [logs,setLogs]=useState([]);
+ const [totalActiveMonths,setTotalActiveMonths]=useState(0);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
  const months=useMemo(()=>Array.from({length:12},(_,i)=>shiftMonth(month,-11+i)),[month]);
@@ -40,11 +41,13 @@ export function ReportsPage(){
    const logRows=Array.isArray(allLogs)?allLogs:[];
    const fixedRows=Array.isArray(fixedPayments)?fixedPayments:[];
    setLogs(logRows);
+   const activeMonthKeys=new Set([...logRows.map(x=>String(x.date||'').slice(0,7)),...fixedRows.map(x=>String(x.month||'').slice(0,7))].filter(validMonth));
+   setTotalActiveMonths(activeMonthKeys.size);
    // Keep the month explicitly selected by the user; do not reset it after every refresh.
   }catch(e){setError(e.message||'Unable to load report data.');}
   finally{setLoading(false);}
  }
- useEffect(()=>{let live=true;(async()=>{const results=await Promise.allSettled([apiRequest('/timelogs/latest-month'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments'),apiRequest('/timelogs/months')]);if(!live)return;const direct=results[0].status==='fulfilled'?results[0].value?.latest_month:null;const logs=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];const fixed=results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[];const apiMonths=results[3].status==='fulfilled'&&Array.isArray(results[3].value?.months)?results[3].value.months:[];const activity=[...new Set([monthKey(new Date()),...apiMonths,...logs.map(x=>String(x.date||'').slice(0,7)),...fixed.map(x=>String(x.month||'').slice(0,7))].filter(validMonth))].sort().reverse();setAvailableMonths(activity);const currentMonth=monthKey(new Date());const fixedMonths=fixed.map(x=>String(x.month||'').slice(0,7));const latest=fixedMonths.includes(currentMonth)?currentMonth:(validMonth(direct)?direct:(activity[0]||currentMonth));setMonth(current=>current||latest);})();return()=>{live=false;};},[]);useEffect(()=>{if(month)load();},[month]);
+ useEffect(()=>{let live=true;(async()=>{const results=await Promise.allSettled([apiRequest('/timelogs/latest-month'),apiRequest('/timelogs?limit=5000'),apiRequest('/fixed-payments'),apiRequest('/timelogs/months')]);if(!live)return;const direct=results[0].status==='fulfilled'?results[0].value?.latest_month:null;const logs=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];const fixed=results[2].status==='fulfilled'&&Array.isArray(results[2].value)?results[2].value:[];const apiMonths=results[3].status==='fulfilled'&&Array.isArray(results[3].value?.months)?results[3].value.months:[];const activity=[...new Set([monthKey(new Date()),...apiMonths,...logs.map(x=>String(x.date||'').slice(0,7)),...fixed.map(x=>String(x.month||'').slice(0,7))].filter(validMonth))].sort().reverse();setAvailableMonths(activity);setTotalActiveMonths(new Set([...logs.map(x=>String(x.date||'').slice(0,7)),...fixed.map(x=>String(x.month||'').slice(0,7))].filter(validMonth)).size);const currentMonth=monthKey(new Date());const fixedMonths=fixed.map(x=>String(x.month||'').slice(0,7));const latest=fixedMonths.includes(currentMonth)?currentMonth:(validMonth(direct)?direct:(activity[0]||currentMonth));setMonth(current=>current||latest);})();return()=>{live=false;};},[]);useEffect(()=>{if(month)load();},[month]);
 
  const selectedClients=useMemo(()=>Array.isArray(stats?.clientBreakdown)?stats.clientBreakdown.map(c=>({name:c.client_name||'Unknown client',paid:Number(c.paid)||0,unpaid:Number(c.unpaid)||0,total:Number(c.total)||0,hours:Number(c.hours)||0})).sort((a,b)=>b.total-a.total):[],[stats]);
  const paymentMix=useMemo(()=>[{name:'Paid',value:selectedClients.reduce((a,c)=>a+c.paid,0)},{name:'Outstanding',value:selectedClients.reduce((a,c)=>a+c.unpaid,0)}].filter(x=>x.value>0),[selectedClients]);
@@ -57,10 +60,11 @@ export function ReportsPage(){
   ['Revenue received (12 months)',allTimePaid.toFixed(2)],
   ['Outstanding (12 months)',allTimeOutstanding.toFixed(2)],
   ['Tracked hours (12 months)',totalHours.toFixed(2)],
+  ['Active months (all time)',String(totalActiveMonths)],
   [],
   ['Client','Rate type','Hours','Expected','Paid','Outstanding'],
   ...selectedClients.map(c=>[c.name,'',c.hours.toFixed(2),c.total.toFixed(2),c.paid.toFixed(2),c.unpaid.toFixed(2)])
- ],[month,allTimePaid,allTimeOutstanding,totalHours,selectedClients]);
+ ],[month,allTimePaid,allTimeOutstanding,totalHours,totalActiveMonths,selectedClients]);
  function exportBalanceSheet(){
   const csv=csvRows.map(row=>row.map(csvCell).join(',')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
@@ -76,6 +80,7 @@ export function ReportsPage(){
    <article className="metric-card"><div className="metric-label"><Wallet size={15}/> Outstanding · 12 months</div><div className="metric-value">{loading?'—':money(allTimeOutstanding)}</div></article>
    <article className="metric-card"><div className="metric-label"><Clock3 size={15}/> Tracked hours · 12 months</div><div className="metric-value">{loading?'—':totalHours.toFixed(1)+'h'}</div></article>
    <article className="metric-card"><div className="metric-label"><Users size={15}/> Clients · selected month</div><div className="metric-value">{loading?'—':selectedClients.length}</div></article>
+   <article className="metric-card"><div className="metric-label"><CalendarDays size={15}/> Active months · all time</div><div className="metric-value">{loading?'—':totalActiveMonths}</div></article>
   </div>
   <div className="report-chart-grid">
    <section className="panel-card report-chart-card"><div className="panel-heading"><div><h2>Monthly revenue trend</h2><p>Paid revenue and outstanding balances</p></div><BarChart3 size={18}/></div><div className="report-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={monthly} margin={{top:12,right:12,left:4,bottom:4}}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="label" tick={{fontSize:10}}/><YAxis tickFormatter={v=>'$'+Number(v).toLocaleString()} tick={{fontSize:10}}/><Tooltip formatter={tooltipFormatter}/><Legend/><Bar dataKey="paid" name="Paid" fill="#1a5cff" radius={[4,4,0,0]}/><Bar dataKey="unpaid" name="Outstanding" fill="#f5c842" radius={[4,4,0,0]}/></BarChart></ResponsiveContainer></div></section>
