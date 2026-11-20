@@ -1573,3 +1573,13 @@
  }
  .client-portal-page.portal-sidebar-collapsed .client-mobile-live-clock svg{display:none!important}
 }
+
+
+/* Reports KPI row: keep all five metrics compact and aligned on desktop. */
+.module-page .report-kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.report-kpis .metric-card{padding:14px 15px 13px}
+.report-kpis .metric-label{font-size:10px;line-height:1.35;gap:6px;min-height:28px}
+.report-kpis .metric-label svg{width:13px;height:13px;flex:0 0 13px}
+.report-kpis .metric-value{font-size:clamp(17px,1.45vw,22px);margin-top:4px}
+@media(max-width:950px){.module-page .report-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.module-page .report-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.report-kpis .metric-card{padding:12px}.report-kpis .metric-label{font-size:9px}.report-kpis .metric-value{font-size:18px}}
