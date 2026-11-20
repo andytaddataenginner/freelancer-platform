@@ -98,7 +98,6 @@ export function AppShell() {
           <button className="icon-button mobile-menu" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={20}/></button>
           <div className="breadcrumb"><span>Workspace</span><i>/</i><strong>QFA Management</strong></div>
           <div className="topbar-actions">
-            <span className="status-pill"><span/> All systems ready</span>
             <button className="icon-button" onClick={toggleTheme} aria-label="Toggle theme">{dark ? <Sun size={18}/> : <Moon size={18}/>}</button>
           </div>
         </header>
