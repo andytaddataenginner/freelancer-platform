@@ -58,7 +58,7 @@ export function ClientPortalPage(){
  const clientActiveMonths=useMemo(()=>new Set([
   ...data.logs.map(l=>String(l.date||'').slice(0,7)),
   ...data.fixed.map(r=>String(r.month||'').slice(0,7))
- ].filter(month=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(month))).size,[data.logs,data.fixed]);
+ ].filter(month=>/^\d{4}-(0[1-9]|1[0-2])$/.test(month))).size,[data.logs,data.fixed]);
  const filteredLogs=useMemo(()=>data.logs.filter(l=>(filter==='all'||l.payment_status===filter)&&(!from||String(l.date).slice(0,10)>=from)&&(!to||String(l.date).slice(0,10)<=to)),[data.logs,filter,from,to]);
  const hours=filteredLogs.reduce((a,l)=>a+Number(l.hours||0),0);
  const fixedForPeriod=data.fixed.filter(r=>{const month=String(r.month||'').slice(0,7);return (!from||month>=from.slice(0,7))&&(!to||month<=to.slice(0,7));});
