@@ -55,6 +55,10 @@ export function ClientPortalPage(){
  useEffect(()=>{if(data.liveTimer?.started_at)setTimerPopupMinimized(false);},[data.liveTimer?.started_at]);
  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';document.body.dataset.theme=dark?'dark':'light';localStorage.setItem('qfa_theme',dark?'dark':'light');},[dark]);
  const s=data.stats||{};
+ const clientActiveMonths=useMemo(()=>new Set([
+  ...data.logs.map(l=>String(l.date||'').slice(0,7)),
+  ...data.fixed.map(r=>String(r.month||'').slice(0,7))
+ ].filter(month=>/^\d{4}-(0[1-9]|1[0-2])$/.test(month))).size,[data.logs,data.fixed]);
  const filteredLogs=useMemo(()=>data.logs.filter(l=>(filter==='all'||l.payment_status===filter)&&(!from||String(l.date).slice(0,10)>=from)&&(!to||String(l.date).slice(0,10)<=to)),[data.logs,filter,from,to]);
  const hours=filteredLogs.reduce((a,l)=>a+Number(l.hours||0),0);
  const fixedForPeriod=data.fixed.filter(r=>{const month=String(r.month||'').slice(0,7);return (!from||month>=from.slice(0,7))&&(!to||month<=to.slice(0,7));});
@@ -118,7 +122,7 @@ export function ClientPortalPage(){
    <div className="portal-title-row"><div><div className="eyebrow">YOUR QFA WORKSPACE</div><h1>Welcome, {user?.name||'Client'}.</h1><p>View your work, account activity and communication with your freelancer.</p></div><button className="button-secondary client-portal-refresh" onClick={load} disabled={loading}><RefreshCw size={15} className={loading?'spin':''}/> Refresh</button></div>
    {error&&<div className="notice-error" role="alert">{error}</div>}{notice&&<div className="notice-success">{notice}</div>}
    <div className="metric-grid portal-metrics">
-    {[{label:'Contract status',value:s.contractStatus||'—'},{label:'Total paid',value:money(s.totalPaid)},{label:'Outstanding',value:money(s.totalUnpaid)},{label:'Account credit',value:money(s.creditBalance)},{label:s.rateType==='fixed'?'Monthly fixed fee':'Hourly rate',value:s.rateType==='fixed'?money(s.fixedPrice)+'/mo':money(s.hourlyRate)+'/hr'}].map(x=><article className="metric-card" key={x.label}><div className="metric-label">{x.label}</div><div className="metric-value portal-metric-value">{loading?'—':x.value}</div></article>)}
+    {[{label:'Contract status',value:s.contractStatus||'—'},{label:'Months together',value:clientActiveMonths+' '+(clientActiveMonths===1?'month':'months')},{label:'Total paid',value:money(s.totalPaid)},{label:'Outstanding',value:money(s.totalUnpaid)},{label:'Account credit',value:money(s.creditBalance)},{label:s.rateType==='fixed'?'Monthly fixed fee':'Hourly rate',value:s.rateType==='fixed'?money(s.fixedPrice)+'/mo':money(s.hourlyRate)+'/hr'}].map(x=><article className="metric-card" key={x.label}><div className="metric-label">{x.label}</div><div className="metric-value portal-metric-value">{loading?'—':x.value}</div></article>)}
    </div>
    
 
